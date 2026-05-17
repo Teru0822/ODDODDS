@@ -51,6 +51,16 @@ public class MoneyManager : MonoBehaviour
 
         // 初期化
         _previousDecreaseAmount = _initialDecreaseAmount;
+
+        // セーブデータのロード
+        LoadRoguelikeData();
+    }
+
+    private void LoadRoguelikeData()
+    {
+        RoguelikeSaveData saveData = RoguelikeSaveManager.Load();
+        VirtuePoints = saveData.virtuePoints;
+        Debug.Log($"セーブデータをロードしました。現在の徳ポイント: {VirtuePoints}");
     }
 
     private void Start()
@@ -141,7 +151,19 @@ public class MoneyManager : MonoBehaviour
         VirtuePoints += earnedVirtue;
         Debug.Log($"徳ポイントを獲得しました: {earnedVirtue} (累計: {VirtuePoints} / 経過ターン: {_currentTurnCount})");
 
+        // ローグライク要素をセーブする
+        SaveRoguelikeData();
+
         return earnedVirtue;
+    }
+
+    private void SaveRoguelikeData()
+    {
+        RoguelikeSaveData data = new RoguelikeSaveData
+        {
+            virtuePoints = this.VirtuePoints
+        };
+        RoguelikeSaveManager.Save(data);
     }
 
     /// <summary>
