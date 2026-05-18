@@ -25,11 +25,24 @@ namespace App.Player
         [Tooltip("カメラから隠す頭部メッシュの名前の一部")]
         [SerializeField] private string[] headMeshNames = { "Head", "Eye", "Jaw", "Balaclava", "Face", "head" };
 
+        [Header("Head Bob Settings")]
+        [SerializeField] private bool enableHeadBob = true;
+        [SerializeField] private float bobSpeed = 14.0f;
+        [SerializeField] private float bobAmountX = 0.04f; // 左右の揺れの大きさ
+        [SerializeField] private float bobAmountY = 0.06f; // 上下の揺れの大きさ
+        [SerializeField] private float bobLerpSpeed = 10.0f; // 揺れ状態への補間速度
+
+        [Header("Animator Settings")]
+        [SerializeField] private Animator avatarAnimator;
+        [SerializeField] private string animatorSpeedParam = "Speed";
+
         private CharacterController characterController;
         private Vector2 moveInput;
         private Vector2 lookInput;
         private Vector3 velocity;
         private float cameraPitch = 0.0f;
+        private Vector3 defaultCameraLocalPosition;
+        private float bobTimer = 0.0f;
 
         private void Awake()
         {
@@ -41,6 +54,11 @@ namespace App.Player
             // マウスカーソルをロックして非表示にする
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
+
+            if (playerCamera != null)
+            {
+                defaultCameraLocalPosition = playerCamera.transform.localPosition;
+            }
 
             SetupAvatarHeadCulling();
         }
@@ -78,6 +96,7 @@ namespace App.Player
         {
             HandleLook();
             HandleMovement();
+            HandleHeadBob();
         }
 
         private void HandleMovement()
@@ -91,11 +110,47 @@ namespace App.Player
 
             // カメラの向き（プレイヤーの向き）に基づいた移動方向の計算
             Vector3 moveDirection = transform.right * moveInput.x + transform.forward * moveInput.y;
-            characterController.Move(moveDirection * (moveSpeed * Time.deltaTime));
+            
+            // 水平移動と垂直移動（重力）を1つのベクトルにまとめる
+            Vector3 finalMove = moveDirection * moveSpeed + velocity;
+            
+            // Moveの呼び出しを1回に統合（これによりvelocityの取得や接地判定が安定します）
+            characterController.Move(finalMove * Time.deltaTime);
 
-            // 重力の適用
-            velocity.y += gravity * Time.deltaTime;
-            characterController.Move(velocity * Time.deltaTime);
+            // Animatorの速度パラメータ更新
+            if (avatarAnimator != null)
+            {
+                float speed = new Vector2(characterController.velocity.x, characterController.velocity.z).magnitude;
+                avatarAnimator.SetFloat(animatorSpeedParam, speed);
+            }
+        }
+
+        private void HandleHeadBob()
+        {
+            if (!enableHeadBob || playerCamera == null) return;
+
+            // 移動入力があるか判定
+            float inputMagnitude = moveInput.magnitude;
+
+            // 接地判定(isGrounded)が地形によってずっとfalseになる場合があるため、条件から外して入力のみで揺らすように変更
+            if (inputMagnitude > 0.1f)
+            {
+                // 移動入力の大きさに応じて揺れのスピードを変化させる
+                bobTimer += Time.deltaTime * bobSpeed * inputMagnitude;
+
+                // サイン・コサイン波で左右・上下の揺れを計算 (左右は上下の半分の周期にして無限ループ8の字の揺れにする)
+                float bobX = Mathf.Cos(bobTimer * 0.5f) * bobAmountX;
+                float bobY = Mathf.Sin(bobTimer) * bobAmountY;
+
+                Vector3 targetPos = defaultCameraLocalPosition + new Vector3(bobX, bobY, 0f);
+                playerCamera.transform.localPosition = Vector3.Lerp(playerCamera.transform.localPosition, targetPos, Time.deltaTime * bobLerpSpeed);
+            }
+            else
+            {
+                // 静止時や空中ではゆっくり初期位置に戻す
+                bobTimer = 0.0f;
+                playerCamera.transform.localPosition = Vector3.Lerp(playerCamera.transform.localPosition, defaultCameraLocalPosition, Time.deltaTime * bobLerpSpeed);
+            }
         }
 
         private void HandleLook()
