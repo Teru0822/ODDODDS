@@ -249,7 +249,14 @@ namespace MiniGames.FallBall
             newBall.name = "RefilledBall_" + Time.frameCount;
             
             // 重要：アウト判定(OutZone)で検知されるようにタグを設定
-            newBall.tag = "Ball";
+            try
+            {
+                newBall.tag = "Ball";
+            }
+            catch (UnityEngine.UnityException ex)
+            {
+                Debug.LogError($"FallBallRefillController: 'Ball' タグの設定に失敗しました。Unityのエディタ設定で 'Ball' タグが定義されているか確認してください。エラー: {ex.Message}");
+            }
             
             newBall.transform.localScale = ballTemplate.transform.localScale;
             newBall.SetActive(true);
