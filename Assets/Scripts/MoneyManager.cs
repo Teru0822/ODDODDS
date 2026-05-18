@@ -23,6 +23,15 @@ public class MoneyManager : MonoBehaviour
     [SerializeField] private float _exponentialRate = 1.5f;
     [SerializeField] private float _initialDecreaseAmount = 100f;
 
+    [Header("ローグライク要素（徳ポイント）")]
+    [SerializeField, Tooltip("徳ポイント算出の基準倍率。大きいほど獲得量が増える")] 
+    private float _virtueMultiplier = 2.0f;
+
+    /// <summary>
+    /// 獲得した徳ポイントの累計
+    /// </summary>
+    public int VirtuePoints { get; private set; } = 0;
+
     private int _currentTurnCount = 0;
     private float _previousDecreaseAmount = 0;
 
@@ -42,6 +51,16 @@ public class MoneyManager : MonoBehaviour
 
         // 初期化
         _previousDecreaseAmount = _initialDecreaseAmount;
+
+        // セーブデータのロード
+        LoadRoguelikeData();
+    }
+
+    private void LoadRoguelikeData()
+    {
+        RoguelikeSaveData saveData = RoguelikeSaveManager.Load();
+        VirtuePoints = saveData.virtuePoints;
+        Debug.Log($"セーブデータをロードしました。現在の徳ポイント: {VirtuePoints}");
     }
 
     private void Start()
@@ -116,6 +135,38 @@ public class MoneyManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 経過ターン数に応じて獲得できる徳ポイントを算出し、加算する
+    /// 平方根（Sqrt）を利用することで、ターン数が多いほど増加のペースがなだらかになる。
+    /// </summary>
+    /// <returns>今回獲得した徳ポイント</returns>
+    public int CalculateAndAddVirtuePoints()
+    {
+        // 算出式: 倍率 * √(経過ターン数)
+        // 例(_virtueMultiplier=2の場合): 
+        //  10ターンの時 -> 2 * 3.16 ≒ 6pt
+        //  50ターンの時 -> 2 * 7.07 ≒ 14pt
+        // 100ターンの時 -> 2 * 10.0 = 20pt
+        int earnedVirtue = Mathf.FloorToInt(_virtueMultiplier * Mathf.Sqrt(_currentTurnCount));
+        
+        VirtuePoints += earnedVirtue;
+        Debug.Log($"徳ポイントを獲得しました: {earnedVirtue} (累計: {VirtuePoints} / 経過ターン: {_currentTurnCount})");
+
+        // ローグライク要素をセーブする
+        SaveRoguelikeData();
+
+        return earnedVirtue;
+    }
+
+    private void SaveRoguelikeData()
+    {
+        RoguelikeSaveData data = new RoguelikeSaveData
+        {
+            virtuePoints = this.VirtuePoints
+        };
+        RoguelikeSaveManager.Save(data);
+    }
+
+    /// <summary>
     /// 所持金が0以下になった場合にゲームオーバーを告知する
     /// </summary>
     private void CheckGameOver()
@@ -124,6 +175,9 @@ public class MoneyManager : MonoBehaviour
         {
             _currentMoney = 0;
             Debug.Log("所持金額が0になりました。ゲームオーバーです。");
+
+            // ゲームオーバー時に徳ポイントを算出して付与する
+            CalculateAndAddVirtuePoints();
             
             //TODO:ここに詳細なゲームオーバー時の処理を実装
         }
