@@ -100,6 +100,7 @@ public class UFOArmController : MonoBehaviour
     private Vector3  _visualOffset; // ピボットと実際の見た目の中心（ロープ）とのズレ
     private float    _stateTimer; // 様々な待機タイマー兼用
     private float    _wakeUpTimer;
+    private Rigidbody _armRigidbody;
 
     private Quaternion[] _fingerDefaultRot;
     private Quaternion[] _fingerOpenRot;
@@ -110,9 +111,13 @@ public class UFOArmController : MonoBehaviour
     private Vector3[] _fingerCurrentBasePos; // 開閉の純粋な座標を保持
 
     private bool         _wantFingerOpen = false;
+    public bool WantFingerOpen => _wantFingerOpen;
 
     // ─────────────────────────────────────
     [Header("揺れ（Sway）設定")]
+    [Tooltip("揺れ（慣性・振り子挙動）を有効にするか")]
+    public bool enableSway = true;
+
     [Tooltip("指以外の、一緒に揺らしたいパーツ（6番のロープなど）を指定します")]
     public Transform[] extraSwayParts;
     private Quaternion[] _extraSwayDefaultRot;
@@ -152,7 +157,16 @@ public class UFOArmController : MonoBehaviour
         // 基準点を明確にする（指定があればそれ、なければ自分自身）
         _machineBasePos = (machineRoot != null) ? machineRoot.position : transform.position;
 
-        if (armRoot != null) _armInitialPos = armRoot.position;
+        if (armRoot != null)
+        {
+            _armInitialPos = armRoot.position;
+            _armRigidbody = armRoot.GetComponent<Rigidbody>();
+            if (_armRigidbody == null)
+            {
+                _armRigidbody = armRoot.gameObject.AddComponent<Rigidbody>();
+                _armRigidbody.isKinematic = true;
+            }
+        }
         if (armRoot != null && stretchRope != null)
         {
             // armRoot（ピボット）と実際の見た目の中心（ロープ）のズレを計算
@@ -219,15 +233,45 @@ public class UFOArmController : MonoBehaviour
         Debug.Log($"[UFOArmController] 手動開閉ボタンが押されました！ 開く={_wantFingerOpen}");
     }
 
+    private bool _collidersDisabledForSpawn = false;
+
     void Update()
     {
-        UpdateMovement();
-        UpdateSwayPhysics();
-        UpdateRailFollow();
+        UpdateColliderStateForSpawning();
         UpdateFingersAndSway();
         UpdateStateMachine();
         WakeUpNearbyCoins();
         UpdateMagnet();
+    }
+
+    void UpdateColliderStateForSpawning()
+    {
+        if (armRoot == null) return;
+
+        // コインが降っている最中、および落下中の時間帯を判定する
+        bool shouldDisable = ItemSpawner.IsSpawning || (Time.time < CoinOptimizer.freezeStartTime);
+
+        if (shouldDisable != _collidersDisabledForSpawn)
+        {
+            _collidersDisabledForSpawn = shouldDisable;
+            Collider[] colliders = armRoot.GetComponentsInChildren<Collider>();
+            foreach (var col in colliders)
+            {
+                // トリガー（UFOClawCarrierなど運搬用の領域判定コライダー）は動作を維持するため除外し、
+                // 物理衝突判定用のコライダーのみ無効化する
+                if (col.isTrigger) continue;
+                
+                col.enabled = !shouldDisable;
+            }
+            Debug.Log($"[UFOArmController] Spawning coin collision state changed: Arm Solid Colliders Enabled = {!shouldDisable}");
+        }
+    }
+
+    void FixedUpdate()
+    {
+        UpdateMovement();
+        UpdateSwayPhysics();
+        UpdateRailFollow();
     }
 
     void WakeUpNearbyCoins()
@@ -317,9 +361,9 @@ public class UFOArmController : MonoBehaviour
             _state == ArmState.Ascending) return;
         if (armRoot == null) return;
 
-        Vector3 pos = armRoot.position;
-        pos.x += _leverInput.x * moveSpeed * Time.deltaTime;
-        pos.z += _leverInput.y * moveSpeed * Time.deltaTime;
+        Vector3 pos = (_armRigidbody != null) ? _armRigidbody.position : armRoot.position;
+        pos.x += _leverInput.x * moveSpeed * Time.fixedDeltaTime;
+        pos.z += _leverInput.y * moveSpeed * Time.fixedDeltaTime;
 
         // ピボットではなく、「実際の見た目の中心座標（visualPos）」を算出してClamp判定を行う
         Vector3 visualPos = pos + _visualOffset;
@@ -338,7 +382,14 @@ public class UFOArmController : MonoBehaviour
         // Clampされた見た目の座標から、再びピボットの座標を逆算して適用する
         pos = visualPos - _visualOffset;
 
-        armRoot.position = pos;
+        if (_armRigidbody != null)
+        {
+            _armRigidbody.MovePosition(pos);
+        }
+        else
+        {
+            armRoot.position = pos;
+        }
         
         // コントロール中のみ状態をMovingにする（操作不可ステート時は維持）
         if (_state == ArmState.Idle || _state == ArmState.Moving)
@@ -350,19 +401,33 @@ public class UFOArmController : MonoBehaviour
     void UpdateSwayPhysics()
     {
         if (armRoot == null) return;
-        if (Time.deltaTime == 0f) return;
+        
+        float dt = Time.fixedDeltaTime;
+        if (dt == 0f) return;
+
+        if (!enableSway)
+        {
+            _ropeSwayAngle = Vector3.zero;
+            _ropeSwayVelocity = Vector3.zero;
+            _clawSwayAngle = Vector3.zero;
+            _clawSwayVelocity = Vector3.zero;
+            ropeSwayRot = Quaternion.identity;
+            clawSwayRot = Quaternion.identity;
+            _lastWorldPos = (_armRigidbody != null) ? _armRigidbody.position : armRoot.position;
+            return;
+        }
 
         // 座標から現在の移動速度（Velocity）を取得
-        Vector3 currentPos = armRoot.position;
-        Vector3 currentVel = (currentPos - _lastWorldPos) / Time.deltaTime;
+        Vector3 currentPos = (_armRigidbody != null) ? _armRigidbody.position : armRoot.position;
+        Vector3 currentVel = (currentPos - _lastWorldPos) / dt;
         _lastWorldPos = currentPos;
 
         // 【ロープ（Extra）側の揺れ計算】
         Vector3 ropeTargetSway = new Vector3(currentVel.z, 0f, currentVel.x) * extraSwaySensitivity;
         Vector3 ropeAngleDiff = ropeTargetSway - _ropeSwayAngle;
         Vector3 ropeSpringAccel = (ropeAngleDiff * extraSwaySpringForce) - (_ropeSwayVelocity * extraSwayDamping);
-        _ropeSwayVelocity += ropeSpringAccel * Time.deltaTime;
-        _ropeSwayAngle += _ropeSwayVelocity * Time.deltaTime;
+        _ropeSwayVelocity += ropeSpringAccel * dt;
+        _ropeSwayAngle += _ropeSwayVelocity * dt;
         _ropeSwayAngle.x = Mathf.Clamp(_ropeSwayAngle.x, -50f, 50f);
         _ropeSwayAngle.z = Mathf.Clamp(_ropeSwayAngle.z, -50f, 50f);
         ropeSwayRot = Quaternion.Euler(_ropeSwayAngle.x, 0f, _ropeSwayAngle.z);
@@ -371,8 +436,8 @@ public class UFOArmController : MonoBehaviour
         Vector3 clawTargetSway = new Vector3(currentVel.z, 0f, currentVel.x) * clawSwaySensitivity;
         Vector3 clawAngleDiff = clawTargetSway - _clawSwayAngle;
         Vector3 clawSpringAccel = (clawAngleDiff * clawSwaySpringForce) - (_clawSwayVelocity * clawSwayDamping);
-        _clawSwayVelocity += clawSpringAccel * Time.deltaTime;
-        _clawSwayAngle += _clawSwayVelocity * Time.deltaTime;
+        _clawSwayVelocity += clawSpringAccel * dt;
+        _clawSwayAngle += _clawSwayVelocity * dt;
         _clawSwayAngle.x = Mathf.Clamp(_clawSwayAngle.x, -50f, 50f);
         _clawSwayAngle.z = Mathf.Clamp(_clawSwayAngle.z, -50f, 50f);
         clawSwayRot = Quaternion.Euler(_clawSwayAngle.x, 0f, _clawSwayAngle.z);
@@ -383,7 +448,8 @@ public class UFOArmController : MonoBehaviour
         if (armRoot == null) return;
 
         // アームが初期位置からどれだけ移動したか（差分）を計算
-        Vector3 delta = armRoot.position - _armInitialPos;
+        Vector3 currentPos = (_armRigidbody != null) ? _armRigidbody.position : armRoot.position;
+        Vector3 delta = currentPos - _armInitialPos;
 
         // Rail1: 左右（X方向）移動をアームに合わせる
         if (rail1 != null)
