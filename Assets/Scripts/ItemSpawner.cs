@@ -32,6 +32,8 @@ public class ItemSpawner : MonoBehaviour
     public GameObject hourglassPrefab;
     public float hourglassRate = 5f;
 
+    public static bool IsSpawning { get; private set; } = false;
+
     void Start()
     {
         StartCoroutine(SpawnRoutine());
@@ -39,6 +41,7 @@ public class ItemSpawner : MonoBehaviour
 
     private IEnumerator SpawnRoutine()
     {
+        IsSpawning = true;
         int spawnedCount = 0;
         float startTime = Time.time;
         float totalRate = copperRate + silverRate + goldRate + hourglassRate;
@@ -47,6 +50,7 @@ public class ItemSpawner : MonoBehaviour
         if (totalRate <= 0f)
         {
             Debug.LogError("アイテムの排出率がすべて0になっています！");
+            IsSpawning = false;
             yield break;
         }
 
@@ -69,6 +73,7 @@ public class ItemSpawner : MonoBehaviour
 
         // スポーン完了！全コインに「今から凍結チェックを始めていいよ」と通知する
         // 3秒の余裕を加えて、最後のコインが落ち切るのを待つ
+        IsSpawning = false;
         CoinOptimizer.freezeStartTime = Time.time + 3.0f;
         Debug.Log($"[ItemSpawner] スポーン完了。{CoinOptimizer.freezeStartTime:F1}秒後から凍結チェック開始");
     }

@@ -108,7 +108,7 @@ public class StretchRope : MonoBehaviour
     public bool IsAtMin() => _stretchTime <= 0f;
 
     // ─────────────────────────────────────
-    void LateUpdate()
+    void FixedUpdate()
     {
         // ── 伸縮量の更新 ──
         if (_externalControl)
