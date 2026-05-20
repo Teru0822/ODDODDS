@@ -125,6 +125,7 @@ public class UFOCameraController : MonoBehaviour
         newCam.clearFlags = frontCamera.clearFlags;
         newCam.backgroundColor = frontCamera.backgroundColor;
         newCam.depth = frontCamera.depth - 1; // プレイヤーカメラの下にするため低めに設定
+        newCam.targetDisplay = frontCamera.targetDisplay; // Display2など使用中のDisplayに合わせる
         newCam.enabled = false;
 
         // URP対応：UniversalAdditionalCameraData のコピー
@@ -227,6 +228,13 @@ public class UFOCameraController : MonoBehaviour
     private void SwitchToCamera(Camera targetCamera)
     {
         if (targetCamera == null) return;
+
+        // プレイヤーカメラが映っているDisplayに合わせてターゲットカメラのDisplayを設定
+        // （Display2などを使用している場合でも正しく映るようにする）
+        if (playerCamera != null)
+        {
+            targetCamera.targetDisplay = playerCamera.targetDisplay;
+        }
 
         // 全てのカメラを一旦非アクティブにする
         if (playerCamera != null) playerCamera.enabled = false;
