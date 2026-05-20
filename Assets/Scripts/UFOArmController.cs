@@ -492,8 +492,7 @@ public class UFOArmController : MonoBehaviour
                 fingerParts[i].localRotation = _fingerCurrentBaseRot[i];
                 fingerParts[i].localPosition = _fingerCurrentBasePos[i];
 
-                // 2. 爪用の個別揺れを適用
-                fingerParts[i].rotation = clawSwayRot * fingerParts[i].rotation;
+                // 2. 爪（finger）の個別揺れは適用しない（親オブジェクトである structure の揺れをそのまま引き継ぐため）
             }
         }
 
