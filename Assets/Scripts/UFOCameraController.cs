@@ -200,13 +200,16 @@ public class UFOCameraController : MonoBehaviour
     private void EnterUfoMode()
     {
         SetUfoMode(true);
-        SwitchToCamera(frontCamera);
+        // Display2のUFOカメラを正面に切り替えるだけ
+        // playerCamera（Display4）は触らない
+        SwitchUfoCameraTo(frontCamera);
     }
 
     private void ExitUfoMode()
     {
         SetUfoMode(false);
-        SwitchToCamera(playerCamera);
+        // UFOモード終了時もplayer cameraは触らない
+        // UFOカメラはそのままDisplay2に映し続ける
     }
 
     private void SetUfoMode(bool active)
@@ -240,20 +243,24 @@ public class UFOCameraController : MonoBehaviour
         }
     }
 
-    private void SwitchToCamera(Camera targetCamera)
+    /// <summary>
+    /// Display2のUFOカメラ間だけを切り替える。
+    /// playerCamera（Display4）には一切触れない。
+    /// </summary>
+    private void SwitchUfoCameraTo(Camera targetCamera)
     {
         if (targetCamera == null) return;
 
-        // 全てのカメラを一旦非アクティブにする
-        if (playerCamera != null) playerCamera.enabled = false;
+        // UFOカメラ（Display2）だけを切り替える
         if (frontCamera != null) frontCamera.enabled = false;
-        if (leftCamera != null) leftCamera.enabled = false;
+        if (leftCamera  != null) leftCamera.enabled  = false;
         if (rightCamera != null) rightCamera.enabled = false;
-        if (topCamera != null) topCamera.enabled = false;
+        if (topCamera   != null) topCamera.enabled   = false;
 
-        // ターゲットカメラを有効化
         targetCamera.enabled = true;
         _activeCamera = targetCamera;
+
+        Debug.Log($"[UFOCameraController] UFOカメラ切り替え → {targetCamera.name}");
     }
 
     private void HandleUfoInput()
@@ -270,10 +277,10 @@ public class UFOCameraController : MonoBehaviour
         }
 
         // 視点切り替えキー (1:前, 2:左, 3:右, 4:上)
-        if (Keyboard.current.digit1Key.wasPressedThisFrame) SwitchToCamera(frontCamera);
-        if (Keyboard.current.digit2Key.wasPressedThisFrame) SwitchToCamera(leftCamera);
-        if (Keyboard.current.digit3Key.wasPressedThisFrame) SwitchToCamera(rightCamera);
-        if (Keyboard.current.digit4Key.wasPressedThisFrame) SwitchToCamera(topCamera);
+        if (Keyboard.current.digit1Key.wasPressedThisFrame) SwitchUfoCameraTo(frontCamera);
+        if (Keyboard.current.digit2Key.wasPressedThisFrame) SwitchUfoCameraTo(leftCamera);
+        if (Keyboard.current.digit3Key.wasPressedThisFrame) SwitchUfoCameraTo(rightCamera);
+        if (Keyboard.current.digit4Key.wasPressedThisFrame) SwitchUfoCameraTo(topCamera);
     }
 
     private void OnGUI()
