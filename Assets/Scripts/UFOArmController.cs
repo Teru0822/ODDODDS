@@ -426,15 +426,8 @@ public class UFOArmController : MonoBehaviour
         Vector3 currentVel = (currentPos - _lastWorldPos) / dt;
         _lastWorldPos = currentPos;
 
-        // 【ロープ（Extra）側の揺れ計算】
-        Vector3 ropeTargetSway = new Vector3(currentVel.z, 0f, currentVel.x) * extraSwaySensitivity;
-        Vector3 ropeAngleDiff = ropeTargetSway - _ropeSwayAngle;
-        Vector3 ropeSpringAccel = (ropeAngleDiff * extraSwaySpringForce) - (_ropeSwayVelocity * extraSwayDamping);
-        _ropeSwayVelocity += ropeSpringAccel * dt;
-        _ropeSwayAngle += _ropeSwayVelocity * dt;
-        _ropeSwayAngle.x = Mathf.Clamp(_ropeSwayAngle.x, -50f, 50f);
-        _ropeSwayAngle.z = Mathf.Clamp(_ropeSwayAngle.z, -50f, 50f);
-        ropeSwayRot = Quaternion.Euler(_ropeSwayAngle.x, 0f, _ropeSwayAngle.z);
+        // 【ロープ（Extra）側の揺れは計算せず、常に無効（Identity）にする】
+        ropeSwayRot = Quaternion.identity;
 
         // 【爪（Claw）側の揺れ計算】
         Vector3 clawTargetSway = new Vector3(currentVel.z, 0f, currentVel.x) * clawSwaySensitivity;
@@ -507,19 +500,7 @@ public class UFOArmController : MonoBehaviour
             }
         }
 
-        // その他（6番ロープなど）に対する揺れの適用（Extra設定）
-        if (extraSwayParts != null && extraSwayParts.Length > 0)
-        {
-            for (int i = 0; i < extraSwayParts.Length; i++)
-            {
-                if (extraSwayParts[i] == null) continue;
-
-                // 1. 本来のローカル回転をセット
-                extraSwayParts[i].localRotation = _extraSwayDefaultRot[i];
-                // 2. ロープ用の個別揺れを適用
-                extraSwayParts[i].rotation = ropeSwayRot * extraSwayParts[i].rotation;
-            }
-        }
+        // その他（6番ロープなど）に対する揺れの適用（個別揺れはすべて無効化されました）
     }
 
     public void OnClawCollided()

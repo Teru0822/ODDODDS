@@ -3117,17 +3117,14 @@ MonoBehaviour:
   magnetForce: 200
   enableSway: 1
   extraSwayParts:
-  - {fileID: 0}
+  - {fileID: 7724329831879238921}
   extraSwaySensitivity: 0.26
   extraSwayDamping: 1
   extraSwaySpringForce: 80
-  clawBaseParts:
-  - {fileID: 2820339585742645229}
-  - {fileID: 1335517826632139456}
-  - {fileID: 6953399217295080850}
+  clawBaseParts: []
   clawSwaySensitivity: 0.21
-  clawSwayDamping: 1
-  clawSwaySpringForce: 80
+  clawSwayDamping: 60
+  clawSwaySpringForce: 40
 --- !u!1 &8645661572343024919
 GameObject:
   m_ObjectHideFlags: 0
@@ -4932,5 +4929,10 @@ Transform:
 --- !u!4 &6752370501068503386 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2740654105524569014, guid: 5288d4ab37925e440b5087ec4f169d44, type: 3}
+  m_PrefabInstance: {fileID: 8916563567466101484}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &7724329831879238921 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1193359738744397797, guid: 5288d4ab37925e440b5087ec4f169d44, type: 3}
   m_PrefabInstance: {fileID: 8916563567466101484}
   m_PrefabAsset: {fileID: 0}
