@@ -53,6 +53,13 @@ public class UFOCameraController : MonoBehaviour
             playerCamera = _fpController.GetComponentInChildren<Camera>(true);
         }
 
+        // ===== デバッグログ =====
+        Debug.Log($"[UFOCameraController] Start: fpController={(_fpController != null ? _fpController.name : "NULL")}");
+        Debug.Log($"[UFOCameraController] Start: playerCamera={( playerCamera != null ? playerCamera.name : "NULL")}");
+        Debug.Log($"[UFOCameraController] Start: ufoCenterTransform={ufoCenterTransform.name}");
+        Debug.Log($"[UFOCameraController] Start: interactionDistance={interactionDistance}");
+        // =======================
+
         SetupDynamicCameras();
 
         // 開始時はUFOプレイモードではない状態にする
@@ -159,6 +166,13 @@ public class UFOCameraController : MonoBehaviour
         float distance = Vector3.Distance(_fpController.transform.position, ufoCenterTransform.position);
         bool isClose = distance <= interactionDistance;
 
+        // ===== デバッグログ（毎秒1回だけ表示）=====
+        if (Time.frameCount % 60 == 0)
+        {
+            Debug.Log($"[UFOCameraController] 距離: {distance:F2} / 判定距離: {interactionDistance} / 近い: {isClose} / プレイ中: {IsPlayingUfo}");
+        }
+        // ===========================================
+
         if (!IsPlayingUfo)
         {
             // プレイ中でなく、かつ近ければプロンプトを表示。Fキーで開始
@@ -167,6 +181,7 @@ public class UFOCameraController : MonoBehaviour
                 _showPrompt = true;
                 if (Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame)
                 {
+                    Debug.Log("[UFOCameraController] Fキー検出！UFOモードに入ります");
                     EnterUfoMode();
                 }
             }
