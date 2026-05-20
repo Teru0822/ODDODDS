@@ -48,6 +48,10 @@ public class UFOArmController : MonoBehaviour
     [Tooltip("指の開閉スピード")]
     public float fingerSpeed = 4f;
 
+    [Tooltip("爪の閉じ切り度合い（1.0で完全に閉じる。0.8など少し小さくすると、完全に閉じきらずに隙間を残すことで、中のコインが過度に圧迫されてはみ出したり弾け飛んだりするのを防ぎます）")]
+    [Range(0.1f, 1.0f)]
+    public float closeLimitRatio = 1.0f;
+
     [Header("【新規】爪の開いた状態の直接指定")]
     [Tooltip("チェックを入れると、下のリストの座標・角度を開いた状態として使用します")]
     public bool useCustomOpenTransform = true;
@@ -478,8 +482,8 @@ public class UFOArmController : MonoBehaviour
                 if (fingerParts[i] == null) continue;
 
                 // 開閉アニメーションの補間（純粹なローカル状態）
-                Quaternion targetBaseRot = _wantFingerOpen ? _fingerOpenRot[i] : _fingerDefaultRot[i];
-                Vector3 targetBasePos = _wantFingerOpen ? _fingerOpenPos[i] : _fingerDefaultPos[i];
+                Quaternion targetBaseRot = _wantFingerOpen ? _fingerOpenRot[i] : Quaternion.Slerp(_fingerOpenRot[i], _fingerDefaultRot[i], closeLimitRatio);
+                Vector3 targetBasePos = _wantFingerOpen ? _fingerOpenPos[i] : Vector3.Lerp(_fingerOpenPos[i], _fingerDefaultPos[i], closeLimitRatio);
 
                 _fingerCurrentBaseRot[i] = Quaternion.Lerp(_fingerCurrentBaseRot[i], targetBaseRot, Time.deltaTime * fingerSpeed);
                 _fingerCurrentBasePos[i] = Vector3.Lerp(_fingerCurrentBasePos[i], targetBasePos, Time.deltaTime * fingerSpeed);
