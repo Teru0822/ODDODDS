@@ -122,14 +122,7 @@ public class UFOArmController : MonoBehaviour
     [Tooltip("揺れ（慣性・振り子挙動）を有効にするか")]
     public bool enableSway = true;
 
-    [Tooltip("指以外の、一緒に揺らしたいパーツ（6番のロープなど）を指定します")]
-    public Transform[] extraSwayParts;
-    private Quaternion[] _extraSwayDefaultRot;
 
-    [Header("ロープの揺れ設定（Extra Sway Parts用）")]
-    public float extraSwaySensitivity = 2f;
-    public float extraSwayDamping = 3f;
-    public float extraSwaySpringForce = 15f;
 
     [Header("爪の揺れ設定（Finger Parts用）")]
     [Tooltip("爪の土台（finger）など、開閉アニメはないが爪と同じ強さで揺れてほしいパーツ")]
@@ -145,9 +138,6 @@ public class UFOArmController : MonoBehaviour
 
     private Vector3 _lastWorldPos;
     
-    // Extra Sway State
-    private Vector3 _ropeSwayAngle;
-    private Vector3 _ropeSwayVelocity;
     public Quaternion ropeSwayRot { get; private set; } = Quaternion.identity;
 
     // Claw Sway State
@@ -184,16 +174,7 @@ public class UFOArmController : MonoBehaviour
         // 爪の初期/開いた回転と座標を記録
         InitializeFingers();
 
-        // その他揺らすパーツの初期回転を記録
-        if (extraSwayParts != null && extraSwayParts.Length > 0)
-        {
-            _extraSwayDefaultRot = new Quaternion[extraSwayParts.Length];
-            for (int i = 0; i < extraSwayParts.Length; i++)
-            {
-                if (extraSwayParts[i] != null)
-                    _extraSwayDefaultRot[i] = extraSwayParts[i].localRotation;
-            }
-        }
+
 
         // 爪土台の初期回転を記録
         if (clawBaseParts != null && clawBaseParts.Length > 0)
@@ -411,8 +392,6 @@ public class UFOArmController : MonoBehaviour
 
         if (!enableSway)
         {
-            _ropeSwayAngle = Vector3.zero;
-            _ropeSwayVelocity = Vector3.zero;
             _clawSwayAngle = Vector3.zero;
             _clawSwayVelocity = Vector3.zero;
             ropeSwayRot = Quaternion.identity;
