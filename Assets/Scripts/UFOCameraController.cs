@@ -229,13 +229,6 @@ public class UFOCameraController : MonoBehaviour
     {
         if (targetCamera == null) return;
 
-        // プレイヤーカメラが映っているDisplayに合わせてターゲットカメラのDisplayを設定
-        // （Display2などを使用している場合でも正しく映るようにする）
-        if (playerCamera != null)
-        {
-            targetCamera.targetDisplay = playerCamera.targetDisplay;
-        }
-
         // 全てのカメラを一旦非アクティブにする
         if (playerCamera != null) playerCamera.enabled = false;
         if (frontCamera != null) frontCamera.enabled = false;
