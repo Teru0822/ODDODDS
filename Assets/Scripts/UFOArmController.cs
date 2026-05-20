@@ -685,4 +685,23 @@ public class UFOArmController : MonoBehaviour
             }
         }
     }
+
+    private void OnDrawGizmosSelected()
+    {
+        // 基準座標の決定
+        Vector3 basePos = (machineRoot != null) ? machineRoot.position : transform.position;
+
+        // レバー等のプレイ中ではない時の高さ基準として少し浮かせる（あればアームルートの高さに合わせる）
+        float y = (armRoot != null) ? armRoot.position.y : basePos.y;
+        Vector3 center = new Vector3(basePos.x + playAreaCenter.x, y, basePos.z + playAreaCenter.y);
+        Vector3 size = new Vector3(playAreaSize.x, 1f, playAreaSize.y); // 厚み（高さ）を1m持たせて視認しやすくする
+
+        // 輪郭線（赤）
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireCube(center, size);
+
+        // 半透明の赤い塗りつぶし（見やすさ向上）
+        Gizmos.color = new Color(1f, 0f, 0f, 0.15f);
+        Gizmos.DrawCube(center, size);
+    }
 }
