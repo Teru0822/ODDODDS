@@ -200,8 +200,10 @@ public class UFOCameraController : MonoBehaviour
     private void EnterUfoMode()
     {
         SetUfoMode(true);
-        // Display2のUFOカメラを正面に切り替えるだけ
-        // playerCamera（Display4）は触らない
+        Debug.Log($"[UFOCameraController] EnterUfoMode: frontCamera={( frontCamera != null ? frontCamera.name + " display=" + frontCamera.targetDisplay : "NULL")}");
+        Debug.Log($"[UFOCameraController] EnterUfoMode: leftCamera={(  leftCamera  != null ? leftCamera.name  : "NULL")}");
+        Debug.Log($"[UFOCameraController] EnterUfoMode: rightCamera={( rightCamera != null ? rightCamera.name : "NULL")}");
+        Debug.Log($"[UFOCameraController] EnterUfoMode: topCamera={(   topCamera   != null ? topCamera.name   : "NULL")}");
         SwitchUfoCameraTo(frontCamera);
     }
 
@@ -249,7 +251,18 @@ public class UFOCameraController : MonoBehaviour
     /// </summary>
     private void SwitchUfoCameraTo(Camera targetCamera)
     {
-        if (targetCamera == null) return;
+        if (targetCamera == null)
+        {
+            Debug.LogError("[UFOCameraController] SwitchUfoCameraTo: targetCamera が null です！インスペクターでカメラを設定してください。");
+            return;
+        }
+
+        // カメラのGameObjectが非アクティブな場合も有効化する
+        if (!targetCamera.gameObject.activeInHierarchy)
+        {
+            targetCamera.gameObject.SetActive(true);
+            Debug.LogWarning($"[UFOCameraController] {targetCamera.name} のGameObjectが非アクティブだったため有効化しました");
+        }
 
         // UFOカメラ（Display2）だけを切り替える
         if (frontCamera != null) frontCamera.enabled = false;
@@ -260,7 +273,7 @@ public class UFOCameraController : MonoBehaviour
         targetCamera.enabled = true;
         _activeCamera = targetCamera;
 
-        Debug.Log($"[UFOCameraController] UFOカメラ切り替え → {targetCamera.name}");
+        Debug.Log($"[UFOCameraController] UFOカメラ切り替え → {targetCamera.name} / targetDisplay={targetCamera.targetDisplay} / enabled={targetCamera.enabled}");
     }
 
     private void HandleUfoInput()
