@@ -50,15 +50,38 @@ public class UFOArmManager : MonoBehaviour
         // 【修正】現在稼働している古いアーム（Lv1など配列に入っていないもの含む）を確実に非表示にする
         if (ufoController.fingerParts != null && ufoController.fingerParts.Length > 0 && ufoController.fingerParts[0] != null)
         {
-            ufoController.fingerParts[0].parent.gameObject.SetActive(false);
+            // fingerParts[0] から親を上に辿って、armRoot（大元の吊り下げ部）の直下にあるルートオブジェクトを探す
+            Transform t = ufoController.fingerParts[0];
+            while (t != null && t.parent != null && t.parent != ufoController.armRoot)
+            {
+                t = t.parent;
+            }
+            
+            // 見つかった大元のオブジェクト（structureなど）を非表示にする
+            if (t != null)
+            {
+                t.gameObject.SetActive(false);
+            }
         }
 
-        // 一旦配列内のすべてのアームを非表示にする
+        // 一旦配列内のすべてのアームおよびその大元（親構造）を非表示にする
         for (int i = 0; i < armSetsByLevel.Length; i++)
         {
             if (armSetsByLevel[i] != null)
             {
+                // 登録されたオブジェクト（フィンガー等）自体を非表示にする
                 armSetsByLevel[i].SetActive(false);
+
+                // 大元の structure オブジェクトを親方向に辿って非表示にする
+                Transform t = armSetsByLevel[i].transform;
+                while (t != null && t.parent != null && t.parent != ufoController.armRoot)
+                {
+                    t = t.parent;
+                }
+                if (t != null)
+                {
+                    t.gameObject.SetActive(false);
+                }
             }
         }
 
@@ -66,7 +89,20 @@ public class UFOArmManager : MonoBehaviour
         GameObject targetArm = armSetsByLevel[index];
         if (targetArm != null)
         {
+            // 登録されたオブジェクト（フィンガー等）自体を表示する
             targetArm.SetActive(true);
+
+            // 大元の structure オブジェクトを親方向に辿って表示する
+            Transform t = targetArm.transform;
+            while (t != null && t.parent != null && t.parent != ufoController.armRoot)
+            {
+                t = t.parent;
+            }
+            if (t != null)
+            {
+                t.gameObject.SetActive(true);
+            }
+
             ufoController.ChangeClaw_InScene(targetArm);
             Debug.Log($"UFOArmManager: アームを Lv{level} (インデックス:{index}) に切り替えました！");
         }

@@ -569,25 +569,43 @@ public class UFOArmController : MonoBehaviour
             this.fingerOpenAngle = data.fingerOpenAngle;
             this.useCustomOpenTransform = data.useCustomOpenTransform;
 
-            if (data.invertFingerAngle != null && data.invertFingerAngle.Length > 0)
-                this.invertFingerAngle = data.invertFingerAngle;
+            this.invertFingerAngle = (data.invertFingerAngle != null && data.invertFingerAngle.Length > 0) ? data.invertFingerAngle : null;
+            this.fingerAngleOffsets = (data.fingerAngleOffsets != null && data.fingerAngleOffsets.Length > 0) ? data.fingerAngleOffsets : null;
+            this.customOpenLocalPositions = (data.customOpenLocalPositions != null && data.customOpenLocalPositions.Length > 0) ? data.customOpenLocalPositions : null;
+            this.customOpenLocalRotations = (data.customOpenLocalRotations != null && data.customOpenLocalRotations.Length > 0) ? data.customOpenLocalRotations : null;
 
-            if (data.fingerAngleOffsets != null && data.fingerAngleOffsets.Length > 0)
-                this.fingerAngleOffsets = data.fingerAngleOffsets;
-
-            if (data.customOpenLocalPositions != null && data.customOpenLocalPositions.Length > 0)
-                this.customOpenLocalPositions = data.customOpenLocalPositions;
-
-            if (data.customOpenLocalRotations != null && data.customOpenLocalRotations.Length > 0)
-                this.customOpenLocalRotations = data.customOpenLocalRotations;
+            // インスペクターで指パーツが明示されている場合はそれを使う
+            if (data.fingerParts != null && data.fingerParts.Length > 0)
+            {
+                this.fingerParts = data.fingerParts;
+            }
+            else
+            {
+                // 指定されていなければ、従来通り直下の子オブジェクトを登録する
+                int childCount = activeClawObj.transform.childCount;
+                this.fingerParts = new Transform[childCount];
+                for (int i = 0; i < childCount; i++)
+                {
+                    this.fingerParts[i] = activeClawObj.transform.GetChild(i);
+                }
+            }
         }
-
-        // 子オブジェクトたち（finger1, finger2...）を配列に登録し直す
-        int childCount = activeClawObj.transform.childCount;
-        fingerParts = new Transform[childCount];
-        for (int i = 0; i < childCount; i++)
+        else
         {
-            fingerParts[i] = activeClawObj.transform.GetChild(i);
+            // 新しいアームに設定が無い場合は、前回の設定を引き継がずにリセットする
+            this.useCustomOpenTransform = false;
+            this.invertFingerAngle = null;
+            this.fingerAngleOffsets = null;
+            this.customOpenLocalPositions = null;
+            this.customOpenLocalRotations = null;
+
+            // 従来通り直下の子オブジェクトを登録する
+            int childCount = activeClawObj.transform.childCount;
+            this.fingerParts = new Transform[childCount];
+            for (int i = 0; i < childCount; i++)
+            {
+                this.fingerParts[i] = activeClawObj.transform.GetChild(i);
+            }
         }
 
         // もう一度初期化処理を走らせる
@@ -620,19 +638,45 @@ public class UFOArmController : MonoBehaviour
         if (data != null)
         {
             this.fingerOpenAngle = data.fingerOpenAngle;
-            this.invertFingerAngle = data.invertFingerAngle;
-            this.fingerAngleOffsets = data.fingerAngleOffsets;
             this.useCustomOpenTransform = data.useCustomOpenTransform;
-            this.customOpenLocalPositions = data.customOpenLocalPositions;
-            this.customOpenLocalRotations = data.customOpenLocalRotations;
-        }
 
-        // プレハブの「子オブジェクト」たち（finger1, finger2...）を配列に登録し直す
-        int childCount = newClawObj.transform.childCount;
-        fingerParts = new Transform[childCount];
-        for (int i = 0; i < childCount; i++)
+            this.invertFingerAngle = (data.invertFingerAngle != null && data.invertFingerAngle.Length > 0) ? data.invertFingerAngle : null;
+            this.fingerAngleOffsets = (data.fingerAngleOffsets != null && data.fingerAngleOffsets.Length > 0) ? data.fingerAngleOffsets : null;
+            this.customOpenLocalPositions = (data.customOpenLocalPositions != null && data.customOpenLocalPositions.Length > 0) ? data.customOpenLocalPositions : null;
+            this.customOpenLocalRotations = (data.customOpenLocalRotations != null && data.customOpenLocalRotations.Length > 0) ? data.customOpenLocalRotations : null;
+
+            // インスペクターで指パーツが明示されている場合はそれを使う
+            if (data.fingerParts != null && data.fingerParts.Length > 0)
+            {
+                this.fingerParts = data.fingerParts;
+            }
+            else
+            {
+                // 指定されていなければ、従来通り直下の子オブジェクトを登録する
+                int childCount = newClawObj.transform.childCount;
+                this.fingerParts = new Transform[childCount];
+                for (int i = 0; i < childCount; i++)
+                {
+                    this.fingerParts[i] = newClawObj.transform.GetChild(i);
+                }
+            }
+        }
+        else
         {
-            fingerParts[i] = newClawObj.transform.GetChild(i);
+            // 新しいアームに設定が無い場合は、前回の設定を引き継がずにリセットする
+            this.useCustomOpenTransform = false;
+            this.invertFingerAngle = null;
+            this.fingerAngleOffsets = null;
+            this.customOpenLocalPositions = null;
+            this.customOpenLocalRotations = null;
+
+            // 従来通り直下の子オブジェクトを登録する
+            int childCount = newClawObj.transform.childCount;
+            this.fingerParts = new Transform[childCount];
+            for (int i = 0; i < childCount; i++)
+            {
+                this.fingerParts[i] = newClawObj.transform.GetChild(i);
+            }
         }
 
         // もう一度初期化処理を走らせる
