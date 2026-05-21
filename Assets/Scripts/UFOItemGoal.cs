@@ -61,9 +61,16 @@ public class UFOItemGoal : MonoBehaviour
                 case UFOItemType.SilverCoin:
                 case UFOItemType.GoldCoin:
                     // メインのお金（MoneyManager）ではなく、未洗浄メダルとして別に貯める
+                    // 一元管理シングルトンがあればそちらに加算（ピンボールショップ等から参照される）
+                    if (UnwashedMoneyManager.Instance != null)
+                    {
+                        UnwashedMoneyManager.Instance.Add(finalValue);
+                    }
+
+                    // 旧 API 互換: ローカルの累計とゴール表示も維持
                     unwashedMoney += finalValue;
                     Debug.Log($"[獲得] {item.itemType}！ (未洗浄メダル総額: {unwashedMoney}円)");
-                    
+
                     if (unwashedMoneyText != null)
                     {
                         unwashedMoneyText.text = $"Unwashed: ¥{Mathf.FloorToInt(unwashedMoney):N0}";
