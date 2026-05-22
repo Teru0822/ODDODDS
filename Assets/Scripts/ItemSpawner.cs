@@ -76,6 +76,23 @@ public class ItemSpawner : MonoBehaviour
         StartCoroutine(SpawnRoutine());
     }
 
+    void Update()
+    {
+        // Pキー入力でデバッグ用のアイテムスポーンをトリガーする
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            if (!IsSpawning)
+            {
+                Debug.Log("[ItemSpawner] Pキーが押されました。デバッグ用のスポーンを開始します。");
+                StartCoroutine(SpawnRoutine());
+            }
+            else
+            {
+                Debug.LogWarning("[ItemSpawner] 現在すでにスポーン中であるため、Pキー入力を無視します。");
+            }
+        }
+    }
+
     private IEnumerator SpawnRoutine()
     {
         IsSpawning = true;
