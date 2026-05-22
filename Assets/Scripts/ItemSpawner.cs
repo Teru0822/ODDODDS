@@ -32,22 +32,27 @@ public class ItemSpawner : MonoBehaviour
     public GameObject hourglassPrefab;
     public float hourglassRate = 5f;
 
+    [Header("グリッド設定")]
+    [Tooltip("グリッド分割数 (4面 または 9面)")]
+    public GridType gridType = GridType.Grid4;
+
+    [Tooltip("毎ウェーブでグリッド分割数をランダムに変えるかどうか")]
+    public bool randomGridType = false;
+
     [Header("確率パターン設定 (nパターン)")]
-    [Tooltip("コインと時計の降る確率のベースパターンリスト。空の場合はデフォルトの5パターンが自動生成されます。")]
+    [Tooltip("コインと時計の降る確率のベースパターンリスト。空の場合はデフォルトの10パターンが自動生成されます。")]
     public System.Collections.Generic.List<SpawnRatePattern> ratePatterns = new System.Collections.Generic.List<SpawnRatePattern>();
 
     public static bool IsSpawning { get; private set; } = false;
 
     // 現在のウェーブの設定
-    private int _activeAreaMask = 15; // 4ビットフラグ (1=左上, 2=右上, 4=右下, 8=左下)
-    private SpawnRatePattern _topLeftRate;
-    private SpawnRatePattern _topRightRate;
-    private SpawnRatePattern _bottomLeftRate;
-    private SpawnRatePattern _bottomRightRate;
+    private GridType _currentWaveGridType;
+    private int _activeAreaMask = 0;
+    private SpawnRatePattern[] _activeRates; // 割り当てられたパターン (サイズは 4 または 9)
 
     void Awake()
     {
-        // インスペクターで設定されていない場合、デフォルトの5パターンを生成
+        // インスペクターで設定されていない場合、デフォルトの10パターンを生成
         if (ratePatterns == null || ratePatterns.Count == 0)
         {
             ratePatterns = new System.Collections.Generic.List<SpawnRatePattern>()
@@ -56,7 +61,12 @@ public class ItemSpawner : MonoBehaviour
                 new SpawnRatePattern("Pattern 2 (コイン多め)", 40f, 35f, 20f, 5f),
                 new SpawnRatePattern("Pattern 3 (高レア多め)", 20f, 40f, 30f, 10f),
                 new SpawnRatePattern("Pattern 4 (時計特化)", 30f, 30f, 15f, 25f),
-                new SpawnRatePattern("Pattern 5 (フィーバー)", 10f, 20f, 40f, 30f)
+                new SpawnRatePattern("Pattern 5 (フィーバー)", 10f, 20f, 40f, 30f),
+                new SpawnRatePattern("Pattern 6 (銅特化)", 90f, 8f, 1f, 1f),
+                new SpawnRatePattern("Pattern 7 (銀特化)", 10f, 75f, 10f, 5f),
+                new SpawnRatePattern("Pattern 8 (金特化)", 5f, 15f, 75f, 5f),
+                new SpawnRatePattern("Pattern 9 (バランス時計)", 25f, 25f, 25f, 25f),
+                new SpawnRatePattern("Pattern 10 (スーパーフィーバー)", 0f, 10f, 50f, 40f)
             };
         }
     }
@@ -66,18 +76,35 @@ public class ItemSpawner : MonoBehaviour
         StartCoroutine(SpawnRoutine());
     }
 
+    void Update()
+    {
+        // Pキー入力でデバッグ用のアイテムスポーンをトリガーする (新Input System対応)
+        if (UnityEngine.InputSystem.Keyboard.current != null && UnityEngine.InputSystem.Keyboard.current.pKey.wasPressedThisFrame)
+        {
+            if (!IsSpawning)
+            {
+                Debug.Log("[ItemSpawner] Pキーが押されました。デバッグ用のスポーンを開始します。");
+                StartCoroutine(SpawnRoutine());
+            }
+            else
+            {
+                Debug.LogWarning("[ItemSpawner] 現在すでにスポーン中であるため、Pキー入力を無視します。");
+            }
+        }
+    }
+
     private IEnumerator SpawnRoutine()
     {
         IsSpawning = true;
         int spawnedCount = 0;
         float startTime = Time.time;
 
-        // ウェーブ設定（15通りの組み合わせとnC4確率割り当て）を準備
+        // ウェーブ設定（4面/9面の決定、15通り/511通りの組み合わせとnC4/nC9確率割り当て）を準備
         PrepareWaveSettings();
 
         while (spawnedCount < totalItems)
         {
-            // 経過時間から「今何個生成されているべきか」を計算（10秒で500個なら1秒に50個ペース）
+            // 経過時間から「今何個生成されているべきか」を計算
             float elapsedTime = Time.time - startTime;
             float progress = Mathf.Clamp01(elapsedTime / spawnDuration);
             int targetCount = Mathf.FloorToInt(progress * totalItems);
@@ -93,7 +120,6 @@ public class ItemSpawner : MonoBehaviour
         }
 
         // スポーン完了！全コインに「今から凍結チェックを始めていいよ」と通知する
-        // 3秒の余裕を加えて、最後のコインが落ち切るのを待つ
         IsSpawning = false;
         CoinOptimizer.freezeStartTime = Time.time + 3.0f;
         Debug.Log($"[ItemSpawner] スポーン完了。{CoinOptimizer.freezeStartTime:F1}秒後から凍結チェック開始");
@@ -101,39 +127,81 @@ public class ItemSpawner : MonoBehaviour
 
     private void PrepareWaveSettings()
     {
-        // 1. エリアの組み合わせを決定 (1〜15のランダム数値で全15パターン)
-        _activeAreaMask = Random.Range(1, 16);
+        // 1. グリッド分割モードの決定
+        if (randomGridType)
+        {
+            _currentWaveGridType = (GridType)Random.Range(0, 2);
+        }
+        else
+        {
+            _currentWaveGridType = gridType;
+        }
 
-        // 2. 確率パターンの選択 (nC4通りに対応する割り当て)
+        int cellCount = (_currentWaveGridType == GridType.Grid4) ? 4 : 9;
+
+        // 2. エリアの組み合わせを決定 (1〜2^cellCount - 1のランダム数値)
+        _activeAreaMask = Random.Range(1, 1 << cellCount);
+
+        // 3. 確率パターンの選択 (nC_cellCount通りに対応する割り当て)
         if (ratePatterns != null && ratePatterns.Count > 0)
         {
-            // n個のパターンからランダムに4つを非重複で選択する
-            System.Collections.Generic.List<SpawnRatePattern> selected = GetRandomCombinations(ratePatterns, 4);
-            _topLeftRate = selected[0];
-            _topRightRate = selected[1];
-            _bottomLeftRate = selected[2];
-            _bottomRightRate = selected[3];
+            // n個のパターンからランダムにcellCount個を非重複で選択する
+            System.Collections.Generic.List<SpawnRatePattern> selected = GetRandomCombinations(ratePatterns, cellCount);
+            _activeRates = selected.ToArray();
         }
         else
         {
             // フォールバック用のデフォルトレート
             var fallback = new SpawnRatePattern("Fallback", copperRate, silverRate, goldRate, hourglassRate);
-            _topLeftRate = fallback;
-            _topRightRate = fallback;
-            _bottomLeftRate = fallback;
-            _bottomRightRate = fallback;
+            _activeRates = new SpawnRatePattern[cellCount];
+            for (int i = 0; i < cellCount; i++)
+            {
+                _activeRates[i] = fallback;
+            }
         }
 
         // ログ出力用テキスト生成
+        string gridModeName = (_currentWaveGridType == GridType.Grid4) ? "4面 (2x2)" : "9面 (3x3)";
         string areaStr = "";
-        if ((_activeAreaMask & 1) != 0) areaStr += "左上 ";
-        if ((_activeAreaMask & 2) != 0) areaStr += "右上 ";
-        if ((_activeAreaMask & 4) != 0) areaStr += "右下 ";
-        if ((_activeAreaMask & 8) != 0) areaStr += "左下 ";
+        
+        if (_currentWaveGridType == GridType.Grid4)
+        {
+            if ((_activeAreaMask & 1) != 0) areaStr += "左上 ";
+            if ((_activeAreaMask & 2) != 0) areaStr += "右上 ";
+            if ((_activeAreaMask & 4) != 0) areaStr += "右下 ";
+            if ((_activeAreaMask & 8) != 0) areaStr += "左下 ";
+        }
+        else // Grid9
+        {
+            string[] cellNames = { "左上", "中央上", "右上", "左中央", "中央", "右中央", "左下", "中央下", "右下" };
+            for (int i = 0; i < 9; i++)
+            {
+                if ((_activeAreaMask & (1 << i)) != 0)
+                {
+                    areaStr += cellNames[i] + " ";
+                }
+            }
+        }
+
+        // 確率割り当てログの生成
+        System.Text.StringBuilder ratesLog = new System.Text.StringBuilder();
+        if (_currentWaveGridType == GridType.Grid4)
+        {
+            ratesLog.Append($"[左上:{_activeRates[0].name}] [右上:{_activeRates[1].name}] [右下:{_activeRates[2].name}] [左下:{_activeRates[3].name}]");
+        }
+        else
+        {
+            string[] cellNames = { "左上", "中央上", "右上", "左中央", "中央", "右中央", "左下", "中央下", "右下" };
+            for (int i = 0; i < 9; i++)
+            {
+                ratesLog.Append($"[{cellNames[i]}:{_activeRates[i].name}] ");
+            }
+        }
 
         Debug.Log($"[ItemSpawner] ウェーブ設定完了: \n" +
+                  $"グリッドモード: {gridModeName}\n" +
                   $"有効エリア: {areaStr}(マスク値: {_activeAreaMask})\n" +
-                  $"確率割当: [左上:{_topLeftRate.name}] [右上:{_topRightRate.name}] [右下:{_bottomRightRate.name}] [左下:{_bottomLeftRate.name}]");
+                  $"確率割当: {ratesLog.ToString()}");
     }
 
     private System.Collections.Generic.List<SpawnRatePattern> GetRandomCombinations(System.Collections.Generic.List<SpawnRatePattern> list, int count)
@@ -142,7 +210,7 @@ public class ItemSpawner : MonoBehaviour
         
         if (list.Count >= count)
         {
-            // 重複なしで選択 (nC4の組み合わせ選択に相当)
+            // 重複なしで選択 (nC4/nC9の組み合わせ選択に相当)
             var indices = new System.Collections.Generic.List<int>();
             for (int i = 0; i < list.Count; i++) indices.Add(i);
 
@@ -155,7 +223,7 @@ public class ItemSpawner : MonoBehaviour
         }
         else
         {
-            // 要素数nが割り当て先数(4)より少ない場合は重複を許容して割り当て
+            // 要素数nが割り当て先数より少ない場合は重複を許容して割り当て
             for (int i = 0; i < count; i++)
             {
                 result.Add(list[Random.Range(0, list.Count)]);
@@ -167,33 +235,32 @@ public class ItemSpawner : MonoBehaviour
 
     private void SpawnSingleItem()
     {
-        // 1. 有効なエリア（マスク）からランダムに1つのクアドラントを選択
-        var activeQuads = new System.Collections.Generic.List<int>();
-        if ((_activeAreaMask & 1) != 0) activeQuads.Add(1); // 左上
-        if ((_activeAreaMask & 2) != 0) activeQuads.Add(0); // 右上
-        if ((_activeAreaMask & 4) != 0) activeQuads.Add(3); // 右下
-        if ((_activeAreaMask & 8) != 0) activeQuads.Add(2); // 左下
+        int cellCount = (_currentWaveGridType == GridType.Grid4) ? 4 : 9;
 
-        int chosenQuad = 0;
-        if (activeQuads.Count > 0)
+        // 1. 有効なエリア（マスク）からランダムに1つのセルを選択
+        var activeCells = new System.Collections.Generic.List<int>();
+        for (int i = 0; i < cellCount; i++)
         {
-            chosenQuad = activeQuads[Random.Range(0, activeQuads.Count)];
+            if ((_activeAreaMask & (1 << i)) != 0)
+            {
+                activeCells.Add(i);
+            }
+        }
+
+        int chosenCell = 0;
+        if (activeCells.Count > 0)
+        {
+            chosenCell = activeCells[Random.Range(0, activeCells.Count)];
         }
         else
         {
-            // 万が一マスクが0の場合は全クアドラントから選択
-            chosenQuad = Random.Range(0, 4);
+            // 万が一マスクが0の場合は全セルから選択
+            chosenCell = Random.Range(0, cellCount);
         }
 
-        // 2. 選択されたクアドラントに割り当てられた確率パターンを取得
-        SpawnRatePattern ratePattern = null;
-        switch (chosenQuad)
-        {
-            case 0: ratePattern = _topRightRate; break;
-            case 1: ratePattern = _topLeftRate; break;
-            case 2: ratePattern = _bottomLeftRate; break;
-            case 3: ratePattern = _bottomRightRate; break;
-        }
+        // 2. 選択されたセルに割り当てられた確率パターンを取得
+        if (_activeRates == null || chosenCell >= _activeRates.Length) return;
+        SpawnRatePattern ratePattern = _activeRates[chosenCell];
 
         if (ratePattern == null) return;
 
@@ -235,24 +302,77 @@ public class ItemSpawner : MonoBehaviour
         float offsetX = 0f;
         float offsetZ = 0f;
 
-        switch (chosenQuad)
+        if (_currentWaveGridType == GridType.Grid4)
         {
-            case 0: // 右上
-                offsetX = Random.Range(0f, spawnArea.x);
-                offsetZ = Random.Range(0f, spawnArea.y);
-                break;
-            case 1: // 左上
-                offsetX = Random.Range(-spawnArea.x, 0f);
-                offsetZ = Random.Range(0f, spawnArea.y);
-                break;
-            case 2: // 左下
-                offsetX = Random.Range(-spawnArea.x, 0f);
-                offsetZ = Random.Range(-spawnArea.y, 0f);
-                break;
-            case 3: // 右下
-                offsetX = Random.Range(0f, spawnArea.x);
-                offsetZ = Random.Range(-spawnArea.y, 0f);
-                break;
+            float halfWidth = spawnArea.x;
+            float halfHeight = spawnArea.y;
+
+            switch (chosenCell)
+            {
+                case 0: // 左上 (X: [-halfWidth, 0], Z: [0, halfHeight])
+                    offsetX = Random.Range(-halfWidth, 0f);
+                    offsetZ = Random.Range(0f, halfHeight);
+                    break;
+                case 1: // 右上 (X: [0, halfWidth], Z: [0, halfHeight])
+                    offsetX = Random.Range(0f, halfWidth);
+                    offsetZ = Random.Range(0f, halfHeight);
+                    break;
+                case 2: // 右下 (X: [0, halfWidth], Z: [-halfHeight, 0])
+                    offsetX = Random.Range(0f, halfWidth);
+                    offsetZ = Random.Range(-halfHeight, 0f);
+                    break;
+                case 3: // 左下 (X: [-halfWidth, 0], Z: [-halfHeight, 0])
+                    offsetX = Random.Range(-halfWidth, 0f);
+                    offsetZ = Random.Range(-halfHeight, 0f);
+                    break;
+            }
+        }
+        else // Grid9
+        {
+            float thirdWidth = spawnArea.x / 3f;
+            float thirdHeight = spawnArea.y / 3f;
+
+            // Column: 0 = Left, 1 = Center, 2 = Right
+            int col = chosenCell % 3;
+            // Row: 0 = Top, 1 = Center, 2 = Bottom
+            int row = chosenCell / 3;
+
+            float minX = 0f, maxX = 0f;
+            if (col == 0) // Left
+            {
+                minX = -spawnArea.x;
+                maxX = -thirdWidth;
+            }
+            else if (col == 1) // Center
+            {
+                minX = -thirdWidth;
+                maxX = thirdWidth;
+            }
+            else // Right
+            {
+                minX = thirdWidth;
+                maxX = spawnArea.x;
+            }
+
+            float minZ = 0f, maxZ = 0f;
+            if (row == 0) // Top
+            {
+                minZ = thirdHeight;
+                maxZ = spawnArea.y;
+            }
+            else if (row == 1) // Center
+            {
+                minZ = -thirdHeight;
+                maxZ = thirdHeight;
+            }
+            else // Bottom
+            {
+                minZ = -spawnArea.y;
+                maxZ = -thirdHeight;
+            }
+
+            offsetX = Random.Range(minX, maxX);
+            offsetZ = Random.Range(minZ, maxZ);
         }
 
         // ばらつき（散らばり）を加える
@@ -294,4 +414,10 @@ public class SpawnRatePattern
         this.goldRate = gold;
         this.hourglassRate = hourglass;
     }
+}
+
+public enum GridType
+{
+    Grid4,
+    Grid9
 }
