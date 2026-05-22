@@ -19,7 +19,7 @@ public class ItemSpawner : MonoBehaviour
     [Tooltip("生成されたアイテムを入れるフォルダ（空のオブジェクト）")]
     public Transform parentFolder;
 
-    [Header("アイテムと排出率（合計が100にならなくても比率で計算されます）")]
+    [Header("アイテムと排出率（デフォルト値）")]
     public GameObject copperCoinPrefab;
     public float copperRate = 60f;
 
@@ -32,26 +32,31 @@ public class ItemSpawner : MonoBehaviour
     public GameObject hourglassPrefab;
     public float hourglassRate = 5f;
 
-    [Header("スポーンパターン設定")]
-    [Tooltip("降らせるごとに順番に切り替わるパターンのリスト。空の場合はデフォルトの4パターンが自動生成されます。")]
-    public System.Collections.Generic.List<SpawnPattern> patterns = new System.Collections.Generic.List<SpawnPattern>();
+    [Header("確率パターン設定 (nパターン)")]
+    [Tooltip("コインと時計の降る確率のベースパターンリスト。空の場合はデフォルトの5パターンが自動生成されます。")]
+    public System.Collections.Generic.List<SpawnRatePattern> ratePatterns = new System.Collections.Generic.List<SpawnRatePattern>();
 
     public static bool IsSpawning { get; private set; } = false;
 
-    private static int _currentPatternIndex = 0;
-    private SpawnPattern _activePattern;
+    // 現在のウェーブの設定
+    private int _activeAreaMask = 15; // 4ビットフラグ (1=左上, 2=右上, 4=右下, 8=左下)
+    private SpawnRatePattern _topLeftRate;
+    private SpawnRatePattern _topRightRate;
+    private SpawnRatePattern _bottomLeftRate;
+    private SpawnRatePattern _bottomRightRate;
 
     void Awake()
     {
-        // インスペクターで設定されていない場合、デフォルトの4パターンを生成
-        if (patterns == null || patterns.Count == 0)
+        // インスペクターで設定されていない場合、デフォルトの5パターンを生成
+        if (ratePatterns == null || ratePatterns.Count == 0)
         {
-            patterns = new System.Collections.Generic.List<SpawnPattern>()
+            ratePatterns = new System.Collections.Generic.List<SpawnRatePattern>()
             {
-                new SpawnPattern("Pattern 1 (右上 - 標準)", false, true, false, false, 60f, 25f, 10f, 5f),
-                new SpawnPattern("Pattern 2 (左下 - コイン多め)", false, false, true, false, 40f, 35f, 20f, 5f),
-                new SpawnPattern("Pattern 3 (右下 - 高レア多め)", false, false, false, true, 20f, 40f, 30f, 10f),
-                new SpawnPattern("Pattern 4 (左下 - 時計特化)", false, false, true, false, 30f, 30f, 15f, 25f)
+                new SpawnRatePattern("Pattern 1 (標準)", 60f, 25f, 10f, 5f),
+                new SpawnRatePattern("Pattern 2 (コイン多め)", 40f, 35f, 20f, 5f),
+                new SpawnRatePattern("Pattern 3 (高レア多め)", 20f, 40f, 30f, 10f),
+                new SpawnRatePattern("Pattern 4 (時計特化)", 30f, 30f, 15f, 25f),
+                new SpawnRatePattern("Pattern 5 (フィーバー)", 10f, 20f, 40f, 30f)
             };
         }
     }
@@ -67,34 +72,8 @@ public class ItemSpawner : MonoBehaviour
         int spawnedCount = 0;
         float startTime = Time.time;
 
-        // パターンの決定とローテーション
-        if (patterns != null && patterns.Count > 0)
-        {
-            int index = _currentPatternIndex % patterns.Count;
-            _activePattern = patterns[index];
-            Debug.Log($"[ItemSpawner] パターン {index + 1}/{patterns.Count} を適用: {_activePattern.name} " +
-                      $"(右上:{_activePattern.topRight}, 左下:{_activePattern.bottomLeft}, 右下:{_activePattern.bottomRight}, 左上:{_activePattern.topLeft})");
-            _currentPatternIndex++;
-        }
-        else
-        {
-            _activePattern = null;
-            Debug.Log("[ItemSpawner] スポーンパターンが空のため、既存の設定で均等に生成します。");
-        }
-
-        float copper = _activePattern != null ? _activePattern.copperRate : copperRate;
-        float silver = _activePattern != null ? _activePattern.silverRate : silverRate;
-        float gold = _activePattern != null ? _activePattern.goldRate : goldRate;
-        float hourglass = _activePattern != null ? _activePattern.hourglassRate : hourglassRate;
-        float totalRate = copper + silver + gold + hourglass;
-
-        // 排出率がすべて0の場合はエラーを防ぐ
-        if (totalRate <= 0f)
-        {
-            Debug.LogError("アイテムの排出率がすべて0になっています！");
-            IsSpawning = false;
-            yield break;
-        }
+        // ウェーブ設定（15通りの組み合わせとnC4確率割り当て）を準備
+        PrepareWaveSettings();
 
         while (spawnedCount < totalItems)
         {
@@ -106,7 +85,7 @@ public class ItemSpawner : MonoBehaviour
             // 目標数に達するまでこのフレームで生成を繰り返す
             while (spawnedCount < targetCount)
             {
-                SpawnSingleItem(totalRate, copper, silver, gold);
+                SpawnSingleItem();
                 spawnedCount++;
             }
 
@@ -120,9 +99,113 @@ public class ItemSpawner : MonoBehaviour
         Debug.Log($"[ItemSpawner] スポーン完了。{CoinOptimizer.freezeStartTime:F1}秒後から凍結チェック開始");
     }
 
-    private void SpawnSingleItem(float totalRate, float copper, float silver, float gold)
+    private void PrepareWaveSettings()
     {
-        // 確率計算
+        // 1. エリアの組み合わせを決定 (1〜15のランダム数値で全15パターン)
+        _activeAreaMask = Random.Range(1, 16);
+
+        // 2. 確率パターンの選択 (nC4通りに対応する割り当て)
+        if (ratePatterns != null && ratePatterns.Count > 0)
+        {
+            // n個のパターンからランダムに4つを非重複で選択する
+            System.Collections.Generic.List<SpawnRatePattern> selected = GetRandomCombinations(ratePatterns, 4);
+            _topLeftRate = selected[0];
+            _topRightRate = selected[1];
+            _bottomLeftRate = selected[2];
+            _bottomRightRate = selected[3];
+        }
+        else
+        {
+            // フォールバック用のデフォルトレート
+            var fallback = new SpawnRatePattern("Fallback", copperRate, silverRate, goldRate, hourglassRate);
+            _topLeftRate = fallback;
+            _topRightRate = fallback;
+            _bottomLeftRate = fallback;
+            _bottomRightRate = fallback;
+        }
+
+        // ログ出力用テキスト生成
+        string areaStr = "";
+        if ((_activeAreaMask & 1) != 0) areaStr += "左上 ";
+        if ((_activeAreaMask & 2) != 0) areaStr += "右上 ";
+        if ((_activeAreaMask & 4) != 0) areaStr += "右下 ";
+        if ((_activeAreaMask & 8) != 0) areaStr += "左下 ";
+
+        Debug.Log($"[ItemSpawner] ウェーブ設定完了: \n" +
+                  $"有効エリア: {areaStr}(マスク値: {_activeAreaMask})\n" +
+                  $"確率割当: [左上:{_topLeftRate.name}] [右上:{_topRightRate.name}] [右下:{_bottomRightRate.name}] [左下:{_bottomLeftRate.name}]");
+    }
+
+    private System.Collections.Generic.List<SpawnRatePattern> GetRandomCombinations(System.Collections.Generic.List<SpawnRatePattern> list, int count)
+    {
+        var result = new System.Collections.Generic.List<SpawnRatePattern>();
+        
+        if (list.Count >= count)
+        {
+            // 重複なしで選択 (nC4の組み合わせ選択に相当)
+            var indices = new System.Collections.Generic.List<int>();
+            for (int i = 0; i < list.Count; i++) indices.Add(i);
+
+            for (int i = 0; i < count; i++)
+            {
+                int randIdx = Random.Range(0, indices.Count);
+                result.Add(list[indices[randIdx]]);
+                indices.RemoveAt(randIdx);
+            }
+        }
+        else
+        {
+            // 要素数nが割り当て先数(4)より少ない場合は重複を許容して割り当て
+            for (int i = 0; i < count; i++)
+            {
+                result.Add(list[Random.Range(0, list.Count)]);
+            }
+        }
+
+        return result;
+    }
+
+    private void SpawnSingleItem()
+    {
+        // 1. 有効なエリア（マスク）からランダムに1つのクアドラントを選択
+        var activeQuads = new System.Collections.Generic.List<int>();
+        if ((_activeAreaMask & 1) != 0) activeQuads.Add(1); // 左上
+        if ((_activeAreaMask & 2) != 0) activeQuads.Add(0); // 右上
+        if ((_activeAreaMask & 4) != 0) activeQuads.Add(3); // 右下
+        if ((_activeAreaMask & 8) != 0) activeQuads.Add(2); // 左下
+
+        int chosenQuad = 0;
+        if (activeQuads.Count > 0)
+        {
+            chosenQuad = activeQuads[Random.Range(0, activeQuads.Count)];
+        }
+        else
+        {
+            // 万が一マスクが0の場合は全クアドラントから選択
+            chosenQuad = Random.Range(0, 4);
+        }
+
+        // 2. 選択されたクアドラントに割り当てられた確率パターンを取得
+        SpawnRatePattern ratePattern = null;
+        switch (chosenQuad)
+        {
+            case 0: ratePattern = _topRightRate; break;
+            case 1: ratePattern = _topLeftRate; break;
+            case 2: ratePattern = _bottomLeftRate; break;
+            case 3: ratePattern = _bottomRightRate; break;
+        }
+
+        if (ratePattern == null) return;
+
+        float copper = ratePattern.copperRate;
+        float silver = ratePattern.silverRate;
+        float gold = ratePattern.goldRate;
+        float hourglass = ratePattern.hourglassRate;
+        float totalRate = copper + silver + gold + hourglass;
+
+        if (totalRate <= 0f) return;
+
+        // 3. 確率計算
         float rand = Random.Range(0f, totalRate);
         GameObject prefabToSpawn = null;
 
@@ -145,59 +228,31 @@ public class ItemSpawner : MonoBehaviour
 
         if (prefabToSpawn == null) return;
 
-        // 座標計算
+        // 4. 座標計算
         Vector3 center = (armRoot != null) ? armRoot.position : transform.position;
         center.y += spawnYOffset;
 
-        // エリアの偏りを計算
         float offsetX = 0f;
         float offsetZ = 0f;
 
-        if (_activePattern != null)
+        switch (chosenQuad)
         {
-            // 有効なクアドラントをリストアップ
-            var activeQuads = new System.Collections.Generic.List<int>();
-            if (_activePattern.topRight) activeQuads.Add(0);    // 右上: X[0, spawnArea.x], Z[0, spawnArea.y]
-            if (_activePattern.topLeft) activeQuads.Add(1);     // 左上: X[-spawnArea.x, 0], Z[0, spawnArea.y]
-            if (_activePattern.bottomLeft) activeQuads.Add(2);  // 左下: X[-spawnArea.x, 0], Z[-spawnArea.y, 0]
-            if (_activePattern.bottomRight) activeQuads.Add(3); // 右下: X[0, spawnArea.x], Z[-spawnArea.y, 0]
-
-            if (activeQuads.Count > 0)
-            {
-                // 有効なクアドラントからランダムに1つ選択
-                int chosenQuad = activeQuads[Random.Range(0, activeQuads.Count)];
-                switch (chosenQuad)
-                {
-                    case 0: // 右上
-                        offsetX = Random.Range(0f, spawnArea.x);
-                        offsetZ = Random.Range(0f, spawnArea.y);
-                        break;
-                    case 1: // 左上
-                        offsetX = Random.Range(-spawnArea.x, 0f);
-                        offsetZ = Random.Range(0f, spawnArea.y);
-                        break;
-                    case 2: // 左下
-                        offsetX = Random.Range(-spawnArea.x, 0f);
-                        offsetZ = Random.Range(-spawnArea.y, 0f);
-                        break;
-                    case 3: // 右下
-                        offsetX = Random.Range(0f, spawnArea.x);
-                        offsetZ = Random.Range(-spawnArea.y, 0f);
-                        break;
-                }
-            }
-            else
-            {
-                // 有効なクアドラント指定がない場合は、前面から均等に落下
-                offsetX = Random.Range(-spawnArea.x, spawnArea.x);
-                offsetZ = Random.Range(-spawnArea.y, spawnArea.y);
-            }
-        }
-        else
-        {
-            // 従来の均等落下
-            offsetX = Random.Range(-spawnArea.x, spawnArea.x);
-            offsetZ = Random.Range(-spawnArea.y, spawnArea.y);
+            case 0: // 右上
+                offsetX = Random.Range(0f, spawnArea.x);
+                offsetZ = Random.Range(0f, spawnArea.y);
+                break;
+            case 1: // 左上
+                offsetX = Random.Range(-spawnArea.x, 0f);
+                offsetZ = Random.Range(0f, spawnArea.y);
+                break;
+            case 2: // 左下
+                offsetX = Random.Range(-spawnArea.x, 0f);
+                offsetZ = Random.Range(-spawnArea.y, 0f);
+                break;
+            case 3: // 右下
+                offsetX = Random.Range(0f, spawnArea.x);
+                offsetZ = Random.Range(-spawnArea.y, 0f);
+                break;
         }
 
         // ばらつき（散らばり）を加える
@@ -221,29 +276,19 @@ public class ItemSpawner : MonoBehaviour
 }
 
 [System.Serializable]
-public class SpawnPattern
+public class SpawnRatePattern
 {
     public string name;
     
-    [Header("有効にするエリア")]
-    public bool topLeft = true;
-    public bool topRight = true;
-    public bool bottomLeft = true;
-    public bool bottomRight = true;
-
     [Header("確率（排出比率）")]
     public float copperRate = 60f;
     public float silverRate = 25f;
     public float goldRate = 10f;
     public float hourglassRate = 5f;
 
-    public SpawnPattern(string name, bool topLeft, bool topRight, bool bottomLeft, bool bottomRight, float copper, float silver, float gold, float hourglass)
+    public SpawnRatePattern(string name, float copper, float silver, float gold, float hourglass)
     {
         this.name = name;
-        this.topLeft = topLeft;
-        this.topRight = topRight;
-        this.bottomLeft = bottomLeft;
-        this.bottomRight = bottomRight;
         this.copperRate = copper;
         this.silverRate = silver;
         this.goldRate = gold;
