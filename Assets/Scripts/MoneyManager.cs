@@ -19,8 +19,7 @@ public class MoneyManager : MonoBehaviour
 
 
     [Header("ターン管理")]
-    [SerializeField] private int _decreaseInterval = 1;
-    [SerializeField] private float _exponentialRate = 1.5f;
+    [SerializeField] private float _exponentialRate = 2.0f;
     [SerializeField] private float _initialDecreaseAmount = 100f;
 
     [Header("ローグライク要素（徳ポイント）")]
@@ -34,6 +33,7 @@ public class MoneyManager : MonoBehaviour
 
     private int _currentTurnCount = 0;
     private float _previousDecreaseAmount = 0;
+    public float PreviousDecreaseAmount { get { return _previousDecreaseAmount; }}
 
 
     private void Awake()
@@ -105,31 +105,15 @@ public class MoneyManager : MonoBehaviour
         _currentMoney -= finalAmount;
         UpdateMoneyUI();
         Debug.Log($"お金が減少しました: -{finalAmount} (現在: {_currentMoney})");
-
-        CheckGameOver();
     }
 
     /// <summary>
-    /// 規定のターン数に応じた減少処理を行うための関数
+    /// 「悪魔の取り立て」によるお金の減少処理
     /// </summary>
-    public void AdvanceTurn()
-    {
-        _currentTurnCount++;
-
-        // 指定ターンごとに減少処理を実行
-        if (_currentTurnCount % _decreaseInterval == 0)
-        {
-            ApplyTurnDecrease();
-        }
-    }
-
-    /// <summary>
-    /// ターン経過によるお金の減少処理
-    /// </summary>
-    private void ApplyTurnDecrease()
+    public void ApplyTurnDecrease()
     {
         ReduceMoney(_previousDecreaseAmount);
-
+        _currentTurnCount++;
         // 次回の減少額を指数関数的に増加させて記憶
         _previousDecreaseAmount *= _exponentialRate;
     }
@@ -169,7 +153,7 @@ public class MoneyManager : MonoBehaviour
     /// <summary>
     /// 所持金が0以下になった場合にゲームオーバーを告知する
     /// </summary>
-    private void CheckGameOver()
+    public void CheckGameOver()
     {
         if (_currentMoney <= 0)
         {
