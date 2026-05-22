@@ -78,6 +78,8 @@ public class UFOArmController : MonoBehaviour
     public float grabWaitSeconds = 0.5f;
     [Tooltip("何かにぶつかった後、さらに下降を続ける秒数（コインをしっかり掴むため）")]
     public float postCollisionDescentSeconds = 0.15f;
+    [Tooltip("指定されたコライダーに入った場合、追加下降をスキップして即座に爪を閉じて上昇します")]
+    public Collider immediateGrabArea;
 
     [Header("コイン最適化解除（WakeUp）設定")]
     [Tooltip("アームが下降する際、どれくらいの範囲のコインを叩き起こすか")]
@@ -500,29 +502,43 @@ public class UFOArmController : MonoBehaviour
             return;
         }
 
-        // コイン判定：衝突したオブジェクトまたはその親がCoinOptimizerを持っているか
-        bool isCoin = hitObject.GetComponent<CoinOptimizer>() != null || hitObject.GetComponentInParent<CoinOptimizer>() != null;
-
-        if (isCoin)
+        // ユーザー指定の即時掴みエリア判定
+        bool isImmediateArea = false;
+        if (immediateGrabArea != null)
         {
-            // 下降中にコインに衝突した場合、少しだけ下降を継続する
-            if (_state == ArmState.Descending)
+            if (hitObject == immediateGrabArea.gameObject || hitObject.transform.IsChildOf(immediateGrabArea.transform))
             {
-                _state = ArmState.PostCollisionDescending;
-                _stateTimer = postCollisionDescentSeconds;
+                isImmediateArea = true;
+            }
+            else
+            {
+                Collider hitCollider = hitObject.GetComponent<Collider>();
+                if (hitCollider != null && hitCollider == immediateGrabArea)
+                {
+                    isImmediateArea = true;
+                }
             }
         }
-        else
+
+        if (isImmediateArea)
         {
-            // コイン以外の衝突（床やPrizeChuteなど）の場合、
-            // 下降中または少しだけ下降中のステートであれば、すぐに掴む（Grabbing）状態に移行する
+            // 指定エリアに入った場合、下降中または少しだけ下降中のステートであれば、即座に掴む（Grabbing）状態に移行する
             if (_state == ArmState.Descending || _state == ArmState.PostCollisionDescending)
             {
-                Debug.Log($"[UFOArmController] Non-coin collision detected with {hitObject.name}. Bypassing extra descent. State: {_state} -> Grabbing");
+                Debug.Log($"[UFOArmController] Entered immediate grab area with {hitObject.name}. Bypassing extra descent. State: {_state} -> Grabbing");
                 _state = ArmState.Grabbing;
                 _wantFingerOpen = false;
                 _stateTimer = grabWaitSeconds;
                 if (stretchRope != null) stretchRope.PauseExternalControl(); // 掴み中はピタッと停止
+            }
+        }
+        else
+        {
+            // それ以外の衝突（コインや通常の床・壁など）の場合、下降中であれば少しだけ下降を継続する（従来通り）
+            if (_state == ArmState.Descending)
+            {
+                _state = ArmState.PostCollisionDescending;
+                _stateTimer = postCollisionDescentSeconds;
             }
         }
     }
