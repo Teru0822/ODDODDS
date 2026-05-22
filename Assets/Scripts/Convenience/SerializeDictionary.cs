@@ -48,6 +48,11 @@ public class SerializeDictionary<TKey, TValue> : IEnumerable<KeyValuePair<TKey, 
         }
     }
 
+    public bool TryGetValue(TKey key, out TValue value)
+    {
+        return GetDictionary.TryGetValue(key, out value);
+    }
+
     // foreach‘Î‰žFIEnumerator‚ð•Ô‚·
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
     {

@@ -47,6 +47,8 @@ public class DebtCollectionManager : MonoBehaviour
     int previousDecreaseValue;
     int previousMoneyValue;
 
+    [Header("ゲームオーバー用")]
+    [SerializeField] private ResultUIManager _resultUIManager;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -202,6 +204,8 @@ public class DebtCollectionManager : MonoBehaviour
     /// <returns>会話コルーチン</returns>
     private IEnumerator ShowConversation(string key)
     {
+        bool isSuccess = true;//取り立てに耐えたか否か
+
         //画面を暗転させる
         _background.DOFade(endValue: 1f, duration: 1f)
             .OnComplete(() =>
@@ -254,6 +258,7 @@ public class DebtCollectionManager : MonoBehaviour
             if (MoneyManager.Instance.CurrentMoney <= 0)//失敗用
             {
                 //ランダムで失敗演出を設定
+                isSuccess = false;
                 int random = Random.RandomRange(1, 3);//1~2
                 string failKey = "fail_" + random.ToString("00");
 
@@ -264,7 +269,9 @@ public class DebtCollectionManager : MonoBehaviour
                 //TODO:アイテムでゲームオーバーを回避する
 
 
+                //ゲームオーバー処理
                 MoneyManager.Instance.CheckGameOver();
+                StartCoroutine(_resultUIManager.GameOverAnimation());
             }
             else//成功用
             {
@@ -289,11 +296,15 @@ public class DebtCollectionManager : MonoBehaviour
             _background.DOFade(endValue: 0f, duration: 2f);
             _devil.DOFade(endValue: 0f, duration: 2f);
             _panel.SetActive(false);
-            _audioSource.DOFade(endValue: 0f, duration: 1f).OnComplete(() =>
+
+            if (isSuccess)//取り立てに耐えられたらBGMは消す
             {
-                _audioSource.Stop();
-                _audioSource.volume = 0.2f;
-            } );
+                _audioSource.DOFade(endValue: 0f, duration: 1f).OnComplete(() =>
+                {
+                    _audioSource.Stop();
+                    _audioSource.volume = 0.2f;
+                });
+            }        
 
             _reduceMoneyCounter.DOFade(endValue: 0f, duration: 1f);
             _reduceMoneyCounter.rectTransform.DOAnchorPos(new Vector2(-540, 180), 1.0f).SetEase(Ease.OutQuart);
