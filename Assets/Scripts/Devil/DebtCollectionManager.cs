@@ -23,9 +23,12 @@ public class DebtCollectionManager : MonoBehaviour
     [SerializeField] private Image _devil;
     [SerializeField] private Sprite[] _devilExpressions;
     [SerializeField] private GameObject _panel;
+    [SerializeField] private TMP_Text _name;
     [SerializeField] private TMP_Text _mainSentence;
     [SerializeField] private TMP_Text _reduceMoneyCounter;
     [SerializeField] private TMP_Text _myMoneyCounter;
+    private string _reduceMoneyMessage = "<size=50>請求金額</size>";
+    private string _myMoneyMessage = "<size=50>所持金</size>";
 
     [Header("会話用コンポーネント")]
     [SerializeField] private AudioSource _audioSource;
@@ -63,7 +66,7 @@ public class DebtCollectionManager : MonoBehaviour
 #if UNITY_EDITOR
         if (Keyboard.current.iKey.wasPressedThisFrame)
         {
-            //MoneyManager.Instance.ReduceMoney(9999);
+            MoneyManager.Instance.ReduceMoney(9999);
             StartCoroutine(ShowConversation("Conversation_00"));
             Debug.Log("試しにイベント機能を使います。");
         }
@@ -82,6 +85,9 @@ public class DebtCollectionManager : MonoBehaviour
             _reduceMoneyCounter.font = _japaneseFontAsset;
             _myMoneyCounter.font = _japaneseFontAsset;
 
+            _name.text = "アクマ";
+            _reduceMoneyMessage = "<size=50>請求金額</size>\n";
+            _myMoneyMessage = "<size=50>所持金</size>\n";
             _characterSpeed = 0.1f;
         }
         else
@@ -90,6 +96,9 @@ public class DebtCollectionManager : MonoBehaviour
             _reduceMoneyCounter.font = _englishFontAsset;
             _myMoneyCounter.font = _englishFontAsset;
 
+            _name.text = "Demon";
+            _reduceMoneyMessage = "<size=50>Debt Amount</size>\n";
+            _myMoneyMessage = "<size=50>Money</size>\n";
             _characterSpeed = 0.05f;
         }
     }
@@ -205,7 +214,7 @@ public class DebtCollectionManager : MonoBehaviour
             });
 
         //シナリオに設定された文字を表示させていく
-        yield return new WaitForSeconds(1);
+        yield return new WaitForSeconds(1.5f);
         yield return StartCoroutine(TextSystem(key));
 
         //取り立て開始
@@ -215,8 +224,8 @@ public class DebtCollectionManager : MonoBehaviour
 
             //ゲームオブジェクトの表示・非表示
             _panel.SetActive(false);
-            _reduceMoneyCounter.text = previousDecreaseValue.ToString();
-            _myMoneyCounter.text = previousMoneyValue.ToString();
+            _reduceMoneyCounter.text = _reduceMoneyMessage + previousDecreaseValue.ToString();
+            _myMoneyCounter.text = _myMoneyMessage + previousMoneyValue.ToString();
 
             //減らす金額を表示する用のアニメーション開始
             countAnimSequence = DOTween.Sequence();
@@ -228,12 +237,12 @@ public class DebtCollectionManager : MonoBehaviour
                          num => previousDecreaseValue = num,    //値の更新を行う
                          0,                                     //最終的な値
                          1.0f                                   //時間
-                         ).OnStart(() => _audioSource.PlayOneShot(_drumRoll)).OnUpdate(() => _reduceMoneyCounter.text = previousDecreaseValue.ToString()))
+                         ).OnStart(() => _audioSource.PlayOneShot(_drumRoll)).OnUpdate(() => _reduceMoneyCounter.text = _reduceMoneyMessage + previousDecreaseValue.ToString()))
                   .Join(DOTween.To(() => previousMoneyValue,
                          num => previousMoneyValue = num,
                          previousMoneyValue - previousDecreaseValue,
                          1.0f
-                         ).OnUpdate(() => _myMoneyCounter.text = previousMoneyValue.ToString()))
+                         ).OnUpdate(() => _myMoneyCounter.text = _myMoneyMessage + previousMoneyValue.ToString()))
                   .AppendInterval(1.0f)
                   .Append(_reduceMoneyCounter.DOFade(endValue: 0f, duration: 1f))//請求金額テキストの表示
                   .Join(_myMoneyCounter.DOFade(endValue: 0f, duration: 1f));//所持金テキストの表示
