@@ -78,6 +78,8 @@ public class UFOArmController : MonoBehaviour
     public float grabWaitSeconds = 0.5f;
     [Tooltip("何かにぶつかった後、さらに下降を続ける秒数（コインをしっかり掴むため）")]
     public float postCollisionDescentSeconds = 0.15f;
+    [Tooltip("指定されたコライダーに入った場合、追加下降をスキップして即座に爪を閉じて上昇します")]
+    public Collider immediateGrabArea;
 
     [Header("コイン最適化解除（WakeUp）設定")]
     [Tooltip("アームが下降する際、どれくらいの範囲のコインを叩き起こすか")]
@@ -484,11 +486,54 @@ public class UFOArmController : MonoBehaviour
 
     public void OnClawCollided()
     {
-        // 下降中に景品や床にぶつかったら、すぐに上昇せずに少しだけ下降を継続する
-        if (_state == ArmState.Descending)
+        OnClawCollided(null);
+    }
+
+    public void OnClawCollided(Collider hitCollider)
+    {
+        if (hitCollider == null)
         {
-            _state = ArmState.PostCollisionDescending;
-            _stateTimer = postCollisionDescentSeconds;
+            // フォールバック（引数がnullの場合）
+            if (_state == ArmState.Descending)
+            {
+                _state = ArmState.PostCollisionDescending;
+                _stateTimer = postCollisionDescentSeconds;
+            }
+            return;
+        }
+
+        // ユーザー指定の即時掴みエリア判定
+        bool isImmediateArea = false;
+        if (immediateGrabArea != null)
+        {
+            if (hitCollider == immediateGrabArea || 
+                hitCollider.gameObject == immediateGrabArea.gameObject || 
+                hitCollider.transform.IsChildOf(immediateGrabArea.transform))
+            {
+                isImmediateArea = true;
+            }
+        }
+
+        if (isImmediateArea)
+        {
+            // 指定エリアに入った場合、下降中または少しだけ下降中のステートであれば、即座に掴む（Grabbing）状態に移行する
+            if (_state == ArmState.Descending || _state == ArmState.PostCollisionDescending)
+            {
+                Debug.Log($"[UFOArmController] Entered immediate grab area with {hitCollider.name}. Bypassing extra descent. State: {_state} -> Grabbing");
+                _state = ArmState.Grabbing;
+                _wantFingerOpen = false;
+                _stateTimer = grabWaitSeconds;
+                if (stretchRope != null) stretchRope.PauseExternalControl(); // 掴み中はピタッと停止
+            }
+        }
+        else
+        {
+            // それ以外の衝突（コインや通常の床・壁など）の場合、下降中であれば少しだけ下降を継続する（従来通り）
+            if (_state == ArmState.Descending)
+            {
+                _state = ArmState.PostCollisionDescending;
+                _stateTimer = postCollisionDescentSeconds;
+            }
         }
     }
 

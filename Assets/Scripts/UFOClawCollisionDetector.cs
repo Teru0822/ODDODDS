@@ -22,12 +22,17 @@ public class UFOClawCollisionDetector : MonoBehaviour
     {
         if (armController == null) return;
 
-        // 爪同士やUFOキャッチャー本体との衝突は無視する
-        if (collision.transform.IsChildOf(armController.transform.root))
+        // 爪同士やUFOキャッチャー本体との衝突は無視する（ただし、即時掴み判定エリアであれば無視しない）
+        bool isImmediateArea = armController.immediateGrabArea != null && 
+            (collision.collider == armController.immediateGrabArea || 
+             collision.gameObject == armController.immediateGrabArea.gameObject || 
+             collision.transform.IsChildOf(armController.immediateGrabArea.transform));
+
+        if (!isImmediateArea && collision.transform.IsChildOf(armController.transform.root))
             return;
 
         Debug.Log($"[UFOClawCollisionDetector] Collided with: {collision.gameObject.name}");
-        armController.OnClawCollided(); 
+        armController.OnClawCollided(collision.collider); 
     }
 
     // IsTrigger にチェックを入れている場合（すり抜けながら検知したい場合）はこちらが呼ばれる
@@ -35,11 +40,16 @@ public class UFOClawCollisionDetector : MonoBehaviour
     {
         if (armController == null) return;
 
-        // 爪同士やUFOキャッチャー本体との衝突は無視する
-        if (other.transform.IsChildOf(armController.transform.root))
+        // 爪同士やUFOキャッチャー本体との衝突は無視する（ただし、即時掴み判定エリアであれば無視しない）
+        bool isImmediateArea = armController.immediateGrabArea != null && 
+            (other == armController.immediateGrabArea || 
+             other.gameObject == armController.immediateGrabArea.gameObject || 
+             other.transform.IsChildOf(armController.immediateGrabArea.transform));
+
+        if (!isImmediateArea && other.transform.IsChildOf(armController.transform.root))
             return;
 
         Debug.Log($"[UFOClawCollisionDetector] Triggered with: {other.gameObject.name}");
-        armController.OnClawCollided(); 
+        armController.OnClawCollided(other); 
     }
 }
