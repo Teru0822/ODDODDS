@@ -78,8 +78,8 @@ public class ItemSpawner : MonoBehaviour
 
     void Update()
     {
-        // Pキー入力でデバッグ用のアイテムスポーンをトリガーする
-        if (Input.GetKeyDown(KeyCode.P))
+        // Pキー入力でデバッグ用のアイテムスポーンをトリガーする (新Input System対応)
+        if (UnityEngine.InputSystem.Keyboard.current != null && UnityEngine.InputSystem.Keyboard.current.pKey.wasPressedThisFrame)
         {
             if (!IsSpawning)
             {
