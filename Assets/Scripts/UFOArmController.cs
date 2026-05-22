@@ -484,11 +484,46 @@ public class UFOArmController : MonoBehaviour
 
     public void OnClawCollided()
     {
-        // 下降中に景品や床にぶつかったら、すぐに上昇せずに少しだけ下降を継続する
-        if (_state == ArmState.Descending)
+        OnClawCollided(null);
+    }
+
+    public void OnClawCollided(GameObject hitObject)
+    {
+        if (hitObject == null)
         {
-            _state = ArmState.PostCollisionDescending;
-            _stateTimer = postCollisionDescentSeconds;
+            // フォールバック（引数がnullの場合）
+            if (_state == ArmState.Descending)
+            {
+                _state = ArmState.PostCollisionDescending;
+                _stateTimer = postCollisionDescentSeconds;
+            }
+            return;
+        }
+
+        // コイン判定：衝突したオブジェクトまたはその親がCoinOptimizerを持っているか
+        bool isCoin = hitObject.GetComponent<CoinOptimizer>() != null || hitObject.GetComponentInParent<CoinOptimizer>() != null;
+
+        if (isCoin)
+        {
+            // 下降中にコインに衝突した場合、少しだけ下降を継続する
+            if (_state == ArmState.Descending)
+            {
+                _state = ArmState.PostCollisionDescending;
+                _stateTimer = postCollisionDescentSeconds;
+            }
+        }
+        else
+        {
+            // コイン以外の衝突（床やPrizeChuteなど）の場合、
+            // 下降中または少しだけ下降中のステートであれば、すぐに掴む（Grabbing）状態に移行する
+            if (_state == ArmState.Descending || _state == ArmState.PostCollisionDescending)
+            {
+                Debug.Log($"[UFOArmController] Non-coin collision detected with {hitObject.name}. Bypassing extra descent. State: {_state} -> Grabbing");
+                _state = ArmState.Grabbing;
+                _wantFingerOpen = false;
+                _stateTimer = grabWaitSeconds;
+                if (stretchRope != null) stretchRope.PauseExternalControl(); // 掴み中はピタッと停止
+            }
         }
     }
 

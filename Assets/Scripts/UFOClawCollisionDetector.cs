@@ -27,7 +27,7 @@ public class UFOClawCollisionDetector : MonoBehaviour
             return;
 
         Debug.Log($"[UFOClawCollisionDetector] Collided with: {collision.gameObject.name}");
-        armController.OnClawCollided(); 
+        armController.OnClawCollided(collision.gameObject); 
     }
 
     // IsTrigger にチェックを入れている場合（すり抜けながら検知したい場合）はこちらが呼ばれる
@@ -40,6 +40,6 @@ public class UFOClawCollisionDetector : MonoBehaviour
             return;
 
         Debug.Log($"[UFOClawCollisionDetector] Triggered with: {other.gameObject.name}");
-        armController.OnClawCollided(); 
+        armController.OnClawCollided(other.gameObject); 
     }
 }
