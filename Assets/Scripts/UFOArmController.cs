@@ -489,9 +489,9 @@ public class UFOArmController : MonoBehaviour
         OnClawCollided(null);
     }
 
-    public void OnClawCollided(GameObject hitObject)
+    public void OnClawCollided(Collider hitCollider)
     {
-        if (hitObject == null)
+        if (hitCollider == null)
         {
             // フォールバック（引数がnullの場合）
             if (_state == ArmState.Descending)
@@ -506,17 +506,11 @@ public class UFOArmController : MonoBehaviour
         bool isImmediateArea = false;
         if (immediateGrabArea != null)
         {
-            if (hitObject == immediateGrabArea.gameObject || hitObject.transform.IsChildOf(immediateGrabArea.transform))
+            if (hitCollider == immediateGrabArea || 
+                hitCollider.gameObject == immediateGrabArea.gameObject || 
+                hitCollider.transform.IsChildOf(immediateGrabArea.transform))
             {
                 isImmediateArea = true;
-            }
-            else
-            {
-                Collider hitCollider = hitObject.GetComponent<Collider>();
-                if (hitCollider != null && hitCollider == immediateGrabArea)
-                {
-                    isImmediateArea = true;
-                }
             }
         }
 
@@ -525,7 +519,7 @@ public class UFOArmController : MonoBehaviour
             // 指定エリアに入った場合、下降中または少しだけ下降中のステートであれば、即座に掴む（Grabbing）状態に移行する
             if (_state == ArmState.Descending || _state == ArmState.PostCollisionDescending)
             {
-                Debug.Log($"[UFOArmController] Entered immediate grab area with {hitObject.name}. Bypassing extra descent. State: {_state} -> Grabbing");
+                Debug.Log($"[UFOArmController] Entered immediate grab area with {hitCollider.name}. Bypassing extra descent. State: {_state} -> Grabbing");
                 _state = ArmState.Grabbing;
                 _wantFingerOpen = false;
                 _stateTimer = grabWaitSeconds;
