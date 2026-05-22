@@ -1,24 +1,24 @@
-# UFOキャッチャーアーム衝突判定時の挙動調整報告 (コライダー指定版)
+# UFOキャッチャーアーム衝突判定時の挙動調整報告 (コライダー指定・Trigger対応版)
 
-本変更では、ユーザーがインスペクター上で指定した特定の判定コライダー（`immediateGrabArea`）にアーム（爪）が接触・進入した際、少し下降する追加処理（`PostCollisionDescending`）をスキップし、即座に爪を閉じて（`Grabbing`）上昇に移る機能を追加しました。
+本変更では、ユーザーがインスペクター上で指定した特定の判定コライダー（`immediateGrabArea`）にアーム（爪）が接触・進入した際、少し下降する追加処理（`PostCollisionDescending`）をスキップし、即座に爪を閉じて（`Grabbing`）上昇に移る機能を追加・修正しました。また、指定コライダーが `isTrigger` であり、かつUFOキャッチャー本体と同じ親子構造（ルート）に含まれる場合でも、検知が無視されずに即座に上昇フェーズへ移行できるように修正を行いました。
 
 ## 1. どの部分をどう変えたか
 - **[UFOClawCollisionDetector.cs](file:///c:/Users/clock/FEVER-CAPITAL/Assets/Scripts/UFOClawCollisionDetector.cs)**
-  - `OnCollisionEnter` および `OnTriggerEnter` 内で衝突した `GameObject` を `UFOArmController.OnClawCollided(GameObject)` に引数として渡すように変更しました。
+  - `OnCollisionEnter` および `OnTriggerEnter` 内で衝突した `Collider` 自体を `UFOArmController.OnClawCollided(Collider)` に渡すようにシグネチャを修正しました。
+  - トリガーまたは衝突対象が `immediateGrabArea` である場合、UFOキャッチャー本体の階層判定（`IsChildOf(armController.transform.root)`）による「衝突無視フィルタ」をバイパス（例外化）し、確実に衝突検知イベントをコントローラーに通知できるように修正しました。
 - **[UFOArmController.cs](file:///c:/Users/clock/FEVER-CAPITAL/Assets/Scripts/UFOArmController.cs)**
-  - `public Collider immediateGrabArea;` フィールドを追加しました。これにより、インスペクター上から特定のコライダー（トリガー領域など）を指定できます。
-  - `OnClawCollided(GameObject hitObject)` のオーバーロードを追加し、衝突した `hitObject` が `immediateGrabArea`（そのGameObject、子オブジェクト、またはCollider自体）に一致するか判定します。
+  - `public Collider immediateGrabArea;` フィールドを追加しました（インスペクター上で即時反応させたいエリアを設定可能）。
+  - `OnClawCollided(Collider hitCollider)` のオーバーロードを追加し、受け取った `Collider` 自体またはその属するGameObjectが `immediateGrabArea` と一致するかを正確に判定します。
   - 一致した場合は即座に `Grabbing` 状態に遷移させて追加下降をスキップし、爪を閉じます。
-  - 一致しない場合（コイン山やその他の通常の床）は、従来通り少し沈み込む追加下降（`PostCollisionDescending`）を維持します。
+  - 一致しない場合は、従来通り少し沈み込む追加下降（`PostCollisionDescending`）を維持します。
   - すでにコイン等に当たって追加下降している最中でも、指定コライダーに進入した瞬間、即座に `Grabbing` に移行するため、競合時の優先順位（指定コライダー優先）を満たします。
 
 ## 2. 新たに何が出来るようになったか
-- インスペクター上の `immediateGrabArea` にコライダーをアタッチすることで、任意の領域（床や特定のChuteエリアなど）にアームが接触した際に、下降を直ちに切り上げて「即座に掴み・上昇」のサイクルに移行させることが可能になりました。
-- 指定したエリア以外では通常の追加下降＆掴みアクションが実行されるため、コイン等の獲得に必要な沈み込み挙動は影響を受けません。
+- インスペクター上の `immediateGrabArea` に `isTrigger` が有効なコライダーをセットした場合でも、アームがその領域（床や特定のChuteエリアなど）に触れた瞬間、即座に爪を閉じて上昇サイクルに移行可能になりました。
+- アタッチされたエリアがUFOキャッチャー本体と同じプレハブや親子関係に配置されていても、衝突検知が正しく実行され、無視されなくなりました。
 
 ## 3. 確認した内容
 - `git diff` による差分チェックを行い、C#シンタックスや命名規則に従った綺麗な実装であることを確認しました。
-- 該当するクラスを参照している他のスクリプトに影響が出ないよう、シグネチャの互換性を考慮した実装を行いました。
 
 ## 4. 未確認事項 / 懸念点
 - Unityエディタ上で `immediateGrabArea` にコライダーを設定し、実際のプレイ動作を確認する必要があります。
