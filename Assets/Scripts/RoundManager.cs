@@ -364,4 +364,11 @@ public class RoundManager : MonoBehaviour
         if (!isTurnSystemEnabled) return true;
         return currentPhase == RoundPhase.PinballPhase && _purchasedBallCountThisRound < 1;
     }
+
+    /// <summary>Checks if exchange button is interactable (in PinballPhase)</summary>
+    public bool CanExchange()
+    {
+        if (!isTurnSystemEnabled) return true;
+        return currentPhase == RoundPhase.PinballPhase;
+    }
 }
