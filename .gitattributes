@@ -1,0 +1,27 @@
+# Unity Smart Merge (UnityYAMLMerge) を使って Unity 専用 YAML ファイルをマージする
+# このファイルを置くことで git merge / git mergetool が自動で SmartMerge を呼ぶ
+*.unity   merge=unityyamlmerge
+*.prefab  merge=unityyamlmerge
+*.asset   merge=unityyamlmerge
+*.meta    merge=unityyamlmerge
+*.controller merge=unityyamlmerge
+*.anim    merge=unityyamlmerge
+*.physicMaterial merge=unityyamlmerge
+*.physicsMaterial2D merge=unityyamlmerge
+*.mat     merge=unityyamlmerge
+*.lighting merge=unityyamlmerge
+
+# 一般的なバイナリ: マージ衝突時は手動解決
+*.fbx     binary
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.tga     binary
+*.psd     binary
+*.tif     binary
+*.exr     binary
+*.hdr     binary
+*.wav     binary
+*.mp3     binary
+*.ogg     binary
+*.dll     binary
