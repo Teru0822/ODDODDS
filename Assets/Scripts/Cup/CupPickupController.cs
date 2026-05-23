@@ -54,8 +54,27 @@ public class CupPickupController : MonoBehaviour
         if (lookCamera == null) lookCamera = Camera.main;
     }
 
+    private void OnDisable()
+    {
+        if (_currentLooked != null)
+        {
+            _currentLooked.ApplyHighlight(false);
+            _currentLooked = null;
+        }
+    }
+
     private void Update()
     {
+        if (UFOCameraController.IsPlayingUfo)
+        {
+            if (_currentLooked != null)
+            {
+                _currentLooked.ApplyHighlight(false);
+                _currentLooked = null;
+            }
+            return;
+        }
+
         if (lookCamera == null) lookCamera = Camera.main;
         if (lookCamera == null) return;
 

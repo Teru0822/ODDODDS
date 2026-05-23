@@ -51,6 +51,19 @@ public class LeverController : MonoBehaviour
 
     void Update()
     {
+        // UFOプレイ中かつアクティブなプレイセッション中のみ操作を許可する
+        if (!UFOCameraController.IsPlayingUfo || !UFOCameraController.IsPlaySessionActive)
+        {
+            _isDragging = false;
+            _targetAngleH = 0f;
+            _targetAngleV = 0f;
+            _angleH = Mathf.Lerp(_angleH, _targetAngleH, Time.deltaTime * returnSpeed);
+            _angleV = Mathf.Lerp(_angleV, _targetAngleV, Time.deltaTime * returnSpeed);
+            ApplyLeverRotation();
+            UpdateArmInput();
+            return;
+        }
+
         var mouse = Mouse.current;
         if (mouse == null) return;
 
@@ -89,8 +102,9 @@ public class LeverController : MonoBehaviour
 
     void ApplyLeverRotation()
     {
-        if (Camera.main == null) return;
-        var cam = Camera.main.transform;
+        Camera activeCam = UFOCameraController.Instance != null ? UFOCameraController.Instance.GetActiveCamera() : Camera.main;
+        if (activeCam == null) return;
+        var cam = activeCam.transform;
 
         // 【修正ポイント1】カメラの描画空間ではなく、フィールド上の「右」と「奥」を取得（アーム移動と同じ基準）
         Vector3 camXZRight   = Vector3.ProjectOnPlane(cam.right,   Vector3.up).normalized;
@@ -131,8 +145,9 @@ public class LeverController : MonoBehaviour
 
     void UpdateArmInput()
     {
-        if (Camera.main == null || armController == null) return;
-        var cam = Camera.main.transform;
+        Camera activeCam = UFOCameraController.Instance != null ? UFOCameraController.Instance.GetActiveCamera() : Camera.main;
+        if (activeCam == null || armController == null) return;
+        var cam = activeCam.transform;
 
         // カメラの右/前方向を XZ 平面（地面）に投影 → アームの移動方向
         Vector3 camXZRight   = Vector3.ProjectOnPlane(cam.right,   Vector3.up).normalized;
@@ -164,8 +179,9 @@ public class LeverController : MonoBehaviour
 
     bool IsMouseOverThis(Vector2 screenPos)
     {
-        if (_collider == null || Camera.main == null) return false;
-        Ray ray = Camera.main.ScreenPointToRay(screenPos);
+        Camera activeCam = UFOCameraController.Instance != null ? UFOCameraController.Instance.GetActiveCamera() : Camera.main;
+        if (_collider == null || activeCam == null) return false;
+        Ray ray = activeCam.ScreenPointToRay(screenPos);
         return _collider.Raycast(ray, out _, 1000f);
     }
 }
