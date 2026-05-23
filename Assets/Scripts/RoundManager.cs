@@ -110,8 +110,8 @@ public class RoundManager : MonoBehaviour
         var exchange = FindAnyObjectByType<ExchangeStation>();
         if (exchange != null)
         {
-            exchange.onDispenseComplete.RemoveListener(OnExchangeDispenseComplete);
-            exchange.onDispenseComplete.AddListener(OnExchangeDispenseComplete);
+            exchange.onDispenseStart.RemoveListener(OnExchangeDispenseStart);
+            exchange.onDispenseStart.AddListener(OnExchangeDispenseStart);
         }
 
         // Subscribe to ShopBallController purchase event
@@ -265,19 +265,16 @@ public class RoundManager : MonoBehaviour
         // Get count of active balls in the pinball system
         int activeBalls = PinballBallManager.Instance != null ? PinballBallManager.Instance.ActiveBallCount : 0;
 
-        // Check if exchange station is cashing out
-        var exchange = FindAnyObjectByType<ExchangeStation>();
-        bool isDispensing = exchange != null && exchange.IsDispensing;
-
         // Has the player bought their ball and is the play session finished?
         bool hasPlayedBall = _purchasedBallCountThisRound >= 1;
-        bool isPlayFinished = activeBalls == 0 && !isDispensing;
+        bool isPlayFinished = activeBalls == 0;
 
         if (hasPlayedBall && isPlayFinished)
         {
+            var exchange = FindAnyObjectByType<ExchangeStation>();
             float totalValue = exchange != null ? exchange.CurrentTotalValue : 0f;
             
-            // If they got no score/value, or if they successfully cashed out (totalValue reset to 0)
+            // If they scored 0 value, there is no money to exchange, so advance immediately
             if (totalValue <= 0f)
             {
                 EndRound();
@@ -285,9 +282,10 @@ public class RoundManager : MonoBehaviour
         }
     }
 
-    private void OnExchangeDispenseComplete()
+    private void OnExchangeDispenseStart()
     {
-        CheckRoundEnd();
+        if (!isTurnSystemEnabled || currentPhase != RoundPhase.PinballPhase) return;
+        EndRound();
     }
 
     private void EndRound()
