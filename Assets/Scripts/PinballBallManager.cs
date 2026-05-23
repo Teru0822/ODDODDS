@@ -300,14 +300,19 @@ public class PinballBallManager : MonoBehaviour
         }
 
         int count = _splitCount;
-        Vector3 parentLocalScale = source.transform.localScale;
-        Vector3 childScale = parentLocalScale * _splitScaleRatio;
+        // ボールがスケール付き親の中にいる場合 (例: shop_ball の ball_spawn_point の中) に
+        // localScale だけで計算すると親の lossyScale 分を見落として子が極端に小さくなる。
+        // 子ボールは scene root (親なし) で生成されるので、ワールドスケール (lossyScale) を直接使う。
+        Vector3 parentWorldScale = source.transform.lossyScale;
+        Vector3 childScale = parentWorldScale * _splitScaleRatio;
         // 世代が深くなるほどスポーン左右オフセットも縮小 (親スケールに追従)
         float xOffset = _spawnXOffset * Mathf.Pow(_splitScaleRatio, parentGen);
         // 親の現在 gravity を引き継ぐ (コンベアで上書きされた状態を子も保持)
         Vector3 inheritedGravity = source != null ? source.gravity : new Vector3(0f, -9.81f, 9.81f);
         // Enforce Pin で上昇した発色レベルも子に継承する
         int inheritedEnforceLevel = source != null ? source.enforceLevel : 0;
+        // ボール固有の価値も子に継承 (各子は親と同じ価値で枝分かれする)
+        float inheritedValue = source != null ? source.currentValue : 0f;
 
         for (int i = 0; i < count; i++)
         {
@@ -318,7 +323,7 @@ public class PinballBallManager : MonoBehaviour
                 collisionPos.z
             );
             Vector3 vel = new Vector3(_splitSpread * t, 0f, 0f);
-            SpawnPhysicsChild(spawnPos, vel, childScale, nextGen, splitterCol, inheritedGravity, inheritedEnforceLevel);
+            SpawnPhysicsChild(spawnPos, vel, childScale, nextGen, splitterCol, inheritedGravity, inheritedEnforceLevel, inheritedValue);
         }
     }
 
@@ -331,7 +336,7 @@ public class PinballBallManager : MonoBehaviour
     }
 
     /// <summary>テンプレートから RB + Collider + Controller 付きの子ボールを 1 個生成する。NativeList には登録しない。</summary>
-    void SpawnPhysicsChild(Vector3 pos, Vector3 vel, Vector3 localScale, int generation, Collider ignoredSplitter, Vector3 inheritedGravity, int inheritedEnforceLevel)
+    void SpawnPhysicsChild(Vector3 pos, Vector3 vel, Vector3 localScale, int generation, Collider ignoredSplitter, Vector3 inheritedGravity, int inheritedEnforceLevel, float inheritedValue = 0f)
     {
         GameObject child = Instantiate(_ballTemplate, pos, Quaternion.identity);
         child.hideFlags = HideFlags.None;
@@ -347,6 +352,8 @@ public class PinballBallManager : MonoBehaviour
             // Enforce 発色レベルを継承 + 即時 emission 反映
             ctrl.enforceLevel = inheritedEnforceLevel;
             ctrl.ApplyBallEmission();
+            // ボール固有の価値を継承
+            ctrl.currentValue = inheritedValue;
         }
 
         // 生成元 splitter とは衝突しないよう永続的に Ignore (このボールが destroy されたらペアも消える)
@@ -669,8 +676,9 @@ public class PinballBallManager : MonoBehaviour
 
         int count = _splitCount;
         float childRadius = parentRadius * _splitScaleRatio;
-        Vector3 parentLocalScale = _transforms[index].localScale;
-        Vector3 childScale = parentLocalScale * _splitScaleRatio;
+        // 一貫性のためここも lossyScale で計算 (gen >=1 は通常 scene root にいるが安全側に倒す)
+        Vector3 parentWorldScale = _transforms[index].lossyScale;
+        Vector3 childScale = parentWorldScale * _splitScaleRatio;
         float xOffset = _spawnXOffset * Mathf.Pow(0.5f, parentGen);
 
         for (int i = 0; i < count; i++)
@@ -686,7 +694,8 @@ public class PinballBallManager : MonoBehaviour
             // コンパイル維持のため SpawnPhysicsChild にフォワード (gravity は Config 既定を渡す)
             Collider ignored = (hitSplitterIdx >= 0 && hitSplitterIdx < _splitterCount) ? _splitterColliders[hitSplitterIdx] : null;
             Vector3 defaultGravity = _config != null ? _config.EffectiveGravity : new Vector3(0f, -9.81f, 9.81f);
-            SpawnPhysicsChild(spawnPos, vel, childScale, nextGen, ignored, defaultGravity, 0);
+            // NativeList 経由のため親 ctrl 参照は無い。価値継承は不可なので 0 を渡す。
+            SpawnPhysicsChild(spawnPos, vel, childScale, nextGen, ignored, defaultGravity, 0, 0f);
         }
 
         DestroyAt(index);

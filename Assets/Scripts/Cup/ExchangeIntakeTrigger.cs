@@ -16,10 +16,13 @@ public class ExchangeIntakeTrigger : MonoBehaviour
     [Tooltip("ボール検出: tag が空なら PinballBallController または UFOItem コンポーネントで判定")]
     public string ballTag = "";
 
-    [Tooltip("ボールの UFOItem.baseValue を優先採用する (false なら常に defaultBallValueOverride を使う)")]
+    [Tooltip("PinballBallController.currentValue (shop 購入額 + Enforce Pin 倍率反映) を最優先で読み取る")]
+    public bool usePinballBallControllerValue = true;
+
+    [Tooltip("currentValue が 0 / コンポーネント無しの場合に UFOItem.baseValue を採用するか")]
     public bool useUFOItemValue = true;
 
-    [Tooltip("UFOItem が無い場合の基本価値。負なら ExchangeStation.defaultBallValue を使用")]
+    [Tooltip("どれも無い場合の基本価値。負なら ExchangeStation.defaultBallValue を使用")]
     public float defaultBallValueOverride = -1f;
 
     [Tooltip("価値倍率 (例: 1.5 で全ボールの価値が 1.5 倍になる)")]
@@ -89,17 +92,23 @@ public class ExchangeIntakeTrigger : MonoBehaviour
 
     private float EvaluateValue(GameObject ballRoot)
     {
-        // 1. UFOItem の baseValue を優先 (個別価値)
+        // 1. PinballBallController.currentValue を最優先 (shop 購入額 + Enforce Pin 倍率が反映済み)
+        if (usePinballBallControllerValue)
+        {
+            var pinCtrl = ballRoot.GetComponentInChildren<PinballBallController>();
+            if (pinCtrl != null && pinCtrl.currentValue > 0f) return pinCtrl.currentValue;
+        }
+        // 2. UFOItem の baseValue (固定アイテム用)
         if (useUFOItemValue)
         {
             var item = ballRoot.GetComponentInChildren<UFOItem>();
             if (item != null) return item.baseValue;
         }
-        // 2. Override が設定されていればそれ
+        // 3. Override が設定されていればそれ
         if (defaultBallValueOverride >= 0f) return defaultBallValueOverride;
-        // 3. それ以外は owner の defaultBallValue
+        // 4. それ以外は owner の defaultBallValue
         if (owner != null) return owner.defaultBallValue;
-        // 4. フォールバック
+        // 5. フォールバック
         return 100f;
     }
 
