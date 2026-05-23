@@ -90,55 +90,28 @@ public class CupPickupController : MonoBehaviour
     {
         InteractableHighlight best = null;
         float bestDist = float.PositiveInfinity;
-        int cupsConsidered = 0, cupsHit = 0, cupsInteractable = 0;
-        int exchangesConsidered = 0, exchangesHit = 0, exchangesInteractable = 0;
 
-        if (IsHoldingBin)
+        // すべての InteractableHighlight 派生 (BallCup / ExchangeStation / ExchangeButton 等) を対象に探索。
+        // 各派生の IsInteractable(this) が現在のプレイヤー状態 (Bin 保持中など) に応じて可否を決める。
+        var all = FindObjectsByType<InteractableHighlight>(FindObjectsSortMode.None);
+        int considered = 0, interactable = 0, hits = 0;
+        foreach (var item in all)
         {
-            // Bin を持っている時は exchange だけ探索
-            var stations = FindObjectsByType<ExchangeStation>(FindObjectsSortMode.None);
-            foreach (var ex in stations)
+            if (item == null) continue;
+            considered++;
+            if (!item.IsInteractable(this)) continue;
+            interactable++;
+            if (item.Raycast(ray, out RaycastHit hit, lookMaxDistance) && hit.distance < bestDist)
             {
-                if (ex == null) continue;
-                exchangesConsidered++;
-                bool interactable = ex.IsInteractable(this);
-                if (interactable) exchangesInteractable++;
-                if (!interactable) continue;
-                if (ex.Raycast(ray, out RaycastHit hit, lookMaxDistance))
-                {
-                    exchangesHit++;
-                    if (hit.distance < bestDist)
-                    {
-                        bestDist = hit.distance;
-                        best = ex;
-                    }
-                }
+                hits++;
+                bestDist = hit.distance;
+                best = item;
             }
-            _lastDiagnostic = $"Mode=HoldingBin | Exchange考慮={exchangesConsidered} 内Interactable={exchangesInteractable} 内Hit={exchangesHit} | best={(best != null ? best.name : "NONE")}";
         }
-        else
-        {
-            // 何も持っていない時は cup だけ探索
-            var cups = FindObjectsByType<BallCup>(FindObjectsSortMode.None);
-            foreach (var cup in cups)
-            {
-                if (cup == null) continue;
-                cupsConsidered++;
-                bool interactable = cup.IsInteractable(this);
-                if (interactable) cupsInteractable++;
-                if (!interactable) continue;
-                if (cup.Raycast(ray, out RaycastHit hit, lookMaxDistance))
-                {
-                    cupsHit++;
-                    if (hit.distance < bestDist)
-                    {
-                        bestDist = hit.distance;
-                        best = cup;
-                    }
-                }
-            }
-            _lastDiagnostic = $"Mode=Idle | Cup考慮={cupsConsidered} 内Interactable={cupsInteractable} 内Hit={cupsHit} | best={(best != null ? best.name : "NONE")}";
-        }
+
+        string mode = IsHoldingBin ? "HoldingBin" : "Idle";
+        string bestStr = best != null ? $"{best.name}({best.GetType().Name})" : "NONE";
+        _lastDiagnostic = $"Mode={mode} | 考慮={considered} Interactable={interactable} Hit={hits} | best={bestStr}";
 
         if (logEvents && Time.frameCount % 30 == 0)
         {
@@ -169,8 +142,16 @@ public class CupPickupController : MonoBehaviour
 
     private void HandleClick(InteractableHighlight target)
     {
-        if (target is BallCup cup) PickupCup(cup);
-        else if (target is ExchangeStation ex) ExchangeAtStation(ex);
+        switch (target)
+        {
+            case BallCup cup: PickupCup(cup); break;
+            case ExchangeStation ex: ExchangeAtStation(ex); break;
+            case ExchangeButton btn:
+                btn.OnPressed();
+                if (logEvents) Debug.Log($"[CupPickup] ExchangeButton pressed: {btn.name}");
+                _currentLooked = null; // 押した直後は対象を再評価 (累計値 0 になればハイライトも消える)
+                break;
+        }
     }
 
     private void PickupCup(BallCup cup)
