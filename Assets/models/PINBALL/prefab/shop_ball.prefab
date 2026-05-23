@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &764350746069416653
+--- !u!1 &801513596569535121
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,7 +8,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 7013802550369351659}
+  - component: {fileID: 1550777814546115858}
+  - component: {fileID: 2078873127462430765}
   m_Layer: 0
   m_Name: ball_4
   m_TagString: Untagged
@@ -16,22 +17,53 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &7013802550369351659
+--- !u!4 &1550777814546115858
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 764350746069416653}
+  m_GameObject: {fileID: 801513596569535121}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0.020199575, z: 0.018746348}
-  m_LocalScale: {x: 0.05895089, y: 0.05895088, z: 0.05895088}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.0203, z: 0.0187}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 7686389368255153882}
+  m_Father: {fileID: 3339615989224436553}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1555122119699178745
+--- !u!114 &2078873127462430765
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 801513596569535121}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2389405c16bdb0247a2d2ea335b6e48a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ShopBallSlot
+  ballPrefab: {fileID: 0}
+  price: 100
+  spawnDisplayBall: 1
+  displayScale: {x: 1, y: 1, z: 1}
+  displayLocalOffset: {x: 0, y: 0, z: 0}
+  independentRotation: 1
+  independentScale: 1
+  priceTagText: {fileID: 0}
+  priceTagFormat: "\xA5{0:N0}"
+  priceTagWorldOffset: {x: 0, y: 0.15, z: 0}
+  priceTagBillboard: 1
+  priceTagFlip180: 0
+  priceTagUseWorldUp: 1
+  autoTagFontSize: 0.05
+  autoTagColor: {r: 1, g: 1, b: 1, a: 1}
+  affordableColor: {r: 0.25, g: 1, b: 0.4, a: 1}
+  notAffordableColor: {r: 1, g: 0.3, b: 0.3, a: 1}
+  highlightStrength: 0.65
+  tintPriceTag: 1
+--- !u!1 &1556340282429162066
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -39,38 +71,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5062233190034394191}
-  m_Layer: 0
-  m_Name: ball_5
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &5062233190034394191
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1555122119699178745}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: -0.019864138, y: 0.020376414, z: 0.018746348}
-  m_LocalScale: {x: 0.05895089, y: 0.05895088, z: 0.05895088}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 7686389368255153882}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &2667338277105540359
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 8641435711074166948}
+  - component: {fileID: 2307211171610594334}
+  - component: {fileID: 5735715858207873256}
   m_Layer: 0
   m_Name: ball_1
   m_TagString: Untagged
@@ -78,22 +80,53 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8641435711074166948
+--- !u!4 &2307211171610594334
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2667338277105540359}
+  m_GameObject: {fileID: 1556340282429162066}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0.00023809148, y: -0.000079552985, z: 0.013322865}
-  m_LocalScale: {x: 0.05895089, y: 0.05895088, z: 0.05895088}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0, z: 0.0142}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 7686389368255153882}
+  m_Father: {fileID: 3339615989224436553}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &3675746130355463230
+--- !u!114 &5735715858207873256
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1556340282429162066}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2389405c16bdb0247a2d2ea335b6e48a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ShopBallSlot
+  ballPrefab: {fileID: 6226969307561795622, guid: cd96e176311037944b26f5358dac36c0, type: 3}
+  price: 100
+  spawnDisplayBall: 1
+  displayScale: {x: 5, y: 5, z: 5}
+  displayLocalOffset: {x: 0, y: 0, z: 0}
+  independentRotation: 1
+  independentScale: 1
+  priceTagText: {fileID: 0}
+  priceTagFormat: "\xA5{0:N0}"
+  priceTagWorldOffset: {x: 0, y: 0.15, z: 0}
+  priceTagBillboard: 1
+  priceTagFlip180: 0
+  priceTagUseWorldUp: 1
+  autoTagFontSize: 0.65
+  autoTagColor: {r: 1, g: 1, b: 1, a: 1}
+  affordableColor: {r: 0.25, g: 1, b: 0.4, a: 1}
+  notAffordableColor: {r: 1, g: 0.3, b: 0.3, a: 1}
+  highlightStrength: 0.65
+  tintPriceTag: 1
+--- !u!1 &2498639475882897387
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -101,7 +134,71 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 2795893201465096554}
+  - component: {fileID: 6899330864170880254}
+  - component: {fileID: 3652382890813078622}
+  m_Layer: 0
+  m_Name: ball_5
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6899330864170880254
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2498639475882897387}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.0196, y: 0.0203, z: 0.0187}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3339615989224436553}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3652382890813078622
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2498639475882897387}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2389405c16bdb0247a2d2ea335b6e48a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ShopBallSlot
+  ballPrefab: {fileID: 0}
+  price: 100
+  spawnDisplayBall: 1
+  displayScale: {x: 1, y: 1, z: 1}
+  displayLocalOffset: {x: 0, y: 0, z: 0}
+  independentRotation: 1
+  independentScale: 1
+  priceTagText: {fileID: 0}
+  priceTagFormat: "\xA5{0:N0}"
+  priceTagWorldOffset: {x: 0, y: 0.15, z: 0}
+  priceTagBillboard: 1
+  priceTagFlip180: 0
+  priceTagUseWorldUp: 1
+  autoTagFontSize: 0.05
+  autoTagColor: {r: 1, g: 1, b: 1, a: 1}
+  affordableColor: {r: 0.25, g: 1, b: 0.4, a: 1}
+  notAffordableColor: {r: 1, g: 0.3, b: 0.3, a: 1}
+  highlightStrength: 0.65
+  tintPriceTag: 1
+--- !u!1 &4664329410752609020
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6724544284659753367}
+  - component: {fileID: 35103868929976183}
   m_Layer: 0
   m_Name: ball_3
   m_TagString: Untagged
@@ -109,22 +206,53 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &2795893201465096554
+--- !u!4 &6724544284659753367
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3675746130355463230}
+  m_GameObject: {fileID: 4664329410752609020}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: -0.03990745, y: -0.00025636473, z: 0.013322865}
-  m_LocalScale: {x: 0.05895089, y: 0.05895088, z: 0.05895088}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.0397, y: -0, z: 0.0142}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 7686389368255153882}
+  m_Father: {fileID: 3339615989224436553}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &3792128395935985305
+--- !u!114 &35103868929976183
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4664329410752609020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2389405c16bdb0247a2d2ea335b6e48a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ShopBallSlot
+  ballPrefab: {fileID: 0}
+  price: 100
+  spawnDisplayBall: 1
+  displayScale: {x: 1, y: 1, z: 1}
+  displayLocalOffset: {x: 0, y: 0, z: 0}
+  independentRotation: 1
+  independentScale: 1
+  priceTagText: {fileID: 0}
+  priceTagFormat: "\xA5{0:N0}"
+  priceTagWorldOffset: {x: 0, y: 0.15, z: 0}
+  priceTagBillboard: 1
+  priceTagFlip180: 0
+  priceTagUseWorldUp: 1
+  autoTagFontSize: 0.05
+  autoTagColor: {r: 1, g: 1, b: 1, a: 1}
+  affordableColor: {r: 0.25, g: 1, b: 0.4, a: 1}
+  notAffordableColor: {r: 1, g: 0.3, b: 0.3, a: 1}
+  highlightStrength: 0.65
+  tintPriceTag: 1
+--- !u!1 &4720510029766188860
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -132,69 +260,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 3264935807388060308}
-  m_Layer: 0
-  m_Name: ball_2
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &3264935807388060308
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3792128395935985305}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: -0.019746246, y: 0.000038340248, z: 0.013322865}
-  m_LocalScale: {x: 0.05895089, y: 0.05895088, z: 0.05895088}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 7686389368255153882}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &4912789040747904394
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 4423751706782413418}
-  m_Layer: 0
-  m_Name: ball_6
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &4423751706782413418
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4912789040747904394}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: -0.039789557, y: 0.020199575, z: 0.018746348}
-  m_LocalScale: {x: 0.05895089, y: 0.05895088, z: 0.05895088}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 7686389368255153882}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &5464724665138554173
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2788965185175227439}
+  - component: {fileID: 1640901969033722061}
+  - component: {fileID: 1012525350495539632}
   m_Layer: 0
   m_Name: ball_8
   m_TagString: Untagged
@@ -202,22 +269,53 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &2788965185175227439
+--- !u!4 &1640901969033722061
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5464724665138554173}
+  m_GameObject: {fileID: 4720510029766188860}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: -0.019864138, y: 0.040242888, z: 0.02475933}
-  m_LocalScale: {x: 0.05895089, y: 0.05895088, z: 0.05895088}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.0196, y: 0.0398, z: 0.0229}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 7686389368255153882}
+  m_Father: {fileID: 3339615989224436553}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &5671614909027681427
+--- !u!114 &1012525350495539632
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4720510029766188860}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2389405c16bdb0247a2d2ea335b6e48a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ShopBallSlot
+  ballPrefab: {fileID: 0}
+  price: 100
+  spawnDisplayBall: 1
+  displayScale: {x: 1, y: 1, z: 1}
+  displayLocalOffset: {x: 0, y: 0, z: 0}
+  independentRotation: 1
+  independentScale: 1
+  priceTagText: {fileID: 0}
+  priceTagFormat: "\xA5{0:N0}"
+  priceTagWorldOffset: {x: 0, y: 0.15, z: 0}
+  priceTagBillboard: 1
+  priceTagFlip180: 0
+  priceTagUseWorldUp: 1
+  autoTagFontSize: 0.05
+  autoTagColor: {r: 1, g: 1, b: 1, a: 1}
+  affordableColor: {r: 0.25, g: 1, b: 0.4, a: 1}
+  notAffordableColor: {r: 1, g: 0.3, b: 0.3, a: 1}
+  highlightStrength: 0.65
+  tintPriceTag: 1
+--- !u!1 &6624704854655704148
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -225,7 +323,71 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 6232454037347454329}
+  - component: {fileID: 2815370317264145608}
+  - component: {fileID: 506703295110802106}
+  m_Layer: 0
+  m_Name: ball_6
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2815370317264145608
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6624704854655704148}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.0397, y: 0.0203, z: 0.0187}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3339615989224436553}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &506703295110802106
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6624704854655704148}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2389405c16bdb0247a2d2ea335b6e48a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ShopBallSlot
+  ballPrefab: {fileID: 0}
+  price: 100
+  spawnDisplayBall: 1
+  displayScale: {x: 1, y: 1, z: 1}
+  displayLocalOffset: {x: 0, y: 0, z: 0}
+  independentRotation: 1
+  independentScale: 1
+  priceTagText: {fileID: 0}
+  priceTagFormat: "\xA5{0:N0}"
+  priceTagWorldOffset: {x: 0, y: 0.15, z: 0}
+  priceTagBillboard: 1
+  priceTagFlip180: 0
+  priceTagUseWorldUp: 1
+  autoTagFontSize: 0.05
+  autoTagColor: {r: 1, g: 1, b: 1, a: 1}
+  affordableColor: {r: 0.25, g: 1, b: 0.4, a: 1}
+  notAffordableColor: {r: 1, g: 0.3, b: 0.3, a: 1}
+  highlightStrength: 0.65
+  tintPriceTag: 1
+--- !u!1 &6972617889974852574
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7835952559726029259}
+  - component: {fileID: 7374419031970558151}
   m_Layer: 0
   m_Name: ball_9
   m_TagString: Untagged
@@ -233,22 +395,53 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &6232454037347454329
+--- !u!4 &7835952559726029259
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5671614909027681427}
+  m_GameObject: {fileID: 6972617889974852574}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: -0.03990745, y: 0.040007073, z: 0.02475933}
-  m_LocalScale: {x: 0.05895089, y: 0.05895088, z: 0.05895088}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.0397, y: 0.0398, z: 0.0229}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 7686389368255153882}
+  m_Father: {fileID: 3339615989224436553}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &7535543290999593351
+--- !u!114 &7374419031970558151
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6972617889974852574}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2389405c16bdb0247a2d2ea335b6e48a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ShopBallSlot
+  ballPrefab: {fileID: 0}
+  price: 100
+  spawnDisplayBall: 1
+  displayScale: {x: 1, y: 1, z: 1}
+  displayLocalOffset: {x: 0, y: 0, z: 0}
+  independentRotation: 1
+  independentScale: 1
+  priceTagText: {fileID: 0}
+  priceTagFormat: "\xA5{0:N0}"
+  priceTagWorldOffset: {x: 0, y: 0.15, z: 0}
+  priceTagBillboard: 1
+  priceTagFlip180: 0
+  priceTagUseWorldUp: 1
+  autoTagFontSize: 0.05
+  autoTagColor: {r: 1, g: 1, b: 1, a: 1}
+  affordableColor: {r: 0.25, g: 1, b: 0.4, a: 1}
+  notAffordableColor: {r: 1, g: 0.3, b: 0.3, a: 1}
+  highlightStrength: 0.65
+  tintPriceTag: 1
+--- !u!1 &8379357415684772286
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -256,7 +449,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 2771268152761592693}
+  - component: {fileID: 7420487193743189316}
+  - component: {fileID: 1949493956888552223}
   m_Layer: 0
   m_Name: ball_7
   m_TagString: Untagged
@@ -264,22 +458,116 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &2771268152761592693
+--- !u!4 &7420487193743189316
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7535543290999593351}
+  m_GameObject: {fileID: 8379357415684772286}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0.00017917297, y: 0.040419728, z: 0.02475933}
-  m_LocalScale: {x: 0.05895089, y: 0.05895088, z: 0.05895088}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.0398, z: 0.0229}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 7686389368255153882}
+  m_Father: {fileID: 3339615989224436553}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &7863622613318066481
+--- !u!114 &1949493956888552223
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8379357415684772286}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2389405c16bdb0247a2d2ea335b6e48a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ShopBallSlot
+  ballPrefab: {fileID: 0}
+  price: 100
+  spawnDisplayBall: 1
+  displayScale: {x: 1, y: 1, z: 1}
+  displayLocalOffset: {x: 0, y: 0, z: 0}
+  independentRotation: 1
+  independentScale: 1
+  priceTagText: {fileID: 0}
+  priceTagFormat: "\xA5{0:N0}"
+  priceTagWorldOffset: {x: 0, y: 0.15, z: 0}
+  priceTagBillboard: 1
+  priceTagFlip180: 0
+  priceTagUseWorldUp: 1
+  autoTagFontSize: 0.05
+  autoTagColor: {r: 1, g: 1, b: 1, a: 1}
+  affordableColor: {r: 0.25, g: 1, b: 0.4, a: 1}
+  notAffordableColor: {r: 1, g: 0.3, b: 0.3, a: 1}
+  highlightStrength: 0.65
+  tintPriceTag: 1
+--- !u!1 &8572524733924079189
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4685723509567551940}
+  - component: {fileID: 1192661883601671523}
+  m_Layer: 0
+  m_Name: ball_2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4685723509567551940
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8572524733924079189}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.0196, y: -0, z: 0.0142}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3339615989224436553}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1192661883601671523
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8572524733924079189}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2389405c16bdb0247a2d2ea335b6e48a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ShopBallSlot
+  ballPrefab: {fileID: 0}
+  price: 100
+  spawnDisplayBall: 1
+  displayScale: {x: 1, y: 1, z: 1}
+  displayLocalOffset: {x: 0, y: 0, z: 0}
+  independentRotation: 1
+  independentScale: 1
+  priceTagText: {fileID: 0}
+  priceTagFormat: "\xA5{0:N0}"
+  priceTagWorldOffset: {x: 0, y: 0.15, z: 0}
+  priceTagBillboard: 1
+  priceTagFlip180: 0
+  priceTagUseWorldUp: 1
+  autoTagFontSize: 0.05
+  autoTagColor: {r: 1, g: 1, b: 1, a: 1}
+  affordableColor: {r: 0.25, g: 1, b: 0.4, a: 1}
+  notAffordableColor: {r: 1, g: 0.3, b: 0.3, a: 1}
+  highlightStrength: 0.65
+  tintPriceTag: 1
+--- !u!1001 &3013482581872252066
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -289,7 +577,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 36d2e06732079844bb54501537b4cfe1, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 11.839961
+      value: 11.877
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 36d2e06732079844bb54501537b4cfe1, type: 3}
       propertyPath: m_LocalPosition.y
@@ -297,7 +585,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 36d2e06732079844bb54501537b4cfe1, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 8.185651
+      value: 8.287
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 36d2e06732079844bb54501537b4cfe1, type: 3}
       propertyPath: m_LocalRotation.w
@@ -340,35 +628,65 @@ PrefabInstance:
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 36d2e06732079844bb54501537b4cfe1, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 8641435711074166948}
+      addedObject: {fileID: 2307211171610594334}
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 36d2e06732079844bb54501537b4cfe1, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 3264935807388060308}
+      addedObject: {fileID: 4685723509567551940}
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 36d2e06732079844bb54501537b4cfe1, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 2795893201465096554}
+      addedObject: {fileID: 6724544284659753367}
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 36d2e06732079844bb54501537b4cfe1, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 7013802550369351659}
+      addedObject: {fileID: 1550777814546115858}
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 36d2e06732079844bb54501537b4cfe1, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 5062233190034394191}
+      addedObject: {fileID: 6899330864170880254}
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 36d2e06732079844bb54501537b4cfe1, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 4423751706782413418}
+      addedObject: {fileID: 2815370317264145608}
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 36d2e06732079844bb54501537b4cfe1, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 2771268152761592693}
+      addedObject: {fileID: 7420487193743189316}
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 36d2e06732079844bb54501537b4cfe1, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 2788965185175227439}
+      addedObject: {fileID: 1640901969033722061}
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 36d2e06732079844bb54501537b4cfe1, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6232454037347454329}
-    m_AddedComponents: []
+      addedObject: {fileID: 7835952559726029259}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 36d2e06732079844bb54501537b4cfe1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2414490430030535945}
   m_SourcePrefab: {fileID: 100100000, guid: 36d2e06732079844bb54501537b4cfe1, type: 3}
---- !u!4 &7686389368255153882 stripped
+--- !u!1 &2671588546185243123 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 36d2e06732079844bb54501537b4cfe1, type: 3}
+  m_PrefabInstance: {fileID: 3013482581872252066}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2414490430030535945
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2671588546185243123}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 311b0d7122347454a83561e6a972dd5d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ShopBallController
+  lookCamera: {fileID: 0}
+  useMousePointer: 0
+  lookMaxDistance: 50
+  ballSpawnPoint: {fileID: 0}
+  initialVelocityLocal: {x: 0, y: 0, z: 0}
+  spawnScaleMultiplier: 1
+  spawnParent: {fileID: 0}
+  onPurchase:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!4 &3339615989224436553 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 36d2e06732079844bb54501537b4cfe1, type: 3}
-  m_PrefabInstance: {fileID: 7863622613318066481}
+  m_PrefabInstance: {fileID: 3013482581872252066}
   m_PrefabAsset: {fileID: 0}
