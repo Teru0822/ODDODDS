@@ -37,7 +37,7 @@ public class ButtonController : MonoBehaviour
     void Update()
     {
         // UFOプレイ中かつアクティブなプレイセッション中のみ操作を許可する
-        if (!UFOCameraController.IsPlayingUfo || !UFOCameraController.IsPlaySessionActive)
+        if (!UFOCameraController.IsPlayingUfo || !UFOCameraController.IsControlActive)
         {
             _isPressed = false;
             float inactiveTargetY = _originalLocalPos.y;

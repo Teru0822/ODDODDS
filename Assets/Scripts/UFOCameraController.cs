@@ -11,6 +11,7 @@ public class UFOCameraController : MonoBehaviour
     public static UFOCameraController Instance { get; private set; }
     public static bool IsPlayingUfo { get; private set; } = false;
     public static bool IsPlaySessionActive { get; private set; } = false;
+    public static bool IsControlActive => IsPlaySessionActive && Instance != null && Instance._playTimer > 0f;
 
     [Header("Camera Settings")]
     [Tooltip("Player's first-person camera")]
@@ -691,7 +692,8 @@ public class UFOCameraController : MonoBehaviour
 
                 if (_timerText != null)
                 {
-                    _timerText.text = $"Time Left: {_playTimer:F1}s\nPlays: {_paymentCount} / {maxPlayCount}";
+                    float displayedTime = Mathf.Max(0f, _playTimer);
+                    _timerText.text = $"Time Left: {displayedTime:F1}s\nPlays: {_paymentCount} / {maxPlayCount}";
                 }
             }
             else

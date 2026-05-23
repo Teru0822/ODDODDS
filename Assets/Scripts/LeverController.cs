@@ -52,7 +52,7 @@ public class LeverController : MonoBehaviour
     void Update()
     {
         // UFOプレイ中かつアクティブなプレイセッション中のみ操作を許可する
-        if (!UFOCameraController.IsPlayingUfo || !UFOCameraController.IsPlaySessionActive)
+        if (!UFOCameraController.IsPlayingUfo || !UFOCameraController.IsControlActive)
         {
             _isDragging = false;
             _targetAngleH = 0f;
