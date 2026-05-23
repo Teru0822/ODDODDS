@@ -255,11 +255,20 @@ public class UFOCameraController : MonoBehaviour
             // プレイ中でなく、かつ近ければプロンプトを表示。Fキーで開始
             if (isClose)
             {
+                bool canPlayUfo = RoundManager.Instance == null || RoundManager.Instance.CanPlayUfo();
                 _showPrompt = true;
-                if (Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame)
+                if (canPlayUfo)
                 {
-                    Debug.Log("[UFOCameraController] Fキー検出！UFOモードに入ります");
-                    EnterUfoMode();
+                    if (_promptText != null) _promptText.text = "[F] Play UFO Catcher";
+                    if (Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame)
+                    {
+                        Debug.Log("[UFOCameraController] Fキー検出！UFOモードに入ります");
+                        EnterUfoMode();
+                    }
+                }
+                else
+                {
+                    if (_promptText != null) _promptText.text = "UFO Locked: Finish Pinball Phase First";
                 }
             }
             else
@@ -318,6 +327,13 @@ public class UFOCameraController : MonoBehaviour
 
         // 毎フレーム動的UIの状態を更新
         UpdateDynamicUI();
+    }
+
+    public int PaymentCount => _paymentCount;
+
+    public void ResetPaymentCount()
+    {
+        _paymentCount = 0;
     }
 
     public float GetCurrentPlayCost()

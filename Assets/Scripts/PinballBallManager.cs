@@ -263,6 +263,7 @@ public class PinballBallManager : MonoBehaviour
 
     public float FloorY => _floorY;
     public bool IsFloorYSet => _floorYSet;
+    public int ActiveBallCount => (_positions.IsCreated ? _positions.Length : 0) + PinballBallController.AliveGen0Count;
 
     public void SetFloorY(float y)
     {

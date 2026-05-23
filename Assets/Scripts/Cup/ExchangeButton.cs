@@ -40,6 +40,7 @@ public class ExchangeButton : InteractableHighlight
         if (pickup == null) return false;
         if (pickup.IsHoldingBin) return false;        // Bin 保持中は不可
         if (owner == null) return false;
+        if (RoundManager.Instance != null && !RoundManager.Instance.CanBuyBalls()) return false;
         return owner.CurrentTotalValue > 0f;          // 累計値が 0 なら不可
     }
 
