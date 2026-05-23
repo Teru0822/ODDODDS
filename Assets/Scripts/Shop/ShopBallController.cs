@@ -153,6 +153,13 @@ public class ShopBallController : MonoBehaviour
             spawned.transform.localScale *= spawnScaleMultiplier;
         }
 
+        // ボール固有の価値を slot.price で初期化 (Exchange モニターが最終的に読む値)
+        var ballController = spawned.GetComponent<PinballBallController>();
+        if (ballController != null)
+        {
+            ballController.currentValue = slot.Price;
+        }
+
         if (initialVelocityLocal != Vector3.zero)
         {
             var rb = spawned.GetComponent<Rigidbody>();

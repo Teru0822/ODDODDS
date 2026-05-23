@@ -109,6 +109,13 @@ public class PinballBallController : MonoBehaviour
     /// <summary>Enforce Pin で上昇する発色レベル (Manager がスポーン時に親から継承する)</summary>
     [HideInInspector] public int enforceLevel = 0;
 
+    [Header("価値 (Exchange モニター連動)")]
+    [Tooltip("このボール固有の現在価値 (¥)。ShopBallController がスポーン時に slot.price で初期化、Enforce Pin で enforceValueMultiplier 倍、分裂時に子へ継承される")]
+    public float currentValue = 0f;
+
+    [Tooltip("Enforce Pin 1 回ヒットで currentValue に掛ける倍率 (デフォルト 2 = 2 倍)")]
+    [SerializeField, Min(1f)] private float enforceValueMultiplier = 2f;
+
     private Material _ballMaterialInstance;
 
     [Header("重力 (このボール固有)")]
@@ -248,9 +255,13 @@ public class PinballBallController : MonoBehaviour
         StartCoroutine(SplitNextFrame(posAtCollision, collision.collider));
     }
 
-    /// <summary>Enforce Pin に触れた時に呼ぶ。発色レベル+1 (上限まで) して emission を更新。</summary>
+    /// <summary>Enforce Pin に触れた時に呼ぶ。発色レベル+1 (上限まで) して emission を更新。
+    /// さらに 1 回ヒットごとに currentValue を enforceValueMultiplier 倍する (レベル上限到達後も価値は増え続ける)。</summary>
     public void EnforceLevelUp()
     {
+        // 価値は毎回掛け算 (レベル上限と独立)
+        currentValue *= enforceValueMultiplier;
+
         if (enforceColors == null || enforceColors.Length == 0) return;
         int max = enforceColors.Length - 1;
         if (enforceLevel < max)
