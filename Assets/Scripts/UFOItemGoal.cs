@@ -33,6 +33,36 @@ public class UFOItemGoal : MonoBehaviour
     {
         // 最初はLv1の箱だけを表示し、残りを非表示にする（要素があれば）
         SetGoalLevel(0); // 0が最初のレベル(Lv1)
+
+        // UnwashedMoneyManagerの初期値との同期、および変更イベントの購読
+        if (UnwashedMoneyManager.Instance != null)
+        {
+            unwashedMoney = UnwashedMoneyManager.Instance.CurrentAmount;
+            UpdateUnwashedMoneyText();
+            UnwashedMoneyManager.Instance.OnAmountChanged += HandleUnwashedMoneyChanged;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (UnwashedMoneyManager.Instance != null)
+        {
+            UnwashedMoneyManager.Instance.OnAmountChanged -= HandleUnwashedMoneyChanged;
+        }
+    }
+
+    private void HandleUnwashedMoneyChanged(float newAmount)
+    {
+        unwashedMoney = newAmount;
+        UpdateUnwashedMoneyText();
+    }
+
+    private void UpdateUnwashedMoneyText()
+    {
+        if (unwashedMoneyText != null)
+        {
+            unwashedMoneyText.text = $"Unwashed: ¥{Mathf.FloorToInt(unwashedMoney):N0}";
+        }
     }
 
     // 自分の直接のコライダーに入った場合
@@ -66,15 +96,13 @@ public class UFOItemGoal : MonoBehaviour
                     {
                         UnwashedMoneyManager.Instance.Add(finalValue);
                     }
-
-                    // 旧 API 互換: ローカルの累計とゴール表示も維持
-                    unwashedMoney += finalValue;
-                    Debug.Log($"[獲得] {item.itemType}！ (未洗浄メダル総額: {unwashedMoney}円)");
-
-                    if (unwashedMoneyText != null)
+                    else
                     {
-                        unwashedMoneyText.text = $"Unwashed: ¥{Mathf.FloorToInt(unwashedMoney):N0}";
+                        // 旧 API 互換: ローカルの累計とゴール表示も維持
+                        unwashedMoney += finalValue;
+                        UpdateUnwashedMoneyText();
                     }
+                    Debug.Log($"[獲得] {item.itemType}！ (未洗浄メダル総額: {unwashedMoney}円)");
                     break;
                 case UFOItemType.Watch:
                     collectedWatches++;
