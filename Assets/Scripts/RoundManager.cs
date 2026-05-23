@@ -35,6 +35,9 @@ public class RoundManager : MonoBehaviour
     [Tooltip("Optional: TextMeshPro 3D component in the world (e.g. above the exchange station) to display the round number.")]
     public TMP_Text worldRoundText;
 
+    [Tooltip("If true, the world round text will actively rotate to face the camera. Turn this off to keep it fixed (e.g. on a wall).")]
+    public bool billboardWorldText = true;
+
     private Canvas _hudCanvas;
     private TextMeshProUGUI _hudRoundText;
     private int _purchasedBallCountThisRound = 0;
@@ -247,7 +250,7 @@ public class RoundManager : MonoBehaviour
         }
 
         // Billboard rotation for World Round Text to face player camera
-        if (worldRoundText != null && worldRoundText.gameObject.activeInHierarchy)
+        if (billboardWorldText && worldRoundText != null && worldRoundText.gameObject.activeInHierarchy)
         {
             Camera activeCam = UFOCameraController.Instance != null ? UFOCameraController.Instance.GetActiveCamera() : Camera.main;
             if (activeCam != null)
