@@ -2633,10 +2633,28 @@ MonoBehaviour:
   currentTotalValue: 0
   defaultBallValue: 100
   addToUnwashedMoney: 0
+  moneySpawner: {fileID: 909426299}
+  moneyBigPrefab: {fileID: 5515078726583006773, guid: b7ac9c7020f583c4e89c64ef3b4cf1d2, type: 3}
+  bigDenomination: 10000
+  moneyMiddlePrefab: {fileID: 3251457358012705680, guid: a32fac22e13c2fd478bdb117db859663, type: 3}
+  middleDenomination: 1000
+  moneySmallPrefab: {fileID: 5693812434394980683, guid: f39190fd0e330954992c01a37ab32a28, type: 3}
+  smallDenomination: 100
+  dispenseInterval: 0.05
+  dispenseJitterRadius: 0.05
+  dispenseInitialVelocity: {x: 0, y: 0, z: 0}
+  dispenseRandomYRotation: 1
+  resetValueOnDispense: 1
   onExchange:
     m_PersistentCalls:
       m_Calls: []
   onTotalValueChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  onDispenseStart:
+    m_PersistentCalls:
+      m_Calls: []
+  onDispenseComplete:
     m_PersistentCalls:
       m_Calls: []
 --- !u!4 &289962332 stripped
@@ -12197,6 +12215,37 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 031d7d16637e968459b1d20f7da3c9c1, type: 3}
+--- !u!1 &909426298
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 909426299}
+  m_Layer: 0
+  m_Name: MoneySpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &909426299
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 909426298}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2.526, y: 3.005, z: 2.508}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 289962332}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &914321365
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -16294,6 +16343,52 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: dc736826ad46ba04ca862e1b87f8de16, type: 3}
+--- !u!1 &1504188863 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6646264294196217555, guid: a17cc7684136da4418ddbcde4e0bb725, type: 3}
+  m_PrefabInstance: {fileID: 2143875344}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &1504188865
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1504188863}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2, y: 2.0000002, z: 2.0000002}
+  m_Center: {x: 0.0000076293945, y: -0.0000019073486, z: 0}
+--- !u!114 &1504188866
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1504188863}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 77234509c39c8364bb7781bf47ff9152, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ExchangeButton
+  highlightColor: {r: 0.35, g: 0.85, b: 1, a: 1}
+  highlightStrength: 0.6
+  autoCollectRenderers: 1
+  highlightTargets: []
+  includeTriggersInRaycast: 1
+  owner: {fileID: 0}
+  pressDepth: 0.01
+  pressDuration: 0.15
 --- !u!1001 &1508444231
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -19080,6 +19175,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ExchangeIntakeTrigger
   owner: {fileID: 0}
   ballTag: 
+  usePinballBallControllerValue: 1
   useUFOItemValue: 1
   defaultBallValueOverride: -1
   valueMultiplier: 1
@@ -20725,12 +20821,16 @@ PrefabInstance:
       propertyPath: m_Name
       value: exchange
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 4262183988650116283, guid: a17cc7684136da4418ddbcde4e0bb725, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 1546779401120591462, guid: a17cc7684136da4418ddbcde4e0bb725, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1870503463}
+    - targetCorrespondingSourceObject: {fileID: 1546779401120591462, guid: a17cc7684136da4418ddbcde4e0bb725, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 909426299}
     - targetCorrespondingSourceObject: {fileID: 8536385457556697386, guid: a17cc7684136da4418ddbcde4e0bb725, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1147101132}
@@ -20738,6 +20838,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2178777978402469084, guid: a17cc7684136da4418ddbcde4e0bb725, type: 3}
       insertIndex: -1
       addedObject: {fileID: 289962331}
+    - targetCorrespondingSourceObject: {fileID: 6646264294196217555, guid: a17cc7684136da4418ddbcde4e0bb725, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1504188866}
+    - targetCorrespondingSourceObject: {fileID: 6646264294196217555, guid: a17cc7684136da4418ddbcde4e0bb725, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1504188865}
     - targetCorrespondingSourceObject: {fileID: 7702254535129317086, guid: a17cc7684136da4418ddbcde4e0bb725, type: 3}
       insertIndex: -1
       addedObject: {fileID: 0}
