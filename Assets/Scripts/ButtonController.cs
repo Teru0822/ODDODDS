@@ -36,6 +36,17 @@ public class ButtonController : MonoBehaviour
 
     void Update()
     {
+        // UFOプレイ中かつアクティブなプレイセッション中のみ操作を許可する
+        if (!UFOCameraController.IsPlayingUfo || !UFOCameraController.IsPlaySessionActive)
+        {
+            _isPressed = false;
+            float inactiveTargetY = _originalLocalPos.y;
+            Vector3 inactivePos = transform.localPosition;
+            inactivePos.y = Mathf.Lerp(inactivePos.y, inactiveTargetY, Time.deltaTime * pressSpeed);
+            transform.localPosition = inactivePos;
+            return;
+        }
+
         var mouse = Mouse.current;
         if (mouse == null) return;
 
@@ -74,8 +85,9 @@ public class ButtonController : MonoBehaviour
     /// <summary>マウス座標がこのオブジェクトのCollider上にあるか判定</summary>
     bool IsMouseOverThis(Vector2 screenPos)
     {
-        if (_collider == null || Camera.main == null) return false;
-        Ray ray = Camera.main.ScreenPointToRay(screenPos);
+        Camera activeCam = UFOCameraController.Instance != null ? UFOCameraController.Instance.GetActiveCamera() : Camera.main;
+        if (_collider == null || activeCam == null) return false;
+        Ray ray = activeCam.ScreenPointToRay(screenPos);
         return _collider.Raycast(ray, out _, 1000f);
     }
 }

@@ -98,6 +98,7 @@ public class UFOArmController : MonoBehaviour
     // ─────────────────────────────────────
     // 内部状態
     private ArmState _state = ArmState.Idle;
+    public ArmState CurrentState => _state;
     private Vector2  _leverInput;
     private Vector3  _machineBasePos; // スクリプトがついているオブジェクトの初期座標
     private Vector3  _armInitialPos;
@@ -118,6 +119,11 @@ public class UFOArmController : MonoBehaviour
 
     private bool         _wantFingerOpen = false;
     public bool WantFingerOpen => _wantFingerOpen;
+
+    /// <summary>
+    /// アームが下降・掴み・上昇などの一連の動作中（Busy）であるかどうか。
+    /// </summary>
+    public bool IsBusy => _state != ArmState.Idle && _state != ArmState.Moving;
 
     // ─────────────────────────────────────
     [Header("揺れ（Sway）設定")]
@@ -150,6 +156,11 @@ public class UFOArmController : MonoBehaviour
     // ─────────────────────────────────────
     void Start()
     {
+        if (stretchRope == null)
+        {
+            stretchRope = GetComponentInChildren<StretchRope>(true);
+        }
+
         // 基準点を明確にする（指定があればそれ、なければ自分自身）
         _machineBasePos = (machineRoot != null) ? machineRoot.position : transform.position;
 

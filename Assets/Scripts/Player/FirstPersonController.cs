@@ -274,5 +274,16 @@ namespace App.Player
                 velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
             }
         }
+
+        /// <summary>
+        /// Toggles the visibility of the avatar (character model).
+        /// </summary>
+        public void SetAvatarVisibility(bool visible)
+        {
+            if (avatarRoot != null)
+            {
+                avatarRoot.gameObject.SetActive(visible);
+            }
+        }
     }
 }
