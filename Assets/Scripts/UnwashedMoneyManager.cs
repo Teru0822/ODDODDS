@@ -14,7 +14,16 @@ public class UnwashedMoneyManager : MonoBehaviour
     private float _currentAmount = 0f;
 
     /// <summary>現在の未洗浄金残高</summary>
-    public float CurrentAmount => _currentAmount;
+    public float CurrentAmount
+    {
+        get => _currentAmount;
+        set
+        {
+            _currentAmount = Mathf.Max(0f, value);
+            UpdateUI();
+            OnAmountChanged?.Invoke(_currentAmount);
+        }
+    }
 
     [Header("画面表示 (UI)")]
     [Tooltip("未洗浄金を表示するUIテキスト (任意)")]
@@ -79,4 +88,15 @@ public class UnwashedMoneyManager : MonoBehaviour
             displayText.text = string.Format(displayFormat, Mathf.FloorToInt(_currentAmount));
         }
     }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (Application.isPlaying && Instance == this)
+        {
+            UpdateUI();
+            OnAmountChanged?.Invoke(_currentAmount);
+        }
+    }
+#endif
 }
