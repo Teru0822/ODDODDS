@@ -155,6 +155,21 @@ public class Reticle : MonoBehaviour
         rt.sizeDelta = size;
     }
 
+    private void Update()
+    {
+        bool showReticle = true;
+        if (UFOCameraController.IsPlayingUfo)
+        {
+            showReticle = false;
+        }
+
+        GameObject targetGo = _autoCanvas != null ? _autoCanvas : _reticleContainer;
+        if (targetGo != null && targetGo.activeSelf != showReticle)
+        {
+            targetGo.SetActive(showReticle);
+        }
+    }
+
     private int ResolveSortingOrder()
     {
         if (!autoBringToFront) return sortingOrder;
