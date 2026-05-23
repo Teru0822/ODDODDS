@@ -111,13 +111,15 @@ public class ExchangeStation : InteractableHighlight
     {
         if (bin == null || cupPrefab == null || tubeSpawnPoint == null) return null;
 
-        // tube 上部に cup を生成
+        // tube 上部に cup を生成 (親なし → SetParent(true) で親 lossyScale による巨大化を防ぐ)
         Vector3 pos = tubeSpawnPoint.position;
         Quaternion rot = tubeSpawnPoint.rotation;
         Transform parent = spawnedCupParent != null ? spawnedCupParent : null;
-        GameObject cupGo = parent != null
-            ? Instantiate(cupPrefab, pos, rot, parent)
-            : Instantiate(cupPrefab, pos, rot);
+        GameObject cupGo = Instantiate(cupPrefab, pos, rot);
+        if (parent != null)
+        {
+            cupGo.transform.SetParent(parent, true);
+        }
 
         // 中身のボールを cup に流し込む
         var newCup = cupGo.GetComponent<BallCup>();

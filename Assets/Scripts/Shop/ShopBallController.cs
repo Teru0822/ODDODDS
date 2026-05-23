@@ -141,9 +141,12 @@ public class ShopBallController : MonoBehaviour
         Quaternion rot = ballSpawnPoint != null ? ballSpawnPoint.rotation : Quaternion.identity;
         Transform parent = spawnParent != null ? spawnParent : ballSpawnPoint;
 
-        GameObject spawned = parent != null
-            ? Instantiate(slot.BallPrefab, pos, rot, parent)
-            : Instantiate(slot.BallPrefab, pos, rot);
+        // 親なしで生成してからワールド変換維持で親子化 (親の lossyScale で巨大化するのを防ぐ)
+        GameObject spawned = Instantiate(slot.BallPrefab, pos, rot);
+        if (parent != null)
+        {
+            spawned.transform.SetParent(parent, true); // worldPositionStays=true でワールドスケールを保持
+        }
 
         if (!Mathf.Approximately(spawnScaleMultiplier, 1f))
         {
