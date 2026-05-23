@@ -13934,6 +13934,11 @@ Transform:
   - {fileID: 993797702}
   m_Father: {fileID: 1122561444}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1136937891 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 9047963099573447313, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+  m_PrefabInstance: {fileID: 5351351319220983938}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1137002559
 GameObject:
   m_ObjectHideFlags: 0
@@ -16267,7 +16272,7 @@ Canvas:
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
   m_SortingOrder: 0
-  m_TargetDisplay: 1
+  m_TargetDisplay: 3
 --- !u!224 &1448812826
 RectTransform:
   m_ObjectHideFlags: 0
@@ -21412,7 +21417,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4923901105416892814, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: m_TargetDisplay
-      value: 1
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 5336918042384276037, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: m_TargetDisplay
@@ -21441,7 +21446,7 @@ PrefabInstance:
     - target: {fileID: 8514869435957483499, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: ufoUiCanvas
       value: 
-      objectReference: {fileID: 919855220}
+      objectReference: {fileID: 1136937891}
     - target: {fileID: 8514869435957483499, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: playerCamera
       value: 
