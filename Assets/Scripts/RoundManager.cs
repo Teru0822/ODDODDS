@@ -77,7 +77,10 @@ public class RoundManager : MonoBehaviour
 
     private void Start()
     {
-        CreateHUD();
+        if (_hudCanvas == null)
+        {
+            CreateHUD();
+        }
         SetupWorldText();
         SetupListeners();
         UpdateUI();
@@ -147,6 +150,15 @@ public class RoundManager : MonoBehaviour
 
     private void CreateHUD()
     {
+        // Prevent duplicate HUD canvases
+        var existingCanvasGo = GameObject.Find("RoundHUDCanvas");
+        if (existingCanvasGo != null)
+        {
+            _hudCanvas = existingCanvasGo.GetComponent<Canvas>();
+            _hudRoundText = existingCanvasGo.GetComponentInChildren<TextMeshProUGUI>();
+            return;
+        }
+
         // Screen overlay HUD for display on player's camera screen
         GameObject canvasGo = new GameObject("RoundHUDCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
         _hudCanvas = canvasGo.GetComponent<Canvas>();
@@ -271,11 +283,32 @@ public class RoundManager : MonoBehaviour
 
         if (hasPlayedBall && isPlayFinished)
         {
+            // Check if player is holding a bin
+            var pickup = FindAnyObjectByType<CupPickupController>();
+            bool isHoldingBin = pickup != null && pickup.IsHoldingBin;
+
+            // Check if there are balls in any cups in the scene
+            int ballsInCups = 0;
+            var cups = FindObjectsByType<BallCup>(FindObjectsSortMode.None);
+            foreach (var cup in cups)
+            {
+                if (cup != null) ballsInCups += cup.BallCount;
+            }
+
+            // Check if there are any bins in the scene with balls
+            int ballsInBins = 0;
+            var bins = FindObjectsByType<CupBin>(FindObjectsSortMode.None);
+            foreach (var bin in bins)
+            {
+                if (bin != null) ballsInBins += bin.BallCount;
+            }
+
             var exchange = FindAnyObjectByType<ExchangeStation>();
             float totalValue = exchange != null ? exchange.CurrentTotalValue : 0f;
-            
-            // If they scored 0 value, there is no money to exchange, so advance immediately
-            if (totalValue <= 0f)
+
+            // If there are no balls in play, no bins held, no balls in cups, no balls in bins,
+            // and exchange has 0 value, then they scored 0. Advance the round automatically.
+            if (!isHoldingBin && ballsInCups == 0 && ballsInBins == 0 && totalValue <= 0f)
             {
                 EndRound();
             }
