@@ -173,6 +173,31 @@ namespace MiniGames.FallBall
 
         private void HandleGameCompleted(bool isSuccess, float multiplier)
         {
+            StartCoroutine(ShowResultAndReturn(isSuccess, multiplier));
+        }
+
+        private IEnumerator ShowResultAndReturn(bool isSuccess, float multiplier)
+        {
+            // タイマーやプロンプトを隠し、支払い確認テキストを流用して結果を表示
+            _timerPanel.SetActive(false);
+            _promptText.gameObject.SetActive(false);
+            _paymentPanel.SetActive(true);
+
+            if (isSuccess)
+            {
+                _paymentStatusText.text = $"<color=yellow>SUCCESS!</color>\n\nGoal Reached!\nYour money has doubled!\n\nPayout Multiplier: x{multiplier}";
+            }
+            else
+            {
+                _paymentStatusText.text = $"<color=red>GAME OVER</color>\n\nTime or Balls ran out.\nYou lost everything you bet...";
+            }
+
+            // 3秒間結果を表示
+            yield return new WaitForSeconds(3.0f);
+
+            // リザルト画面を閉じる
+            _paymentPanel.SetActive(false);
+
             // プレイ終了時のカメラと操作の復帰
             SwitchToPlayerCamera();
             
@@ -204,9 +229,9 @@ namespace MiniGames.FallBall
                 Debug.LogError("FallBall: 専用カメラ (Fall Ball Camera) が設定されていません！インスペクターで割り当ててください。");
             }
 
-            // マウスカーソルを再度ロック（必要に応じて）
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+            // ミニゲーム操作のためにマウスカーソルを表示・ロック解除
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
         }
 
         private void SwitchToPlayerCamera()
@@ -215,6 +240,10 @@ namespace MiniGames.FallBall
 
             if (playerCamera != null) playerCamera.enabled = true;
             if (_playerController != null) _playerController.enabled = true;
+
+            // 一人称視点に戻るためマウスカーソルを再度隠す
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
         }
 
         private void CreateDynamicUI()
