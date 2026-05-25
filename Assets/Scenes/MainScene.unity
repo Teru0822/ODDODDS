@@ -3537,7 +3537,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a73163fb97c1077468559edb3d3586e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RoundManager
-  isTurnSystemEnabled: 1
+  isTurnSystemEnabled: 0
   currentRound: 1
   currentPhase: 0
   worldRoundText: {fileID: 262892005}
@@ -13445,55 +13445,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!1 &1045027925
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1045027927}
-  - component: {fileID: 1045027926}
-  m_Layer: 0
-  m_Name: MoneyManeger
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1045027926
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1045027925}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 941e7240f5fa3bf4abf0346950a728aa, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MoneyManager
-  _currentMoney: 10000
-  moneyText: {fileID: 0}
-  _exponentialRate: 1.5
-  _initialDecreaseAmount: 100
-  _virtueMultiplier: 2
---- !u!4 &1045027927
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1045027925}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 26.63674, y: 5.68434, z: 15.66522}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1068196986 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 9198173782295560328, guid: 21263e10f5594d94999b51dbaa4c1191, type: 3}
@@ -13864,6 +13815,10 @@ GameObject:
   - component: {fileID: 1122561441}
   - component: {fileID: 1122561446}
   - component: {fileID: 1122561447}
+  - component: {fileID: 1122561451}
+  - component: {fileID: 1122561450}
+  - component: {fileID: 1122561449}
+  - component: {fileID: 1122561448}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -14026,6 +13981,84 @@ MonoBehaviour:
   autoBringToFront: 1
   persistAcrossScenes: 0
   logOnStart: 1
+--- !u!114 &1122561448
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1122561440}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b8018f2a26f50049a25007b6c9c97f3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WalletDisplayHUD
+  wallet: {fileID: 0}
+  holdKey: 3
+  font: {fileID: 0}
+  fallbackFontResourcePath: Font/Noto_Sans_JP/NotoSansJP-Medium SDF
+  backgroundColor: {r: 0, g: 0, b: 0, a: 0.65}
+  textColor: {r: 1, g: 1, b: 1, a: 1}
+  fontSize: 28
+  padding: {x: 24, y: 24}
+  panelInnerPadding: 16
+  anchor: 0
+  targetDisplay: 3
+  sortingOrder: 32000
+  autoBringToFront: 1
+  showVirtuePoints: 1
+  unwashedFormat: "\u672A\u6D17\u6D44\u91D1: \xA5{0:N0}"
+  washedFormat: "\u6240\u6301\u91D1: \xA5{0:N0}"
+  virtueFormat: "\u5FB3\u30DD\u30A4\u30F3\u30C8: {0}"
+  logOnStart: 1
+--- !u!114 &1122561449
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1122561440}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 941e7240f5fa3bf4abf0346950a728aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MoneyManager
+  wallet: {fileID: 0}
+  moneyText: {fileID: 0}
+  moneyFormat: "Money:\n\xA5{0:N0}"
+  _exponentialRate: 1.5
+  _initialDecreaseAmount: 100
+  _virtueMultiplier: 2
+--- !u!114 &1122561450
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1122561440}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 300af02661aff3a45ac1fffbd0ab2e7f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UnwashedMoneyManager
+  wallet: {fileID: 0}
+  displayText: {fileID: 0}
+  displayFormat: "Unwashed: \xA5{0:N0}"
+--- !u!114 &1122561451
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1122561440}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f8b07fdc8647ed42835448b4681afc0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerWallet
+  _unwashedAmount: 0
+  _washedAmount: 10000
+  _virtuePoints: 0
 --- !u!1 &1126775031
 GameObject:
   m_ObjectHideFlags: 0
@@ -19564,53 +19597,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1249829682101682178, guid: 71a65492b11841b40bd76899b27aa339, type: 3}
   m_PrefabInstance: {fileID: 1770780587}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1867306170
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1867306172}
-  - component: {fileID: 1867306171}
-  m_Layer: 0
-  m_Name: UnwashedMoneyManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1867306171
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1867306170}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 300af02661aff3a45ac1fffbd0ab2e7f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UnwashedMoneyManager
-  _currentAmount: 10000
-  displayText: {fileID: 0}
-  displayFormat: "Unwashed: \xA5{0:N0}"
---- !u!4 &1867306172
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1867306170}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 11.41901, y: 4.30793, z: 7.67125}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1870503462
 GameObject:
   m_ObjectHideFlags: 0
@@ -21906,7 +21892,6 @@ SceneRoots:
   - {fileID: 702227218}
   - {fileID: 1448812826}
   - {fileID: 1524158320}
-  - {fileID: 1045027927}
   - {fileID: 290399823}
   - {fileID: 1377905150}
   - {fileID: 1122561444}
@@ -21914,7 +21899,6 @@ SceneRoots:
   - {fileID: 2143875344}
   - {fileID: 1026770109774195312}
   - {fileID: 903258152}
-  - {fileID: 1867306172}
   - {fileID: 126629605}
   - {fileID: 662814826}
   - {fileID: 1105229197}
