@@ -16,8 +16,8 @@ namespace MiniGames.FallBall
         [Header("Player Tracking")]
         [Tooltip("プレイヤーのカメラ（通常時はこちらがON、プレイ中はOFFになります）")]
         [SerializeField] private Camera playerCamera;
-        [Tooltip("プレイヤーの操作を止めるためのコンポーネントがあればここに設定")]
-        [SerializeField] private MonoBehaviour playerController;
+        [Tooltip("プレイヤーの操作を止めるためのコンポーネント（FirstPersonControllerなど）があればここに設定")]
+        [SerializeField] private App.Player.FirstPersonController playerController;
 
         private bool _isPlayerNear = false;
         private bool _showPrompt = false;
