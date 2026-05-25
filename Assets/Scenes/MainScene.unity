@@ -13866,7 +13866,7 @@ GameObject:
   - component: {fileID: 1122561447}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -15369,6 +15369,58 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1156404441265726775, guid: f7aec59fe3825914eab9fad2d7342d43, type: 3}
   m_PrefabInstance: {fileID: 1294632374}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1299434721 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4324723735757659900, guid: 5f116004a5a7d41818ff51e7c21c46ea, type: 3}
+  m_PrefabInstance: {fileID: 1377905150}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1299434724 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6357331151520703328, guid: 5f116004a5a7d41818ff51e7c21c46ea, type: 3}
+  m_PrefabInstance: {fileID: 1377905150}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1299434721}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff2e8729dde154568a328f9f4517f1cb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiniGames.FallBall.FallBallGameManager
+--- !u!114 &1299434726
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1299434721}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4082e5810a344beeb05877d57bd5d00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiniGames.FallBall.FallBallInteractionController
+  fallBallManager: {fileID: 1299434724}
+  fallBallCamera: {fileID: 358432284}
+  playerCamera: {fileID: 1126775032}
+--- !u!65 &1299434727
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1299434721}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 6.4984245, y: 8.55668, z: 8.628197}
+  m_Center: {x: 0.12248224, y: -0.58522373, z: -1.5969436}
 --- !u!4 &1301409293 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1503717751264703810, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
@@ -16325,6 +16377,14 @@ PrefabInstance:
       propertyPath: m_LocalPosition.y
       value: 1.077
       objectReference: {fileID: 0}
+    - target: {fileID: 6357331151520703328, guid: 5f116004a5a7d41818ff51e7c21c46ea, type: 3}
+      propertyPath: maxPlayCount
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6357331151520703328, guid: 5f116004a5a7d41818ff51e7c21c46ea, type: 3}
+      propertyPath: allowContinuousPlay
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -16334,7 +16394,13 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 208800503518365840, guid: 5f116004a5a7d41818ff51e7c21c46ea, type: 3}
       insertIndex: 1
       addedObject: {fileID: 844282509}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4324723735757659900, guid: 5f116004a5a7d41818ff51e7c21c46ea, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1299434727}
+    - targetCorrespondingSourceObject: {fileID: 4324723735757659900, guid: 5f116004a5a7d41818ff51e7c21c46ea, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1299434726}
   m_SourcePrefab: {fileID: 100100000, guid: 5f116004a5a7d41818ff51e7c21c46ea, type: 3}
 --- !u!4 &1421381523 stripped
 Transform:
