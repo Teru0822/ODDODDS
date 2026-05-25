@@ -184,10 +184,25 @@ namespace MiniGames.FallBall
 
         private void SwitchToFallBallCamera()
         {
-            if (playerCamera != null) playerCamera.enabled = false;
+            int targetDisp = 0; // デフォルトはDisplay 1
+
+            if (playerCamera != null) 
+            {
+                targetDisp = playerCamera.targetDisplay;
+                playerCamera.enabled = false;
+            }
             if (_playerController != null) _playerController.enabled = false;
 
-            if (fallBallCamera != null) fallBallCamera.enabled = true;
+            if (fallBallCamera != null) 
+            {
+                // カメラの出力先ディスプレイをプレイヤーカメラと同じに強制する（No cameras rendering防止）
+                fallBallCamera.targetDisplay = targetDisp;
+                fallBallCamera.enabled = true;
+            }
+            else
+            {
+                Debug.LogError("FallBall: 専用カメラ (Fall Ball Camera) が設定されていません！インスペクターで割り当ててください。");
+            }
 
             // マウスカーソルを再度ロック（必要に応じて）
             Cursor.lockState = CursorLockMode.Locked;
