@@ -75,6 +75,7 @@ namespace MiniGames.FallBall
 
         private void OnTriggerEnter(Collider other)
         {
+            Debug.Log($"FallBall TriggerEnter: {other.name}, tag={other.tag}");
             // Playerタグを持つオブジェクトが近づいたか判定
             if (other.CompareTag("Player"))
             {
@@ -82,17 +83,20 @@ namespace MiniGames.FallBall
                 if (fallBallManager != null && !fallBallManager.IsPlaying)
                 {
                     _showPrompt = true;
+                    Debug.Log("FallBall: プレイヤーが接近し、プロンプトを表示します");
                 }
             }
         }
 
         private void OnTriggerExit(Collider other)
         {
+            Debug.Log($"FallBall TriggerExit: {other.name}, tag={other.tag}");
             if (other.CompareTag("Player"))
             {
                 _isPlayerNear = false;
                 _showPrompt = false;
                 _isPaymentScreen = false;
+                Debug.Log("FallBall: プレイヤーが離れました");
             }
         }
 
@@ -204,6 +208,11 @@ namespace MiniGames.FallBall
             _dynamicCanvas = canvasGo.GetComponent<Canvas>();
             _dynamicCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
             _dynamicCanvas.sortingOrder = 31000;
+            
+            if (playerCamera != null)
+            {
+                _dynamicCanvas.targetDisplay = playerCamera.targetDisplay;
+            }
 
             CanvasScaler scaler = canvasGo.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
