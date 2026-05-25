@@ -14,10 +14,11 @@ namespace MiniGames.FallBall
         [SerializeField] private Camera fallBallCamera;
         
         [Header("Player Tracking")]
-        [Tooltip("プレイヤーのカメラ（通常時はこちらがON、プレイ中はOFFになります）")]
+        [Tooltip("プレイヤーのカメラ（通常時はこちらがON、プレイ中はOFFになります）。空欄なら自動取得します。")]
         [SerializeField] private Camera playerCamera;
-        [Tooltip("プレイヤーの操作を止めるためのコンポーネント（FirstPersonControllerなど）があればここに設定")]
-        [SerializeField] private App.Player.FirstPersonController playerController;
+        
+        // 自動取得用
+        private App.Player.FirstPersonController _playerController;
 
         private bool _isPlayerNear = false;
         private bool _showPrompt = false;
@@ -36,6 +37,13 @@ namespace MiniGames.FallBall
 
         private void Start()
         {
+            // プレイヤーとカメラの自動取得
+            _playerController = FindAnyObjectByType<App.Player.FirstPersonController>();
+            if (playerCamera == null && _playerController != null)
+            {
+                playerCamera = _playerController.GetComponentInChildren<Camera>(true);
+            }
+
             // Trigger設定を強制
             Collider col = GetComponent<Collider>();
             if (col != null) col.isTrigger = true;
@@ -173,7 +181,7 @@ namespace MiniGames.FallBall
         private void SwitchToFallBallCamera()
         {
             if (playerCamera != null) playerCamera.enabled = false;
-            if (playerController != null) playerController.enabled = false;
+            if (_playerController != null) _playerController.enabled = false;
 
             if (fallBallCamera != null) fallBallCamera.enabled = true;
 
@@ -187,7 +195,7 @@ namespace MiniGames.FallBall
             if (fallBallCamera != null) fallBallCamera.enabled = false;
 
             if (playerCamera != null) playerCamera.enabled = true;
-            if (playerController != null) playerController.enabled = true;
+            if (_playerController != null) _playerController.enabled = true;
         }
 
         private void CreateDynamicUI()
