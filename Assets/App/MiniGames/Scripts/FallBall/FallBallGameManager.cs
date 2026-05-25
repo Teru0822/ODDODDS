@@ -163,7 +163,7 @@ namespace MiniGames.FallBall
             Debug.Log($"FallBall: 新しいボールを出しました！ (球数: {UsedBallsCount}/{maxPlayCount})");
         }
 
-        public void Initialize(float betAmount)
+        public void Initialize(int betAmount)
         {
             currentBet = betAmount;
             isFinished = false;

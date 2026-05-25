@@ -154,8 +154,8 @@ namespace MiniGames.FallBall
             // カメラとプレイヤーの操作切り替え
             SwitchToFallBallCamera();
 
-            // ゲーム開始
-            fallBallManager.Initialize(currentMoney);
+            // ゲーム開始 (Initializeはint要求のためキャスト)
+            fallBallManager.Initialize(Mathf.FloorToInt(currentMoney));
             fallBallManager.StartGame();
         }
 
