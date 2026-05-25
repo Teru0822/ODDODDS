@@ -26,11 +26,25 @@ namespace MiniGames.FallBall
 
         [Header("Debug & Test")]
         [Tooltip("テスト用に、ボールが落ちてもゲームを終了せず操作を続けられるようにする")]
-        [SerializeField] private bool allowContinuousPlay = true;
+        [SerializeField] private bool allowContinuousPlay = false; // 動的UI連動のためデフォルトfalseに
+
+        [Header("Play Limits")]
+        [Tooltip("1プレイでの制限時間（秒）")]
+        [SerializeField] private float maxPlayTime = 60f;
+        [Tooltip("1プレイで補充できる最大球数")]
+        [SerializeField] private int maxPlayCount = 5;
         
         private Rigidbody ballRigidbody;
-        private int currentBet;
+        private float currentBet; // 全額対応のためfloatに変更
         private bool isFinished = false;
+        private bool isPlaying = false; // プレイ中かどうかのフラグ
+
+        // 状態公開用プロパティ
+        public bool IsPlaying => isPlaying;
+        public float PlayTimer { get; private set; }
+        public int UsedBallsCount { get; private set; }
+        public int MaxPlayCount => maxPlayCount;
+        public float CurrentBet => currentBet;
 
         private GameObject ballTemplate;
         private Vector3 initialBallPosition;
@@ -86,8 +100,23 @@ namespace MiniGames.FallBall
 
         private void Update()
         {
+            if (isPlaying)
+            {
+                // タイマー減少
+                PlayTimer -= Time.deltaTime;
+                if (PlayTimer <= 0)
+                {
+                    PlayTimer = 0;
+                    GameOver(false); // 時間切れで失敗
+                    return;
+                }
+            }
+
             if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
             {
+                // プレイ中のみスペースキー（補充）を許可する
+                if (!isPlaying && !allowContinuousPlay) return;
+
                 Debug.Log($"FallBallGameManager: Spaceキー検知! refillController={refillController != null}, IsRefilling={refillController?.IsRefilling}");
                 
                 // 補充アニメーション中は追加スポーンを無効化
@@ -99,12 +128,23 @@ namespace MiniGames.FallBall
 
         private void SpawnNewBall()
         {
+            if (isPlaying)
+            {
+                if (UsedBallsCount >= maxPlayCount)
+                {
+                    Debug.Log("FallBallGameManager: 制限球数に達しました。");
+                    GameOver(false); // 弾切れ失敗
+                    return;
+                }
+                UsedBallsCount++;
+            }
+
             // RefillController が設定されている場合はアニメーション付きで補充
             // (RefillController は自身の ballTemplate を持つので GameManager の ballTemplate は不要)
             if (refillController != null)
             {
                 StartCoroutine(refillController.PlayRefillSequence());
-                Debug.Log("FallBall: 補充アニメーションを開始しました");
+                Debug.Log($"FallBall: 補充アニメーションを開始しました (球数: {UsedBallsCount}/{maxPlayCount})");
                 return;
             }
             
@@ -120,13 +160,16 @@ namespace MiniGames.FallBall
                 rb.isKinematic = false;
                 rb.linearVelocity = Vector3.zero;
             }
-            Debug.Log("FallBall: Spaceキーで新しいボールを出しました！");
+            Debug.Log($"FallBall: 新しいボールを出しました！ (球数: {UsedBallsCount}/{maxPlayCount})");
         }
 
-        public void Initialize(int betAmount)
+        public void Initialize(float betAmount)
         {
             currentBet = betAmount;
             isFinished = false;
+            isPlaying = false;
+            PlayTimer = maxPlayTime;
+            UsedBallsCount = 0;
             
             if (ballObject != null)
             {
@@ -147,10 +190,42 @@ namespace MiniGames.FallBall
         public void StartGame()
         {
             // ゲーム開始：操作と物理挙動を有効化
+            isPlaying = true;
             if (barController != null) barController.SetActive(true);
             if (ballRigidbody != null) ballRigidbody.isKinematic = false;
             
             Debug.Log("FallBall Started!");
+            
+            // 最初の球をスポーンする
+            SpawnNewBall();
+        }
+
+        public void GameOver(bool isSuccess)
+        {
+            if (isFinished) return;
+            isFinished = true;
+            isPlaying = false;
+
+            if (barController != null) 
+            {
+                barController.SetActive(false);
+            }
+
+            if (isSuccess)
+            {
+                Debug.Log($"FallBall: Goal Reached! Success. Won: {currentBet * successMultiplier}");
+                if (MoneyManager.Instance != null && currentBet > 0)
+                {
+                    MoneyManager.Instance.AddMoney(currentBet, successMultiplier);
+                }
+            }
+            else
+            {
+                Debug.Log("FallBall: Game Over! Failed.");
+                // お金はすでにプレイ開始時に徴収されているので加算なし（没収）
+            }
+
+            OnGameCompleted?.Invoke(isSuccess, isSuccess ? successMultiplier : 0);
         }
 
         /// <summary>
@@ -161,15 +236,8 @@ namespace MiniGames.FallBall
         {
             Debug.Log("FallBall: ゴールに到達！成功です！");
             if (isFinished && !allowContinuousPlay) return;
-            isFinished = true;
             
-            if (!allowContinuousPlay && barController != null) 
-            {
-                barController.SetActive(false);
-            }
-            
-            Debug.Log($"FallBall: Goal Reached! Success. Won: {currentBet * successMultiplier}");
-            OnGameCompleted?.Invoke(true, successMultiplier);
+            GameOver(true);
         }
 
         /// <summary>
