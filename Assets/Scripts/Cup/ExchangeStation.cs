@@ -94,17 +94,20 @@ public class ExchangeStation : InteractableHighlight
     [Tooltip("開閉アニメーション対象のドア Transform。null なら子から 'ex_door' を自動検索")]
     public Transform exDoor;
 
-    [Tooltip("ドアを開く時に加えるローカル移動 (デフォルト: 局所 Z+ 0.3)")]
-    public Vector3 doorOpenLocalOffset = new Vector3(0f, 0f, 0.3f);
+    [Tooltip("ex_door 開く時の移動量 (ex_door 自身のローカル Z+ 方向、メートル)")]
+    public float doorOpenDistance = 0.3f;
 
-    [Tooltip("ボタン押下からドアを開き始めるまでの遅延 (秒)")]
-    public float doorOpenDelay = 2.0f;
+    [Tooltip("ボタンクリックから ex_door が開き始めるまでの秒数 (デフォルト t=2)")]
+    public float doorOpenTime = 2.0f;
 
-    [Tooltip("ドアの開閉アニメーション秒数")]
+    [Tooltip("ボタンクリックから money 飛散・所持金加算が始まるまでの秒数 (デフォルト t=4)")]
+    public float scatterTime = 4.0f;
+
+    [Tooltip("ボタンクリックから ex_door が閉じ始めるまでの秒数 (デフォルト t=8)")]
+    public float doorCloseTime = 8.0f;
+
+    [Tooltip("ドアの開閉アニメーション秒数 (片方向)")]
     public float doorAnimDuration = 0.4f;
-
-    [Tooltip("ドアを開き終わってから money 飛散開始までの遅延 (秒)")]
-    public float scatterDelay = 2.0f;
 
     [Header("Money 飛散演出")]
     [Tooltip("飛散時に各 money に与える外向き初速の大きさ (m/s)")]
@@ -252,28 +255,21 @@ public class ExchangeStation : InteractableHighlight
         // クリック直後に累計値表示はクリアし、ボタン側の再押下を防ぐ
         if (resetValueOnDispense) ResetValue();
 
-        // クリック時刻を起点にドア開始遅延を計算する
+        // クリック時刻 (t=0) を起点にすべてのタイミングを絶対時刻で待機する
         float clickTime = Time.time;
 
         _spawnedMoney.Clear();
-        yield return SpawnMoneyOverTime(moneyBigPrefab, bigCount, "big");
-        yield return SpawnMoneyOverTime(moneyMiddlePrefab, middleCount, "middle");
-        yield return SpawnMoneyOverTime(moneySmallPrefab, smallCount, "small");
+        // money 生成は t=0 から並行して進める (バックグラウンドで)
+        StartCoroutine(SpawnAllMoneyRoutine(bigCount, middleCount, smallCount));
 
-        // クリックから doorOpenDelay 秒経つまで待つ
-        float waitOpen = doorOpenDelay - (Time.time - clickTime);
-        if (waitOpen > 0f) yield return new WaitForSeconds(waitOpen);
-
-        // ex_door を局所 Z+ に開く
+        // t = doorOpenTime まで待つ → ex_door を開く
+        yield return WaitUntilAfter(clickTime, doorOpenTime);
         yield return AnimateDoor(opening: true);
 
-        // 開きっぱなしで scatterDelay 秒待つ
-        if (scatterDelay > 0f) yield return new WaitForSeconds(scatterDelay);
-
-        // money を順次飛散させて Destroy
+        // t = scatterTime まで待つ → money 飛散 + 所持金加算
+        yield return WaitUntilAfter(clickTime, scatterTime);
         yield return ScatterSpawnedMoney();
 
-        // 所持金に加算 (MoneyManager 経由)
         if (value > 0)
         {
             if (MoneyManager.Instance != null)
@@ -286,11 +282,26 @@ public class ExchangeStation : InteractableHighlight
             }
         }
 
-        // ex_door を閉じる
+        // t = doorCloseTime まで ex_door は開いた位置で固定 → 到達後に閉じる
+        yield return WaitUntilAfter(clickTime, doorCloseTime);
         yield return AnimateDoor(opening: false);
 
         _dispensing = false;
         onDispenseComplete?.Invoke();
+    }
+
+    /// <summary>clickTime からの絶対経過秒数 targetElapsed まで待つ。すでに過ぎていれば即時 return。</summary>
+    private IEnumerator WaitUntilAfter(float clickTime, float targetElapsed)
+    {
+        float remaining = targetElapsed - (Time.time - clickTime);
+        if (remaining > 0f) yield return new WaitForSeconds(remaining);
+    }
+
+    private IEnumerator SpawnAllMoneyRoutine(int bigCount, int middleCount, int smallCount)
+    {
+        yield return SpawnMoneyOverTime(moneyBigPrefab, bigCount, "big");
+        yield return SpawnMoneyOverTime(moneyMiddlePrefab, middleCount, "middle");
+        yield return SpawnMoneyOverTime(moneySmallPrefab, smallCount, "small");
     }
 
     private IEnumerator AnimateDoor(bool opening)
@@ -301,8 +312,12 @@ public class ExchangeStation : InteractableHighlight
             _doorClosedLocalPos = exDoor.localPosition;
             _doorInitialized = true;
         }
+        // ex_door 自身の局所 Z+ 方向に doorOpenDistance だけずらす。
+        // localPosition は親の座標系なので、ex_door 自身の回転で回して親の座標系に変換する。
+        Vector3 offsetLocalSelf = new Vector3(0f, 0f, doorOpenDistance);
+        Vector3 offsetInParent = exDoor.localRotation * offsetLocalSelf;
         Vector3 from = exDoor.localPosition;
-        Vector3 to = opening ? (_doorClosedLocalPos + doorOpenLocalOffset) : _doorClosedLocalPos;
+        Vector3 to = opening ? (_doorClosedLocalPos + offsetInParent) : _doorClosedLocalPos;
         float dur = Mathf.Max(0.001f, doorAnimDuration);
         float t = 0f;
         while (t < dur)
