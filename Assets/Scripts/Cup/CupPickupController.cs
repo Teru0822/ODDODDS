@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 /// <summary>
@@ -156,7 +157,10 @@ public class CupPickupController : MonoBehaviour
     {
         var mouse = Mouse.current;
         if (mouse == null) return false;
-        return mouse.leftButton.wasPressedThisFrame;
+        if (!mouse.leftButton.wasPressedThisFrame) return false;
+        // UI 要素 (報酬選択ダイアログなど) 上のクリックは EventSystem に任せ、ワールドへは流さない
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return false;
+        return true;
     }
 
     private void HandleClick(InteractableHighlight target)
@@ -169,6 +173,11 @@ public class CupPickupController : MonoBehaviour
                 btn.OnPressed();
                 if (logEvents) Debug.Log($"[CupPickup] ExchangeButton pressed: {btn.name}");
                 _currentLooked = null; // 押した直後は対象を再評価 (累計値 0 になればハイライトも消える)
+                break;
+            case TypewriterInteractable tw:
+                tw.OnPressed();
+                if (logEvents) Debug.Log($"[CupPickup] Typewriter clicked: {tw.name}");
+                _currentLooked = null; // 直後は UI モードに入るので対象を再評価
                 break;
         }
     }
