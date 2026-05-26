@@ -58,24 +58,23 @@ public class ShopBallSlot : MonoBehaviour
     [Tooltip("自動生成する値札の色")]
     public Color autoTagColor = Color.white;
 
-    [Header("ハイライト")]
-    [Tooltip("購入可能時のティント色")]
+    [Header("ハイライト (アウトライン)")]
+    [Tooltip("購入可能時の輪郭色")]
     public Color affordableColor = new Color(0.25f, 1f, 0.4f, 1f);
 
-    [Tooltip("購入不可時のティント色")]
+    [Tooltip("購入不可時の輪郭色")]
     public Color notAffordableColor = new Color(1f, 0.3f, 0.3f, 1f);
 
-    [Range(0f, 1f)]
-    [Tooltip("ハイライトの強さ (0=オリジナル, 1=完全置換)")]
-    public float highlightStrength = 0.65f;
+    [Range(0f, 0.05f)]
+    [Tooltip("輪郭の太さ (オブジェクト空間で法線に沿った押し出し量)")]
+    public float outlineWidth = 0.005f;
 
     [Tooltip("値札テキスト自体もハイライト色に追従させる")]
     public bool tintPriceTag = true;
 
     // 内部状態
     private GameObject _displayInstance;
-    private Renderer[] _highlightTargets;
-    private Color[] _originalBaseColors;
+    private List<Renderer> _outlineRenderers;
     private MaterialPropertyBlock _mpb;
     private Color _originalTagColor;
     private bool _purchased = false;
@@ -85,9 +84,6 @@ public class ShopBallSlot : MonoBehaviour
     public float Price => price;
     public GameObject BallPrefab => ballPrefab;
 
-    static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
-    static readonly int LegacyColorId = Shader.PropertyToID("_Color");
-
     private ShopBallController _ownerController;
 
     private void Start()
@@ -95,8 +91,7 @@ public class ShopBallSlot : MonoBehaviour
         // 親ヒエラルキーから ShopBallController を探す (billboard カメラ参照用)
         _ownerController = GetComponentInParent<ShopBallController>();
         SetupDisplayBall();
-        CollectHighlightTargets();
-        CacheOriginalColors();
+        BuildOutlines();
         SetupPriceTag();
         ApplyHighlight(false, false);
     }
@@ -169,7 +164,7 @@ public class ShopBallSlot : MonoBehaviour
         }
     }
 
-    private void CollectHighlightTargets()
+    private void BuildOutlines()
     {
         var list = new List<Renderer>();
         if (_displayInstance != null)
@@ -180,27 +175,9 @@ public class ShopBallSlot : MonoBehaviour
         {
             GetComponentsInChildren<Renderer>(true, list);
         }
-        // TextMeshPro 3D が持つ MeshRenderer は除外（値札は tintPriceTag 側で扱う）
-        list.RemoveAll(r => r == null || r.GetComponent<TextMeshPro>() != null);
-        _highlightTargets = list.ToArray();
+        var sources = OutlineHighlightUtil.FilterRenderers(list);
+        _outlineRenderers = OutlineHighlightUtil.CreateOutlineCopies(sources);
         _mpb = new MaterialPropertyBlock();
-    }
-
-    private void CacheOriginalColors()
-    {
-        if (_highlightTargets == null) return;
-        _originalBaseColors = new Color[_highlightTargets.Length];
-        for (int i = 0; i < _highlightTargets.Length; i++)
-        {
-            Color c = Color.white;
-            var mat = _highlightTargets[i].sharedMaterial;
-            if (mat != null)
-            {
-                if (mat.HasProperty(BaseColorId)) c = mat.GetColor(BaseColorId);
-                else if (mat.HasProperty(LegacyColorId)) c = mat.GetColor(LegacyColorId);
-            }
-            _originalBaseColors[i] = c;
-        }
     }
 
     private void SetupPriceTag()
@@ -247,35 +224,15 @@ public class ShopBallSlot : MonoBehaviour
         priceTagText.text = string.Format(priceTagFormat, Mathf.FloorToInt(price));
     }
 
-    /// <summary>ハイライト適用。show=false で解除。</summary>
+    /// <summary>ハイライト適用。show=false で解除。affordable で輪郭の色を切り替え。</summary>
     public void ApplyHighlight(bool show, bool affordable)
     {
-        if (_highlightTargets == null) return;
-
-        if (!show)
-        {
-            for (int i = 0; i < _highlightTargets.Length; i++)
-            {
-                if (_highlightTargets[i] == null) continue;
-                _highlightTargets[i].SetPropertyBlock(null);
-            }
-            if (tintPriceTag && priceTagText != null) priceTagText.color = _originalTagColor;
-            return;
-        }
-
         Color target = affordable ? affordableColor : notAffordableColor;
-        for (int i = 0; i < _highlightTargets.Length; i++)
+        OutlineHighlightUtil.SetActive(_outlineRenderers, show, target, outlineWidth, _mpb);
+        if (tintPriceTag && priceTagText != null)
         {
-            var r = _highlightTargets[i];
-            if (r == null) continue;
-            Color baseColor = _originalBaseColors != null && i < _originalBaseColors.Length ? _originalBaseColors[i] : Color.white;
-            Color tinted = Color.Lerp(baseColor, target, highlightStrength);
-            r.GetPropertyBlock(_mpb);
-            _mpb.SetColor(BaseColorId, tinted);
-            _mpb.SetColor(LegacyColorId, tinted);
-            r.SetPropertyBlock(_mpb);
+            priceTagText.color = show ? target : _originalTagColor;
         }
-        if (tintPriceTag && priceTagText != null) priceTagText.color = target;
     }
 
     /// <summary>このスロットの陳列ボールが ray と交差するか判定。当たれば最近接 hit を返す。</summary>

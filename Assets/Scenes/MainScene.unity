@@ -2826,6 +2826,17 @@ MonoBehaviour:
   dispenseInitialVelocity: {x: 0, y: 0, z: 0}
   dispenseRandomYRotation: 1
   resetValueOnDispense: 1
+  exDoor: {fileID: 0}
+  doorOpenDistance: 0.7
+  doorOpenTime: 2
+  scatterTime: 4
+  doorCloseTime: 8
+  doorAnimDuration: 0.4
+  scatterSpeed: 3.5
+  scatterUpwardBias: 0.6
+  scatterAngularSpeed: 12
+  scatterInterval: 0.05
+  scatterLifetime: 0.6
   onExchange:
     m_PersistentCalls:
       m_Calls: []
@@ -13971,7 +13982,7 @@ MonoBehaviour:
   shape: 2
   color: {r: 1, g: 1, b: 1, a: 0.9}
   dotSize: 6
-  armLength: 12
+  armLength: 4
   armThickness: 2
   centerGap: 4
   plusWithCenterDot: 0
