@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using TMPro;
@@ -89,6 +90,41 @@ public class ExchangeStation : InteractableHighlight
     [Tooltip("払い出し完了後に累計値を 0 にリセットする")]
     public bool resetValueOnDispense = true;
 
+    [Header("ドア演出 (ex_door)")]
+    [Tooltip("開閉アニメーション対象のドア Transform。null なら子から 'ex_door' を自動検索")]
+    public Transform exDoor;
+
+    [Tooltip("ex_door 開く時の移動量 (ex_door 自身のローカル Z+ 方向、メートル)")]
+    public float doorOpenDistance = 0.3f;
+
+    [Tooltip("ボタンクリックから ex_door が開き始めるまでの秒数 (デフォルト t=2)")]
+    public float doorOpenTime = 2.0f;
+
+    [Tooltip("ボタンクリックから money 飛散・所持金加算が始まるまでの秒数 (デフォルト t=4)")]
+    public float scatterTime = 4.0f;
+
+    [Tooltip("ボタンクリックから ex_door が閉じ始めるまでの秒数 (デフォルト t=8)")]
+    public float doorCloseTime = 8.0f;
+
+    [Tooltip("ドアの開閉アニメーション秒数 (片方向)")]
+    public float doorAnimDuration = 0.4f;
+
+    [Header("Money 飛散演出")]
+    [Tooltip("飛散時に各 money に与える外向き初速の大きさ (m/s)")]
+    public float scatterSpeed = 3.5f;
+
+    [Tooltip("飛散初速のランダム上方成分 (0=水平, 1=ほぼ真上)")]
+    [Range(0f, 1f)] public float scatterUpwardBias = 0.6f;
+
+    [Tooltip("飛散時に各 money に与える角速度の大きさ (rad/s)")]
+    public float scatterAngularSpeed = 12f;
+
+    [Tooltip("飛散を 1 個ずつずらす間隔 (秒)。0 で一斉")]
+    public float scatterInterval = 0.05f;
+
+    [Tooltip("飛散開始から各 money を Destroy するまでの寿命 (秒)")]
+    public float scatterLifetime = 0.6f;
+
     [Header("イベント")]
     [Tooltip("交換成立時に発火 (生成された cup の BallCup を引数に)")]
     public ExchangeEvent onExchange;
@@ -111,6 +147,10 @@ public class ExchangeStation : InteractableHighlight
     /// <summary>現在の累計価値 (吸い込みごとに加算)</summary>
     public float CurrentTotalValue => currentTotalValue;
 
+    private Vector3 _doorClosedLocalPos;
+    private bool _doorInitialized;
+    private readonly List<GameObject> _spawnedMoney = new List<GameObject>();
+
     private void Start()
     {
         // valueDisplayText が未指定なら子から自動検索 (TMP_Text 派生: TextMeshPro / TextMeshProUGUI 両対応)
@@ -132,6 +172,24 @@ public class ExchangeStation : InteractableHighlight
                 }
             }
             if (found != null) moneySpawner = found;
+        }
+        // exDoor 自動検索
+        if (exDoor == null)
+        {
+            var d = transform.Find("ex_door");
+            if (d == null)
+            {
+                foreach (var t in GetComponentsInChildren<Transform>(true))
+                {
+                    if (t.name == "ex_door") { d = t; break; }
+                }
+            }
+            if (d != null) exDoor = d;
+        }
+        if (exDoor != null)
+        {
+            _doorClosedLocalPos = exDoor.localPosition;
+            _doorInitialized = true;
         }
         UpdateValueDisplay();
     }
@@ -194,17 +252,115 @@ public class ExchangeStation : InteractableHighlight
 
         Debug.Log($"[ExchangeStation] DispenseMoney: value=¥{value}, big={bigCount}, middle={middleCount}, small={smallCount}", this);
 
-        yield return SpawnMoneyOverTime(moneyBigPrefab, bigCount, "big");
-        yield return SpawnMoneyOverTime(moneyMiddlePrefab, middleCount, "middle");
-        yield return SpawnMoneyOverTime(moneySmallPrefab, smallCount, "small");
+        // クリック直後に累計値表示はクリアし、ボタン側の再押下を防ぐ
+        if (resetValueOnDispense) ResetValue();
 
-        if (resetValueOnDispense)
+        // クリック時刻 (t=0) を起点にすべてのタイミングを絶対時刻で待機する
+        float clickTime = Time.time;
+
+        _spawnedMoney.Clear();
+        // money 生成は t=0 から並行して進める (バックグラウンドで)
+        StartCoroutine(SpawnAllMoneyRoutine(bigCount, middleCount, smallCount));
+
+        // t = doorOpenTime まで待つ → ex_door を開く
+        yield return WaitUntilAfter(clickTime, doorOpenTime);
+        yield return AnimateDoor(opening: true);
+
+        // t = scatterTime まで待つ → money 飛散 + 所持金加算
+        yield return WaitUntilAfter(clickTime, scatterTime);
+        yield return ScatterSpawnedMoney();
+
+        if (value > 0)
         {
-            ResetValue();
+            if (MoneyManager.Instance != null)
+            {
+                MoneyManager.Instance.AddMoney(value);
+            }
+            else
+            {
+                Debug.LogWarning("[ExchangeStation] MoneyManager.Instance が見つからず、所持金加算をスキップしました。", this);
+            }
         }
+
+        // t = doorCloseTime まで ex_door は開いた位置で固定 → 到達後に閉じる
+        yield return WaitUntilAfter(clickTime, doorCloseTime);
+        yield return AnimateDoor(opening: false);
 
         _dispensing = false;
         onDispenseComplete?.Invoke();
+    }
+
+    /// <summary>clickTime からの絶対経過秒数 targetElapsed まで待つ。すでに過ぎていれば即時 return。</summary>
+    private IEnumerator WaitUntilAfter(float clickTime, float targetElapsed)
+    {
+        float remaining = targetElapsed - (Time.time - clickTime);
+        if (remaining > 0f) yield return new WaitForSeconds(remaining);
+    }
+
+    private IEnumerator SpawnAllMoneyRoutine(int bigCount, int middleCount, int smallCount)
+    {
+        yield return SpawnMoneyOverTime(moneyBigPrefab, bigCount, "big");
+        yield return SpawnMoneyOverTime(moneyMiddlePrefab, middleCount, "middle");
+        yield return SpawnMoneyOverTime(moneySmallPrefab, smallCount, "small");
+    }
+
+    private IEnumerator AnimateDoor(bool opening)
+    {
+        if (exDoor == null) yield break;
+        if (!_doorInitialized)
+        {
+            _doorClosedLocalPos = exDoor.localPosition;
+            _doorInitialized = true;
+        }
+        // ex_door 自身の局所 Z+ 方向に doorOpenDistance だけずらす。
+        // localPosition は親の座標系なので、ex_door 自身の回転で回して親の座標系に変換する。
+        Vector3 offsetLocalSelf = new Vector3(0f, 0f, doorOpenDistance);
+        Vector3 offsetInParent = exDoor.localRotation * offsetLocalSelf;
+        Vector3 from = exDoor.localPosition;
+        Vector3 to = opening ? (_doorClosedLocalPos + offsetInParent) : _doorClosedLocalPos;
+        float dur = Mathf.Max(0.001f, doorAnimDuration);
+        float t = 0f;
+        while (t < dur)
+        {
+            t += Time.deltaTime;
+            float u = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / dur));
+            exDoor.localPosition = Vector3.LerpUnclamped(from, to, u);
+            yield return null;
+        }
+        exDoor.localPosition = to;
+    }
+
+    private IEnumerator ScatterSpawnedMoney()
+    {
+        if (_spawnedMoney.Count == 0) yield break;
+
+        Transform sp = moneySpawner != null ? moneySpawner : transform;
+        foreach (var go in _spawnedMoney)
+        {
+            if (go == null) continue;
+
+            // 外向き方向 (sp.position から見た radial) + 上向きバイアス
+            Vector3 outward = go.transform.position - sp.position;
+            outward.y = 0f;
+            if (outward.sqrMagnitude < 0.0001f)
+            {
+                outward = new Vector3(Random.Range(-1f, 1f), 0f, Random.Range(-1f, 1f));
+            }
+            outward.Normalize();
+            Vector3 dir = Vector3.Lerp(outward, Vector3.up, scatterUpwardBias).normalized;
+
+            var rb = go.GetComponent<Rigidbody>();
+            if (rb == null) rb = go.AddComponent<Rigidbody>();
+            rb.isKinematic = false;
+            rb.useGravity = true;
+            rb.linearVelocity = dir * scatterSpeed;
+            rb.angularVelocity = Random.onUnitSphere * scatterAngularSpeed;
+
+            Destroy(go, scatterLifetime);
+
+            if (scatterInterval > 0f) yield return new WaitForSeconds(scatterInterval);
+        }
+        _spawnedMoney.Clear();
     }
 
     private IEnumerator SpawnMoneyOverTime(GameObject prefab, int count, string label)
@@ -226,6 +382,7 @@ public class ExchangeStation : InteractableHighlight
             if (dispenseRandomYRotation) rot *= Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
 
             var go = Instantiate(prefab, pos, rot);
+            _spawnedMoney.Add(go);
 
             if (dispenseInitialVelocity != Vector3.zero)
             {
