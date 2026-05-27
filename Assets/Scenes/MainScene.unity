@@ -886,7 +886,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3491351290351437369, guid: 603aa5395538f0f499fb817bb4fc20db, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.1625
+      value: -0.1561
       objectReference: {fileID: 0}
     - target: {fileID: 3491351290351437369, guid: 603aa5395538f0f499fb817bb4fc20db, type: 3}
       propertyPath: m_LocalPosition.z
@@ -927,6 +927,22 @@ PrefabInstance:
     - target: {fileID: 4871254887108620791, guid: 603aa5395538f0f499fb817bb4fc20db, type: 3}
       propertyPath: logEvents
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4871254887108620791, guid: 603aa5395538f0f499fb817bb4fc20db, type: 3}
+      propertyPath: outlineWidth
+      value: 0.002
+      objectReference: {fileID: 0}
+    - target: {fileID: 4871254887108620791, guid: 603aa5395538f0f499fb817bb4fc20db, type: 3}
+      propertyPath: highlightColor.b
+      value: 0.38648695
+      objectReference: {fileID: 0}
+    - target: {fileID: 4871254887108620791, guid: 603aa5395538f0f499fb817bb4fc20db, type: 3}
+      propertyPath: highlightColor.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4871254887108620791, guid: 603aa5395538f0f499fb817bb4fc20db, type: 3}
+      propertyPath: highlightColor.r
+      value: 0.34901965
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2773,8 +2789,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 446b0265e25d3cd4ca140c11a9873880, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExchangeStation
-  highlightColor: {r: 0.35, g: 0.85, b: 1, a: 1}
-  outlineWidth: 0.005
+  highlightColor: {r: 0.34901965, g: 1, b: 0.4464515, a: 1}
+  outlineWidth: 0.0149
   autoCollectRenderers: 1
   highlightTargets: []
   includeTriggersInRaycast: 1
@@ -13858,8 +13874,8 @@ MonoBehaviour:
   verticalSensitivity: 0.8
   invertY: 0
   lookSmoothing: 0
-  maxLookUpAngle: 80
-  maxLookDownAngle: 50
+  maxLookUpAngle: 70
+  maxLookDownAngle: 80
   lockAvatarLateralPosition: 0
   restrictInputToDisplay: 1
   activeInputDisplay: 3
@@ -14067,7 +14083,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7f8b07fdc8647ed42835448b4681afc0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerWallet
-  _unwashedAmount: 0
+  _unwashedAmount: 10000
   _washedAmount: 10000
   _virtuePoints: 0
 --- !u!1 &1126775031
@@ -14647,6 +14663,10 @@ PrefabInstance:
     - target: {fileID: 5131970261902915074, guid: 2c30255a1ccb6e74880fcd02aed3bfd4, type: 3}
       propertyPath: m_CollisionDetection
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7294859633188674514, guid: 2c30255a1ccb6e74880fcd02aed3bfd4, type: 3}
+      propertyPath: gravity.z
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 7294859633188674514, guid: 2c30255a1ccb6e74880fcd02aed3bfd4, type: 3}
       propertyPath: splitSfxClip
@@ -16903,8 +16923,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 77234509c39c8364bb7781bf47ff9152, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExchangeButton
-  highlightColor: {r: 0.35, g: 0.85, b: 1, a: 1}
-  outlineWidth: 0.005
+  highlightColor: {r: 0.34901965, g: 1, b: 0.43420142, a: 1}
+  outlineWidth: 0.02
   autoCollectRenderers: 1
   highlightTargets: []
   includeTriggersInRaycast: 1
@@ -21882,6 +21902,22 @@ PrefabInstance:
     - target: {fileID: 5709618224357951113, guid: b6fef00de4d2e7540add868eaf920c25, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6046716883295855845, guid: b6fef00de4d2e7540add868eaf920c25, type: 3}
+      propertyPath: outlineWidth
+      value: 0.0149
+      objectReference: {fileID: 0}
+    - target: {fileID: 9103030430489835650, guid: b6fef00de4d2e7540add868eaf920c25, type: 3}
+      propertyPath: pressDepth
+      value: 0.15
+      objectReference: {fileID: 0}
+    - target: {fileID: 9103030430489835650, guid: b6fef00de4d2e7540add868eaf920c25, type: 3}
+      propertyPath: pressUpDuration
+      value: 0.025
+      objectReference: {fileID: 0}
+    - target: {fileID: 9103030430489835650, guid: b6fef00de4d2e7540add868eaf920c25, type: 3}
+      propertyPath: pressDownDuration
+      value: 0.02
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

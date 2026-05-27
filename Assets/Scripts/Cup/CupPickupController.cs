@@ -57,10 +57,22 @@ public class CupPickupController : MonoBehaviour
 
     private void OnDisable()
     {
+        SetCurrentLooked(null);
+    }
+
+    /// <summary>照準対象を切り替え、ハイライトと OnLookEnter/OnLookExit 通知を一元管理する。</summary>
+    private void SetCurrentLooked(InteractableHighlight target)
+    {
+        if (_currentLooked == target) return;
         if (_currentLooked != null)
         {
             _currentLooked.ApplyHighlight(false);
-            _currentLooked = null;
+            _currentLooked.OnLookExit();
+        }
+        _currentLooked = target;
+        if (_currentLooked != null)
+        {
+            _currentLooked.OnLookEnter();
         }
     }
 
@@ -68,11 +80,7 @@ public class CupPickupController : MonoBehaviour
     {
         if (UFOCameraController.IsPlayingUfo)
         {
-            if (_currentLooked != null)
-            {
-                _currentLooked.ApplyHighlight(false);
-                _currentLooked = null;
-            }
+            SetCurrentLooked(null);
             return;
         }
 
@@ -88,12 +96,8 @@ public class CupPickupController : MonoBehaviour
         // 視線対象を選択: 状況に応じて BallCup または ExchangeStation を探索
         InteractableHighlight best = FindBestTarget(ray);
 
-        // ハイライト切替
-        if (best != _currentLooked)
-        {
-            if (_currentLooked != null) _currentLooked.ApplyHighlight(false);
-            _currentLooked = best;
-        }
+        // ハイライト切替 (enter/exit 通知込み)
+        SetCurrentLooked(best);
         if (_currentLooked != null)
         {
             _currentLooked.ApplyHighlight(true);
@@ -172,12 +176,12 @@ public class CupPickupController : MonoBehaviour
             case ExchangeButton btn:
                 btn.OnPressed();
                 if (logEvents) Debug.Log($"[CupPickup] ExchangeButton pressed: {btn.name}");
-                _currentLooked = null; // 押した直後は対象を再評価 (累計値 0 になればハイライトも消える)
+                SetCurrentLooked(null); // 押した直後は対象を再評価 (累計値 0 になればハイライトも消える)
                 break;
             case TypewriterInteractable tw:
                 tw.OnPressed();
                 if (logEvents) Debug.Log($"[CupPickup] Typewriter clicked: {tw.name}");
-                _currentLooked = null; // 直後は UI モードに入るので対象を再評価
+                SetCurrentLooked(null); // 直後は UI モードに入るので対象を再評価
                 break;
         }
     }
@@ -213,7 +217,7 @@ public class CupPickupController : MonoBehaviour
         if (logEvents) Debug.Log($"[CupPickup] cup → Bin: balls={balls.Count}, cup={cup.name}");
 
         Destroy(cup.gameObject);
-        _currentLooked = null; // 次フレームで再評価
+        SetCurrentLooked(null); // 次フレームで再評価
     }
 
     private void ExchangeAtStation(ExchangeStation station)
@@ -223,6 +227,6 @@ public class CupPickupController : MonoBehaviour
         var newCup = station.AcceptBin(_heldBin);
         if (logEvents) Debug.Log($"[CupPickup] Bin → cup at exchange: newCup={(newCup != null ? newCup.name : "NULL")}");
         _heldBin = null;
-        _currentLooked = null;
+        SetCurrentLooked(null);
     }
 }

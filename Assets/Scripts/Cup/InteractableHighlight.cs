@@ -98,4 +98,10 @@ public abstract class InteractableHighlight : MonoBehaviour
 
     /// <summary>サブクラスから「現在 interactable か」を判定 (cup なら『ボールが入っている』など)</summary>
     public virtual bool IsInteractable(CupPickupController pickup) => true;
+
+    /// <summary>レティクルがこのオブジェクトを照準し始めた時に呼ばれる (CupPickupController から)</summary>
+    public virtual void OnLookEnter() { }
+
+    /// <summary>レティクルがこのオブジェクトから外れた時に呼ばれる (CupPickupController から)</summary>
+    public virtual void OnLookExit() { }
 }

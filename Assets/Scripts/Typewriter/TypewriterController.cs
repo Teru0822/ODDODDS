@@ -250,6 +250,38 @@ public class TypewriterController : MonoBehaviour
         return StartCoroutine(TypeTextCoroutine(text));
     }
 
+    /// <summary>
+    /// 1 文字分のキーを手動で打鍵する (物理キーボード連動用)。文字列の自動打鍵中 (TypeText) は無視。
+    /// 紙への出力は行わず、キーアニメーション + 打鍵音のみ。
+    /// </summary>
+    public void StrikeKey(char c)
+    {
+        if (_typing) return; // 自動打鍵中は手動入力を無視
+        if (_charMap == null) return;
+        if (!_charMap.TryGetValue(c, out var entry)) return;            // 未対応文字は無視
+        if (!_keyMap.TryGetValue(entry.keyId, out var key) || key == null) return; // 未バインドは無視
+        StartCoroutine(StrikeKeyRoutine(c, key, entry.shift));
+    }
+
+    private IEnumerator StrikeKeyRoutine(char c, TypewriterKey key, bool shift)
+    {
+        Vector3 worldDelta = GetPressWorldDelta();
+        if (shift && _shiftKey != null)
+        {
+            yield return _shiftKey.HoldDown(worldDelta, pressDownDuration);
+            yield return key.PressDown(worldDelta, pressDownDuration);
+            PlayKeySound();
+            yield return key.PressUp(pressUpDuration);
+            yield return _shiftKey.Release(pressUpDuration);
+        }
+        else
+        {
+            yield return key.PressDown(worldDelta, pressDownDuration);
+            PlayKeySound();
+            yield return key.PressUp(pressUpDuration);
+        }
+    }
+
     /// <summary>現在打鍵中ならコルーチンを止めてシフトも戻す (緊急停止用)。</summary>
     public void AbortTyping()
     {

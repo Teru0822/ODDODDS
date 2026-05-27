@@ -33,11 +33,22 @@ public class ShopBallController : MonoBehaviour
     [Tooltip("生成ボールの親 (null なら spawn target を親)")]
     public Transform spawnParent;
 
+    [Header("再入荷 (Exchange 換金後)")]
+    [Tooltip("Exchange で換金 (DispenseMoney) が完了した時に、購入済みスロットを再入荷して再度購入可能にする")]
+    public bool restockOnExchangeDispense = true;
+
+    [Tooltip("再入荷トリガー元の ExchangeStation。null ならシーンから自動取得")]
+    public ExchangeStation exchangeStation;
+
     [Header("イベント")]
     [Tooltip("購入が成立したときに発火 (ShopBallSlot を引数に)")]
     public PurchaseEvent onPurchase;
 
+    [Tooltip("Exchange 換金により再入荷したときに発火 (再入荷したスロット数を引数に)")]
+    public RestockEvent onRestock;
+
     [System.Serializable] public class PurchaseEvent : UnityEvent<ShopBallSlot> { }
+    [System.Serializable] public class RestockEvent : UnityEvent<int> { }
 
     private ShopBallSlot[] _slots;
     private ShopBallSlot _currentLooked;
@@ -47,6 +58,52 @@ public class ShopBallController : MonoBehaviour
         _slots = GetComponentsInChildren<ShopBallSlot>(true);
         if (lookCamera == null) lookCamera = Camera.main;
         PropagateCameraToSlots();
+        SubscribeExchange();
+    }
+
+    private void SubscribeExchange()
+    {
+        if (!restockOnExchangeDispense) return;
+        if (exchangeStation == null) exchangeStation = FindAnyObjectByType<ExchangeStation>();
+        if (exchangeStation == null)
+        {
+            Debug.LogWarning("[ShopBallController] ExchangeStation が見つからず、換金後の再入荷が無効です。Inspector で exchangeStation を指定してください。", this);
+            return;
+        }
+        if (exchangeStation.onDispenseComplete == null)
+        {
+            exchangeStation.onDispenseComplete = new UnityEvent();
+        }
+        exchangeStation.onDispenseComplete.AddListener(RestockAll);
+    }
+
+    private void OnDestroy()
+    {
+        if (exchangeStation != null && exchangeStation.onDispenseComplete != null)
+        {
+            exchangeStation.onDispenseComplete.RemoveListener(RestockAll);
+        }
+    }
+
+    /// <summary>購入済みのスロットをすべて再陳列して再度購入可能にする (Exchange 換金完了時に呼ばれる)。</summary>
+    public void RestockAll()
+    {
+        if (_slots == null) return;
+        int restocked = 0;
+        for (int i = 0; i < _slots.Length; i++)
+        {
+            var s = _slots[i];
+            if (s != null && s.IsPurchased)
+            {
+                s.ResetSlot();
+                restocked++;
+            }
+        }
+        if (restocked > 0)
+        {
+            Debug.Log($"[ShopBallController] Exchange 換金により {restocked} 個のショップスロットを再入荷しました");
+            onRestock?.Invoke(restocked);
+        }
     }
 
     private void PropagateCameraToSlots()

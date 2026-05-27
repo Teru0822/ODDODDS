@@ -99,6 +99,8 @@ public class PinballBallManager : MonoBehaviour
     private float _lifetime;
     private float _splitScaleRatio;
     private int _splitCount;
+    /// <summary>実効分裂数 = 設定値とローグライク強化値の大きい方。報酬「分裂数 2→3」等で増える。</summary>
+    private int EffectiveSplitCount => Mathf.Max(_splitCount, RoguelikeUpgrades.SplitPinBallCount);
     private float _splitSpread;
     private float _spawnXOffset;
     private int _particleGeneration;
@@ -300,7 +302,7 @@ public class PinballBallManager : MonoBehaviour
             return;
         }
 
-        int count = _splitCount;
+        int count = EffectiveSplitCount;
         // ボールがスケール付き親の中にいる場合 (例: shop_ball の ball_spawn_point の中) に
         // localScale だけで計算すると親の lossyScale 分を見落として子が極端に小さくなる。
         // 子ボールは scene root (親なし) で生成されるので、ワールドスケール (lossyScale) を直接使う。
@@ -675,7 +677,7 @@ public class PinballBallManager : MonoBehaviour
             return;
         }
 
-        int count = _splitCount;
+        int count = EffectiveSplitCount;
         float childRadius = parentRadius * _splitScaleRatio;
         // 一貫性のためここも lossyScale で計算 (gen >=1 は通常 scene root にいるが安全側に倒す)
         Vector3 parentWorldScale = _transforms[index].lossyScale;
