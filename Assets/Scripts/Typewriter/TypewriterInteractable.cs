@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// タイプライターのルートにアタッチして「クリック → 報酬選択 UI → 選択肢のテキストを打鍵」を駆動する。
@@ -18,7 +19,13 @@ public class TypewriterInteractable : InteractableHighlight
     [Tooltip("自動生成する RewardSelectionUI を DontDestroyOnLoad に乗せる")]
     public bool persistAutoCreatedUI = false;
 
+    [Header("物理キーボード連動")]
+    [Tooltip("このタイプライターに照準している間、物理キーボード入力で対応キーを打鍵させる")]
+    public bool linkPhysicalKeyboard = true;
+
     private bool _busy;
+    private bool _lookedAt;
+    private bool _keyboardSubscribed;
 
     protected override void Awake()
     {
@@ -36,6 +43,47 @@ public class TypewriterInteractable : InteractableHighlight
         var go = new GameObject("RewardSelectionUI");
         if (persistAutoCreatedUI) DontDestroyOnLoad(go);
         selectionUI = go.AddComponent<RewardSelectionUI>();
+    }
+
+    public override void OnLookEnter()
+    {
+        _lookedAt = true;
+        SubscribeKeyboard();
+    }
+
+    public override void OnLookExit()
+    {
+        _lookedAt = false;
+        UnsubscribeKeyboard();
+    }
+
+    private void OnDisable()
+    {
+        _lookedAt = false;
+        UnsubscribeKeyboard();
+    }
+
+    private void SubscribeKeyboard()
+    {
+        if (!linkPhysicalKeyboard || _keyboardSubscribed) return;
+        if (Keyboard.current == null) return;
+        Keyboard.current.onTextInput += OnPhysicalTextInput;
+        _keyboardSubscribed = true;
+    }
+
+    private void UnsubscribeKeyboard()
+    {
+        if (!_keyboardSubscribed) return;
+        if (Keyboard.current != null) Keyboard.current.onTextInput -= OnPhysicalTextInput;
+        _keyboardSubscribed = false;
+    }
+
+    private void OnPhysicalTextInput(char c)
+    {
+        // 照準中 + UI非表示 + 自動打鍵中でない時だけ手動打鍵
+        if (!_lookedAt || _busy) return;
+        if (controller == null || controller.IsTyping) return;
+        controller.StrikeKey(c);
     }
 
     public override bool IsInteractable(CupPickupController pickup)
@@ -74,6 +122,7 @@ public class TypewriterInteractable : InteractableHighlight
     {
         Debug.Log($"[TypewriterInteractable] OnRewardSelected: \"{chosen}\"", this);
         RewardOptionsRepository.MarkSelected(chosen);
+        RewardEffects.Apply(chosen); // 選択した報酬のゲームプレイ効果を反映 (分裂数強化など)
         if (controller == null)
         {
             Debug.LogWarning("[TypewriterInteractable] TypewriterController が未設定 - 打鍵をスキップ", this);

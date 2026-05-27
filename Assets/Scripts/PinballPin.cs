@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Events;
 
 /// <summary>
 /// ピンボールのピン (Enforce / Split) を表すコンポーネント。
@@ -68,7 +69,12 @@ public class PinballPin : MonoBehaviour
     [Tooltip("消費後 (黒くなった後) もアニメーションを続けるか")]
     [SerializeField] private bool keepAnimatingWhenConsumed = false;
 
+    [Header("Exchange 換金で再有効化")]
+    [Tooltip("Exchange で換金 (DispenseMoney) が完了した時に、このピンを再有効化 (消費前の状態に戻す)")]
+    [SerializeField] private bool reactivateOnExchangeDispense = true;
+
     private bool _consumed = false;
+    private ExchangeStation _exchangeStation;
     private Material _pinTopMaterialInstance;
     private Vector3 _pinWingInitialScale = Vector3.one;
     // XZ 一律拡縮の基準サイズ (初期 X と Z の平均)。これに pulse 倍率を掛けて X = Z にセット
@@ -124,6 +130,35 @@ public class PinballPin : MonoBehaviour
             _pinWingInitialScale = Vector3.one;
             _pinWingBaseSizeXZ = 1f;
         }
+    }
+
+    void Start()
+    {
+        if (!reactivateOnExchangeDispense) return;
+        _exchangeStation = FindAnyObjectByType<ExchangeStation>();
+        if (_exchangeStation == null) return;
+        if (_exchangeStation.onDispenseComplete == null)
+        {
+            _exchangeStation.onDispenseComplete = new UnityEvent();
+        }
+        _exchangeStation.onDispenseComplete.AddListener(Reactivate);
+    }
+
+    void OnDestroy()
+    {
+        if (_exchangeStation != null && _exchangeStation.onDispenseComplete != null)
+        {
+            _exchangeStation.onDispenseComplete.RemoveListener(Reactivate);
+        }
+    }
+
+    /// <summary>消費状態を解除して発色を戻し、再びボールに効果を発動できるようにする。</summary>
+    public void Reactivate()
+    {
+        if (!_consumed) return;
+        _consumed = false;
+        ApplyEmission(type == PinType.Enforce ? enforceEmissionColor : splitEmissionColor);
+        _pulseTimer = 0f;
     }
 
     void Update()
