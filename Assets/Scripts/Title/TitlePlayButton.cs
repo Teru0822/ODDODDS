@@ -82,6 +82,13 @@ public class TitlePlayButton : MonoBehaviour
 
     private void Update()
     {
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            if (logEvents) Debug.Log("[TitlePlayButton] ESC pressed, restarting scene.", this);
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            return;
+        }
+
         if (Mouse.current == null) return;
         if (!Mouse.current.leftButton.wasPressedThisFrame) return;
 
@@ -112,6 +119,10 @@ public class TitlePlayButton : MonoBehaviour
 
         // ホバーハイライトを終了 (二重クリックや視覚的混乱の防止)
         if (hoverOutline != null) hoverOutline.enabled = false;
+
+        // FloatingMotion 等の毎フレーム位置上書き系コンポーネントを止めないと slide が打ち消されて
+        // 「一定時間後に元の場所に戻る」現象になる。slide 開始前に全対象で無効化する。
+        DisableMotionOverrides();
 
         // Imp を pos1 に配置 + 歩行方向に向ける + walk アニメ開始
         if (imp != null && pos1 != null)
@@ -175,15 +186,19 @@ public class TitlePlayButton : MonoBehaviour
                 if (go == null) continue;
                 // 自身 (または自身の祖先) を SetActive(false) すると本 MonoBehaviour も停止し、
                 // 状態が ReadyToLoad に進まず Update も止まって 2 度目のクリックを拾えなくなる。
-                // 移動済みで画面外にあるため、機能上は deactivate せずに残しても問題ない。
+                // 見た目上・物理的に消去するために Renderer/Collider を無効化して非表示・非衝突化します。
                 if (go == gameObject || transform.IsChildOf(go.transform))
                 {
-                    if (logEvents) Debug.Log($"[TitlePlayButton] '{go.name}' は自身/祖先のため SetActive(false) を回避 (Update を生かす)", this);
+                    if (logEvents) Debug.Log($"[TitlePlayButton] '{go.name}' は自身/祖先のため SetActive(false) を回避し、Renderer/Collider を無効化して非表示にします", this);
+                    HidePlayButtonVisuals(go);
                     continue;
                 }
                 go.SetActive(false);
             }
         }
+
+        // スライド先オブジェクトに自身が含まれていなかった場合の安全策として、PLAYボタン自身も非表示にします
+        HidePlayButtonVisuals(gameObject);
     }
 
     private IEnumerator WalkImpToPos2()
@@ -235,5 +250,52 @@ public class TitlePlayButton : MonoBehaviour
             yield break;
         }
         SceneManager.LoadScene(targetSceneName);
+    }
+
+    /// <summary>
+    /// slideAwayObjects や PLAY ボタン自身の FloatingMotion などの挙動上書き系コンポーネントを無効化します。
+    /// </summary>
+    private void DisableMotionOverrides()
+    {
+        if (slideAwayObjects != null)
+        {
+            foreach (var go in slideAwayObjects)
+            {
+                if (go == null) continue;
+                var motions = go.GetComponentsInChildren<FloatingMotion>(true);
+                foreach (var motion in motions)
+                {
+                    motion.enabled = false;
+                }
+            }
+        }
+
+        // 自身（PLAY ボタン）の FloatingMotion も無効化
+        var selfMotions = GetComponentsInChildren<FloatingMotion>(true);
+        foreach (var motion in selfMotions)
+        {
+            motion.enabled = false;
+        }
+    }
+
+    /// <summary>
+    /// 指定されたゲームオブジェクト（PLAYボタン等）の Renderer と Collider を無効化して
+    /// 見た目上・物理的に消去しますが、GameObject 自体はアクティブのままにしてスクリプトの動作を維持します。
+    /// </summary>
+    private void HidePlayButtonVisuals(GameObject go)
+    {
+        if (go == null) return;
+        
+        var renderers = go.GetComponentsInChildren<Renderer>(true);
+        foreach (var r in renderers)
+        {
+            r.enabled = false;
+        }
+
+        var colliders = go.GetComponentsInChildren<Collider>(true);
+        foreach (var c in colliders)
+        {
+            c.enabled = false;
+        }
     }
 }
