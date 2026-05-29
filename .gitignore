@@ -16,6 +16,16 @@
 *.blend1
 *.blend1.meta
 
+# GitHub の 1 ファイル 100MB 制限を超える配布アーカイブは追跡しない (Asset Store 由来の ZIP / unitypackage 等)
+*.zip
+*.zip.meta
+*.unitypackage
+*.unitypackage.meta
+*.7z
+*.7z.meta
+*.rar
+*.rar.meta
+
 # MemoryCaptures can get excessive in size.
 # They also could contain extremely sensitive data
 /[Mm]emoryCaptures/
