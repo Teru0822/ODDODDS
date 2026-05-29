@@ -38,6 +38,28 @@ public class MouseHoverOutline : MonoBehaviour
     [Tooltip("Physics.Raycast に使う LayerMask (オクルージョン考慮時に有効)")]
     public LayerMask raycastLayerMask = ~0; // 全レイヤー
 
+    [Header("ホバー SE")]
+    [Tooltip("ホバー開始時 (アウトラインが出る瞬間) に再生する AudioClip。null なら無音")]
+    public AudioClip hoverEnterClip;
+
+    [Tooltip("再生用 AudioSource。null なら自身に AddComponent して使う")]
+    public AudioSource audioSource;
+
+    [Range(0f, 5f)]
+    [Tooltip("SE ボリューム (1 を超えるブースト可)")]
+    public float hoverVolume = 1f;
+
+    [Tooltip("再生ピッチのランダム範囲 (x=最小, y=最大)。x=y で固定")]
+    public Vector2 hoverPitchRange = new Vector2(1f, 1f);
+
+    [Tooltip("再生開始オフセット (秒)。元音源の先頭にある無音区間をスキップしてラグを消す。0 で先頭から")]
+    [Min(0f)]
+    public float hoverEnterStartOffset = 0f;
+
+    [Tooltip("SE の空間ブレンド (0=2D 距離無関係, 1=3D 距離減衰あり)")]
+    [Range(0f, 1f)]
+    public float audioSpatialBlend = 0f;
+
     [Header("デバッグ")]
     [Tooltip("Awake/ホバー切替/未取得の警告を Console に出力")]
     public bool logEvents = false;
@@ -74,11 +96,47 @@ public class MouseHoverOutline : MonoBehaviour
         }
         _outlineRenderers = OutlineHighlightUtil.CreateOutlineCopies(sources);
         _mpb = new MaterialPropertyBlock();
+        EnsureAudioSource();
         _ready = true;
         Apply(false);
         if (logEvents)
         {
             Debug.Log($"[MouseHoverOutline] '{name}' setup: colliders={_colliders.Length}, renderers={_outlineRenderers.Count}", this);
+        }
+    }
+
+    private void EnsureAudioSource()
+    {
+        if (audioSource == null) audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.playOnAwake = false;
+        }
+        audioSource.spatialBlend = audioSpatialBlend;
+    }
+
+    private void PlayHoverEnterSE()
+    {
+        if (audioSource == null || hoverEnterClip == null) return;
+
+        audioSource.pitch = Mathf.Approximately(hoverPitchRange.x, hoverPitchRange.y)
+            ? hoverPitchRange.x
+            : Random.Range(hoverPitchRange.x, hoverPitchRange.y);
+
+        if (hoverEnterStartOffset > 0f)
+        {
+            // PlayOneShot は途中再生に対応していないため、clip + time を直接設定して Play() する。
+            // 連続ホバー時は再生中の音が止まって新しい音が頭から鳴り直す (オフセット後の位置から)。
+            audioSource.clip = hoverEnterClip;
+            audioSource.volume = hoverVolume;
+            float clipLen = hoverEnterClip.length;
+            audioSource.time = Mathf.Clamp(hoverEnterStartOffset, 0f, Mathf.Max(0f, clipLen - 0.01f));
+            audioSource.Play();
+        }
+        else
+        {
+            audioSource.PlayOneShot(hoverEnterClip, hoverVolume);
         }
     }
 
@@ -116,6 +174,7 @@ public class MouseHoverOutline : MonoBehaviour
         {
             _hovered = over;
             Apply(_hovered);
+            if (_hovered) PlayHoverEnterSE(); // アウトラインが出た瞬間に SE 再生
             if (logEvents) Debug.Log($"[MouseHoverOutline] '{name}': hover={_hovered}", this);
         }
     }

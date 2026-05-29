@@ -28,8 +28,12 @@ public class TitlePlayButton : MonoBehaviour
     [Tooltip("退場アニメ秒数")]
     public float slideDuration = 1.0f;
 
-    [Tooltip("退場後に SetActive(false) で完全に消す")]
+    [Tooltip("退場後に SetActive(false) で完全に消す (自身/親は安全のため自動除外)")]
     public bool deactivateAfterSlide = true;
+
+    [Header("デバッグ")]
+    [Tooltip("状態遷移・コルーチン・シーン遷移を Console に出力")]
+    public bool logEvents = true;
 
     [Header("Imp 歩行")]
     [Tooltip("歩かせる Imp の Transform")]
@@ -59,9 +63,9 @@ public class TitlePlayButton : MonoBehaviour
     [Tooltip("Imp を pos1→pos2 の方向に向ける (Y 軸基準)")]
     public bool faceWalkDirection = true;
 
-    [Header("シーン遷移 (idle 後の左クリック)")]
+    [Header("シーン遷移 (Play ボタン押下後の任意の左クリック)")]
     [Tooltip("遷移先シーン名 (Build Settings に追加されていること)")]
-    public string targetSceneName = "GameScene";
+    public string targetSceneName = "MainScene";
 
     [Tooltip("遷移時に有効化するディスプレイインデックス (0=Display1, 3=Display4)")]
     [Range(0, 7)]
@@ -81,6 +85,8 @@ public class TitlePlayButton : MonoBehaviour
         if (Mouse.current == null) return;
         if (!Mouse.current.leftButton.wasPressedThisFrame) return;
 
+        if (logEvents) Debug.Log($"[TitlePlayButton] LeftClick detected, state={_state}, hovered={(hoverOutline != null ? hoverOutline.IsHovered.ToString() : "no hoverOutline")}", this);
+
         switch (_state)
         {
             case State.Idle:
@@ -99,7 +105,11 @@ public class TitlePlayButton : MonoBehaviour
 
     private IEnumerator RunTransition()
     {
-        _state = State.Transitioning;
+        // Play ボタン押下直後から「左クリックでシーン遷移」を受理できるよう、
+        // 待機状態 (ReadyToLoad) に即座に入る。imp の歩行アニメーション等はバックグラウンドで進行する。
+        _state = State.ReadyToLoad;
+        if (logEvents) Debug.Log($"[TitlePlayButton] State → ReadyToLoad (押下直後。次の左クリックで '{targetSceneName}' へ遷移)", this);
+
         // ホバーハイライトを終了 (二重クリックや視覚的混乱の防止)
         if (hoverOutline != null) hoverOutline.enabled = false;
 
@@ -125,13 +135,12 @@ public class TitlePlayButton : MonoBehaviour
         yield return slideCo;
         yield return walkCo;
 
-        // 到着 → idle (無限ループ)
+        // 到着 → idle (無限ループ)。クリック受理は冒頭で既に有効化済み。
         if (impAnimator != null && !string.IsNullOrEmpty(idleAnimationName))
         {
             impAnimator.CrossFade(idleAnimationName, animationCrossFade);
         }
-
-        _state = State.ReadyToLoad;
+        if (logEvents) Debug.Log("[TitlePlayButton] Imp が pos2 到着 → idle ループ開始", this);
     }
 
     private IEnumerator SlideAwayObjects()
@@ -162,7 +171,17 @@ public class TitlePlayButton : MonoBehaviour
         {
             for (int i = 0; i < slideAwayObjects.Length; i++)
             {
-                if (slideAwayObjects[i] != null) slideAwayObjects[i].SetActive(false);
+                var go = slideAwayObjects[i];
+                if (go == null) continue;
+                // 自身 (または自身の祖先) を SetActive(false) すると本 MonoBehaviour も停止し、
+                // 状態が ReadyToLoad に進まず Update も止まって 2 度目のクリックを拾えなくなる。
+                // 移動済みで画面外にあるため、機能上は deactivate せずに残しても問題ない。
+                if (go == gameObject || transform.IsChildOf(go.transform))
+                {
+                    if (logEvents) Debug.Log($"[TitlePlayButton] '{go.name}' は自身/祖先のため SetActive(false) を回避 (Update を生かす)", this);
+                    continue;
+                }
+                go.SetActive(false);
             }
         }
     }
@@ -189,6 +208,8 @@ public class TitlePlayButton : MonoBehaviour
     private IEnumerator LoadGameScene()
     {
         _state = State.Loading;
+        if (logEvents) Debug.Log($"[TitlePlayButton] LoadGameScene 開始 (target='{targetSceneName}', display={displayIndexToActivate})", this);
+
         // Display を有効化 (まだ inactive ならアクティベート)
         if (displayIndexToActivate >= 0 && displayIndexToActivate < Display.displays.Length)
         {
@@ -196,12 +217,23 @@ public class TitlePlayButton : MonoBehaviour
             if (!disp.active)
             {
                 disp.Activate();
+                if (logEvents) Debug.Log($"[TitlePlayButton] Display[{displayIndexToActivate}] を Activate しました", this);
                 yield return null; // Activate 直後は 1 フレーム待つ (安全策)
             }
         }
-        if (!string.IsNullOrEmpty(targetSceneName))
+        if (string.IsNullOrEmpty(targetSceneName))
         {
-            SceneManager.LoadScene(targetSceneName);
+            Debug.LogWarning("[TitlePlayButton] targetSceneName が空のためシーン遷移をスキップ", this);
+            yield break;
         }
+        // Build Settings に存在しないシーン名を渡すと SceneManager.LoadScene は例外なく
+        // サイレントに失敗するので事前検証
+        if (SceneUtility.GetBuildIndexByScenePath(targetSceneName) < 0
+            && !Application.CanStreamedLevelBeLoaded(targetSceneName))
+        {
+            Debug.LogError($"[TitlePlayButton] シーン '{targetSceneName}' が Build Settings に含まれていません。File → Build Settings → Scenes In Build に追加してください", this);
+            yield break;
+        }
+        SceneManager.LoadScene(targetSceneName);
     }
 }
