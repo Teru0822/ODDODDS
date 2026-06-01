@@ -78,6 +78,27 @@ public class TitlePlayButton : MonoBehaviour
     {
         if (hoverOutline == null) hoverOutline = GetComponent<MouseHoverOutline>();
         if (impAnimator == null && imp != null) impAnimator = imp.GetComponentInChildren<Animator>();
+        if (hoverOutline == null)
+        {
+            Debug.LogWarning("[TitlePlayButton] MouseHoverOutline が未取得。Play クリックが反応しません。同一 GameObject にアタッチするか Inspector で指定してください", this);
+        }
+    }
+
+    private void OnEnable()
+    {
+        if (hoverOutline != null) hoverOutline.OnClicked += HandlePlayButtonClicked;
+    }
+
+    private void OnDisable()
+    {
+        if (hoverOutline != null) hoverOutline.OnClicked -= HandlePlayButtonClicked;
+    }
+
+    private void HandlePlayButtonClicked()
+    {
+        if (_state != State.Idle) return;
+        if (logEvents) Debug.Log("[TitlePlayButton] Play ボタンクリック確定 (press → release) → RunTransition 開始", this);
+        StartCoroutine(RunTransition());
     }
 
     private void Update()
@@ -89,25 +110,14 @@ public class TitlePlayButton : MonoBehaviour
             return;
         }
 
+        // Idle 中の Play ボタンクリックは MouseHoverOutline.OnClicked (press → release) で処理する。
+        // この先は「ReadyToLoad 中の任意の左クリックでシーン遷移」のみ。
+        if (_state != State.ReadyToLoad) return;
         if (Mouse.current == null) return;
         if (!Mouse.current.leftButton.wasPressedThisFrame) return;
 
-        if (logEvents) Debug.Log($"[TitlePlayButton] LeftClick detected, state={_state}, hovered={(hoverOutline != null ? hoverOutline.IsHovered.ToString() : "no hoverOutline")}", this);
-
-        switch (_state)
-        {
-            case State.Idle:
-                // Play ボタンがホバー中の時だけ受理
-                if (hoverOutline != null && hoverOutline.IsHovered)
-                {
-                    StartCoroutine(RunTransition());
-                }
-                break;
-            case State.ReadyToLoad:
-                // Imp が idle 状態なら、画面上のどこをクリックしても遷移
-                StartCoroutine(LoadGameScene());
-                break;
-        }
+        if (logEvents) Debug.Log("[TitlePlayButton] LeftClick in ReadyToLoad → LoadGameScene", this);
+        StartCoroutine(LoadGameScene());
     }
 
     private IEnumerator RunTransition()

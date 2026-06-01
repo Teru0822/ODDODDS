@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
 /// <summary>
@@ -56,6 +57,55 @@ public class MouseHoverOutline : MonoBehaviour
     [Min(0f)]
     public float hoverEnterStartOffset = 0f;
 
+    [Header("クリック SE (Press / Release)")]
+    [Tooltip("左クリック押し込み時 (アウトライン上で press) の SE")]
+    public AudioClip pressDownClip;
+
+    [Tooltip("press SE のピッチランダム範囲 (x=min, y=max、x=y で固定)")]
+    public Vector2 pressDownPitchRange = new Vector2(1f, 1f);
+
+    [Tooltip("press SE の先頭オフセット (秒、無音スキップ)")]
+    [Min(0f)]
+    public float pressDownStartOffset = 0f;
+
+    [Tooltip("左クリック離す瞬間 (press もアウトライン上だった場合のみ) の SE")]
+    public AudioClip releaseClip;
+
+    [Tooltip("release SE のピッチランダム範囲")]
+    public Vector2 releasePitchRange = new Vector2(1f, 1f);
+
+    [Tooltip("release SE の先頭オフセット (秒、無音スキップ)")]
+    [Min(0f)]
+    public float releaseStartOffset = 0f;
+
+    [Range(0f, 5f)]
+    [Tooltip("クリック系 SE のボリューム (1超でブースト可)")]
+    public float clickVolume = 1f;
+
+    [Header("プレス時の押し込み移動 (ローカル X 軸、Slerp)")]
+    [Tooltip("ON にすると press-while-hovered 中だけ対象を localPosition の X 軸方向にずらす (Slerp 補間)。release で元位置に戻る")]
+    public bool pressMoveEnabled = false;
+
+    [Tooltip("動かす対象の Transform。null なら自身 (MouseHoverOutline がアタッチされた GameObject)")]
+    public Transform pressMoveTarget;
+
+    [Tooltip("ローカル X 軸方向の移動量 (m)。負値で逆向き")]
+    public float pressMoveLocalX = 0.01f;
+
+    [Tooltip("press 押し込み完了 / release で戻る までの所要時間 (秒)")]
+    [Min(0.0001f)]
+    public float pressMoveDuration = 0.1f;
+
+    [Tooltip("press から release まで押し込みを維持する。ボタン自身が動いて hover が一時的に外れても戻らないようにする (標準的なボタン挙動)。OFF にすると hover を外した瞬間に戻る")]
+    public bool pressMoveLatchUntilRelease = true;
+
+    [Header("クリック確定イベント (press → release が両方アウトライン上)")]
+    [Tooltip("Inspector でクリック時の処理を直接バインドできる UnityEvent")]
+    public UnityEvent onClicked;
+
+    /// <summary>C# 側でクリックを購読するための event (TitlePlayButton 等が使う)。</summary>
+    public event System.Action OnClicked;
+
     [Tooltip("SE の空間ブレンド (0=2D 距離無関係, 1=3D 距離減衰あり)")]
     [Range(0f, 1f)]
     public float audioSpatialBlend = 0f;
@@ -65,6 +115,13 @@ public class MouseHoverOutline : MonoBehaviour
     public bool logEvents = false;
 
     private Collider[] _colliders;
+    private bool _pressedOnThis; // press-while-hovered で true、release または hover 外しで false
+
+    // 押し込み移動用
+    private float _pressMoveProgress;       // 0=rest, 1=fully pressed
+    private Vector3 _pressMoveBase;         // 現在の土台位置 (FloatingMotion 等が書いた値)
+    private Vector3 _pressMoveLastSetPos;   // 前フレーム末に自分が書いた値
+    private bool _pressMoveInitialized;
     private List<Renderer> _outlineRenderers;
     private MaterialPropertyBlock _mpb;
     private bool _ready;
@@ -118,25 +175,28 @@ public class MouseHoverOutline : MonoBehaviour
 
     private void PlayHoverEnterSE()
     {
-        if (audioSource == null || hoverEnterClip == null) return;
+        PlayClipWithOffset(hoverEnterClip, hoverPitchRange, hoverEnterStartOffset, hoverVolume);
+    }
 
-        audioSource.pitch = Mathf.Approximately(hoverPitchRange.x, hoverPitchRange.y)
-            ? hoverPitchRange.x
-            : Random.Range(hoverPitchRange.x, hoverPitchRange.y);
+    /// <summary>AudioClip を再生。startOffset > 0 なら途中再生 (Play+time)、=0 なら PlayOneShot。</summary>
+    private void PlayClipWithOffset(AudioClip clip, Vector2 pitchRange, float startOffset, float volume)
+    {
+        if (audioSource == null || clip == null) return;
 
-        if (hoverEnterStartOffset > 0f)
+        audioSource.pitch = Mathf.Approximately(pitchRange.x, pitchRange.y)
+            ? pitchRange.x
+            : Random.Range(pitchRange.x, pitchRange.y);
+
+        if (startOffset > 0f)
         {
-            // PlayOneShot は途中再生に対応していないため、clip + time を直接設定して Play() する。
-            // 連続ホバー時は再生中の音が止まって新しい音が頭から鳴り直す (オフセット後の位置から)。
-            audioSource.clip = hoverEnterClip;
-            audioSource.volume = hoverVolume;
-            float clipLen = hoverEnterClip.length;
-            audioSource.time = Mathf.Clamp(hoverEnterStartOffset, 0f, Mathf.Max(0f, clipLen - 0.01f));
+            audioSource.clip = clip;
+            audioSource.volume = volume;
+            audioSource.time = Mathf.Clamp(startOffset, 0f, Mathf.Max(0f, clip.length - 0.01f));
             audioSource.Play();
         }
         else
         {
-            audioSource.PlayOneShot(hoverEnterClip, hoverVolume);
+            audioSource.PlayOneShot(clip, volume);
         }
     }
 
@@ -177,6 +237,62 @@ public class MouseHoverOutline : MonoBehaviour
             if (_hovered) PlayHoverEnterSE(); // アウトラインが出た瞬間に SE 再生
             if (logEvents) Debug.Log($"[MouseHoverOutline] '{name}': hover={_hovered}", this);
         }
+
+        // Press / Release 検出
+        var lmb = Mouse.current.leftButton;
+        if (lmb.wasPressedThisFrame && _hovered)
+        {
+            _pressedOnThis = true;
+            PlayClipWithOffset(pressDownClip, pressDownPitchRange, pressDownStartOffset, clickVolume);
+            if (logEvents) Debug.Log($"[MouseHoverOutline] '{name}': press-down", this);
+        }
+        if (lmb.wasReleasedThisFrame)
+        {
+            if (_pressedOnThis && _hovered)
+            {
+                PlayClipWithOffset(releaseClip, releasePitchRange, releaseStartOffset, clickVolume);
+                if (logEvents) Debug.Log($"[MouseHoverOutline] '{name}': release → click 確定", this);
+                onClicked?.Invoke();
+                OnClicked?.Invoke();
+            }
+            _pressedOnThis = false;
+        }
+    }
+
+    /// <summary>
+    /// 押し込み移動は LateUpdate で適用する。FloatingMotion など Update で localPosition を
+    /// 上書きするスクリプトの「後」に走らせることで競合を防ぐ。
+    /// 前フレームで自分が加えた offset を引いてから今フレームの offset を加算する差分方式なので、
+    /// 浮遊などの他コンポーネントの動きとも共存できる。
+    /// </summary>
+    private void LateUpdate()
+    {
+        if (!pressMoveEnabled) return;
+        Transform moveTarget = pressMoveTarget != null ? pressMoveTarget : transform;
+        if (moveTarget == null) return;
+
+        // 土台を動的検出: 前フレーム末に自分が書いた値と現在位置を比べて、違っていたら
+        // 他スクリプト (FloatingMotion 等) が上書きしたとみなして現在位置を新しい土台にする。
+        // 同じなら土台は維持 (自分の offset は土台ではなく上乗せ分として扱う)。
+        Vector3 cur = moveTarget.localPosition;
+        if (!_pressMoveInitialized || (cur - _pressMoveLastSetPos).sqrMagnitude > 1e-10f)
+        {
+            _pressMoveBase = cur;
+            _pressMoveInitialized = true;
+        }
+
+        // press 中は押し込み位置を維持する (ボタン自身の移動で hover が一時的に外れても戻らないように)。
+        bool wantPressed = _pressedOnThis && (pressMoveLatchUntilRelease || _hovered);
+        float dir = wantPressed ? 1f : -1f;
+        float dt = Time.deltaTime / Mathf.Max(0.0001f, pressMoveDuration);
+        _pressMoveProgress = Mathf.Clamp01(_pressMoveProgress + dir * dt);
+
+        // ターゲット自身のローカル X 軸を親空間ベクトルに変換した方向に押し込む
+        Vector3 selfXInParent = moveTarget.localRotation * Vector3.right;
+        Vector3 pressedPos = _pressMoveBase + selfXInParent * pressMoveLocalX;
+        Vector3 newPos = Vector3.Slerp(_pressMoveBase, pressedPos, _pressMoveProgress);
+        moveTarget.localPosition = newPos;
+        _pressMoveLastSetPos = newPos;
     }
 
     private bool CheckOverSelfDirect(Ray ray)
