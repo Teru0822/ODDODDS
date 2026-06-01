@@ -11,9 +11,24 @@ public static class RoguelikeSaveManager
     
     // 難読化用のキー (適当な4バイト)
     private static readonly byte[] ObfuscationKeys = { 0x5a, 0x9f, 0x3b, 0x7c };
+    private static bool _isApplyDebugMode = false;
+
+    public static bool isApplyDebugMode { get { return _isApplyDebugMode; } set { _isApplyDebugMode = value; } }
 
     private static string GetSaveFilePath()
     {
+        //DEBUG:デバッグするときの処理
+        if (_isApplyDebugMode)
+        {
+            string path = Path.Combine(
+                Application.dataPath,
+                "Resources",
+                "DebugData",
+                "DebugSaveData.dat"
+            );
+            return path;
+        }
+
         Debug.Log(Path.Combine(Application.persistentDataPath, SaveFileName));
         return Path.Combine(Application.persistentDataPath, SaveFileName);
     }
@@ -23,6 +38,12 @@ public static class RoguelikeSaveManager
     /// </summary>
     public static void Save(RoguelikeSaveData data)
     {
+        //DEBUG:デバッグするときの処理
+        if (_isApplyDebugMode)
+        {
+            Debug.LogError("デバッグ用のデータのため、セーブはできません");
+            return;
+        }
         string json = JsonUtility.ToJson(data);
         byte[] encryptedBytes = EncodeText(json);
 
@@ -78,20 +99,20 @@ public static class RoguelikeSaveManager
 
     #region 難読化ロジック (XOR)
 
-    private static byte[] EncodeText(string text)
+    public static byte[] EncodeText(string text)
     {
         byte[] byteArray = Encoding.UTF8.GetBytes(text);
         DecodeEncode(ref byteArray);
         return byteArray;
     }
 
-    private static string DecodeBytes(byte[] byteArray)
+    public static string DecodeBytes(byte[] byteArray)
     {
         DecodeEncode(ref byteArray);
         return Encoding.UTF8.GetString(byteArray);
     }
 
-    private static void DecodeEncode(ref byte[] byteArray)
+    public static void DecodeEncode(ref byte[] byteArray)
     {
         for (int i = 0; i < byteArray.Length; i++)
         {
