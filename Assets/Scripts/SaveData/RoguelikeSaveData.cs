@@ -4,6 +4,12 @@ using System;
 public class RoguelikeSaveData
 {
     public int virtuePoints;
+    //恒久ポイントを活用したローグライク要素
+    public bool isUnlockPinball    = false; // ピンボール機能を解放
+    public bool isUnlockTypewriter = false; // タイプライター機能を解放
+    public bool isUnlockMinigame   = false; // ミニゲーム機能を解放
+    public bool isUnlockVisitor    = false; // 訪問者機能を解放
+
     // 今後ここに追加のメタプログレッション要素（スキル解放状態など）を記載できます
 
     //ーーー各遊技のローグライク要素をここに記述していくーーーー
