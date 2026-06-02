@@ -29,8 +29,28 @@ public class UFOItemGoal : MonoBehaviour
     [Tooltip("レベルが上がるごとに切り替わる箱のオブジェクトを登録します（Lv1, Lv2, Lv3...の順）")]
     public GameObject[] goalBoxObjects;
 
+    [Header("効果音")]
+    [Tooltip("再生用のAudioSource。未設定の場合は自動でGetComponentします")]
+    [SerializeField] private AudioSource audioSource;
+
+    [Tooltip("コイン獲得時の効果音")]
+    [SerializeField] private AudioClip coinGetSound;
+
+    [Tooltip("時計獲得時の効果音（未設定の場合はコインと同じ音が鳴ります）")]
+    [SerializeField] private AudioClip watchGetSound;
+
+    [Tooltip("効果音の音量調整 (1.0より大きい値で音量増幅可能)")]
+    [Range(0f, 10f)]
+    [SerializeField] private float soundVolume = 1.0f;
+
     private void Start()
     {
+        // AudioSourceの自動取得
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+        }
+
         // 最初はLv1の箱だけを表示し、残りを非表示にする（要素があれば）
         SetGoalLevel(0); // 0が最初のレベル(Lv1)
 
@@ -103,6 +123,9 @@ public class UFOItemGoal : MonoBehaviour
                         UpdateUnwashedMoneyText();
                     }
                     Debug.Log($"[獲得] {item.itemType}！ (未洗浄メダル総額: {unwashedMoney}円)");
+                    
+                    // コイン獲得音の再生
+                    PlaySound(coinGetSound);
                     break;
                 case UFOItemType.Watch:
                     collectedWatches++;
@@ -113,11 +136,35 @@ public class UFOItemGoal : MonoBehaviour
                     {
                         watchCountText.text = $"Watch: {collectedWatches}";
                     }
+
+                    // 時計獲得音の再生（未設定ならコイン音で代用）
+                    PlaySound(watchGetSound != null ? watchGetSound : coinGetSound);
                     break;
             }
 
             // アイテムを消去する
             Destroy(other.gameObject);
+        }
+    }
+
+    /// <summary>
+    /// 効果音を再生するヘルパー関数
+    /// </summary>
+    private void PlaySound(AudioClip clip)
+    {
+        if (clip != null)
+        {
+            if (audioSource == null)
+            {
+                audioSource = GetComponent<AudioSource>();
+                if (audioSource == null)
+                {
+                    audioSource = gameObject.AddComponent<AudioSource>();
+                    audioSource.playOnAwake = false;
+                    audioSource.spatialBlend = 0f; // 2D音響にして距離減衰を無視する
+                }
+            }
+            audioSource.PlayOneShot(clip, soundVolume);
         }
     }
 

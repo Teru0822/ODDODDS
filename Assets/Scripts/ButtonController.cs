@@ -24,6 +24,17 @@ public class ButtonController : MonoBehaviour
     [Tooltip("押し込み／戻りのスピード")]
     public float pressSpeed = 20f;
 
+    [Header("効果音")]
+    [Tooltip("再生用のAudioSource。未設定の場合は自動でGetComponentします")]
+    [SerializeField] private AudioSource audioSource;
+
+    [Tooltip("ボタンを押したときの効果音")]
+    [SerializeField] private AudioClip clickSound;
+
+    [Tooltip("効果音の音量調整 (1.0より大きい値で音量増幅可能)")]
+    [Range(0f, 10f)]
+    [SerializeField] private float soundVolume = 1.0f;
+
     private Vector3  _originalLocalPos;
     private bool     _isPressed = false;
     private Collider _collider;
@@ -32,6 +43,11 @@ public class ButtonController : MonoBehaviour
     {
         _originalLocalPos = transform.localPosition;
         _collider         = GetComponent<Collider>();
+        
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+        }
     }
 
     void Update()
@@ -56,6 +72,9 @@ public class ButtonController : MonoBehaviour
             if (IsMouseOverThis(mouse.position.ReadValue()))
             {
                 _isPressed = true;
+                
+                // クリック効果音の再生
+                PlaySound(clickSound);
                 
                 if (armController != null)
                 {
@@ -89,5 +108,23 @@ public class ButtonController : MonoBehaviour
         if (_collider == null || activeCam == null) return false;
         Ray ray = activeCam.ScreenPointToRay(screenPos);
         return _collider.Raycast(ray, out _, 1000f);
+    }
+
+    private void PlaySound(AudioClip clip)
+    {
+        if (clip != null)
+        {
+            if (audioSource == null)
+            {
+                audioSource = GetComponent<AudioSource>();
+                if (audioSource == null)
+                {
+                    audioSource = gameObject.AddComponent<AudioSource>();
+                    audioSource.playOnAwake = false;
+                    audioSource.spatialBlend = 0f; // 2D音響にして距離減衰を無視する
+                }
+            }
+            audioSource.PlayOneShot(clip, soundVolume);
+        }
     }
 }
