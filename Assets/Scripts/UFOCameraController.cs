@@ -49,6 +49,15 @@ public class UFOCameraController : MonoBehaviour
     [Tooltip("Spotlight GameObject enabled only during active play session")]
     [SerializeField] private GameObject playSpotlight;
 
+    [Header("Audio Settings")]
+    [Tooltip("再生用のAudioSource。未設定の場合は自動でGetComponentします")]
+    [SerializeField] private AudioSource audioSource;
+    [Tooltip("コイン投入時（ゲーム開始時）の効果音")]
+    [SerializeField] private AudioClip coinInsertSound;
+    [Tooltip("効果音の音量調整 (1.0より大きい値で音量増幅可能)")]
+    [Range(0f, 10f)]
+    [SerializeField] private float soundVolume = 1.0f;
+
     [Header("Interaction Settings")]
     [Tooltip("Interaction distance to start playing")]
     [SerializeField] private float interactionDistance = 3.5f;
@@ -138,6 +147,12 @@ public class UFOCameraController : MonoBehaviour
 
         // 動的UIの生成
         CreateDynamicUI();
+
+        // AudioSourceの自動取得
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+        }
 
         // 開始時はUFOプレイモードではない状態にする
         SetUfoMode(false);
@@ -356,6 +371,9 @@ public class UFOCameraController : MonoBehaviour
         {
             playSpotlight.SetActive(true);
         }
+
+        // コイン投入音の再生
+        PlaySound(coinInsertSound);
 
         Debug.Log($"[UFOCameraController] Started UFO play session. Cost: ¥{cost}, Limit: {playDuration}s, Total plays: {_paymentCount}");
     }
@@ -742,6 +760,24 @@ public class UFOCameraController : MonoBehaviour
         if (_dynamicCanvas != null)
         {
             Destroy(_dynamicCanvas.gameObject);
+        }
+    }
+
+    private void PlaySound(AudioClip clip)
+    {
+        if (clip != null)
+        {
+            if (audioSource == null)
+            {
+                audioSource = GetComponent<AudioSource>();
+                if (audioSource == null)
+                {
+                    audioSource = gameObject.AddComponent<AudioSource>();
+                    audioSource.playOnAwake = false;
+                    audioSource.spatialBlend = 0f; // 2D音響にして距離減衰を無視する
+                }
+            }
+            audioSource.PlayOneShot(clip, soundVolume);
         }
     }
 }

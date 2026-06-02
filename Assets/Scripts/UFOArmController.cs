@@ -95,6 +95,38 @@ public class UFOArmController : MonoBehaviour
     [Tooltip("中心に引き寄せる力")]
     public float magnetForce = 50f;
 
+    [Header("【新規】降下衝突時のコインがさがさ効果音")]
+    [Tooltip("アームがコインの山に衝突した時のがさがさ音")]
+    [SerializeField] private AudioClip descentRustleSound;
+    [Tooltip("がさがさ音の最大音量 (1.0より大きい値で音量増幅可能)")]
+    [Range(0f, 10f)]
+    [SerializeField] private float rustleVolume = 0.8f;
+    [Tooltip("がさがさ音を鳴らすために必要な最低コイン枚数")]
+    [SerializeField] private int minCoinsForRustle = 3;
+    [Tooltip("がさがさ音用のコイン検知半径")]
+    [SerializeField] private float rustleDetectRadius = 1.5f;
+
+    [Header("【新規】つかみ中のじゃらじゃら効果音")]
+    [Tooltip("つかみ中（揺れ時）のじゃらじゃら効果音")]
+    [SerializeField] private AudioClip grabJingleSound;
+    [Tooltip("効果音の音量調整 (1.0より大きい値で音量増幅可能)")]
+    [Range(0f, 10f)]
+    [SerializeField] private float jingleVolume = 0.8f;
+    [Tooltip("コインを検知する爪の中心からの半径")]
+    [SerializeField] private float grabDetectRadius = 1.2f;
+    [Tooltip("音が鳴る揺れの速度しきい値")]
+    [SerializeField] private float swayThreshold = 0.5f;
+    [Tooltip("効果音の連続再生を防ぐインターバル（秒）")]
+    [SerializeField] private float jingleInterval = 0.15f;
+
+    [Header("【新規】音量増幅設定（音が小さい場合）")]
+    [Tooltip("音源を重ねて再生して音量を限界突破させます（1で通常、2で2倍、3で3倍）")]
+    [Range(1, 4)]
+    [SerializeField] private int volumeBoost = 1;
+
+    private float _jingleTimer = 0f;
+    private AudioSource _audioSourceForJingle;
+
     // ─────────────────────────────────────
     // 内部状態
     private ArmState _state = ArmState.Idle;
@@ -240,6 +272,7 @@ public class UFOArmController : MonoBehaviour
         UpdateStateMachine();
         WakeUpNearbyCoins();
         UpdateMagnet();
+        UpdateGrabJingleSound();
     }
 
     void UpdateColliderStateForSpawning()
@@ -534,6 +567,10 @@ public class UFOArmController : MonoBehaviour
                 _state = ArmState.Grabbing;
                 _wantFingerOpen = false;
                 _stateTimer = grabWaitSeconds;
+
+                // コインの山に衝突したときのがさがさ音を再生
+                PlayDescentRustleSound();
+
                 if (stretchRope != null) stretchRope.PauseExternalControl(); // 掴み中はピタッと停止
             }
         }
@@ -544,6 +581,9 @@ public class UFOArmController : MonoBehaviour
             {
                 _state = ArmState.PostCollisionDescending;
                 _stateTimer = postCollisionDescentSeconds;
+
+                // コインの山に衝突したときのがさがさ音を再生
+                PlayDescentRustleSound();
             }
         }
     }
@@ -803,5 +843,138 @@ public class UFOArmController : MonoBehaviour
         // 半透明の赤い塗りつぶし（見やすさ向上）
         Gizmos.color = new Color(1f, 0f, 0f, 0.15f);
         Gizmos.DrawCube(center, size);
+    }
+
+    /// <summary>
+    /// つかみ中（揺れ時）のじゃらじゃら効果音の再生管理
+    /// </summary>
+    private void UpdateGrabJingleSound()
+    {
+        if (grabJingleSound == null) return;
+        
+        // 爪が開いている（何も掴んでいない、またはリリース中）なら鳴らさない
+        if (_wantFingerOpen) return;
+
+        _jingleTimer -= Time.deltaTime;
+        if (_jingleTimer > 0f) return;
+
+        // 揺れの速度（物理的な揺れ速度）の大きさを計測
+        float swaySpeed = _clawSwayVelocity.magnitude;
+        
+        // 揺れが一定以上ある場合のみ判定
+        if (swaySpeed > swayThreshold)
+        {
+            // 爪の中に実際にコイン（UFOItem）があるか確認
+            if (fingerParts != null && fingerParts.Length > 0 && fingerParts[0] != null)
+            {
+                Transform parentFolder = fingerParts[0].parent;
+                Vector3 centerPos = (parentFolder != null) ? parentFolder.position : transform.position;
+                centerPos.y -= 0.5f; // 爪の底付近
+
+                Collider[] hits = Physics.OverlapSphere(centerPos, grabDetectRadius);
+                int coinCount = 0;
+                foreach (var hit in hits)
+                {
+                    if (hit.GetComponent<UFOItem>() != null)
+                    {
+                        coinCount++;
+                    }
+                }
+
+                // コインが1つ以上アームの中にあれば音を鳴らす！
+                if (coinCount > 0)
+                {
+                    PlayJingle(swaySpeed, coinCount);
+                    _jingleTimer = jingleInterval;
+                }
+            }
+        }
+    }
+
+    private void PlayJingle(float swaySpeed, int coinCount)
+    {
+        if (_audioSourceForJingle == null)
+        {
+            _audioSourceForJingle = GetComponent<AudioSource>();
+            if (_audioSourceForJingle == null)
+            {
+                _audioSourceForJingle = gameObject.AddComponent<AudioSource>();
+                _audioSourceForJingle.playOnAwake = false;
+                _audioSourceForJingle.spatialBlend = 0f; // 2Dとしてハッキリ再生
+            }
+        }
+
+        // コインの数と揺れの速度に応じて音量を動的に変化させる
+        // コインが多いほど、激しく揺れるほど大きな音になる
+        float speedFactor = Mathf.Clamp01((swaySpeed - swayThreshold) / 10f);
+        float coinFactor = Mathf.Clamp01(coinCount / 5f); // 5個以上で最大
+        float volume = (speedFactor * 0.5f + coinFactor * 0.5f) * jingleVolume;
+
+        // ピッチも若干ランダムにして自然さを出す
+        _audioSourceForJingle.pitch = Random.Range(0.85f, 1.15f);
+        
+        // volumeBoostの回数だけ重ねて再生して音量を限界突破
+        for (int i = 0; i < volumeBoost; i++)
+        {
+            _audioSourceForJingle.PlayOneShot(grabJingleSound, volume);
+        }
+    }
+
+    /// <summary>
+    /// 降下衝突時にコインの山に当たった際のがさがさ効果音を再生する
+    /// </summary>
+    private void PlayDescentRustleSound()
+    {
+        if (descentRustleSound == null) return;
+        if (fingerParts == null || fingerParts.Length == 0 || fingerParts[0] == null) return;
+
+        // 爪の中心点（底付近）を取得
+        Transform parentFolder = fingerParts[0].parent;
+        Vector3 centerPos = (parentFolder != null) ? parentFolder.position : transform.position;
+        centerPos.y -= 0.5f;
+
+        // 周囲のコインを数える
+        Collider[] hits = Physics.OverlapSphere(centerPos, rustleDetectRadius);
+        int coinCount = 0;
+        foreach (var hit in hits)
+        {
+            if (hit.GetComponent<UFOItem>() != null)
+            {
+                coinCount++;
+            }
+        }
+
+        // 最底枚数以上のコインが下にあればがさがさ音を鳴らす
+        if (coinCount >= minCoinsForRustle)
+        {
+            // コインの数に応じて音量を調整（枚数が多いほど音が大きくなる）
+            // 例：minCoinsForRustle枚で最小、10枚以上で最大音量
+            float coinFactor = Mathf.Clamp01((float)(coinCount - minCoinsForRustle) / (10f - minCoinsForRustle));
+            float volume = Mathf.Lerp(rustleVolume * 0.3f, rustleVolume, coinFactor);
+
+            if (_audioSourceForJingle == null)
+            {
+                _audioSourceForJingle = GetComponent<AudioSource>();
+                if (_audioSourceForJingle == null)
+                {
+                    _audioSourceForJingle = gameObject.AddComponent<AudioSource>();
+                    _audioSourceForJingle.playOnAwake = false;
+                    _audioSourceForJingle.spatialBlend = 0f;
+                }
+            }
+
+            _audioSourceForJingle.pitch = Random.Range(0.9f, 1.1f);
+            
+            // volumeBoostの回数だけ重ねて再生して音量を限界突破
+            for (int i = 0; i < volumeBoost; i++)
+            {
+                _audioSourceForJingle.PlayOneShot(descentRustleSound, volume);
+            }
+            Debug.Log($"[UFOArmController] コインの山に衝突！がさがさ音を再生。枚数: {coinCount}, 音量: {volume:F2}, 重ね数: {volumeBoost}");
+        }
+        else
+        {
+            Debug.Log($"[UFOArmController] 衝突しましたが、範囲内のコインが少なすぎるためがさがさ音はスキップします。枚数: {coinCount}");
+        }
     }
 }
