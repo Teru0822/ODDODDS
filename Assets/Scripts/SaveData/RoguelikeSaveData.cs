@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 [Serializable]
 public class RoguelikeSaveData
@@ -10,7 +11,10 @@ public class RoguelikeSaveData
     public bool isUnlockMinigame   = false; // ミニゲーム機能を解放
     public bool isUnlockVisitor    = false; // 訪問者機能を解放
 
-    // 今後ここに追加のメタプログレッション要素（スキル解放状態など）を記載できます
+    //アイテム関連
+    public List<int> ownedItems;
+
+    // 今後ここに追加のメタプログレッション要素（スキル解放状態など）を記載
 
     //ーーー各遊技のローグライク要素をここに記述していくーーーー
     //UFOキャッチャー

@@ -1,5 +1,7 @@
 using System.IO;
 using System.Text;
+using UnityEditor;
+using UnityEditor.Overlays;
 using UnityEngine;
 
 /// <summary>
@@ -11,14 +13,17 @@ public static class RoguelikeSaveManager
     
     // 難読化用のキー (適当な4バイト)
     private static readonly byte[] ObfuscationKeys = { 0x5a, 0x9f, 0x3b, 0x7c };
-    private static bool _isApplyDebugMode = false;
 
-    public static bool isApplyDebugMode { get { return _isApplyDebugMode; } set { _isApplyDebugMode = value; } }
-
+    private static RoguelikeSaveData _previousSaveData;//以前のデータを保持
     private static string GetSaveFilePath()
     {
+#if UNITY_EDITOR
+        bool debugMode = EditorPrefs.GetBool(
+            "LFEngine_DebugMode",
+            false);
+
         //DEBUG:デバッグするときの処理
-        if (_isApplyDebugMode)
+        if (debugMode)
         {
             string path = Path.Combine(
                 Application.dataPath,
@@ -28,23 +33,50 @@ public static class RoguelikeSaveManager
             );
             return path;
         }
-
+#endif
         Debug.Log(Path.Combine(Application.persistentDataPath, SaveFileName));
         return Path.Combine(Application.persistentDataPath, SaveFileName);
     }
 
     /// <summary>
-    /// セーブデータを保存する
+    /// セーブデータにセーブを行う
     /// </summary>
-    public static void Save(RoguelikeSaveData data)
+    /// <param name="isNewData">Trueの場合、新規データを作成</param>
+    public static void Save(bool isNewData = false)
     {
+#if UNITY_EDITOR
+        bool debugMode = EditorPrefs.GetBool(
+            "LFEngine_DebugMode",
+            false);
+
         //DEBUG:デバッグするときの処理
-        if (_isApplyDebugMode)
+        if (debugMode)
         {
             Debug.LogError("デバッグ用のデータのため、セーブはできません");
             return;
         }
-        string json = JsonUtility.ToJson(data);
+#endif
+        if (isNewData)//セーブデータを新規で作る場合
+        {
+            string newJson = JsonUtility.ToJson(new RoguelikeSaveData());
+            byte[] newEncryptedBytes = EncodeText(newJson);
+
+            string newPath = GetSaveFilePath();
+            File.WriteAllBytes(newPath, newEncryptedBytes);
+
+            Debug.Log($"新規セーブデータ作成完了: {newPath}");
+            return;
+        }
+
+        //以前のセーブデータと差別点がある項目のみを検出（個別でセーブしやすくできる）
+        var saveData = new RoguelikeSaveData();
+        var providers = InterfaceFinder.FindAllByInterface<IsaveDataProvider>();
+        foreach (var provider in providers)
+        {
+            provider.WriteSaveData(saveData);
+        }
+
+        string json = JsonUtility.ToJson(saveData);
         byte[] encryptedBytes = EncodeText(json);
 
         string path = GetSaveFilePath();
@@ -56,31 +88,38 @@ public static class RoguelikeSaveManager
     /// <summary>
     /// セーブデータを読み込む
     /// </summary>
-    public static RoguelikeSaveData Load()
+    public static void Load()
     {
         string path = GetSaveFilePath();
-        
+
+        RoguelikeSaveData saveData = new RoguelikeSaveData();
         if (!File.Exists(path))
         {
             Debug.Log("セーブデータが見つかりません。新規データを作成します。");
-            Save(new RoguelikeSaveData());//新規データを作成
+            Save(true);//新規データを作成
         }
 
         try
         {
             byte[] encryptedBytes = File.ReadAllBytes(path);
             string json = DecodeBytes(encryptedBytes);
-            RoguelikeSaveData data = JsonUtility.FromJson<RoguelikeSaveData>(json);
+            saveData = JsonUtility.FromJson<RoguelikeSaveData>(json);
             Debug.Log($"ロード完了: {path}");
+            _previousSaveData = saveData;
 
-            return data ?? new RoguelikeSaveData();
         }
         catch (System.Exception e)
         {
             Debug.LogError($"セーブデータのロードに失敗しました: {e.Message}");
             Debug.LogError("新規データを作成し直します");
-            Save(new RoguelikeSaveData());//新規データを作成
-            return new RoguelikeSaveData();
+            Save(true);//新規データを作成
+        }
+
+        //すべてのデータが必要なスクリプトに欲しいデータを送る
+        var providers = InterfaceFinder.FindAllByInterface<IsaveDataProvider>();
+        foreach (var provider in providers)
+        {
+            provider.ReadSaveData(saveData);
         }
     }
 

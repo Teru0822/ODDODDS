@@ -1,4 +1,5 @@
 using UnityEngine;
+using UniRx;
 
 /// <summary>
 /// Player にアタッチする「財布」コンポーネント。
@@ -10,91 +11,99 @@ using UnityEngine;
 public class PlayerWallet : MonoBehaviour
 {
     [Header("初期値")]
-    [SerializeField, Tooltip("未洗浄金の初期残高")]
+    [SerializeField, Tooltip("未洗浄金の初期残高の設定")]
     private float _unwashedAmount = 0f;
 
-    [SerializeField, Tooltip("洗浄金 (通常お金) の初期残高")]
+    [SerializeField, Tooltip("洗浄金 (通常お金) の初期残高の設定")]
     private float _washedAmount = 10000f;
 
-    [SerializeField, Tooltip("徳ポイント (ローグライク) の初期値")]
+    [SerializeField, Tooltip("徳ポイント (ローグライク) の初期値の設定")]
     private int _virtuePoints = 0;
 
+    //お金関連の変数
+    private ReactiveProperty<float> _washedMoneyAmount = new ReactiveProperty<float>();
+    private ReactiveProperty<float> _unwashedMoneyAmount = new ReactiveProperty<float>();
+    private ReactiveProperty<int> _virtuePointAmount = new ReactiveProperty<int>();
+
+    //外部でSubscribeするための変数
+    public IReadOnlyReactiveProperty<float> OnWashedMoneyAmountChange { get { return _washedMoneyAmount; } }
+    public IReadOnlyReactiveProperty<float> OnUnwashedMoneyAmountChange { get { return _unwashedMoneyAmount; } }
+    public IReadOnlyReactiveProperty<int> OnvirtuePointAmountChange { get { return _virtuePointAmount; } }
+
+
+    //外部で数値参照できるための関数
     /// <summary>未洗浄金残高</summary>
     public float UnwashedAmount
     {
-        get => _unwashedAmount;
+        get => _unwashedMoneyAmount.Value;
         set
         {
+            //Debug.LogError($"MyFunction Called\n{System.Environment.StackTrace}");
             float clamped = Mathf.Max(0f, value);
-            if (Mathf.Approximately(_unwashedAmount, clamped)) return;
-            _unwashedAmount = clamped;
-            OnUnwashedChanged?.Invoke(_unwashedAmount);
+            if (Mathf.Approximately(_unwashedMoneyAmount.Value, clamped)) return;
+            _unwashedMoneyAmount.Value = clamped;
         }
     }
 
     /// <summary>洗浄金 (通常お金) 残高</summary>
     public float WashedAmount
     {
-        get => _washedAmount;
+        get => _washedMoneyAmount.Value;
         set
         {
             float clamped = Mathf.Max(0f, value);
-            if (Mathf.Approximately(_washedAmount, clamped)) return;
-            _washedAmount = clamped;
-            OnWashedChanged?.Invoke(_washedAmount);
+            if (Mathf.Approximately(_washedMoneyAmount.Value, clamped)) return;
+            _washedMoneyAmount.Value = clamped;
         }
     }
 
     /// <summary>徳ポイント (ローグライク)</summary>
     public int VirtuePoints
     {
-        get => _virtuePoints;
+        get => _virtuePointAmount.Value;
         set
         {
             int clamped = Mathf.Max(0, value);
-            if (_virtuePoints == clamped) return;
-            _virtuePoints = clamped;
-            OnVirtuePointsChanged?.Invoke(_virtuePoints);
+            if (_virtuePointAmount.Value == clamped) return;
+            _virtuePointAmount.Value = clamped;
         }
     }
 
-    public event System.Action<float> OnUnwashedChanged;
-    public event System.Action<float> OnWashedChanged;
-    public event System.Action<int> OnVirtuePointsChanged;
+
 
     // ----- 未洗浄金 -----
 
     public void AddUnwashed(float amount)
     {
         if (amount <= 0f) return;
-        UnwashedAmount = _unwashedAmount + amount;
+        UnwashedAmount = _unwashedMoneyAmount.Value + amount;
     }
 
     public bool TrySpendUnwashed(float cost)
     {
         if (cost <= 0f) return true;
-        if (_unwashedAmount < cost) return false;
-        UnwashedAmount = _unwashedAmount - cost;
+        if (_unwashedMoneyAmount.Value < cost) return false;
+        UnwashedAmount = _unwashedMoneyAmount.Value - cost;
         return true;
     }
 
-    public bool CanAffordUnwashed(float cost) => cost <= 0f || _unwashedAmount >= cost;
+    public bool CanAffordUnwashed(float cost) => cost <= 0f || _unwashedMoneyAmount.Value >= cost;
 
     // ----- 洗浄金 -----
 
     public void AddWashed(float amount)
     {
         if (amount <= 0f) return;
-        WashedAmount = _washedAmount + amount;
+        WashedAmount = _washedMoneyAmount.Value + amount;
     }
 
     public void ReduceWashed(float amount)
     {
         if (amount <= 0f) return;
-        WashedAmount = _washedAmount - amount;
+        WashedAmount = _washedMoneyAmount.Value - amount;
     }
 
-    public bool CanAffordWashed(float cost) => cost <= 0f || _washedAmount >= cost;
+    public bool CanAffordWashed(float cost) => cost <= 0f || _washedMoneyAmount.Value >= cost;
 
     // ----- ローカルプレイヤー取得 -----
 
@@ -115,6 +124,12 @@ public class PlayerWallet : MonoBehaviour
         }
     }
 
+    private void Awake()
+    {
+        _washedMoneyAmount.Value = _washedAmount;
+        _unwashedMoneyAmount.Value = _unwashedAmount;
+        _virtuePointAmount.Value = _virtuePoints;
+    }
     private void OnDestroy()
     {
         if (_cachedLocal == this) _cachedLocal = null;
@@ -123,15 +138,12 @@ public class PlayerWallet : MonoBehaviour
 #if UNITY_EDITOR
     private void OnValidate()
     {
-        if (Application.isPlaying)
-        {
-            _unwashedAmount = Mathf.Max(0f, _unwashedAmount);
-            _washedAmount = Mathf.Max(0f, _washedAmount);
-            _virtuePoints = Mathf.Max(0, _virtuePoints);
-            OnUnwashedChanged?.Invoke(_unwashedAmount);
-            OnWashedChanged?.Invoke(_washedAmount);
-            OnVirtuePointsChanged?.Invoke(_virtuePoints);
-        }
+        //if (Application.isPlaying)
+        //{
+        //    _unwashedAmount = Mathf.Max(0f, _unwashedAmount);
+        //    _washedAmount = Mathf.Max(0f, _washedAmount);
+        //    _virtuePoints = Mathf.Max(0, _virtuePoints);
+        //}
     }
 #endif
 }
