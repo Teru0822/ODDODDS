@@ -105,7 +105,9 @@ public class TypewriterInteractable : InteractableHighlight
             Debug.LogWarning("[TypewriterInteractable] RewardSelectionUI が未設定", this);
             return;
         }
-        var picks = RewardOptionsRepository.PickRandom(2);
+        //TODO;将来的にはマルチプレイに対応する必要あり
+        //var picks = RewardOptionsRepository.PickRandom(2);
+        var picks = FindFirstObjectByType<RoguelikeManager>().GetLockSkills(2);
         if (picks.Count < 2)
         {
             Debug.LogWarning($"[TypewriterInteractable] 未選択の報酬が 2 個未満 (残り {picks.Count})", this);
@@ -115,21 +117,23 @@ public class TypewriterInteractable : InteractableHighlight
         // 選択肢が出た時点でレティクル照準のハイライトは不要 (この後 IsInteractable=false になるので
         // CupPickupController 側で再ハイライトされることもない)
         ApplyHighlight(false);
-        selectionUI.Show(picks.ToArray(), OnRewardSelected);
+        selectionUI.Show(picks, OnRewardSelected);
     }
 
-    private void OnRewardSelected(string chosen)
+    private void OnRewardSelected(RoguelikeData chosen)
     {
         Debug.Log($"[TypewriterInteractable] OnRewardSelected: \"{chosen}\"", this);
-        RewardOptionsRepository.MarkSelected(chosen);
-        RewardEffects.Apply(chosen); // 選択した報酬のゲームプレイ効果を反映 (分裂数強化など)
+        FindFirstObjectByType<RoguelikeManager>().UnlockSkill(chosen);
+        //RewardOptionsRepository.MarkSelected(chosen);
+        //RewardEffects.Apply(chosen); // 選択した報酬のゲームプレイ効果を反映 (分裂数強化など)
         if (controller == null)
         {
             Debug.LogWarning("[TypewriterInteractable] TypewriterController が未設定 - 打鍵をスキップ", this);
             _busy = false;
             return;
         }
-        StartCoroutine(TypeAndUnblock(chosen));
+
+        StartCoroutine(TypeAndUnblock(chosen.skillName));
     }
 
     private IEnumerator TypeAndUnblock(string text)

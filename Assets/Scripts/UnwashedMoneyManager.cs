@@ -52,27 +52,14 @@ public class UnwashedMoneyManager : MonoBehaviour
 
     private void Start()
     {
-        SubscribeWallet();
         UpdateUI();
     }
 
     private void OnDestroy()
     {
-        UnsubscribeWallet();
         if (Instance == this) Instance = null;
     }
 
-    private void SubscribeWallet()
-    {
-        if (Wallet == null) return;
-        Wallet.OnUnwashedChanged += HandleWalletChanged;
-    }
-
-    private void UnsubscribeWallet()
-    {
-        if (wallet == null) return;
-        wallet.OnUnwashedChanged -= HandleWalletChanged;
-    }
 
     private void HandleWalletChanged(float newAmount)
     {

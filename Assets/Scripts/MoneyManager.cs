@@ -1,12 +1,14 @@
-using UnityEngine;
 using TMPro;
+using UniRx;
+using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// ゲーム内のお金（洗浄金）操作 API を提供するシングルトン。
 /// 実データ (CurrentMoney / VirtuePoints) は Player の PlayerWallet に保存され、本クラスは委譲する。
 /// ターン管理 (悪魔の取り立て) と徳ポイント算出ロジックは引き続き本クラスで処理する。
 /// </summary>
-public class MoneyManager : MonoBehaviour
+public class MoneyManager : MonoBehaviour, IsaveDataProvider
 {
     public static MoneyManager Instance { get; private set; }
 
@@ -21,9 +23,16 @@ public class MoneyManager : MonoBehaviour
     [Tooltip("表示フォーマット ({0} に金額が入る)")]
     public string moneyFormat = "Money:\n¥{0:N0}";
 
-    [Header("ターン管理")]
+    [Header("ターン管理")]//TODO: 今後、ターン管理を担うスクリプトを作成してそちらに譲渡
     [SerializeField] private float _exponentialRate = 2.0f;
     [SerializeField] private float _initialDecreaseAmount = 100f;
+    [SerializeField] private int _debtCollectionFrequency = 10;
+
+    ReactiveProperty<int> _currentTurnCount = new ReactiveProperty<int>(0);
+    ReactiveProperty<int> _nextDebtCollectionTurnCount = new ReactiveProperty<int>(0);
+    public int CurrentTurnCount { get { return _currentTurnCount.Value; } }
+    public IReadOnlyReactiveProperty<int> OnCurrentTurnChange { get { return _currentTurnCount; } }
+    public IReadOnlyReactiveProperty<int> OnNextDebtCollectionTurnChange { get { return _nextDebtCollectionTurnCount; } }
 
     [Header("ローグライク要素（徳ポイント）")]
     [SerializeField, Tooltip("徳ポイント算出の基準倍率。大きいほど獲得量が増える")]
@@ -48,7 +57,7 @@ public class MoneyManager : MonoBehaviour
         private set { if (Wallet != null) Wallet.VirtuePoints = value; }
     }
 
-    private int _currentTurnCount = 0;
+    
     private float _previousDecreaseAmount = 0;
     public float PreviousDecreaseAmount => _previousDecreaseAmount;
 
@@ -69,41 +78,47 @@ public class MoneyManager : MonoBehaviour
 
     private void Start()
     {
-        SubscribeWallet();
-        LoadRoguelikeData();
+        RoguelikeSaveManager.Load();
         UpdateMoneyUI();
+
+        _currentTurnCount
+            .Pairwise()
+            .Subscribe(x =>
+            {
+                //経過ターンに応じて、次回の取り立てターンを計算
+                var diff = x.Current - x.Previous;
+                _nextDebtCollectionTurnCount.Value-= diff;
+
+                //0以下になれば、リセット
+                if(_nextDebtCollectionTurnCount.Value <= 0)
+                    _nextDebtCollectionTurnCount.Value = _debtCollectionFrequency;
+            }).AddTo(gameObject);
+
+        _nextDebtCollectionTurnCount.Value = _debtCollectionFrequency;
+    }
+
+    private void Update()
+    {
+#if UNITY_EDITOR
+        if (Keyboard.current.iKey.wasPressedThisFrame)
+        {
+            _currentTurnCount.Value++;
+            Debug.Log("試しにターンを経過させます。");
+        }
+#endif
     }
 
     private void OnDestroy()
     {
-        UnsubscribeWallet();
         if (Instance == this) Instance = null;
     }
 
-    private void SubscribeWallet()
-    {
-        if (Wallet == null) return;
-        Wallet.OnWashedChanged += HandleWashedChanged;
-    }
-
-    private void UnsubscribeWallet()
-    {
-        if (wallet == null) return;
-        wallet.OnWashedChanged -= HandleWashedChanged;
-    }
 
     private void HandleWashedChanged(float newAmount)
     {
         UpdateMoneyUI();
     }
 
-    private void LoadRoguelikeData()
-    {
-        if (Wallet == null) return;
-        RoguelikeSaveData saveData = RoguelikeSaveManager.Load();
-        Wallet.VirtuePoints = saveData.virtuePoints;
-        Debug.Log($"セーブデータをロードしました。現在の徳ポイント: {Wallet.VirtuePoints}");
-    }
 
     private void UpdateMoneyUI()
     {
@@ -145,7 +160,6 @@ public class MoneyManager : MonoBehaviour
     public void ApplyTurnDecrease()
     {
         ReduceMoney(_previousDecreaseAmount);
-        _currentTurnCount++;
         // 次回の減少額を指数関数的に増加させて記憶
         _previousDecreaseAmount *= _exponentialRate;
     }
@@ -156,22 +170,23 @@ public class MoneyManager : MonoBehaviour
     public int CalculateAndAddVirtuePoints()
     {
         if (Wallet == null) return 0;
-        int earnedVirtue = Mathf.FloorToInt(_virtueMultiplier * Mathf.Sqrt(_currentTurnCount));
+        int earnedVirtue = Mathf.FloorToInt(_virtueMultiplier * Mathf.Sqrt(_currentTurnCount.Value));
         Wallet.VirtuePoints = Wallet.VirtuePoints + earnedVirtue;
         Debug.Log($"徳ポイントを獲得しました: {earnedVirtue} (累計: {Wallet.VirtuePoints} / 経過ターン: {_currentTurnCount})");
 
-        SaveRoguelikeData();
         return earnedVirtue;
     }
 
-    private void SaveRoguelikeData()
+    public void WriteSaveData(RoguelikeSaveData saveData)
+    {
+        saveData.virtuePoints = Wallet.VirtuePoints;
+    }
+
+    public void ReadSaveData(RoguelikeSaveData saveData)
     {
         if (Wallet == null) return;
-        RoguelikeSaveData data = new RoguelikeSaveData
-        {
-            virtuePoints = Wallet.VirtuePoints
-        };
-        RoguelikeSaveManager.Save(data);
+        Wallet.VirtuePoints = saveData.virtuePoints;
+        Debug.Log($"セーブデータをロードしました。現在の徳ポイント: {Wallet.VirtuePoints}");
     }
 
     /// <summary>
