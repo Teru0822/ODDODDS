@@ -23,7 +23,7 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
 
     ReactiveCollection<int> _ownedItemIds = new ReactiveCollection<int>();
 
-    private void Start()
+    private void Awake()
     {
         _ownedItemIds
             .ObserveAdd()
@@ -42,6 +42,20 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
             }).AddTo(this);
     }
 
+    private void Update()
+    {
+#if UNITY_EDITOR
+        if (Keyboard.current.iKey.wasPressedThisFrame)
+        {
+            foreach (var item in _ownedItemIds)
+            {
+                Debug.LogWarning(item);
+            }
+            UpdateUI();
+            Debug.Log("試しにイベント機能を使います。");
+        }
+#endif
+    }
 
     public void WriteSaveData(RoguelikeSaveData saveData)
     {
@@ -101,7 +115,7 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
     }
 
     /// <summary>
-    /// ボタンオブジェクト配下からTextまたはTMP_Textを探してテキストを設定する
+    /// ボタンオブジェクト配下からTMP_Textを探してテキストを設定する
     /// </summary>
     private void SetButtonText(GameObject btnObj, string text)
     {
@@ -145,8 +159,6 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
         }
     }
 
-    // --- 外部システム連携用パブリックAPI ---
-
     /// <summary>
     /// 指定されたIDのアイテムを所持リストに追加し、UI更新を行う
     /// </summary>
@@ -171,21 +183,4 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
             UpdateUI();
         }
     }
-
-    #region ContextMenu Tests (インスペクターからテスト可能)
-
-    [ContextMenu("Test Add Item ID 1")]
-    private void TestAdd1() => AddItem(1);
-
-    [ContextMenu("Test Add Item ID 2")]
-    private void TestAdd2() => AddItem(2);
-
-    [ContextMenu("Test Clear Inventory")]
-    private void TestClear()
-    {
-        _ownedItemIds.Clear();
-        UpdateUI();
-    }
-
-    #endregion
 }

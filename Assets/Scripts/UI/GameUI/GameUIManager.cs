@@ -30,7 +30,7 @@ public class GameUIManager : MonoBehaviour
 
     [Header("メニュー用のSettings")]
     [SerializeField] private InputActionReference _openMenuReference;//Tabキーを押したらメニュー表示
-    [SerializeField] private SerializeDictionary<int, string> _menuTitle = new SerializeDictionary<int, string>();
+    [SerializeField] private SerializeDictionary<int, GameObject> _menuTitle = new SerializeDictionary<int, GameObject>();
     private bool _isOpenMenu = false;
     private int _index = 0;
 
@@ -84,7 +84,7 @@ public class GameUIManager : MonoBehaviour
         wallet.OnvirtuePointAmountChange
             .Subscribe(x =>
             {
-                //お金の更新処理
+                //恒常ポイントの更新処理
                 DOTween.To(() => _previousVirtuePointValue,//ターゲットとなる変数
                          num => _previousVirtuePointValue = num,    //値の更新を行う
                          x,                                     //最終的な値
@@ -124,7 +124,8 @@ public class GameUIManager : MonoBehaviour
         if (_openMenuReference.action.WasPressedThisFrame())
         {
             _isOpenMenu = !_isOpenMenu;
-            _playerInfoPanel.SetActive(_isOpenMenu);
+            if(_menuTitle.TryGetValue(_index, out var value))
+                value.SetActive(_isOpenMenu);
 
             if (_isOpenMenu)
             {
@@ -135,6 +136,7 @@ public class GameUIManager : MonoBehaviour
             {
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible = false;
+                _index = 0;
             }
         }
     }

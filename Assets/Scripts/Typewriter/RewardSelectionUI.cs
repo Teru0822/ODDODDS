@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -34,14 +35,18 @@ public class RewardSelectionUI : MonoBehaviour
     [Tooltip("タイトル/見出しテキスト (任意)")]
     public Text titleText;
 
+    [Tooltip("スキルの説明用テキスト")]
+    public Text explainText;
+
     [Tooltip("見出し文字列")]
     public string titleString = "Select a reward";
 
-    private Action<string> _onSelected;
-    private string[] _currentOptions;
+    private Action<RoguelikeData> _onSelected;
+    private List<RoguelikeData> _currentOptions;
     private CursorLockMode _prevLockState;
     private bool _prevCursorVisible;
 
+    public List<RoguelikeData> CurrentOptions { get { return _currentOptions;} }
     public bool IsActive => uiRoot != null && uiRoot.activeSelf;
 
     private void Awake()
@@ -62,12 +67,16 @@ public class RewardSelectionUI : MonoBehaviour
             int idx = i;
             optionButtons[i].onClick.RemoveAllListeners();
             optionButtons[i].onClick.AddListener(() => OnOptionClicked(idx));
+
+            var hover = optionButtons[i].gameObject.AddComponent<ButtonHover>();
+            hover.RewardSelectionUI = this;
+            hover.RewardIndex = i;
         }
     }
 
-    public void Show(string[] options, Action<string> onSelected)
+    public void Show(List<RoguelikeData> options, Action<RoguelikeData> onSelected)
     {
-        if (options == null || options.Length == 0)
+        if (options == null || options.Count == 0)
         {
             Debug.LogWarning("[RewardSelectionUI] Show: options が空");
             return;
@@ -81,9 +90,9 @@ public class RewardSelectionUI : MonoBehaviour
         _onSelected = onSelected;
         for (int i = 0; i < optionButtons.Length; i++)
         {
-            bool has = i < options.Length;
+            bool has = i < options.Count;
             if (optionButtons[i] != null) optionButtons[i].gameObject.SetActive(has);
-            if (has && optionTexts[i] != null) optionTexts[i].text = options[i];
+            if (has && optionTexts[i] != null) optionTexts[i].text = options[i].skillName;
         }
         if (titleText != null) titleText.text = titleString;
         ApplyTargetDisplay();
@@ -144,12 +153,13 @@ public class RewardSelectionUI : MonoBehaviour
 
     private void OnOptionClicked(int index)
     {
-        if (_currentOptions == null || index < 0 || index >= _currentOptions.Length)
+        if (_currentOptions == null || index < 0 || index >= _currentOptions.Count)
         {
             Debug.LogWarning($"[RewardSelectionUI] OnOptionClicked index={index} だがコンテキスト無効", this);
             return;
         }
-        string picked = _currentOptions[index];
+        explainText.text = "";
+        RoguelikeData picked = _currentOptions[index];
         Debug.Log($"[RewardSelectionUI] OnOptionClicked: index={index} text=\"{picked}\"", this);
         var cb = _onSelected;
         Hide();
@@ -225,6 +235,35 @@ public class RewardSelectionUI : MonoBehaviour
             txt.color = Color.white;
             optionTexts[i] = txt;
         }
+
+        // 説明欄の背景パネルを作成
+        var explainPanelGo = new GameObject("ExplainPanel", typeof(Image));
+        explainPanelGo.transform.SetParent(canvasGo.transform, false);
+        var panelRect = explainPanelGo.GetComponent<RectTransform>();
+        panelRect.anchorMin = new Vector2(0.5f, 0.15f);
+        panelRect.anchorMax = new Vector2(0.5f, 0.15f);
+        panelRect.sizeDelta = new Vector2(1200, 300);
+        panelRect.anchoredPosition = Vector2.zero;
+        
+        var panelImg = explainPanelGo.GetComponent<Image>();
+        panelImg.color = new Color(0.10f, 0.10f, 0.15f, 0.95f); // 薄い黒
+
+        // 説明テキストを作成
+        var explainTextGo = new GameObject("ExplainText", typeof(Text));
+        explainTextGo.transform.SetParent(explainPanelGo.transform, false);
+        var textRect = explainTextGo.GetComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = new Vector2(32, 16);
+        textRect.offsetMax = new Vector2(-32, -16);
+
+        explainText = explainTextGo.GetComponent<Text>();
+        explainText.font = font;
+        explainText.fontSize = 32;
+        explainText.alignment = TextAnchor.UpperCenter;
+        explainText.color = Color.white; // 白い文字
+        explainText.text = ""; // 初期テキストは空
+
         uiRoot = canvasGo;
     }
 
