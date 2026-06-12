@@ -31,6 +31,10 @@ public class RoundManager : MonoBehaviour
     [Header("Current Phase")]
     public RoundPhase currentPhase = RoundPhase.UfoPhase;
 
+    [Header("Display Scope")]
+    [Tooltip("HUD（Round/Phase 表示）を出すシーン名。アクティブシーンがこれと一致するときだけ HUD を生成・表示する。空欄ならどのシーンでも表示。")]
+    [SerializeField] private string displaySceneName = "MainScene";
+
     [Header("World Space Display")]
     [Tooltip("Optional: TextMeshPro 3D component in the world (e.g. above the exchange station) to display the round number.")]
     public TMP_Text worldRoundText;
@@ -80,7 +84,7 @@ public class RoundManager : MonoBehaviour
 
     private void Start()
     {
-        if (_hudCanvas == null)
+        if (IsDisplayScene() && _hudCanvas == null)
         {
             CreateHUD();
         }
@@ -91,23 +95,35 @@ public class RoundManager : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (_hudCanvas == null)
+        // HUD は表示対象シーン (既定 MainScene) でのみ生成する。
+        // 他シーンでは作らない & Update() 側で非表示にする。
+        if (IsDisplayScene())
         {
-            CreateHUD();
-        }
-        else
-        {
-            // Re-target display in case the cameras were recreated
-            var camController = FindAnyObjectByType<UFOCameraController>();
-            if (camController != null && camController.GetActiveCamera() != null)
+            if (_hudCanvas == null)
             {
-                _hudCanvas.targetDisplay = camController.GetActiveCamera().targetDisplay;
+                CreateHUD();
+            }
+            else
+            {
+                // Re-target display in case the cameras were recreated
+                var camController = FindAnyObjectByType<UFOCameraController>();
+                if (camController != null && camController.GetActiveCamera() != null)
+                {
+                    _hudCanvas.targetDisplay = camController.GetActiveCamera().targetDisplay;
+                }
             }
         }
 
         SetupWorldText();
         SetupListeners();
         UpdateUI();
+    }
+
+    /// <summary>HUD を表示してよいシーンか (displaySceneName が空ならどのシーンでも true)。</summary>
+    private bool IsDisplayScene()
+    {
+        if (string.IsNullOrEmpty(displaySceneName)) return true;
+        return SceneManager.GetActiveScene().name == displaySceneName;
     }
 
     private void SetupListeners()
@@ -206,27 +222,19 @@ public class RoundManager : MonoBehaviour
 
     private void Update()
     {
-        if (!isTurnSystemEnabled)
+        // 表示するのはターンシステム有効 かつ 表示対象シーン (既定 MainScene) のときだけ。
+        bool showHud = isTurnSystemEnabled && IsDisplayScene();
+
+        if (_hudCanvas != null && _hudCanvas.gameObject.activeSelf != showHud)
         {
-            if (_hudCanvas != null && _hudCanvas.gameObject.activeSelf)
-            {
-                _hudCanvas.gameObject.SetActive(false);
-            }
-            if (worldRoundText != null && worldRoundText.gameObject.activeSelf)
-            {
-                worldRoundText.gameObject.SetActive(false);
-            }
-            return;
+            _hudCanvas.gameObject.SetActive(showHud);
+        }
+        if (worldRoundText != null && worldRoundText.gameObject.activeSelf != showHud)
+        {
+            worldRoundText.gameObject.SetActive(showHud);
         }
 
-        if (_hudCanvas != null && !_hudCanvas.gameObject.activeSelf)
-        {
-            _hudCanvas.gameObject.SetActive(true);
-        }
-        if (worldRoundText != null && !worldRoundText.gameObject.activeSelf)
-        {
-            worldRoundText.gameObject.SetActive(true);
-        }
+        if (!isTurnSystemEnabled) return;
 
         // Handle UFO -> Pinball phase transition
         if (currentPhase == RoundPhase.UfoPhase)
