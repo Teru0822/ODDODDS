@@ -98,7 +98,7 @@ namespace Lattice.Editor
 		public void Reset()
 		{
 			_lineColor = Color.black;
-			_lineThickness = 3f;
+			_lineThickness = 2f;
 			_lineInFrontOpacity = 2f;
 			_lineBehindOpacity = 0.5f;
 

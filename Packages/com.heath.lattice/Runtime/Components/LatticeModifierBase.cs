@@ -75,6 +75,7 @@ namespace Lattice
 		private Mesh _currentTargetMesh;
 		private ApplyMethod _currentApplyMethod;
 		private TextureCoordinate _currentStretchChannel;
+		private bool _currentIsStatic;
 
 		#endregion
 
@@ -295,6 +296,7 @@ namespace Lattice
 			_currentStretchChannel = _stretchChannel;
 			_currentTargetMesh = _targetMesh;
 			_currentApplyMethod = _applyMethod;
+			_currentIsStatic = gameObject.isStatic;
 
 			// If still no target mesh, log warning and exit early
 			if (_targetMesh == null)
@@ -305,10 +307,11 @@ namespace Lattice
 			}
 
 			// If not readable, log error and exit early
-			if (!_targetMesh.isReadable)
+			// Can ignore if static as it will be baked before runtime
+			if (!_targetMesh.isReadable && !gameObject.isStatic)
 			{
-				Debug.LogError("Target does not have read/write enabled. " +
-					"Enable it in the model import settings.", _targetMesh);
+				Debug.LogError("Target does not have read/write enabled. Enable it in the model import settings.\n" +
+					"Or set the GameObject to static if intended to be a static mesh.", _targetMesh);
 				return;
 			}
 
@@ -467,14 +470,19 @@ namespace Lattice
 #if UNITY_EDITOR
 		private void Update()
 		{
-			// If target mesh, apply method, or stretch channel have changed in inspector
+			// If target mesh, apply method, stretch channel, or isStatic have changed in inspector
 			if ((_targetMesh != _currentTargetMesh) ||
 				(_applyMethod != _currentApplyMethod) ||
-				(_stretchChannel != _currentStretchChannel))
+				(_stretchChannel != _currentStretchChannel) ||
+				(gameObject.isStatic != _currentIsStatic))
 			{
 				// Reset component
 				OnEnable();
 			}
+
+			// Don't reset mesh back if lightmapping
+			if (gameObject.isStatic && UnityEditor.Lightmapping.isRunning)
+				return;
 
 			// Ensure mesh on the renderer is the lattice affected one
 			if ((_mesh != null) && (_mesh != GetMesh()))

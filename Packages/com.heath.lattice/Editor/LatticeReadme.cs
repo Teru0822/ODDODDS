@@ -13,7 +13,7 @@ namespace Lattice.Editor
 		private const string DiscordUrl = "https://discord.gg/q4F9YbtB6V";
 		private const string ReviewUrl = "https://u3d.as/3mDH#reviews";
 		private const string Email = "support@harryheath.com";
-		private const string Version = "v1.3.4";
+		private const string Version = "v1.4.0";
 
 		private static readonly string DocumentationPath = Path.Combine("Documentation", "lattice.html");
 

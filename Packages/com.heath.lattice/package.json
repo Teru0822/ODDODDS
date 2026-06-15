@@ -1,9 +1,9 @@
 {
   "name": "com.heath.lattice",
-  "version": "1.3.4",
+  "version": "1.4.0",
   "description": "Adds Lattice Modifiers to Unity.\nUsing the project panel, take a look at the README within 'Packages/Lattice Modifier' to view the included documentation.",
   "displayName": "Lattice Modifier",
-  "unity": "2021.3",
+  "unity": "2022.3",
   "documentationUrl": "https://harryheath.com/lattice",
   "changelogUrl": "https://harryheath.com/lattice#changelog",
   "type": "tool",
@@ -62,6 +62,11 @@
       "displayName": "Wiggle (URP)",
       "description": "A wiggly elephant with a vase on it.",
       "path": "Samples~/Wiggle"
+    },
+    {
+      "displayName": "Static (URP)",
+      "description": "An example of using a single rock mesh and lattice modifiers to create a variety of static terrain fitting rocks, which are then lightmapped.",
+      "path": "Samples~/Static"
     }
   ],
   "hideInEditor": false

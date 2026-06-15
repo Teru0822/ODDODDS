@@ -27,6 +27,7 @@ namespace Lattice.Editor
 			AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
 			EditorSceneManager.sceneSaved += OnSceneSaved;
 			EditorSceneManager.sceneSaving += OnSceneSaving;
+			Lightmapping.bakeStarted += OnLightmapBakeStarted;
 
 			_initialised = true;
 		}
@@ -46,6 +47,7 @@ namespace Lattice.Editor
 			AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
 			EditorSceneManager.sceneSaved -= OnSceneSaved;
 			EditorSceneManager.sceneSaving -= OnSceneSaving;
+			Lightmapping.bakeStarted -= OnLightmapBakeStarted;
 
 			_initialised = false;
 		}
@@ -101,6 +103,22 @@ namespace Lattice.Editor
 		private static void OnSceneSaving(Scene scene, string path)
 		{
 			ResetMeshes();
+		}
+
+		/// <summary>
+		/// Bakes any static meshes before lightmapping starts
+		/// </summary>
+		private static void OnLightmapBakeStarted()
+		{
+#pragma warning disable 0618
+			LatticeModifier[] components = Object.FindObjectsOfType<LatticeModifier>();
+#pragma warning restore 0618
+
+			LatticeBaker.Clear();
+			foreach (LatticeModifier modifier in components)
+			{
+				if (modifier.gameObject.isStatic) LatticeBaker.Bake(modifier, true);
+			}
 		}
 
 		/// <summary>

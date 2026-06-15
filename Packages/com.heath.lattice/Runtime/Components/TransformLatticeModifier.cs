@@ -21,22 +21,22 @@ namespace Lattice
 			Scale = 4,
 		};
 
-		private const string TargetTransformTooltip = 
+		private const string TargetTransformTooltip =
 			"The transform to apply deformations to.";
 
-		private const string ApplyMethodTooltip = 
+		private const string ApplyMethodTooltip =
 			"Which components of the transform to apply deformations to.";
 
-		private const string LatticesTooltip = 
+		private const string LatticesTooltip =
 			"Lattices to apply to the transform.";
 
-		[SerializeField, Tooltip(TargetTransformTooltip)] 
+		[SerializeField, Tooltip(TargetTransformTooltip)]
 		private Transform _targetTransform;
 
-		[SerializeField, Tooltip(ApplyMethodTooltip)] 
+		[SerializeField, Tooltip(ApplyMethodTooltip)]
 		private ApplyFlags _applyMethod = ApplyFlags.Position | ApplyFlags.Rotation;
 
-		[SerializeField, Tooltip(LatticesTooltip)] 
+		[SerializeField, Tooltip(LatticesTooltip)]
 		private List<LatticeItem> _lattices = new()
 		{
 			new LatticeItem()
@@ -50,18 +50,18 @@ namespace Lattice
 		/// The transform before deforming.
 		/// </summary>
 		public Transform TargetTransform
-		{ 
-			get => _targetTransform; 
-			set => _targetTransform = value; 
+		{
+			get => _targetTransform;
+			set => _targetTransform = value;
 		}
-		
+
 		/// <summary>
 		/// Which components will be deformed.
 		/// </summary>
 		public ApplyFlags ApplyMethod
-		{ 
-			get => _applyMethod; 
-			set => _applyMethod = value; 
+		{
+			get => _applyMethod;
+			set => _applyMethod = value;
 		}
 
 		/// <summary>
@@ -69,9 +69,9 @@ namespace Lattice
 		/// </summary>
 		public List<LatticeItem> Lattices => _lattices;
 
-		private void LateUpdate()
+		internal void Apply()
 		{
-			if (_targetTransform == null) 
+			if (_targetTransform == null)
 				return;
 
 			// Get target matrix
@@ -82,7 +82,7 @@ namespace Lattice
 			{
 				Lattice lattice = _lattices[i].Lattice;
 
-				if ((lattice == null) || !lattice.isActiveAndEnabled) 
+				if ((lattice == null) || !lattice.isActiveAndEnabled)
 					continue;
 
 				matrix = LatticeSolver.DeformTransform(_lattices[i], matrix);
@@ -100,6 +100,11 @@ namespace Lattice
 			Matrix4x4 scaleMatrix = _applyMethod.HasFlag(ApplyFlags.Scale) ? matrix : _targetTransform.localToWorldMatrix;
 			transform.localScale = Vector3.one;
 			transform.localScale = (transform.worldToLocalMatrix * scaleMatrix).lossyScale;
+		}
+
+		private void LateUpdate()
+		{
+			Apply();
 		}
 	}
 }
