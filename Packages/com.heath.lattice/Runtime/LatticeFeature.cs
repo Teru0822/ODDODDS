@@ -76,7 +76,7 @@ namespace Lattice
 		{
 			if (_initialised) return;
 
-			if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.Null) 
+			if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.Null)
 				return;
 
 			if (!SystemInfo.supportsComputeShaders)
@@ -95,7 +95,7 @@ namespace Lattice
 				return;
 			}
 
-			if (!Application.isEditor) 
+			if (!Application.isEditor)
 				Application.quitting += Cleanup;
 
 			// Create the buffer for storing lattice information
@@ -128,7 +128,7 @@ namespace Lattice
 		{
 			if (!_initialised) return;
 
-			if (!Application.isEditor) 
+			if (!Application.isEditor)
 				Application.quitting -= Cleanup;
 
 			// Release the lattice buffer
@@ -176,13 +176,13 @@ namespace Lattice
 		/// <summary>
 		/// Applies lattice deformations to a lattice modifier.
 		/// </summary>
-		private static void ApplyModifier(CommandBuffer cmd, LatticeModifierBase modifier)
+		internal static void ApplyModifier(CommandBuffer cmd, LatticeModifierBase modifier)
 		{
 			if ((modifier == null) || !modifier.IsValid) return;
 
 #if UNITY_EDITOR
 			// Swap compute instance if in editor
-			SwapComputeInstance(modifier);
+			SwapComputeInstance(cmd, modifier);
 #endif
 
 			// Set modifier keywords
@@ -243,7 +243,7 @@ namespace Lattice
 
 #if UNITY_EDITOR
 			// Swap compute instance if in editor
-			SwapComputeInstance(modifier);
+			SwapComputeInstance(cmd, modifier);
 #endif
 
 			MeshInfo info = modifier.MeshInfo;
@@ -285,7 +285,7 @@ namespace Lattice
 
 			if (applyMethod == ApplyMethod.Stretch)
 			{
-				cmd.SetComputeIntParam(_compute, StretchOffsetId, 
+				cmd.SetComputeIntParam(_compute, StretchOffsetId,
 					info.GetTexCoordOffset((int)modifier.StretchChannel)
 				);
 			}
@@ -396,9 +396,9 @@ namespace Lattice
 				cmd.SetBufferData(_latticeBuffer, lattice.Offsets);
 
 				// Use indices
-				bool useIndices = (mask.Selection.Type == LatticeMask.SelectionSettings.MaskType.Material) && 
-					              (mask.Selection.Index >= 0) && 
-					              (mask.Selection.Index < modifier.IndexBuffers.Count);
+				bool useIndices = (mask.Selection.Type == LatticeMask.SelectionSettings.MaskType.Material) &&
+								  (mask.Selection.Index >= 0) &&
+								  (mask.Selection.Index < modifier.IndexBuffers.Count);
 
 				cmd.SetKeyword(_compute, _properties.UseIndicesKeyword, useIndices);
 
@@ -520,12 +520,15 @@ namespace Lattice
 		/// <summary>
 		/// Swaps to a compute shader instance based on the modifier's apply method.
 		/// </summary>
-		private static void SwapComputeInstance(LatticeModifierBase modifier)
+		private static void SwapComputeInstance(CommandBuffer cmd, LatticeModifierBase modifier)
 		{
 			ComputeInstance instance = _computeInstances[(int)modifier.ResolvedApplyMethod];
 
 			_compute = instance.Shader;
 			_properties = instance.Properties;
+
+			// Workaround for a bug a couple of people were having with domain reloading disabled
+			cmd.SetComputeBufferParam(_compute, 0, LatticeBufferId, _latticeBuffer);
 		}
 #endif
 
