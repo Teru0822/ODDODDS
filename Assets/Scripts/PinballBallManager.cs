@@ -5,6 +5,11 @@ using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Jobs;
 using UnityEngine.SceneManagement;
+using UniRx;
+using System;
+using UnityEngine.SocialPlatforms.Impl;
+
+
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -99,8 +104,14 @@ public class PinballBallManager : MonoBehaviour
     private float _lifetime;
     private float _splitScaleRatio;
     private int _splitCount;
+
+    bool isActiveSkill3 = false;
     /// <summary>実効分裂数 = 設定値とローグライク強化値の大きい方。報酬「分裂数 2→3」等で増える。</summary>
-    private int EffectiveSplitCount => Mathf.Max(_splitCount, RoguelikeUpgrades.SplitPinBallCount);
+    private int EffectiveSplitCount()
+    {
+        int num = isActiveSkill3 ? 3 : 2;
+        return Mathf.Max(_splitCount, num);
+    } 
     private float _splitSpread;
     private float _spawnXOffset;
     private int _particleGeneration;
@@ -114,6 +125,11 @@ public class PinballBallManager : MonoBehaviour
 
     // 位置・スケール追従: pinballRoot が移動/スケールした分の補正値
     private float _scaleFactor = 1f;
+
+    //スキルがアンロックされた際のイベント
+    private RoguelikeManager _roguelikeManager;
+    private Subject<RoguelikeManager> _initEvent = new Subject<RoguelikeManager>();
+    public IObserver<RoguelikeManager> OnInitEvent { get { return _initEvent; } }
 
     /// <summary>他スクリプト (PinballBallController など) から読める最新の scaleFactor。EnsureConfigured 後に有効。</summary>
     public static float RuntimeScaleFactor { get; private set; } = 1f;
@@ -143,6 +159,7 @@ public class PinballBallManager : MonoBehaviour
         _instance = this;
         ResolveConfig();
         Initialize();
+        _initEvent.Subscribe(manager => _roguelikeManager = manager);
     }
 
     void Start()
@@ -151,6 +168,28 @@ public class PinballBallManager : MonoBehaviour
         _totalGenerated = PinballBallController.AliveGen0Count;
         // 開始時の所持金ではポップさせない (現ステップを起点に設定)
         _lastMoneyPopStep = CurrentMoneyStep();
+
+        //初期化処理
+        Observable.EveryUpdate()
+            .Select(_ => _roguelikeManager)
+            .Where(target => target != null)
+            .First()
+            .Subscribe(target =>
+            {
+                //TODO:各スキルごとにスキルアンロック時の処理を記述していく
+                _roguelikeManager.OnUnlockSkillEvent
+                .Subscribe(data =>
+                {
+                    if (data.id == 3)//When a ball hits a split pin, it now splits into 3 instead of 2.
+                    {
+                        if(data.isActive)
+                            isActiveSkill3 = true;
+
+                        Debug.LogError("分裂数が2 -> 3に変更された。");
+                    }
+                }).AddTo(this);
+            })
+            .AddTo(this);
     }
 
     long CurrentMoneyStep()
@@ -302,7 +341,7 @@ public class PinballBallManager : MonoBehaviour
             return;
         }
 
-        int count = EffectiveSplitCount;
+        int count = EffectiveSplitCount();
         // ボールがスケール付き親の中にいる場合 (例: shop_ball の ball_spawn_point の中) に
         // localScale だけで計算すると親の lossyScale 分を見落として子が極端に小さくなる。
         // 子ボールは scene root (親なし) で生成されるので、ワールドスケール (lossyScale) を直接使う。
@@ -677,7 +716,7 @@ public class PinballBallManager : MonoBehaviour
             return;
         }
 
-        int count = EffectiveSplitCount;
+        int count = EffectiveSplitCount();
         float childRadius = parentRadius * _splitScaleRatio;
         // 一貫性のためここも lossyScale で計算 (gen >=1 は通常 scene root にいるが安全側に倒す)
         Vector3 parentWorldScale = _transforms[index].lossyScale;

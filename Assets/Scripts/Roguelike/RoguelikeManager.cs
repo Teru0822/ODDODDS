@@ -1,25 +1,30 @@
-using Newtonsoft.Json;
+ï»¿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Linq;
+using UniRx;
 
 public class RoguelikeManager : MonoBehaviour
 {
-    private Dictionary<int,RoguelikeData> _roguelikeDictionary = new Dictionary<int, RoguelikeData>();//int: ID, RoguelikeData:ƒ[ƒOƒ‰ƒCƒN—p‚ÌƒXƒLƒ‹‚ÉŠÖ‚·‚éƒf[ƒ^
+    private Dictionary<int,RoguelikeData> _roguelikeDictionary = new Dictionary<int, RoguelikeData>();//int: ID, RoguelikeData:ãƒ­ãƒ¼ã‚°ãƒ©ã‚¤ã‚¯ç”¨ã®ã‚¹ã‚­ãƒ«ã«é–¢ã™ã‚‹ãƒ‡ãƒ¼ã‚¿
     [SerializeField] private string _jsonFilePath = "Assets/Resources/Roguelike/RoguelikeData.json";
 
 
     /// <summary>
-    /// Œ»İƒAƒ“ƒƒbƒN‚³‚ê‚Ä‚¢‚éƒXƒLƒ‹‚Ì‚İ‚ğW‚ß‚½Dictionary‚ğ•Ô‚·
+    /// ç¾åœ¨ã‚¢ãƒ³ãƒ­ãƒƒã‚¯ã•ã‚Œã¦ã„ã‚‹ã‚¹ã‚­ãƒ«ã®ã¿ã‚’é›†ã‚ãŸDictionaryã‚’è¿”ã™
     /// </summary>
     public Dictionary<int, RoguelikeData> GetUnlockSkillDictionary => _roguelikeDictionary.Where(data => data.Value.isGet == true)
         .ToDictionary(data => data.Key, data => data.Value);
 
 
     public RoguelikeManager MyRoguelikeManager { get; private set; }
+
+    private Subject<RoguelikeData> _unlockSkillEvent = new Subject<RoguelikeData>();//ã‚¹ã‚­ãƒ«ãŒã‚¢ãƒ³ãƒ­ãƒƒã‚¯ã•ã‚ŒãŸéš›ã®ã‚¤ãƒ™ãƒ³ãƒˆï¼ˆintã«ã¯idãŒå…¥ã‚‹ï¼‰
+    public IObservable<RoguelikeData> OnUnlockSkillEvent { get { return _unlockSkillEvent; } }
+
     private void Awake()
     {
         LoadRoguelikeData();
@@ -27,9 +32,10 @@ public class RoguelikeManager : MonoBehaviour
 
     private void Start()
     {
-        //TODO:ƒ}ƒ‹ƒ`ƒvƒŒƒC‚É‚È‚Á‚½Û‚É‚ÍA©•ª‚ÌRoguelikeManager‚ªæ“¾‚Å‚«‚é‚æ‚¤‚É‚·‚é
+        //TODO:ãƒãƒ«ãƒãƒ—ãƒ¬ã‚¤ã«ãªã£ãŸéš›ã«ã¯ã€è‡ªåˆ†ã®RoguelikeManagerãŒå–å¾—ã§ãã‚‹ã‚ˆã†ã«ã™ã‚‹
         MyRoguelikeManager = this;
         RoguelikePanelManager.Instance.OnInitEvent.OnNext(MyRoguelikeManager);
+        PinballBallManager.Instance.OnInitEvent.OnNext(MyRoguelikeManager);
     }
 
     private void Update()
@@ -49,23 +55,23 @@ public class RoguelikeManager : MonoBehaviour
             var tmpDic = GetUnlockSkillDictionary;
             foreach (var skill2 in tmpDic)
             {
-                Debug.LogError(skill2.Value.skillName + "‚Í‰ğ•úÏ‚İ‚Å‚·");
+                Debug.LogError(skill2.Value.skillName + "ã¯è§£æ”¾æ¸ˆã¿ã§ã™");
             }
         }
 #endif
     }
 
     /// <summary>
-    /// Œ»İƒAƒ“ƒƒbƒN‚³‚ê‚Ä‚¢‚È‚¢ƒXƒLƒ‹‚ÉŠÖ‚·‚éî•ñ‚ğ”CˆÓ‚Ì”‚¾‚¯ListŒ`®‚Å—^‚¦‚é
+    /// ç¾åœ¨ã‚¢ãƒ³ãƒ­ãƒƒã‚¯ã•ã‚Œã¦ã„ãªã„ã‚¹ã‚­ãƒ«ã«é–¢ã™ã‚‹æƒ…å ±ã‚’ä»»æ„ã®æ•°ã ã‘Listå½¢å¼ã§ä¸ãˆã‚‹
     /// </summary>
-    /// <param name="num">—~‚µ‚¢ƒXƒLƒ‹î•ñ‚Ì”</param>
-    /// <param name="type">‰½‚ÉŠÖ‚·‚éƒXƒLƒ‹‚ğ—Dæ“I‚É“¾‚é‚©</param>
+    /// <param name="num">æ¬²ã—ã„ã‚¹ã‚­ãƒ«æƒ…å ±ã®æ•°</param>
+    /// <param name="type">ä½•ã«é–¢ã™ã‚‹ã‚¹ã‚­ãƒ«ã‚’å„ªå…ˆçš„ã«å¾—ã‚‹ã‹</param>
     /// <returns></returns>
     public List<RoguelikeData> GetLockSkills(int num, SkillType type = SkillType.None)
     {
         List<RoguelikeData> tmpList = new List<RoguelikeData>();
 
-        //Šù‚ÉƒQƒbƒg‚µ‚Ä‚éƒXƒLƒ‹‚ÍœŠO
+        //æ—¢ã«ã‚²ãƒƒãƒˆã—ã¦ã‚‹ã‚¹ã‚­ãƒ«ã¯é™¤å¤–
         if (type == SkillType.None)
         {
             foreach (var skill in _roguelikeDictionary)
@@ -76,7 +82,7 @@ public class RoguelikeManager : MonoBehaviour
                     tmpList.Add(skill.Value);
             }
         }
-        else@//“Á’è‚Ìƒ^ƒCƒv‚ÌƒXƒLƒ‹‚ğ—Dæ‚µ‚ÄŠl“¾‚³‚¹‚½‚¢ê‡
+        elseã€€//ç‰¹å®šã®ã‚¿ã‚¤ãƒ—ã®ã‚¹ã‚­ãƒ«ã‚’å„ªå…ˆã—ã¦ç²å¾—ã•ã›ãŸã„å ´åˆ
         {
             foreach (var skill in _roguelikeDictionary)
             {
@@ -89,21 +95,21 @@ public class RoguelikeManager : MonoBehaviour
 
         if (tmpList.Count == 0)
         {
-            Debug.LogError("‚à‚¤‚·‚×‚Äæ“¾Ï‚İ‚Å‚·");
+            Debug.LogError("ã‚‚ã†ã™ã¹ã¦å–å¾—æ¸ˆã¿ã§ã™");
             return null;
         }
 
-        //ƒAƒ“ƒƒbƒN‚ÌƒXƒLƒ‹‚Ì’†‚©‚ç’Š‘I‚·‚é
+        //ã‚¢ãƒ³ãƒ­ãƒƒã‚¯ã®ã‚¹ã‚­ãƒ«ã®ä¸­ã‹ã‚‰æŠ½é¸ã™ã‚‹
         List<RoguelikeData> result = new List<RoguelikeData>();
         int random = UnityEngine.Random.Range(0, tmpList.Count);
         for (int i = 0; i < num; i++)
         { 
             if (result.Count != 0)
             {
-                while(true)//d•¡‚µ‚È‚¢Œ‹‰Ê‚É‚È‚é‚Ü‚Åƒ‰ƒ“ƒ_ƒ€‚Å’Š‘I
+                while(true)//é‡è¤‡ã—ãªã„çµæœã«ãªã‚‹ã¾ã§ãƒ©ãƒ³ãƒ€ãƒ ã§æŠ½é¸
                 {
                     random = UnityEngine.Random.Range(0, tmpList.Count);
-                    bool isCheck = true;//“¯‚¶ƒXƒLƒ‹‚ª’Š‘I‚³‚ê‚Ä‚¢‚é‚©”Û‚©itrue‚È‚ç’Š‘I‚³‚ê‚Ä‚¢‚È‚¢j
+                    bool isCheck = true;//åŒã˜ã‚¹ã‚­ãƒ«ãŒæŠ½é¸ã•ã‚Œã¦ã„ã‚‹ã‹å¦ã‹ï¼ˆtrueãªã‚‰æŠ½é¸ã•ã‚Œã¦ã„ãªã„ï¼‰
                     foreach (var data in result)
                     {
                         if (data.id != tmpList[random].id)
@@ -117,13 +123,13 @@ public class RoguelikeManager : MonoBehaviour
             }
 
             result.Add(tmpList[random]);
-            Debug.LogError("’Š‘IŒ‹‰Ê[" + i + "] = " + tmpList[random].skillName);
+            Debug.LogError("æŠ½é¸çµæœ[" + i + "] = " + tmpList[random].skillName);
         }
         return result;
     }
 
     /// <summary>
-    /// ƒXƒLƒ‹‚ÌƒAƒ“ƒƒbƒN‚ğs‚¤ŠÖ”
+    /// ã‚¹ã‚­ãƒ«ã®ã‚¢ãƒ³ãƒ­ãƒƒã‚¯ã‚’è¡Œã†é–¢æ•°
     /// </summary>
     /// <param name="data"></param>
     public void UnlockSkill(RoguelikeData data)
@@ -132,23 +138,24 @@ public class RoguelikeManager : MonoBehaviour
         {
             _roguelikeDictionary[data.id].isGet = true;
 
-            //UI‚ÌXV‚ğs‚Á‚Ä‚¨‚­
+            //UIã®æ›´æ–°ã‚’è¡Œã£ã¦ãŠã
             RoguelikePanelManager.Instance.UpdateUI();
+            _unlockSkillEvent.OnNext(data);
         }
         else
         {
-            Debug.LogError("w’è‚³‚ê‚½ƒL[‚ÌƒXƒLƒ‹‚Í‘¶İ‚µ‚Ü‚¹‚ñB");
+            Debug.LogError("æŒ‡å®šã•ã‚ŒãŸã‚­ãƒ¼ã®ã‚¹ã‚­ãƒ«ã¯å­˜åœ¨ã—ã¾ã›ã‚“ã€‚");
             return;
         }
     }
 
 
     /// <summary>
-    /// w’è‚³‚ê‚½ƒpƒX‚ÌJSONƒtƒ@ƒCƒ‹‚©‚ç‰ï˜bƒf[ƒ^‚ğ“Ç‚İ‚İADictionary‚ÉŠi”[
+    /// æŒ‡å®šã•ã‚ŒãŸãƒ‘ã‚¹ã®JSONãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰ä¼šè©±ãƒ‡ãƒ¼ã‚¿ã‚’èª­ã¿è¾¼ã¿ã€Dictionaryã«æ ¼ç´
     /// </summary>
     private void LoadRoguelikeData()
     {
-        // ƒvƒƒWƒFƒNƒgƒ‹[ƒg‘Š‘ÎƒpƒX‚É‘Î‰‚·‚é‚½‚ßAâ‘ÎƒpƒX‚ğ\’z
+        // ãƒ—ãƒ­ã‚¸ã‚§ã‚¯ãƒˆãƒ«ãƒ¼ãƒˆç›¸å¯¾ãƒ‘ã‚¹ã«å¯¾å¿œã™ã‚‹ãŸã‚ã€çµ¶å¯¾ãƒ‘ã‚¹ã‚’æ§‹ç¯‰
         string fullPath = _jsonFilePath;
         if (!Path.IsPathRooted(fullPath))
         {
@@ -170,25 +177,25 @@ public class RoguelikeManager : MonoBehaviour
 
                         _roguelikeDictionary.Add(data.id, data);
 
-                        //ƒfƒoƒbƒO—pƒf[ƒ^Šm”F
+                        //ãƒ‡ãƒãƒƒã‚°ç”¨ãƒ‡ãƒ¼ã‚¿ç¢ºèª
                         Debug.Log($"RoguelkeID: {_roguelikeDictionary[data.id].id}\nskillName: {_roguelikeDictionary[data.id].skillName}\nskillType: {_roguelikeDictionary[data.id].skillType}\ndescibe: {_roguelikeDictionary[data.id].skillDescription}\n");
                         
                     }
-                    Debug.Log($"ƒ[ƒOƒ‰ƒCƒN—p‚Ìƒf[ƒ^‚ğƒ[ƒh‚µ‚Ü‚µ‚½B‘Œ”: {_roguelikeDictionary.Count} Œ (ƒpƒX: {fullPath})");
+                    Debug.Log($"ãƒ­ãƒ¼ã‚°ãƒ©ã‚¤ã‚¯ç”¨ã®ãƒ‡ãƒ¼ã‚¿ã‚’ãƒ­ãƒ¼ãƒ‰ã—ã¾ã—ãŸã€‚ç·ä»¶æ•°: {_roguelikeDictionary.Count} ä»¶ (ãƒ‘ã‚¹: {fullPath})");
                 }
                 else
                 {
-                    Debug.LogWarning("JSON‚Ìƒp[ƒXŒ‹‰Ê‚ª‹ó‚Å‚·A‚Ü‚½‚ÍƒtƒH[ƒ}ƒbƒg‚ªˆÙ‚È‚è‚Ü‚·B");
+                    Debug.LogWarning("JSONã®ãƒ‘ãƒ¼ã‚¹çµæœãŒç©ºã§ã™ã€ã¾ãŸã¯ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆãŒç•°ãªã‚Šã¾ã™ã€‚");
                 }
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"ƒ[ƒOƒ‰ƒCƒN—pƒf[ƒ^‚Ìƒ[ƒh’†‚ÉƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½: {e.Message}");
+                Debug.LogError($"ãƒ­ãƒ¼ã‚°ãƒ©ã‚¤ã‚¯ç”¨ãƒ‡ãƒ¼ã‚¿ã®ãƒ­ãƒ¼ãƒ‰ä¸­ã«ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸ: {e.Message}");
             }
         }
         else
         {
-            Debug.LogError($"ƒ[ƒOƒ‰ƒCƒN—pƒf[ƒ^ƒtƒ@ƒCƒ‹‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñBƒpƒX: {fullPath}");
+            Debug.LogError($"ãƒ­ãƒ¼ã‚°ãƒ©ã‚¤ã‚¯ç”¨ãƒ‡ãƒ¼ã‚¿ãƒ•ã‚¡ã‚¤ãƒ«ãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“ã€‚ãƒ‘ã‚¹: {fullPath}");
         }
     }
 }
