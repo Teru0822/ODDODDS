@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -9,7 +9,7 @@ using UnityEngine.UI;
 public class RoguelikePanelManager : MonoBehaviour
 {
     public static RoguelikePanelManager Instance;
-    [Header("ƒXƒLƒ‹•\¦—pƒIƒuƒWƒFƒNƒg")]
+    [Header("ã‚¹ã‚­ãƒ«è¡¨ç¤ºç”¨ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ")]
     [SerializeField] private Button _skillTypeOptionButton;
     [SerializeField] private TMP_Text _selectedTypeText;
     [SerializeField] private GameObject _skillTypeScrollView;
@@ -17,7 +17,7 @@ public class RoguelikePanelManager : MonoBehaviour
 
     [SerializeField] private List<Button> _skillButtons = new List<Button>();
 
-    [Header("à–¾—pƒIƒuƒWƒFƒNƒg")]
+    [Header("èª¬æ˜ç”¨ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ")]
     [SerializeField] private TMP_Text _detailDescriptionText;
     [SerializeField] private Image _detailIconImage;
     private RoguelikeManager _roguelikeManager;
@@ -37,18 +37,18 @@ public class RoguelikePanelManager : MonoBehaviour
 
     private void Start()
     {
-        //‰Šú‰»ˆ—
+        //åˆæœŸåŒ–å‡¦ç†
         Observable.EveryUpdate()
             .Select(_ => _roguelikeManager)
             .Where(target => target != null)
             .First()
             .Subscribe(target =>
             {
-                UpdateUI();//_roguelikeManager‚Ì’†‚ªNull‚¶‚á‚È‚­‚È‚Á‚½‚çˆê‰ñUI‚ğXV‚µ‚Ä‚¨‚­
+                UpdateUI();//_roguelikeManagerã®ä¸­ãŒNullã˜ã‚ƒãªããªã£ãŸã‚‰ä¸€å›UIã‚’æ›´æ–°ã—ã¦ãŠã
             })
             .AddTo(this);
 
-        //_skillTypeOptionButton‚È‚Ç‚Ì‹““®‚ğƒZƒbƒg‚·‚é
+        //_skillTypeOptionButtonãªã©ã®æŒ™å‹•ã‚’ã‚»ãƒƒãƒˆã™ã‚‹
         _skillTypeOptionButton.onClick.AddListener(() =>
         {
             if (!_skillTypeScrollView.activeSelf)
@@ -80,9 +80,9 @@ public class RoguelikePanelManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ƒXƒLƒ‹‚ÌƒAƒ“ƒƒbƒNó‹µ‚É‡‚í‚¹‚ÄScroll View‚Ìƒ{ƒ^ƒ“‚ğXV‚·‚é
+    /// ã‚¹ã‚­ãƒ«ã®ã‚¢ãƒ³ãƒ­ãƒƒã‚¯çŠ¶æ³ã«åˆã‚ã›ã¦Scroll Viewã®ãƒœã‚¿ãƒ³ã‚’æ›´æ–°ã™ã‚‹
     /// </summary>
-    /// <param name="type">•\¦‚³‚¹‚½‚¢ƒXƒLƒ‹‚Ìí—Ş</param>
+    /// <param name="type">è¡¨ç¤ºã•ã›ãŸã„ã‚¹ã‚­ãƒ«ã®ç¨®é¡</param>
     public void UpdateUI(SkillType type = SkillType.None)
     {
         var roguelikeDic = _roguelikeManager.GetUnlockSkillDictionary;
@@ -94,7 +94,7 @@ public class RoguelikePanelManager : MonoBehaviour
 
         if (_skillButtons == null || _skillButtons.Count == 0)
         {
-            Debug.LogWarning("Scroll View“à‚Ébutton‚ª‚È‚¢‚Å‚·");
+            Debug.LogWarning("Scroll Viewå†…ã«buttonãŒãªã„ã§ã™");
             return;
         }
 
@@ -115,13 +115,13 @@ public class RoguelikePanelManager : MonoBehaviour
             }
         }
 
-        //à–¾—p‚ÌƒIƒuƒWƒFƒNƒg‚Íˆê’U”ñ•\¦
+        //èª¬æ˜ç”¨ã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã¯ä¸€æ—¦éè¡¨ç¤º
         _detailDescriptionText.gameObject.SetActive(false);
         _detailIconImage.gameObject.SetActive(false);
     }
 
     /// <summary>
-    /// ƒ{ƒ^ƒ“ƒIƒuƒWƒFƒNƒg”z‰º‚©‚çText‚Ü‚½‚ÍTMP_Text‚ğ’T‚µ‚ÄƒeƒLƒXƒg‚ğİ’è‚·‚é
+    /// ãƒœã‚¿ãƒ³ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆé…ä¸‹ã‹ã‚‰Textã¾ãŸã¯TMP_Textã‚’æ¢ã—ã¦ãƒ†ã‚­ã‚¹ãƒˆã‚’è¨­å®šã™ã‚‹
     /// </summary>
     private void SetButtonText(GameObject btnObj, string text)
     {
@@ -134,7 +134,7 @@ public class RoguelikePanelManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ƒXƒLƒ‹‚ª‘I‘ğ‚³‚ê‚½Û‚Ìˆ—
+    /// ã‚¹ã‚­ãƒ«ãŒé¸æŠã•ã‚ŒãŸéš›ã®å‡¦ç†
     /// </summary>
     private void OnSelectSkill(RoguelikeData skill)
     {

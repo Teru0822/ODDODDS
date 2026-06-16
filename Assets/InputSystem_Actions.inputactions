@@ -52,6 +52,15 @@
                     "initialStateCheck": false
                 },
                 {
+                    "name": "OpenSetting",
+                    "type": "Button",
+                    "id": "058cf284-e9f1-416c-a854-45c6891ff834",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "Hold",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "Crouch",
                     "type": "Button",
                     "id": "27c5f898-bc57-4ee1-8800-db469aca5fe3",
@@ -98,17 +107,6 @@
                 }
             ],
             "bindings": [
-                {
-                    "name": "",
-                    "id": "978bfe49-cc26-4a3d-ab7b-7d7a29327403",
-                    "path": "<Gamepad>/leftStick",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": ";Gamepad",
-                    "action": "Move",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
                 {
                     "name": "WASD",
                     "id": "00ca640b-d935-4593-8157-c05846ea39b3",
@@ -207,6 +205,17 @@
                     "action": "Move",
                     "isComposite": false,
                     "isPartOfComposite": true
+                },
+                {
+                    "name": "",
+                    "id": "978bfe49-cc26-4a3d-ab7b-7d7a29327403",
+                    "path": "<Gamepad>/leftStick",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Move",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 },
                 {
                     "name": "",
@@ -485,6 +494,28 @@
                 },
                 {
                     "name": "",
+                    "id": "2093ac4b-6cee-4bdf-afe8-ef2795d6a3d1",
+                    "path": "<Keyboard>/escape",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "OpenSetting",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "4dae90c9-d62f-41a8-98f2-338db29888ce",
+                    "path": "<Gamepad>/start",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Gamepad",
+                    "action": "OpenSetting",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "4f4649ac-64a8-4a73-af11-b3faef356a4d",
                     "path": "<Gamepad>/buttonEast",
                     "interactions": "",
@@ -533,7 +564,7 @@
                     "name": "Cancel",
                     "type": "Button",
                     "id": "15cef263-9014-4fd5-94d9-4e4a6234a6ef",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -1018,6 +1049,34 @@
                     "processors": "",
                     "groups": "XR",
                     "action": "TrackedDeviceOrientation",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "Blank",
+            "id": "df3965da-e6ef-4379-9043-1ec0963f18ed",
+            "actions": [
+                {
+                    "name": "New action",
+                    "type": "Button",
+                    "id": "08e5a4ed-f06e-4067-a4df-9e51eeb8824a",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "f8fc4e21-b3af-4aad-a78a-6a1db1bf03c8",
+                    "path": "",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "New action",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
