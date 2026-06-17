@@ -255,8 +255,8 @@ public class UFOCameraController : MonoBehaviour
             if (_fpController == null) return;
         }
 
-        // プレイヤーとUFOキャッチャー筐体中心との距離を計算
-        float distance = Vector3.Distance(_fpController.transform.position, ufoCenterTransform.position);
+        // プレイヤーの当たり判定（CharacterControllerのカプセル体）の表面とUFOキャッチャー中心との最短距離を計算
+        float distance = GetDistanceToPlayer(_fpController, ufoCenterTransform.position);
         bool isClose = distance <= interactionDistance;
 
         // ===== デバッグログ（毎秒1回だけ表示）=====
@@ -779,5 +779,62 @@ public class UFOCameraController : MonoBehaviour
             }
             audioSource.PlayOneShot(clip, soundVolume);
         }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Transform center = ufoCenterTransform != null ? ufoCenterTransform : transform;
+        
+        // シーンビューで可視化するための黄色のワイヤー球を描画
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(center.position, interactionDistance);
+
+        // 中心点に小さな赤い球を描画して位置をわかりやすくする
+        Gizmos.color = Color.red;
+        Gizmos.DrawSphere(center.position, 0.1f);
+    }
+
+    /// <summary>
+    /// プレイヤーのCharacterController（カプセル型コライダー）の表面から、UFOキャッチャーの中心までの最短距離を計算します。
+    /// </summary>
+    private float GetDistanceToPlayer(App.Player.FirstPersonController player, Vector3 ufoCenter)
+    {
+        if (player == null) return float.MaxValue;
+
+        var cc = player.GetComponent<CharacterController>();
+        if (cc == null)
+        {
+            // CharacterControllerが見つからない場合は、プレイヤーの原点座標からの距離を返します
+            return Vector3.Distance(player.transform.position, ufoCenter);
+        }
+
+        // プレイヤーのCharacterControllerのワールド空間における中心座標を計算
+        Vector3 playerPos = player.transform.position;
+        Vector3 capsuleCenter = playerPos + cc.center;
+        
+        // カプセルの円筒部分（上下の半球の中心を結ぶ線分）の半分の長さを計算
+        float halfSegLength = Mathf.Max(0f, (cc.height * 0.5f) - cc.radius);
+
+        // カプセルの上部球体中心と下部球体中心のワールド座標
+        Vector3 pBottom = capsuleCenter + Vector3.down * halfSegLength;
+        Vector3 pTop = capsuleCenter + Vector3.up * halfSegLength;
+
+        // カプセルの中心線分（pBottom -> pTop）上で、ufoCenterに最も近い点を求める
+        Vector3 segmentDirection = pTop - pBottom;
+        float segmentLength = segmentDirection.magnitude;
+        if (segmentLength < 0.0001f)
+        {
+            float dist = Vector3.Distance(pBottom, ufoCenter) - cc.radius;
+            return Mathf.Max(0f, dist);
+        }
+
+        Vector3 segmentDirNormal = segmentDirection / segmentLength;
+        float t = Vector3.Dot(ufoCenter - pBottom, segmentDirNormal);
+        t = Mathf.Clamp(t, 0f, segmentLength);
+        Vector3 closestPointOnSegment = pBottom + segmentDirNormal * t;
+
+        // 最寄りの点からufoCenterまでの距離を求め、コライダー半径を引くことでカプセル表面からの最短距離を算出
+        float distanceToSurface = Vector3.Distance(closestPointOnSegment, ufoCenter) - cc.radius;
+        return Mathf.Max(0f, distanceToSurface);
     }
 }
