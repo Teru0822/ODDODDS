@@ -108,9 +108,9 @@ public class TypewriterInteractable : InteractableHighlight
         //TODO;将来的にはマルチプレイに対応する必要あり
         //var picks = RewardOptionsRepository.PickRandom(2);
         var picks = FindFirstObjectByType<RoguelikeManager>().GetLockSkills(2);
-        if (picks.Count < 2)
+        if (picks == null || picks.Count < 2)
         {
-            Debug.LogWarning($"[TypewriterInteractable] 未選択の報酬が 2 個未満 (残り {picks.Count})", this);
+            Debug.LogWarning($"[TypewriterInteractable] 未選択の報酬が 2 個未満 (残り {(picks != null ? picks.Count : 0)})", this);
             return;
         }
         _busy = true;
