@@ -322,15 +322,19 @@ public class UFOArmController : MonoBehaviour
                     _physicsJoint = clawGo.AddComponent<ConfigurableJoint>();
                 }
                 _physicsJoint.connectedBody = _armRigidbody;
-
                 // Lock translation relative to anchor
                 _physicsJoint.xMotion = ConfigurableJointMotion.Locked;
                 _physicsJoint.yMotion = ConfigurableJointMotion.Locked;
                 _physicsJoint.zMotion = ConfigurableJointMotion.Locked;
 
-                // Free sway rotations around X and Z, Lock Y (twist)
-                _physicsJoint.angularXMotion = ConfigurableJointMotion.Free;
-                _physicsJoint.angularYMotion = ConfigurableJointMotion.Locked;
+                // 主軸をY軸（垂直）、副軸をX軸（水平）に設定することで、
+                // angularXMotion がねじれ（Y軸回転）、angularY/ZMotion が前後左右のスイング（X/Z軸回転）を制御するようにします。
+                _physicsJoint.axis = Vector3.up;
+                _physicsJoint.secondaryAxis = Vector3.right;
+
+                // ねじれ（Y軸回転）をロックし、前後左右のスイング（X/Z軸回転）をフリーにします。
+                _physicsJoint.angularXMotion = ConfigurableJointMotion.Locked;
+                _physicsJoint.angularYMotion = ConfigurableJointMotion.Free;
                 _physicsJoint.angularZMotion = ConfigurableJointMotion.Free;
 
                 // Configure anchor
