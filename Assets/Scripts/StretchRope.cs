@@ -215,13 +215,21 @@ public class StretchRope : MonoBehaviour
                 // 最終的なワールド座標を更新
                 attachedObjects[i].position = universalPivot + swayedVec;
 
-                // 親（Stretch）のスケールによる歪みを防ぐため、ローカルスケールを補正する（逆数を掛ける）
-                Vector3 parentScale = transform.localScale;
-                attachedObjects[i].localScale = new Vector3(
-                    _originalAttachedLocalScales[i].x / Mathf.Max(0.001f, parentScale.x),
-                    _originalAttachedLocalScales[i].y / Mathf.Max(0.001f, parentScale.y),
-                    _originalAttachedLocalScales[i].z / Mathf.Max(0.001f, parentScale.z)
-                );
+                // 親（Stretch）のスケールによる歪みを防ぐため、直接の子オブジェクトのみローカルスケールを補正（逆数を掛ける）し、
+                // それ以外の階層のオブジェクトは元のスケールを維持して二重に縮小するのを防ぎます
+                if (attachedObjects[i].parent == transform)
+                {
+                    Vector3 parentScale = transform.localScale;
+                    attachedObjects[i].localScale = new Vector3(
+                        _originalAttachedLocalScales[i].x / Mathf.Max(0.001f, parentScale.x),
+                        _originalAttachedLocalScales[i].y / Mathf.Max(0.001f, parentScale.y),
+                        _originalAttachedLocalScales[i].z / Mathf.Max(0.001f, parentScale.z)
+                    );
+                }
+                else
+                {
+                    attachedObjects[i].localScale = _originalAttachedLocalScales[i];
+                }
             }
         }
     }
