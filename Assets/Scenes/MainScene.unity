@@ -10512,6 +10512,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
   m_HorizontalFit: 0
   m_VerticalFit: 2
+--- !u!4 &598714183 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 369881072506351000, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+  m_PrefabInstance: {fileID: 5351351319220983938}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &599530003
 GameObject:
   m_ObjectHideFlags: 0
@@ -41411,6 +41416,14 @@ PrefabInstance:
       propertyPath: immediateGrabArea
       value: 
       objectReference: {fileID: 1911254121}
+    - target: {fileID: 7587156506030312916, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: clawBaseParts.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7587156506030312916, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: 'clawBaseParts.Array.data[0]'
+      value: 
+      objectReference: {fileID: 598714183}
     - target: {fileID: 7925405138788672573, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: m_TargetDisplay
       value: 3

@@ -192,13 +192,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 437268533012857756}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.707107, y: -0, z: -0, w: 0.7071067}
-  m_LocalPosition: {x: 0.020199442, y: 0.10220184, z: 0.090299614}
-  m_LocalScale: {x: 9.740186, y: 9.740183, z: 3.1479516}
+  m_LocalRotation: {x: -0.00000011920926, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.0010124474, y: -0.000016489243, z: -0.021068616}
+  m_LocalScale: {x: 4.059218, y: 4.0592175, z: 1.3119076}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5953847900250980214}
-  m_Father: {fileID: 7735182407269557670}
+  m_Father: {fileID: 369881072506351000}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &704644974470641817
 MeshFilter:
@@ -650,6 +650,9 @@ MonoBehaviour:
   goldRate: 10
   hourglassPrefab: {fileID: 2121889567370596314, guid: 2291b81c6ca5bc5448836b27b1402970, type: 3}
   hourglassRate: 5
+  gridType: 0
+  randomGridType: 0
+  ratePatterns: []
 --- !u!1 &1306816647125267052
 GameObject:
   m_ObjectHideFlags: 0
@@ -981,7 +984,10 @@ Transform:
   m_LocalPosition: {x: 0.017770052, y: 0.15275621, z: 0.09026003}
   m_LocalScale: {x: 2.3995225, y: 2.3995225, z: 2.3995225}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 3561571661407418773}
+  - {fileID: 1859291037574408468}
+  - {fileID: 4922076798179983177}
   m_Father: {fileID: 7735182407269557670}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &4794568503000022809
@@ -1879,15 +1885,15 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2340481418031862546}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.50000006, y: 0.49999994, z: 0.50000006, w: 0.49999994}
-  m_LocalPosition: {x: 0.02100029, y: -0.07058462, z: 0.08900012}
-  m_LocalScale: {x: 9.553667, y: 9.553665, z: 0.6601081}
+  m_LocalRotation: {x: -0, y: -0.00000017881392, z: 0.7071068, w: 0.7071068}
+  m_LocalPosition: {x: 0.0013462005, y: 0.0005249482, z: -0.0930774}
+  m_LocalScale: {x: 3.9814858, y: 3.9814856, z: 0.27509978}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2858144638054123330}
   - {fileID: 6328929844950605993}
   - {fileID: 6517693215301133732}
-  m_Father: {fileID: 7735182407269557670}
+  m_Father: {fileID: 369881072506351000}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &2355916384415112191
 MeshFilter:
@@ -2103,6 +2109,9 @@ MonoBehaviour:
   buttonType: 0
   pressDepth: 0.05
   pressSpeed: 20
+  audioSource: {fileID: 0}
+  clickSound: {fileID: 0}
+  soundVolume: 1
 --- !u!64 &7851237446405652891
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -3995,6 +4004,9 @@ MonoBehaviour:
   buttonType: 1
   pressDepth: 0.05
   pressSpeed: 20
+  audioSource: {fileID: 0}
+  clickSound: {fileID: 0}
+  soundVolume: 1
 --- !u!64 &641868325068294650
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -4402,6 +4414,15 @@ MonoBehaviour:
   leftCamera: {fileID: 3765522845575665704}
   rightCamera: {fileID: 6118290646299472296}
   topCamera: {fileID: 5336918042384276037}
+  ufoUiCanvas: {fileID: 0}
+  playCostBase: 100
+  playDuration: 30
+  maxPlayCount: 3
+  costIncreaseMultiplier: 1.5
+  playSpotlight: {fileID: 0}
+  audioSource: {fileID: 0}
+  coinInsertSound: {fileID: 0}
+  soundVolume: 1
   interactionDistance: 9
   ufoCenterTransform: {fileID: 7735182407269557670}
 --- !u!1 &6213926876404368575
@@ -4547,13 +4568,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6473984530653917637}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.707107, y: -0, z: -0, w: 0.7071067}
-  m_LocalPosition: {x: 0.020198228, y: 0.10220135, z: 0.09029585}
-  m_LocalScale: {x: 9.740186, y: 9.740185, z: 3.1479516}
+  m_LocalRotation: {x: -0.00000011920926, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.0010119412, y: -0.000014970884, z: -0.021068718}
+  m_LocalScale: {x: 4.059218, y: 4.0592184, z: 1.3119076}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6133720404820366547}
-  m_Father: {fileID: 7735182407269557670}
+  m_Father: {fileID: 369881072506351000}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &1207226110468192260
 MeshFilter:
@@ -5598,6 +5619,10 @@ MonoBehaviour:
   - {fileID: 5355987463659551743}
   - {fileID: 7089492954293168340}
   - {fileID: 6584870641838840641}
+  audioSource: {fileID: 0}
+  coinGetSound: {fileID: 0}
+  watchGetSound: {fileID: 0}
+  soundVolume: 1
 --- !u!1 &7642206969129634152
 GameObject:
   m_ObjectHideFlags: 0
@@ -5744,9 +5769,6 @@ Transform:
   - {fileID: 6768528815946182934}
   - {fileID: 853639917024673789}
   - {fileID: 369881072506351000}
-  - {fileID: 3561571661407418773}
-  - {fileID: 1859291037574408468}
-  - {fileID: 4922076798179983177}
   m_Father: {fileID: 1503717751264703810}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8003510271745777097
@@ -6158,11 +6180,22 @@ MonoBehaviour:
   descentSpeedMultiplier: 0.65
   grabWaitSeconds: 2
   postCollisionDescentSeconds: 1
+  immediateGrabArea: {fileID: 0}
   wakeUpRadius: 0.3
   wakeUpInterval: 0.2
   isMagnetMode: 0
   magnetRadius: 3
   magnetForce: 200
+  descentRustleSound: {fileID: 0}
+  rustleVolume: 0.8
+  minCoinsForRustle: 3
+  rustleDetectRadius: 1.5
+  grabJingleSound: {fileID: 0}
+  jingleVolume: 0.8
+  grabDetectRadius: 1.2
+  swayThreshold: 0.5
+  jingleInterval: 0.15
+  volumeBoost: 1
   enableSway: 1
   clawBaseParts:
   - {fileID: 3561571661407418773}
