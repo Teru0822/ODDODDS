@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -99,6 +99,9 @@ public class RoguelikeManager : MonoBehaviour
             return null;
         }
 
+        // 残りスキル数が要求数より少ない場合、無限ループを防ぐために上限を制限
+        num = Mathf.Min(num, tmpList.Count);
+
         //アンロックのスキルの中から抽選する
         List<RoguelikeData> result = new List<RoguelikeData>();
         int random = UnityEngine.Random.Range(0, tmpList.Count);
@@ -123,7 +126,7 @@ public class RoguelikeManager : MonoBehaviour
             }
 
             result.Add(tmpList[random]);
-            Debug.LogError("抽選結果[" + i + "] = " + tmpList[random].skillName);
+            Debug.Log("抽選結果[" + i + "] = " + tmpList[random].skillName);
         }
         return result;
     }
