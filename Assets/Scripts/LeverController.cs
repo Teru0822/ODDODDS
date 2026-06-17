@@ -133,7 +133,7 @@ public class LeverController : MonoBehaviour
 
         // 【修正ポイント2】FBXのローカル軸（_leverInitialUp）がズレているとコマ回転してしまうため、
         // どんなFBXモデルでも常に純粋なワールドの真上(Vector3.up)を直交計算の基準にして、倒れる回転軸を作ります
-        Vector3 rotAxis = Vector3.Cross(Vector3.up, moveDir.normalized).normalized;
+        Vector3 rotAxis = Vector3.Cross(moveDir.normalized, Vector3.up).normalized;
         
         float tiltAngle = Mathf.Min(tiltMagnitude, leverMaxAngle);
         Quaternion additionalRot = Quaternion.AngleAxis(tiltAngle, rotAxis);
