@@ -42,9 +42,11 @@ public class StretchRope : MonoBehaviour
     // 内部状態
     private Vector3 _originalScale;
     private Vector3 _originalPosition;
+    private Quaternion _originalRotation;
     private float   _stretchTime;       // 0(縮み) 〜 1(最大)
 
     private Vector3[] _originalAttachedLocalPos;
+    private Vector3[] _originalAttachedLocalScales;
 
     // 外部制御
     private bool  _externalControl  = false;  // true = UFOArmController が制御中
@@ -56,14 +58,19 @@ public class StretchRope : MonoBehaviour
     {
         _originalScale    = transform.localScale;
         _originalPosition = transform.localPosition;
+        _originalRotation = transform.localRotation;
 
         if (attachedObjects != null && attachedObjects.Length > 0)
         {
             _originalAttachedLocalPos = new Vector3[attachedObjects.Length];
+            _originalAttachedLocalScales = new Vector3[attachedObjects.Length];
             for (int i = 0; i < attachedObjects.Length; i++)
             {
                 if (attachedObjects[i] != null)
+                {
                     _originalAttachedLocalPos[i] = attachedObjects[i].localPosition;
+                    _originalAttachedLocalScales[i] = attachedObjects[i].localScale;
+                }
             }
         }
     }
@@ -179,6 +186,7 @@ public class StretchRope : MonoBehaviour
             Vector3 swayedVec = ropeSwayRot * downwardVec;
 
             transform.position = universalPivot + swayedVec;
+            transform.localRotation = ropeSwayRot * _originalRotation;
         }
 
         // ── finger等の追従（Sway位置反映） ──
@@ -206,6 +214,14 @@ public class StretchRope : MonoBehaviour
 
                 // 最終的なワールド座標を更新
                 attachedObjects[i].position = universalPivot + swayedVec;
+
+                // 親（Stretch）のスケールによる歪みを防ぐため、ローカルスケールを補正する（逆数を掛ける）
+                Vector3 parentScale = transform.localScale;
+                attachedObjects[i].localScale = new Vector3(
+                    _originalAttachedLocalScales[i].x / Mathf.Max(0.001f, parentScale.x),
+                    _originalAttachedLocalScales[i].y / Mathf.Max(0.001f, parentScale.y),
+                    _originalAttachedLocalScales[i].z / Mathf.Max(0.001f, parentScale.z)
+                );
             }
         }
     }
