@@ -170,7 +170,9 @@ public class UFOArmController : MonoBehaviour
     private Quaternion[] _clawBaseDefaultRot;
 
     [UnityEngine.Serialization.FormerlySerializedAs("swaySensitivity")]
-    public float clawSwaySensitivity = 2f;
+    public float clawSwaySensitivity = 0.5f;
+    [Tooltip("Stretch（棒）の揺れ感度の倍率（アームの揺れ感度に対する比率）")]
+    public float rodSwaySensitivityMultiplier = 0.25f;
     [UnityEngine.Serialization.FormerlySerializedAs("swayDamping")]
     public float clawSwayDamping = 3f;
     [UnityEngine.Serialization.FormerlySerializedAs("swaySpringForce")]
@@ -184,6 +186,10 @@ public class UFOArmController : MonoBehaviour
     private Vector3 _clawSwayAngle;
     private Vector3 _clawSwayVelocity;
     public Quaternion clawSwayRot { get; private set; } = Quaternion.identity;
+
+    // Rod Sway State
+    private Vector3 _rodSwayAngle;
+    private Vector3 _rodSwayVelocity;
 
     // ─────────────────────────────────────
     void Start()
@@ -440,6 +446,8 @@ public class UFOArmController : MonoBehaviour
         {
             _clawSwayAngle = Vector3.zero;
             _clawSwayVelocity = Vector3.zero;
+            _rodSwayAngle = Vector3.zero;
+            _rodSwayVelocity = Vector3.zero;
             ropeSwayRot = Quaternion.identity;
             clawSwayRot = Quaternion.identity;
             _lastWorldPos = (_armRigidbody != null) ? _armRigidbody.position : armRoot.position;
@@ -451,8 +459,16 @@ public class UFOArmController : MonoBehaviour
         Vector3 currentVel = (currentPos - _lastWorldPos) / dt;
         _lastWorldPos = currentPos;
 
-        // 【ロープ（Extra）側の揺れは計算せず、常に無効（Identity）にする】
-        ropeSwayRot = Quaternion.identity;
+        // 【棒（Stretch）側の揺れ計算（非常に控えめな揺れにする）】
+        float rodSwaySensitivity = clawSwaySensitivity * rodSwaySensitivityMultiplier;
+        Vector3 rodTargetSway = new Vector3(currentVel.z, 0f, -currentVel.x) * rodSwaySensitivity;
+        Vector3 rodAngleDiff = rodTargetSway - _rodSwayAngle;
+        Vector3 rodSpringAccel = (rodAngleDiff * clawSwaySpringForce) - (_rodSwayVelocity * clawSwayDamping);
+        _rodSwayVelocity += rodSpringAccel * dt;
+        _rodSwayAngle += _rodSwayVelocity * dt;
+        _rodSwayAngle.x = Mathf.Clamp(_rodSwayAngle.x, -15f, 15f); // 棒なので角度制限も厳しく（最大15度）
+        _rodSwayAngle.z = Mathf.Clamp(_rodSwayAngle.z, -15f, 15f);
+        ropeSwayRot = Quaternion.Euler(_rodSwayAngle.x, 0f, _rodSwayAngle.z);
 
         // 【爪（Claw）側の揺れ計算】
         // X軸回転（左右の揺れ）とZ軸回転（前後の揺れ）の計算
