@@ -34,6 +34,16 @@ namespace MiniGames.Title
         [SerializeField] private TMP_FontAsset _fontAsset;
         private float _characterSpeed = 0.1f;
 
+        [Header("文字送り音（タイピングSE）")]
+        [Tooltip("1文字ごとに鳴らす効果音")]
+        [SerializeField] private AudioClip _typingSound;
+        [Tooltip("音の高さ（ピッチ）の最小値。1.0が基準。低くすると悪魔の唸り声のようになります。")]
+        [SerializeField] private float _typingPitchMin = 0.6f;
+        [Tooltip("音の高さ（ピッチ）の最大値。")]
+        [SerializeField] private float _typingPitchMax = 0.8f;
+        [Tooltip("音が連続しすぎないための最低間隔（秒）")]
+        [SerializeField] private float _minTypingInterval = 0.05f;
+
         private void Start()
         {
             if (_textBoxCanvasGroup != null)
@@ -151,6 +161,8 @@ namespace MiniGames.Title
             if (_nameText != null) _nameText.text = "悪魔";
 
             // テキストの1文字ずつの表示
+            float lastTypingTime = 0f;
+
             for (int i = 0; i < data.lines.Length; i++)
             {
                 if (_mainSentenceText != null) _mainSentenceText.text = "";
@@ -166,12 +178,25 @@ namespace MiniGames.Title
                     else
                     {
                         if (_mainSentenceText != null) _mainSentenceText.text += c;
+
+                        // 文字送り音の再生
+                        if (_typingSound != null && _audioSource != null && c != ' ' && c != '\n' && c != '　')
+                        {
+                            if (Time.time - lastTypingTime >= _minTypingInterval)
+                            {
+                                _audioSource.pitch = UnityEngine.Random.Range(_typingPitchMin, _typingPitchMax);
+                                _audioSource.PlayOneShot(_typingSound, 0.7f);
+                                lastTypingTime = Time.time;
+                            }
+                        }
                     }
                     yield return new WaitForSeconds(_characterSpeed);
                 }
 
                 yield return new WaitUntil(() => Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame);
                 
+                // 次の行へ行く前にピッチを戻す
+                if (_audioSource != null) _audioSource.pitch = 1.0f;
                 yield return new WaitForSeconds(0.2f);
             }
 
