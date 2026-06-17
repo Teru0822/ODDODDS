@@ -25,9 +25,7 @@ public class UFOItemGoal : MonoBehaviour
     [Tooltip("未洗浄メダルのお金を表示するUIテキスト")]
     public TextMeshProUGUI unwashedMoneyText;
 
-    [Header("【新規】落とし口の箱の切り替え（強化要素）")]
-    [Tooltip("レベルが上がるごとに切り替わる箱のオブジェクトを登録します（Lv1, Lv2, Lv3...の順）")]
-    public GameObject[] goalBoxObjects;
+
 
     [Header("効果音")]
     [Tooltip("再生用のAudioSource。未設定の場合は自動でGetComponentします")]
@@ -51,8 +49,7 @@ public class UFOItemGoal : MonoBehaviour
             audioSource = GetComponent<AudioSource>();
         }
 
-        // 最初はLv1の箱だけを表示し、残りを非表示にする（要素があれば）
-        SetGoalLevel(0); // 0が最初のレベル(Lv1)
+
 
         // UnwashedMoneyManagerの初期値との同期、および変更イベントの購読
         if (UnwashedMoneyManager.Instance != null)
@@ -168,36 +165,5 @@ public class UFOItemGoal : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 落とし口の大きさを強化要素で広げるための関数
-    /// </summary>
-    public void ExpandGoalSize(float expandRate)
-    {
-        // 現在の大きさに倍率を掛けて広げる
-        transform.localScale *= expandRate;
-        Debug.Log($"落とし口のサイズが {expandRate}倍 に拡張されました！");
-    }
 
-    /// <summary>
-    /// 強化要素（UpgradeItemController）から呼ばれる。
-    /// レベルに応じて箱の表示を切り替える関数
-    /// </summary>
-    /// <param name="level">現在のレベル（1回強化したら 1 が渡ってくる想定）</param>
-    public void SetGoalLevel(int level)
-    {
-        if (goalBoxObjects == null || goalBoxObjects.Length == 0) return;
-
-        // すべての箱をチェックし、現在のレベルと同じインデックスの箱だけを表示(true)にする
-        for (int i = 0; i < goalBoxObjects.Length; i++)
-        {
-            if (goalBoxObjects[i] != null)
-            {
-                // i == level なら true（表示）、それ以外は false（非表示）
-                bool shouldShow = (i == level);
-                goalBoxObjects[i].SetActive(shouldShow);
-            }
-        }
-
-        Debug.Log($"落とし口のレベルが {level} に切り替わり、箱の見た目が変化しました！");
-    }
 }
