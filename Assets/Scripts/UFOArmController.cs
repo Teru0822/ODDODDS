@@ -321,7 +321,10 @@ public class UFOArmController : MonoBehaviour
                 {
                     originalClawLocalOffset = clawBaseParts[0].localPosition;
                 }
-                _physicsJoint.connectedAnchor = originalClawLocalOffset;
+                // 支点をキャリッジ（上部）にするため、爪から見た支点（anchor）を「キャリッジがある上部方向」に設定し、
+                // キャリッジから見た支点（connectedAnchor）を原点 (0, 0, 0) に設定します。
+                _physicsJoint.anchor = -originalClawLocalOffset;
+                _physicsJoint.connectedAnchor = Vector3.zero;
             }
         }
     }

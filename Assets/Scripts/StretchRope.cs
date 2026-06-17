@@ -194,8 +194,10 @@ public class StretchRope : MonoBehaviour
                     float dir     = moveNegative ? -1f : 1f;
                     float moveAdd = scaleAdd * fingerRatio * dir;
 
-                    Vector3 anchorOffset = arm.originalClawLocalOffset;
-                    anchorOffset.y += moveAdd; // 伸縮降下分をローカル座標に適用
+                    // 支点をキャリッジ（上部）にしているため、connectedAnchor（キャリッジから見た接続点）を
+                    // 伸縮降下分（moveAdd）だけ下げていきます。
+                    Vector3 anchorOffset = Vector3.zero;
+                    anchorOffset.y = moveAdd; // 伸縮降下分を適用（moveAddは通常負の値）
                     arm.physicsJoint.connectedAnchor = anchorOffset;
                 }
             }
