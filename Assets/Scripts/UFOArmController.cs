@@ -127,6 +127,16 @@ public class UFOArmController : MonoBehaviour
     private float _jingleTimer = 0f;
     private AudioSource _audioSourceForJingle;
 
+    [Header("物理（Physics / AddForce）設定")]
+    [Tooltip("オンにすると、アームの揺れをUnityの物理演算（Joint & AddTorque）で行います。")]
+    public bool usePhysicsSway = true;
+
+    [Tooltip("理想の揺れ角度へ引き戻すバネの力（PD制御のP項）")]
+    public float clawPhysicsSpring = 150f;
+
+    [Tooltip("揺れを抑えるブレーキの力（PD制御 of D項）")]
+    public float clawPhysicsDamping = 12f;
+
     // ─────────────────────────────────────
     // 内部状態
     private ArmState _state = ArmState.Idle;
@@ -185,6 +195,13 @@ public class UFOArmController : MonoBehaviour
     private Vector3 _clawSwayVelocity;
     public Quaternion clawSwayRot { get; private set; } = Quaternion.identity;
 
+    // 物理揺れ用
+    private Rigidbody _clawRigidbody;
+    private ConfigurableJoint _physicsJoint;
+    private Quaternion _originalClawLocalRotation;
+    public ConfigurableJoint physicsJoint => _physicsJoint;
+    public Vector3 originalClawLocalOffset { get; private set; }
+
     // ─────────────────────────────────────
     void Start()
     {
@@ -235,6 +252,61 @@ public class UFOArmController : MonoBehaviour
         if (armRoot != null) _lastWorldPos = armRoot.position;
         if (rail1 != null) _rail1InitialPos = rail1.position;
         if (rail2 != null) _rail2InitialPos = rail2.position;
+
+        if (usePhysicsSway)
+        {
+            if (_armRigidbody != null)
+            {
+                _armRigidbody.isKinematic = true;
+                _armRigidbody.useGravity = false;
+            }
+
+            if (clawBaseParts != null && clawBaseParts.Length > 0 && clawBaseParts[0] != null)
+            {
+                var clawGo = clawBaseParts[0].gameObject;
+                _clawRigidbody = clawGo.GetComponent<Rigidbody>();
+                if (_clawRigidbody == null)
+                {
+                    _clawRigidbody = clawGo.AddComponent<Rigidbody>();
+                }
+                _clawRigidbody.isKinematic = false;
+                _clawRigidbody.useGravity = true;
+                _clawRigidbody.mass = 1f;
+                _clawRigidbody.linearDamping = 1f;
+                _clawRigidbody.angularDamping = 1f;
+                _clawRigidbody.constraints = RigidbodyConstraints.FreezeRotationY;
+
+                _originalClawLocalRotation = clawBaseParts[0].localRotation;
+
+                _physicsJoint = clawGo.GetComponent<ConfigurableJoint>();
+                if (_physicsJoint == null)
+                {
+                    _physicsJoint = clawGo.AddComponent<ConfigurableJoint>();
+                }
+                _physicsJoint.connectedBody = _armRigidbody;
+
+                // Lock translation relative to anchor
+                _physicsJoint.xMotion = ConfigurableJointMotion.Locked;
+                _physicsJoint.yMotion = ConfigurableJointMotion.Locked;
+                _physicsJoint.zMotion = ConfigurableJointMotion.Locked;
+
+                // Free sway rotations around X and Z, Lock Y (twist)
+                _physicsJoint.angularXMotion = ConfigurableJointMotion.Free;
+                _physicsJoint.angularYMotion = ConfigurableJointMotion.Locked;
+                _physicsJoint.angularZMotion = ConfigurableJointMotion.Free;
+
+                // Configure anchor
+                if (_armRigidbody != null)
+                {
+                    originalClawLocalOffset = _armRigidbody.transform.InverseTransformPoint(clawBaseParts[0].position);
+                }
+                else
+                {
+                    originalClawLocalOffset = clawBaseParts[0].localPosition;
+                }
+                _physicsJoint.connectedAnchor = originalClawLocalOffset;
+            }
+        }
     }
 
     // ─────────────────────────────────────
@@ -465,6 +537,33 @@ public class UFOArmController : MonoBehaviour
         _clawSwayAngle.x = Mathf.Clamp(_clawSwayAngle.x, -50f, 50f);
         _clawSwayAngle.z = Mathf.Clamp(_clawSwayAngle.z, -50f, 50f);
         clawSwayRot = Quaternion.Euler(_clawSwayAngle.x, 0f, _clawSwayAngle.z);
+
+        if (usePhysicsSway && _clawRigidbody != null && clawBaseParts != null && clawBaseParts.Length > 0 && clawBaseParts[0] != null)
+        {
+            // 爪土台の親オブジェクトのワールド回転を取得
+            Quaternion parentRot = (clawBaseParts[0].parent != null) ? clawBaseParts[0].parent.rotation : Quaternion.identity;
+            
+            // 理想のワールド回転を計算 (キネマティックと同様にワールド空間での掛け合わせ)
+            Quaternion targetWorldRot = clawSwayRot * (parentRot * _originalClawLocalRotation);
+            
+            // 現在の物理回転との差（Quaternion）を計算
+            Quaternion rotDiff = targetWorldRot * Quaternion.Inverse(_clawRigidbody.rotation);
+            
+            // 最短経路で回転するための角度軸表現を取得
+            rotDiff.ToAngleAxis(out float angleDiff, out Vector3 axis);
+            
+            // 角度差を -180 〜 180 度の範囲にする
+            if (angleDiff > 180f)
+            {
+                angleDiff -= 360f;
+            }
+            
+            // PD制御式: Torque = (角度差[rad] * Pゲイン) - (現在の角速度[rad/s] * Dゲイン)
+            Vector3 torque = axis * (angleDiff * Mathf.Deg2Rad) * clawPhysicsSpring - _clawRigidbody.angularVelocity * clawPhysicsDamping;
+            
+            // 物理的に回転力を適用する
+            _clawRigidbody.AddTorque(torque, ForceMode.Acceleration);
+        }
     }
 
     void UpdateRailFollow()
@@ -517,7 +616,8 @@ public class UFOArmController : MonoBehaviour
         }
 
         // 爪土台に対する揺れの適用（Claw設定）
-        if (clawBaseParts != null && clawBaseParts.Length > 0)
+        // 物理揺れ（usePhysicsSway）がONの場合は、Rigidbody/JointとPDトルク制御による自動的な物理回転を行うため手動の回転上書きをスキップします
+        if (!usePhysicsSway && clawBaseParts != null && clawBaseParts.Length > 0)
         {
             for (int i = 0; i < clawBaseParts.Length; i++)
             {
@@ -860,11 +960,13 @@ public class UFOArmController : MonoBehaviour
         _jingleTimer -= Time.deltaTime;
         if (_jingleTimer > 0f) return;
 
-        // 揺れの速度（物理的な揺れ速度）の大きさを計測
-        float swaySpeed = _clawSwayVelocity.magnitude;
+        // 揺れの速度（物理的な揺れ速度またはキネマティックな揺れ速度）の大きさを計測
+        float swaySpeed = usePhysicsSway && _clawRigidbody != null 
+            ? _clawRigidbody.angularVelocity.magnitude 
+            : _clawSwayVelocity.magnitude;
         
         // 揺れが一定以上ある場合のみ判定
-        if (swaySpeed > swayThreshold)
+        if (swaySpeed > (usePhysicsSway ? swayThreshold * 0.5f : swayThreshold))
         {
             // 爪の中に実際にコイン（UFOItem）があるか確認
             if (fingerParts != null && fingerParts.Length > 0 && fingerParts[0] != null)
