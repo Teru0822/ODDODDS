@@ -17,8 +17,9 @@
    - **初期化処理 (`Start()`)**:
      - 物理揺れ有効時、親キャリッジ `_armRigidbody` をキネマティック設定 (`isKinematic = true`) にし、アーム自体は従来の等速移動を維持。
      - 爪土台の最初のパーツ（`clawBaseParts[0]`）に対して `Rigidbody`（非キネマティック）および `ConfigurableJoint` を動的に構成。
-     - **接続パーツ自動親子化処理**:
-       - 爪の各サブパーツ（`clawBaseParts[1...]`）およびロープ連動オブジェクト（`StretchRope.attachedObjects`）を、実行時にすべて `clawBaseParts[0]` の子オブジェクトに自動的に再配置（`SetParent`）。これにより、物理シミュレーション時にパーツ同士が分離して崩壊する現象を防止。
+      - **物理ターゲットの自動検出と接続パーツ自動親子化処理**:
+        - 爪ベース（`clawBaseParts[0]`）の親階層から名前が `"cube"` であるオブジェクトを自動的に検索し、それを物理ボディ（揺らす対象の `physicsTarget`）とします。
+        - 物理ターゲットの配下に、他のすべての爪ベースパーツ（`clawBaseParts[0...]`）およびロープ連動オブジェクト（`StretchRope.attachedObjects`）を実行時に自動的に再配置（`SetParent`）します。これにより、物理ターゲット（`Cube`）を主軸とした振り子運動を可能にし、かつ爪モデルのパーツ同士が空中分解して崩壊する現象を防止します。
    - **揺れ物理処理 (`UpdateSwayPhysics()`)**:
      - 物理揺れ有効時、キャリッジ速度（`currentVel`）に反比例する慣性力（`-currentVel * clawPhysicsForceMultiplier`）を計算し、爪の Rigidbody に対し `AddForce` を用いて適用（Y方向の力は 0f に制限）。
      - 有効時は手動での爪土台回転上書きをスキップ。
