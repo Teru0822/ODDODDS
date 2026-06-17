@@ -464,7 +464,20 @@ public class UFOArmController : MonoBehaviour
         _clawSwayAngle += _clawSwayVelocity * dt;
         _clawSwayAngle.x = Mathf.Clamp(_clawSwayAngle.x, -50f, 50f);
         _clawSwayAngle.z = Mathf.Clamp(_clawSwayAngle.z, -50f, 50f);
-        clawSwayRot = Quaternion.Euler(_clawSwayAngle.x, 0f, _clawSwayAngle.z);
+
+        // オイラー角の直接合成による歪み（ジンバルロック）を防ぐため、
+        // 傾きの角度（magnitude）と直交する回転軸を元に Quaternion.AngleAxis で合成します。
+        float swayMagnitude = _clawSwayAngle.magnitude;
+        if (swayMagnitude > 0.001f)
+        {
+            Vector3 tiltDir = new Vector3(_clawSwayAngle.z, 0f, -_clawSwayAngle.x).normalized;
+            Vector3 axis = Vector3.Cross(Vector3.up, tiltDir).normalized;
+            clawSwayRot = Quaternion.AngleAxis(swayMagnitude, axis);
+        }
+        else
+        {
+            clawSwayRot = Quaternion.identity;
+        }
     }
 
     void UpdateRailFollow()

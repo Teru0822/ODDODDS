@@ -81,8 +81,15 @@ public class LeverController : MonoBehaviour
 
             _targetAngleH += delta.x * dirH * sensitivity * Time.deltaTime;
             _targetAngleV += delta.y * dirV * sensitivity * Time.deltaTime;
-            _targetAngleH  = Mathf.Clamp(_targetAngleH, -leverMaxAngle, leverMaxAngle);
-            _targetAngleV  = Mathf.Clamp(_targetAngleV, -leverMaxAngle, leverMaxAngle);
+            
+            // 円形クランプ（四角クランプから変更して角での引っかかりを防止）
+            Vector2 targetAngles = new Vector2(_targetAngleH, _targetAngleV);
+            if (targetAngles.magnitude > leverMaxAngle)
+            {
+                targetAngles = targetAngles.normalized * leverMaxAngle;
+            }
+            _targetAngleH = targetAngles.x;
+            _targetAngleV = targetAngles.y;
         }
         else
         {
@@ -165,11 +172,21 @@ public class LeverController : MonoBehaviour
 
             if (absH > absV)
             {
-                if (absV < absH * axisSnapAssist) normV = 0f; // 完全に横移動
+                if (absV < absH * axisSnapAssist)
+                {
+                    // 完全に0にするのではなく、境界付近でスムーズに減衰させる
+                    float t = absV / (absH * axisSnapAssist);
+                    normV *= t * t;
+                }
             }
             else if (absV > absH)
             {
-                if (absH < absV * axisSnapAssist) normH = 0f; // 完全に縦移動
+                if (absH < absV * axisSnapAssist)
+                {
+                    // 完全に0にするのではなく、境界付近でスムーズに減衰させる
+                    float t = absH / (absV * axisSnapAssist);
+                    normH *= t * t;
+                }
             }
         }
 
