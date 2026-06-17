@@ -346,9 +346,18 @@ public class UFOArmController : MonoBehaviour
                 {
                     originalClawLocalOffset = physicsTarget.localPosition;
                 }
-                // 支点をキャリッジ（上部）にするため、爪（物理ターゲット）から見た支点（anchor）を「キャリッジがある上部方向」に設定し、
-                // キャリッジから見た支点（connectedAnchor）を原点 (0, 0, 0) に設定します。
-                _physicsJoint.anchor = -originalClawLocalOffset;
+                // 支点をキャリッジ（上部）にするため、
+                // 爪（physicsTarget）のローカル空間におけるキャリッジの中心位置をアンカー（anchor）として設定し、
+                // キャリッジ側のアンカー（connectedAnchor）はキャリッジの原点 (0, 0, 0) に設定します。
+                // これにより、爪やキャリッジの初期の回転や位置のズレ（Pivotのズレ）を数学的に完全に吸収します。
+                if (_armRigidbody != null)
+                {
+                    _physicsJoint.anchor = physicsTarget.InverseTransformPoint(_armRigidbody.transform.position);
+                }
+                else
+                {
+                    _physicsJoint.anchor = physicsTarget.InverseTransformPoint(armRoot.position);
+                }
                 _physicsJoint.connectedAnchor = Vector3.zero;
             }
         }
