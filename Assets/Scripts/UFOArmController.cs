@@ -455,8 +455,9 @@ public class UFOArmController : MonoBehaviour
         ropeSwayRot = Quaternion.identity;
 
         // 【爪（Claw）側の揺れ計算】
-        // X軸回転（前後揺れ）は移動方向と逆方向に傾くように符号を反転（-currentVel.z）させます
-        Vector3 clawTargetSway = new Vector3(-currentVel.z, 0f, currentVel.x) * clawSwaySensitivity;
+        // X軸回転（左右の揺れ）とZ軸回転（前後の揺れ）の計算
+        // 前後移動（X軸速度）に対して逆方向に傾くよう、Z方向の揺れ（clawTargetSway.z）の符号を反転（-currentVel.x）させます
+        Vector3 clawTargetSway = new Vector3(currentVel.z, 0f, -currentVel.x) * clawSwaySensitivity;
         Vector3 clawAngleDiff = clawTargetSway - _clawSwayAngle;
         Vector3 clawSpringAccel = (clawAngleDiff * clawSwaySpringForce) - (_clawSwayVelocity * clawSwayDamping);
         _clawSwayVelocity += clawSpringAccel * dt;
