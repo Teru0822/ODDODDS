@@ -472,8 +472,10 @@ public class UFOArmController : MonoBehaviour
         float swayMagnitude = _clawSwayAngle.magnitude;
         if (swayMagnitude > 0.001f)
         {
-            Vector3 tiltDir = new Vector3(_clawSwayAngle.z, 0f, -_clawSwayAngle.x).normalized;
-            Vector3 axis = Vector3.Cross(tiltDir, Vector3.up).normalized;
+            // 倒したい方向のベクトル (X, 0, Z)
+            Vector3 tiltDir = new Vector3(_clawSwayAngle.x, 0f, _clawSwayAngle.z).normalized;
+            // その方向に倒すための直交する回転軸 (Z, 0, -X) をワールド空間の真上ベクトルとの外積から算出
+            Vector3 axis = Vector3.Cross(Vector3.up, tiltDir).normalized;
             clawSwayRot = Quaternion.AngleAxis(swayMagnitude, axis);
         }
         else
