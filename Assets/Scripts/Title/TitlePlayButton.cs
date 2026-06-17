@@ -71,6 +71,18 @@ public class TitlePlayButton : MonoBehaviour
     [Range(0, 7)]
     public int displayIndexToActivate = 3;
 
+    [Header("サウンド (Play押下時)")]
+    [Tooltip("Playボタン押下時の効果音（大きなものが横切る音など）を鳴らすAudioSource")]
+    public AudioSource slideAwayAudioSource;
+    [Tooltip("鳴らすAudioClip")]
+    public AudioClip slideAwaySound;
+
+    [Header("シーケンス (悪魔会話・遷移)")]
+    [Tooltip("タイトル専用の悪魔会話マネージャー")]
+    public MiniGames.Title.TitleConversationManager titleConversationManager;
+    [Tooltip("モヤとロード画面を管理するマネージャー")]
+    public MiniGames.Transitions.SceneTransitionManager sceneTransitionManager;
+
     private enum State { Idle, Transitioning, ReadyToLoad, Loading }
     private State _state = State.Idle;
 
@@ -110,29 +122,25 @@ public class TitlePlayButton : MonoBehaviour
             return;
         }
 
-        // Idle 中の Play ボタンクリックは MouseHoverOutline.OnClicked (press → release) で処理する。
-        // この先は「ReadyToLoad 中の任意の左クリックでシーン遷移」のみ。
-        if (_state != State.ReadyToLoad) return;
-        if (Mouse.current == null) return;
-        if (!Mouse.current.leftButton.wasPressedThisFrame) return;
-
-        if (logEvents) Debug.Log("[TitlePlayButton] LeftClick in ReadyToLoad → LoadGameScene", this);
-        StartCoroutine(LoadGameScene());
+        // 以降の Update 処理（ReadyToLoad中のクリック判定等）は、
+        // 悪魔の会話が自動で遷移を呼ぶようになったため削除または無効化しました。
     }
 
     private IEnumerator RunTransition()
     {
-        // Play ボタン押下直後から「左クリックでシーン遷移」を受理できるよう、
-        // 待機状態 (ReadyToLoad) に即座に入る。imp の歩行アニメーション等はバックグラウンドで進行する。
-        _state = State.ReadyToLoad;
-        if (logEvents) Debug.Log($"[TitlePlayButton] State → ReadyToLoad (押下直後。次の左クリックで '{targetSceneName}' へ遷移)", this);
+        _state = State.Transitioning;
+        if (logEvents) Debug.Log($"[TitlePlayButton] State → Transitioning (オブジェクト退場とImpの移動開始)", this);
 
         // ホバーハイライトを終了 (二重クリックや視覚的混乱の防止)
         if (hoverOutline != null) hoverOutline.enabled = false;
 
-        // FloatingMotion 等の毎フレーム位置上書き系コンポーネントを止めないと slide が打ち消されて
-        // 「一定時間後に元の場所に戻る」現象になる。slide 開始前に全対象で無効化する。
         DisableMotionOverrides();
+
+        // SE再生
+        if (slideAwayAudioSource != null && slideAwaySound != null)
+        {
+            slideAwayAudioSource.PlayOneShot(slideAwaySound);
+        }
 
         // Imp を pos1 に配置 + 歩行方向に向ける + walk アニメ開始
         if (imp != null && pos1 != null)
@@ -150,18 +158,46 @@ public class TitlePlayButton : MonoBehaviour
             impAnimator.CrossFade(walkAnimationName, animationCrossFade);
         }
 
-        // 退場スライドと Imp 歩行を並行実行
-        Coroutine slideCo = StartCoroutine(SlideAwayObjects());
-        Coroutine walkCo = StartCoroutine(WalkImpToPos2());
-        yield return slideCo;
-        yield return walkCo;
+        // 退場スライドはバックグラウンドで進行させ、Imp の歩行完了だけを待つ
+        StartCoroutine(SlideAwayObjects());
+        yield return StartCoroutine(WalkImpToPos2());
 
-        // 到着 → idle (無限ループ)。クリック受理は冒頭で既に有効化済み。
+        // 到着 → idle
         if (impAnimator != null && !string.IsNullOrEmpty(idleAnimationName))
         {
             impAnimator.CrossFade(idleAnimationName, animationCrossFade);
         }
-        if (logEvents) Debug.Log("[TitlePlayButton] Imp が pos2 到着 → idle ループ開始", this);
+        if (logEvents) Debug.Log("[TitlePlayButton] Imp が pos2 到着。オブジェクト退場完了。", this);
+
+        // --- ここから追加シーケンス ---
+        // 悪魔の会話を開始
+        if (titleConversationManager != null)
+        {
+            if (logEvents) Debug.Log("[TitlePlayButton] 悪魔の会話を開始します。", this);
+            titleConversationManager.StartConversation(OnConversationComplete);
+        }
+        else
+        {
+            // 会話マネージャーがない場合はすぐに遷移へ進む
+            if (logEvents) Debug.LogWarning("[TitlePlayButton] TitleConversationManager がアタッチされていません。会話をスキップして遷移します。", this);
+            OnConversationComplete();
+        }
+    }
+
+    private void OnConversationComplete()
+    {
+        if (logEvents) Debug.Log("[TitlePlayButton] 悪魔の会話が完了。モヤ暗転とロードを開始します。", this);
+
+        if (sceneTransitionManager != null)
+        {
+            sceneTransitionManager.TransitionToScene(targetSceneName);
+        }
+        else
+        {
+            // TransitionManager が無い場合のフォールバック（既存のロード）
+            if (logEvents) Debug.LogWarning("[TitlePlayButton] SceneTransitionManager が設定されていません。通常の LoadScene を実行します。", this);
+            StartCoroutine(LoadGameScene());
+        }
     }
 
     private IEnumerator SlideAwayObjects()
