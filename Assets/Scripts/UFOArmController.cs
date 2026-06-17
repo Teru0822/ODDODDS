@@ -259,28 +259,49 @@ public class UFOArmController : MonoBehaviour
 
             if (clawBaseParts != null && clawBaseParts.Length > 0 && clawBaseParts[0] != null)
             {
-                // アームの崩壊（分離）を防ぐため、他のすべての土台パーツを clawBaseParts[0] の配下に自動的に親子化します。
-                for (int i = 1; i < clawBaseParts.Length; i++)
+                // 物理揺れを適用するターゲットとなるオブジェクト（物理ボディ）を決定します。
+                // 爪ベースの親階層に "cube" という名前のオブジェクトがあれば、それをターゲットにします。
+                Transform physicsTarget = clawBaseParts[0];
+                Transform parentCheck = clawBaseParts[0].parent;
+                
+                // ヒエラルキー階層のダンプ（調査・確認用）
+                Debug.Log($"[UFOPhysics] clawBaseParts[0]: {clawBaseParts[0].name}");
+                int checkDepth = 0;
+                while (parentCheck != null && parentCheck != armRoot && checkDepth < 10)
                 {
-                    if (clawBaseParts[i] != null)
+                    Debug.Log($"[UFOPhysics] Parent check depth {checkDepth}: {parentCheck.name}");
+                    if (parentCheck.name.ToLower().Contains("cube"))
                     {
-                        clawBaseParts[i].SetParent(clawBaseParts[0], true);
+                        physicsTarget = parentCheck;
+                        Debug.Log($"[UFOPhysics] Found parent cube: {physicsTarget.name}");
+                        break;
+                    }
+                    parentCheck = parentCheck.parent;
+                    checkDepth++;
+                }
+
+                // 物理ターゲット（physicsTarget）の配下に、他のすべての爪ベースパーツを親子化し、一体化させます。
+                for (int i = 0; i < clawBaseParts.Length; i++)
+                {
+                    if (clawBaseParts[i] != null && clawBaseParts[i] != physicsTarget && !clawBaseParts[i].IsChildOf(physicsTarget))
+                    {
+                        clawBaseParts[i].SetParent(physicsTarget, true);
                     }
                 }
                 
-                // さらに StretchRope の連動オブジェクトもすべて親子化して、物理演算で一緒に揺れ動くようにします。
+                // さらに StretchRope の連動オブジェクトもすべて物理ターゲットの配下に親子化して、物理演算で一緒に揺れ動くようにします。
                 if (stretchRope != null && stretchRope.attachedObjects != null)
                 {
                     foreach (var obj in stretchRope.attachedObjects)
                     {
-                        if (obj != null && obj != clawBaseParts[0] && !obj.IsChildOf(clawBaseParts[0]))
+                        if (obj != null && obj != physicsTarget && !obj.IsChildOf(physicsTarget))
                         {
-                            obj.SetParent(clawBaseParts[0], true);
+                            obj.SetParent(physicsTarget, true);
                         }
                     }
                 }
 
-                var clawGo = clawBaseParts[0].gameObject;
+                var clawGo = physicsTarget.gameObject;
                 _clawRigidbody = clawGo.GetComponent<Rigidbody>();
                 if (_clawRigidbody == null)
                 {
@@ -293,7 +314,7 @@ public class UFOArmController : MonoBehaviour
                 _clawRigidbody.angularDamping = 1f;
                 _clawRigidbody.constraints = RigidbodyConstraints.FreezeRotationY;
 
-                _originalClawLocalRotation = clawBaseParts[0].localRotation;
+                _originalClawLocalRotation = physicsTarget.localRotation;
 
                 _physicsJoint = clawGo.GetComponent<ConfigurableJoint>();
                 if (_physicsJoint == null)
@@ -315,13 +336,13 @@ public class UFOArmController : MonoBehaviour
                 // Configure anchor
                 if (_armRigidbody != null)
                 {
-                    originalClawLocalOffset = _armRigidbody.transform.InverseTransformPoint(clawBaseParts[0].position);
+                    originalClawLocalOffset = _armRigidbody.transform.InverseTransformPoint(physicsTarget.position);
                 }
                 else
                 {
-                    originalClawLocalOffset = clawBaseParts[0].localPosition;
+                    originalClawLocalOffset = physicsTarget.localPosition;
                 }
-                // 支点をキャリッジ（上部）にするため、爪から見た支点（anchor）を「キャリッジがある上部方向」に設定し、
+                // 支点をキャリッジ（上部）にするため、爪（物理ターゲット）から見た支点（anchor）を「キャリッジがある上部方向」に設定し、
                 // キャリッジから見た支点（connectedAnchor）を原点 (0, 0, 0) に設定します。
                 _physicsJoint.anchor = -originalClawLocalOffset;
                 _physicsJoint.connectedAnchor = Vector3.zero;
