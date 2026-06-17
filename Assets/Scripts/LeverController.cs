@@ -17,11 +17,12 @@ public class LeverController : MonoBehaviour
     public float leverMaxAngle = 30f;
     [Tooltip("マウス移動量に対する感度")]
     public float sensitivity = 120f;
+
     [Tooltip("離したときに中央へ戻る速さ")]
-    public float returnSpeed = 8f;
+    public float returnSpeed = 15f;
 
     [Tooltip("操作時の重さ（慣性）。小さいほど重く・遅れて動き、大きいほど軽く・キビキビ動きます")]
-    public float weightDamping = 10f;
+    public float weightDamping = 25f;
 
     [Header("操作アシスト（斜めブレ防止）")]
     [Tooltip("縦・横の入力がどちらかに偏っている時、弱い方のブレ入力を無効化する強さ。\n0で完全な斜め自由、1で完全に十字方向（上下または左右専用）に固定します。")]
