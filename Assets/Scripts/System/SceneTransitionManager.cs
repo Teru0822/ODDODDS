@@ -33,6 +33,9 @@ namespace MiniGames.Transitions
         [Header("フェード設定")]
         [SerializeField] private float _fadeDuration = 1.5f;
 
+        private Coroutine _loadingTextCoroutine;
+        private Tween _loadingTextFadeTween;
+
         private void Awake()
         {
             if (Instance == null)
@@ -69,6 +72,7 @@ namespace MiniGames.Transitions
             if (_loadingText != null && _loadingFontAsset != null)
             {
                 _loadingText.font = _loadingFontAsset;
+                _loadingText.text = "Loading";
             }
         }
 
@@ -106,6 +110,8 @@ namespace MiniGames.Transitions
             {
                 _loadingLogo.gameObject.SetActive(true);
             }
+            
+            StartLoadingAnimation();
 
             if (_loadingScreenCanvasGroup != null)
             {
@@ -148,6 +154,8 @@ namespace MiniGames.Transitions
             {
                 _loadingLogo.gameObject.SetActive(false);
             }
+            
+            StopLoadingAnimation();
 
             // 5. フェードイン（モヤが晴れる）
             if (_fadeCanvasGroup != null)
@@ -157,6 +165,48 @@ namespace MiniGames.Transitions
             }
 
             onTransitionComplete?.Invoke();
+        }
+
+        private void StartLoadingAnimation()
+        {
+            if (_loadingText == null) return;
+            
+            // ピリオドアニメーション開始
+            _loadingTextCoroutine = StartCoroutine(LoadingTextRoutine());
+            
+            // 呼吸（明滅）アニメーション開始
+            _loadingText.color = new Color(_loadingText.color.r, _loadingText.color.g, _loadingText.color.b, 1f);
+            _loadingTextFadeTween = _loadingText.DOFade(0.3f, 1.2f).SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutSine);
+        }
+
+        private void StopLoadingAnimation()
+        {
+            if (_loadingTextCoroutine != null)
+            {
+                StopCoroutine(_loadingTextCoroutine);
+                _loadingTextCoroutine = null;
+            }
+            if (_loadingTextFadeTween != null)
+            {
+                _loadingTextFadeTween.Kill();
+                _loadingTextFadeTween = null;
+                if (_loadingText != null)
+                {
+                    _loadingText.color = new Color(_loadingText.color.r, _loadingText.color.g, _loadingText.color.b, 1f);
+                }
+            }
+        }
+
+        private IEnumerator LoadingTextRoutine()
+        {
+            int dotCount = 0;
+            while (true)
+            {
+                string dots = new string('.', dotCount);
+                _loadingText.text = $"Loading{dots}";
+                dotCount = (dotCount + 1) % 4; // 0, 1, 2, 3 の繰り返し
+                yield return new WaitForSeconds(0.5f);
+            }
         }
     }
 }
