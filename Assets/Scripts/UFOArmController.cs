@@ -170,7 +170,7 @@ public class UFOArmController : MonoBehaviour
     private Quaternion[] _clawBaseDefaultRot;
 
     [UnityEngine.Serialization.FormerlySerializedAs("swaySensitivity")]
-    public float clawSwaySensitivity = 2f;
+    public float clawSwaySensitivity = 0.5f;
     [UnityEngine.Serialization.FormerlySerializedAs("swayDamping")]
     public float clawSwayDamping = 3f;
     [UnityEngine.Serialization.FormerlySerializedAs("swaySpringForce")]
@@ -451,8 +451,8 @@ public class UFOArmController : MonoBehaviour
         Vector3 currentVel = (currentPos - _lastWorldPos) / dt;
         _lastWorldPos = currentPos;
 
-        // 【ロープ（Extra）側の揺れは計算せず、常に無効（Identity）にする】
-        ropeSwayRot = Quaternion.identity;
+        // 【棒（Stretch）とアーム全体を連動して揺らすため、ropeSwayRot にも clawSwayRot を適用する】
+        ropeSwayRot = clawSwayRot;
 
         // 【爪（Claw）側の揺れ計算】
         // X軸回転（左右の揺れ）とZ軸回転（前後の揺れ）の計算

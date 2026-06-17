@@ -42,6 +42,7 @@ public class StretchRope : MonoBehaviour
     // 内部状態
     private Vector3 _originalScale;
     private Vector3 _originalPosition;
+    private Quaternion _originalRotation;
     private float   _stretchTime;       // 0(縮み) 〜 1(最大)
 
     private Vector3[] _originalAttachedLocalPos;
@@ -56,6 +57,7 @@ public class StretchRope : MonoBehaviour
     {
         _originalScale    = transform.localScale;
         _originalPosition = transform.localPosition;
+        _originalRotation = transform.localRotation;
 
         if (attachedObjects != null && attachedObjects.Length > 0)
         {
@@ -179,6 +181,7 @@ public class StretchRope : MonoBehaviour
             Vector3 swayedVec = ropeSwayRot * downwardVec;
 
             transform.position = universalPivot + swayedVec;
+            transform.localRotation = ropeSwayRot * _originalRotation;
         }
 
         // ── finger等の追従（Sway位置反映） ──
