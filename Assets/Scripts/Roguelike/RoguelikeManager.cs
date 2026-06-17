@@ -142,7 +142,9 @@ public class RoguelikeManager : MonoBehaviour
             _roguelikeDictionary[data.id].isGet = true;
 
             // スキルID専用の演出処理
-            if (data.id == 13) ApplySkill13Effects();
+            if      (data.id ==  8) ApplySkill8Effects();
+            else if (data.id ==  9) ApplySkill9Effects();
+            else if (data.id == 13) ApplySkill13Effects();
             else if (data.id == 14) ApplySkill14Effects();
             else if (data.id == 15) ApplySkill15Effects();
 
@@ -158,22 +160,44 @@ public class RoguelikeManager : MonoBehaviour
     }
 
     /// <summary>
-    /// lock_main 配下の指定名オブジェクトを非表示にする共通ヘルパー
+    /// 任意のルートオブジェクト配下の子孫を SetActive する汎用ヘルパー
     /// </summary>
-    private void HideLockMainChild(string childName, string callerLabel)
+    private void SetChildActive(string rootName, string childName, bool active, string callerLabel)
     {
-        GameObject lockMain = GameObject.Find("lock_main");
-        if (lockMain == null)
+        GameObject root = GameObject.Find(rootName);
+        if (root == null)
         {
-            Debug.LogWarning($"[RoguelikeManager] {callerLabel}: lock_main が見つかりません。");
+            Debug.LogWarning($"[RoguelikeManager] {callerLabel}: {rootName} が見つかりません。");
             return;
         }
 
-        Transform hit = FindDeep(lockMain.transform, childName);
+        Transform hit = FindDeep(root.transform, childName);
         if (hit != null)
-            hit.gameObject.SetActive(false);
+            hit.gameObject.SetActive(active);
         else
-            Debug.LogWarning($"[RoguelikeManager] {callerLabel}: {childName} が lock_main 配下に見つかりません。");
+            Debug.LogWarning($"[RoguelikeManager] {callerLabel}: {childName} が {rootName} 配下に見つかりません。");
+    }
+
+    /// <summary>lock_main 配下の子を非表示にする便利ラッパー</summary>
+    private void HideLockMainChild(string childName, string callerLabel)
+        => SetChildActive("lock_main", childName, false, callerLabel);
+
+    /// <summary>スキルID8取得時：アームを Lv2 に切り替える</summary>
+    private void ApplySkill8Effects()
+    {
+        if (UFOArmManager.Instance != null)
+            UFOArmManager.Instance.SetArmLevel(2);
+        else
+            Debug.LogWarning("[RoguelikeManager] ApplySkill8Effects: UFOArmManager が見つかりません。");
+    }
+
+    /// <summary>スキルID9取得時：アームを Lv3 に切り替える</summary>
+    private void ApplySkill9Effects()
+    {
+        if (UFOArmManager.Instance != null)
+            UFOArmManager.Instance.SetArmLevel(3);
+        else
+            Debug.LogWarning("[RoguelikeManager] ApplySkill9Effects: UFOArmManager が見つかりません。");
     }
 
     /// <summary>子孫を再帰的に名前検索する</summary>
