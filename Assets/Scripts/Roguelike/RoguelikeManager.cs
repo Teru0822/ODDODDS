@@ -141,6 +141,11 @@ public class RoguelikeManager : MonoBehaviour
         {
             _roguelikeDictionary[data.id].isGet = true;
 
+            // スキルID専用の演出処理
+            if (data.id == 13) ApplySkill13Effects();
+            else if (data.id == 14) ApplySkill14Effects();
+            else if (data.id == 15) ApplySkill15Effects();
+
             //UIの更新を行っておく
             RoguelikePanelManager.Instance.UpdateUI();
             _unlockSkillEvent.OnNext(data);
@@ -150,6 +155,70 @@ public class RoguelikeManager : MonoBehaviour
             Debug.LogError("指定されたキーのスキルは存在しません。");
             return;
         }
+    }
+
+    /// <summary>
+    /// lock_main 配下の指定名オブジェクトを非表示にする共通ヘルパー
+    /// </summary>
+    private void HideLockMainChild(string childName, string callerLabel)
+    {
+        GameObject lockMain = GameObject.Find("lock_main");
+        if (lockMain == null)
+        {
+            Debug.LogWarning($"[RoguelikeManager] {callerLabel}: lock_main が見つかりません。");
+            return;
+        }
+
+        Transform hit = FindDeep(lockMain.transform, childName);
+        if (hit != null)
+            hit.gameObject.SetActive(false);
+        else
+            Debug.LogWarning($"[RoguelikeManager] {callerLabel}: {childName} が lock_main 配下に見つかりません。");
+    }
+
+    /// <summary>子孫を再帰的に名前検索する</summary>
+    private Transform FindDeep(Transform parent, string name)
+    {
+        foreach (Transform child in parent)
+        {
+            if (child.name == name) return child;
+            var found = FindDeep(child, name);
+            if (found != null) return found;
+        }
+        return null;
+    }
+
+    /// <summary>スキルID13取得時：bolt3・main3・pkn31〜pkn34 を非表示</summary>
+    private void ApplySkill13Effects()
+    {
+        HideLockMainChild("bolt3", "ApplySkill13Effects");
+        HideLockMainChild("main3", "ApplySkill13Effects");
+        HideLockMainChild("pkn31", "ApplySkill13Effects");
+        HideLockMainChild("pkn32", "ApplySkill13Effects");
+        HideLockMainChild("pkn33", "ApplySkill13Effects");
+        HideLockMainChild("pkn34", "ApplySkill13Effects");
+    }
+
+    /// <summary>スキルID14取得時：bolt2・main2・pkn21〜pkn24 を非表示</summary>
+    private void ApplySkill14Effects()
+    {
+        HideLockMainChild("bolt2", "ApplySkill14Effects");
+        HideLockMainChild("main2", "ApplySkill14Effects");
+        HideLockMainChild("pkn21", "ApplySkill14Effects");
+        HideLockMainChild("pkn22", "ApplySkill14Effects"); // 「okn22」は pkn22 の誤字として処理
+        HideLockMainChild("pkn23", "ApplySkill14Effects");
+        HideLockMainChild("pkn24", "ApplySkill14Effects");
+    }
+
+    /// <summary>スキルID15取得時：bolt1・main1・pkn11〜pkn14 を非表示</summary>
+    private void ApplySkill15Effects()
+    {
+        HideLockMainChild("bolt1", "ApplySkill15Effects");
+        HideLockMainChild("main1", "ApplySkill15Effects");
+        HideLockMainChild("pkn11", "ApplySkill15Effects");
+        HideLockMainChild("pkn12", "ApplySkill15Effects");
+        HideLockMainChild("pkn13", "ApplySkill15Effects");
+        HideLockMainChild("pkn14", "ApplySkill15Effects");
     }
 
 
