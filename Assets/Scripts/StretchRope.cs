@@ -184,28 +184,47 @@ public class StretchRope : MonoBehaviour
         // ── finger等の追従（Sway位置反映） ──
         if (attachedObjects != null && attachedObjects.Length > 0)
         {
-            float dir     = moveNegative ? -1f : 1f;
-            float moveAdd = scaleAdd * fingerRatio * dir;
-
-            for (int i = 0; i < attachedObjects.Length; i++)
+            if (arm != null && arm.usePhysicsSway)
             {
-                if (attachedObjects[i] == null) continue;
+                // 物理挙動がONの場合は、UFOArmController の ConfigurableJoint を介して物理位置・揺れを制御するため、
+                // スクリプトでの座標の直接書き込みはスキップします。
+                // 代わりに、伸縮値（scaleAdd）に応じてジョイントのアンカー位置を下に動かして降下・上昇させます。
+                if (arm.physicsJoint != null)
+                {
+                    float dir     = moveNegative ? -1f : 1f;
+                    float moveAdd = scaleAdd * fingerRatio * dir;
 
-                // もし揺れていなかった場合の「本来の真下」にあるワールド座標
-                Vector3 baseWorldPos = (attachedObjects[i].parent != null)
-                                     ? attachedObjects[i].parent.TransformPoint(_originalAttachedLocalPos[i])
-                                     : _originalAttachedLocalPos[i];
+                    Vector3 anchorOffset = arm.originalClawLocalOffset;
+                    anchorOffset.y += moveAdd; // 伸縮降下分をローカル座標に適用
+                    arm.physicsJoint.connectedAnchor = anchorOffset;
+                }
+            }
+            else
+            {
+                // 従来のキネマティック位置・スイング同期
+                float dir     = moveNegative ? -1f : 1f;
+                float moveAdd = scaleAdd * fingerRatio * dir;
 
-                // 爪の本体のY座標（高さ）を強制的にロープと同じ距離だけ下に落とす
-                baseWorldPos.y -= Mathf.Abs(moveAdd);
+                for (int i = 0; i < attachedObjects.Length; i++)
+                {
+                    if (attachedObjects[i] == null) continue;
 
-                // ロープ本体と完全に同じ支点・同じ揺れ角度（ropeSwayRot）を使って位置をスイングさせる！
-                // これにより、6番が右に動けば絶対に爪も右に動く（絶対に分離しない）ようになる
-                Vector3 downwardVec = baseWorldPos - universalPivot;
-                Vector3 swayedVec = ropeSwayRot * downwardVec;
+                    // もし揺れていなかった場合の「本来の真下」にあるワールド座標
+                    Vector3 baseWorldPos = (attachedObjects[i].parent != null)
+                                         ? attachedObjects[i].parent.TransformPoint(_originalAttachedLocalPos[i])
+                                         : _originalAttachedLocalPos[i];
 
-                // 最終的なワールド座標を更新
-                attachedObjects[i].position = universalPivot + swayedVec;
+                    // 爪の本体のY座標（高さ）を強制的にロープと同じ距離だけ下に落とす
+                    baseWorldPos.y -= Mathf.Abs(moveAdd);
+
+                    // ロープ本体と完全に同じ支点・同じ揺れ角度（ropeSwayRot）を使って位置をスイングさせる！
+                    // これにより、6番が右に動けば絶対に爪も右に動く（絶対に分離しない）ようになる
+                    Vector3 downwardVec = baseWorldPos - universalPivot;
+                    Vector3 swayedVec = ropeSwayRot * downwardVec;
+
+                    // 最終的なワールド座標を更新
+                    attachedObjects[i].position = universalPivot + swayedVec;
+                }
             }
         }
     }
