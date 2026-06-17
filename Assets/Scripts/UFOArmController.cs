@@ -128,14 +128,11 @@ public class UFOArmController : MonoBehaviour
     private AudioSource _audioSourceForJingle;
 
     [Header("物理（Physics / AddForce）設定")]
-    [Tooltip("オンにすると、アームのXZ移動および揺れをUnityの物理演算（AddForce & Joint）で行います。")]
+    [Tooltip("オンにすると、アームの揺れをUnityの物理演算（Joint & AddForce）で行います。")]
     public bool usePhysicsSway = true;
 
-    [Tooltip("アーム移動時に加える力（物理移動用）")]
-    public float moveForce = 50f;
-
-    [Tooltip("物理アームの減衰（ドラッグ値）")]
-    public float carriageDrag = 5f;
+    [Tooltip("アームの移動速度に比例して爪のRigidbodyに加える揺れ用フォースの倍率")]
+    public float clawPhysicsForceMultiplier = 20f;
 
     // ─────────────────────────────────────
     // 内部状態
@@ -261,11 +258,8 @@ public class UFOArmController : MonoBehaviour
         {
             if (_armRigidbody != null)
             {
-                _armRigidbody.isKinematic = false;
+                _armRigidbody.isKinematic = true;
                 _armRigidbody.useGravity = false;
-                _armRigidbody.linearDamping = carriageDrag;
-                _armRigidbody.angularDamping = 10f; // Prevent rotation
-                _armRigidbody.constraints = RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotation;
             }
 
             if (clawBaseParts != null && clawBaseParts.Length > 0 && clawBaseParts[0] != null)
@@ -468,74 +462,39 @@ public class UFOArmController : MonoBehaviour
         if (_state == ArmState.Descending ||
             _state == ArmState.PostCollisionDescending ||
             _state == ArmState.Grabbing   ||
-            _state == ArmState.Ascending)
-        {
-            if (usePhysicsSway && _armRigidbody != null)
-            {
-                _armRigidbody.linearVelocity = new Vector3(0f, _armRigidbody.linearVelocity.y, 0f);
-            }
-            return;
-        }
+            _state == ArmState.Ascending) return;
+
         if (armRoot == null) return;
 
-        if (usePhysicsSway && _armRigidbody != null)
+        // 従来のキネマティック移動
+        Vector3 pos = (_armRigidbody != null) ? _armRigidbody.position : armRoot.position;
+        pos.x += _leverInput.x * moveSpeed * Time.fixedDeltaTime;
+        pos.z += _leverInput.y * moveSpeed * Time.fixedDeltaTime;
+
+        // ピボットではなく、「実際の見た目の中心座標（visualPos）」を算出してClamp判定を行う
+        Vector3 visualPos = pos + _visualOffset;
+
+        // 移動範囲の中心座標を決定
+        Vector3 centerPos = _machineBasePos;
+
+        float halfX = playAreaSize.x / 2f;
+        float halfZ = playAreaSize.y / 2f;
+        float limitCenterX = centerPos.x + playAreaCenter.x;
+        float limitCenterZ = centerPos.z + playAreaCenter.y;
+
+        visualPos.x = Mathf.Clamp(visualPos.x, limitCenterX - halfX, limitCenterX + halfX);
+        visualPos.z = Mathf.Clamp(visualPos.z, limitCenterZ - halfZ, limitCenterZ + halfZ);
+
+        // Clampされた見た目の座標から、再びピボットの座標を逆算して適用する
+        pos = visualPos - _visualOffset;
+
+        if (_armRigidbody != null)
         {
-            // 物理移動（AddForce）
-            Vector3 force = new Vector3(_leverInput.x, 0f, _leverInput.y) * moveForce;
-            _armRigidbody.AddForce(force, ForceMode.Force);
-
-            // 移動範囲制限（クランプ）
-            Vector3 pos = _armRigidbody.position;
-            Vector3 visualPos = pos + _visualOffset;
-            Vector3 centerPos = _machineBasePos;
-            float halfX = playAreaSize.x / 2f;
-            float halfZ = playAreaSize.y / 2f;
-            float limitCenterX = centerPos.x + playAreaCenter.x;
-            float limitCenterZ = centerPos.z + playAreaCenter.y;
-
-            float clampedX = Mathf.Clamp(visualPos.x, limitCenterX - halfX, limitCenterX + halfX);
-            float clampedZ = Mathf.Clamp(visualPos.z, limitCenterZ - halfZ, limitCenterZ + halfZ);
-
-            if (clampedX != visualPos.x || clampedZ != visualPos.z)
-            {
-                // 範囲外に出た場合は速度を抑えて位置をクランプ
-                Vector3 newPos = new Vector3(clampedX, visualPos.y, clampedZ) - _visualOffset;
-                _armRigidbody.position = newPos;
-                _armRigidbody.linearVelocity = Vector3.zero;
-            }
+            _armRigidbody.MovePosition(pos);
         }
         else
         {
-            // 従来のキネマティック移動
-            Vector3 pos = (_armRigidbody != null) ? _armRigidbody.position : armRoot.position;
-            pos.x += _leverInput.x * moveSpeed * Time.fixedDeltaTime;
-            pos.z += _leverInput.y * moveSpeed * Time.fixedDeltaTime;
-
-            // ピボットではなく、「実際の見た目の中心座標（visualPos）」を算出してClamp判定を行う
-            Vector3 visualPos = pos + _visualOffset;
-
-            // 移動範囲の中心座標を決定
-            Vector3 centerPos = _machineBasePos;
-
-            float halfX = playAreaSize.x / 2f;
-            float halfZ = playAreaSize.y / 2f;
-            float limitCenterX = centerPos.x + playAreaCenter.x;
-            float limitCenterZ = centerPos.z + playAreaCenter.y;
-
-            visualPos.x = Mathf.Clamp(visualPos.x, limitCenterX - halfX, limitCenterX + halfX);
-            visualPos.z = Mathf.Clamp(visualPos.z, limitCenterZ - halfZ, limitCenterZ + halfZ);
-
-            // Clampされた見た目の座標から、再びピボットの座標を逆算して適用する
-            pos = visualPos - _visualOffset;
-
-            if (_armRigidbody != null)
-            {
-                _armRigidbody.MovePosition(pos);
-            }
-            else
-            {
-                armRoot.position = pos;
-            }
+            armRoot.position = pos;
         }
         
         // コントロール中のみ状態をMovingにする（操作不可ステート時は維持）
@@ -570,17 +529,27 @@ public class UFOArmController : MonoBehaviour
         // 【ロープ（Extra）側の揺れは計算せず、常に無効（Identity）にする】
         ropeSwayRot = Quaternion.identity;
 
-        // 【爪（Claw）側の揺れ計算】
-        // X軸回転（左右の揺れ）とZ軸回転（前後の揺れ）の計算
-        // 前後移動（X軸速度）に対して逆方向に傾くよう、Z方向の揺れ（clawTargetSway.z）の符号を反転（-currentVel.x）させます
-        Vector3 clawTargetSway = new Vector3(currentVel.z, 0f, -currentVel.x) * clawSwaySensitivity;
-        Vector3 clawAngleDiff = clawTargetSway - _clawSwayAngle;
-        Vector3 clawSpringAccel = (clawAngleDiff * clawSwaySpringForce) - (_clawSwayVelocity * clawSwayDamping);
-        _clawSwayVelocity += clawSpringAccel * dt;
-        _clawSwayAngle += _clawSwayVelocity * dt;
-        _clawSwayAngle.x = Mathf.Clamp(_clawSwayAngle.x, -50f, 50f);
-        _clawSwayAngle.z = Mathf.Clamp(_clawSwayAngle.z, -50f, 50f);
-        clawSwayRot = Quaternion.Euler(_clawSwayAngle.x, 0f, _clawSwayAngle.z);
+        if (usePhysicsSway && _clawRigidbody != null)
+        {
+            // 物理揺れの場合：アームの移動速度に反比例する（慣性）力を爪のRigidbodyに適用する
+            Vector3 force = -currentVel * clawPhysicsForceMultiplier;
+            force.y = 0f; // Y方向の不要なブレは防止
+            _clawRigidbody.AddForce(force, ForceMode.Force);
+        }
+        else
+        {
+            // 【爪（Claw）側の揺れ計算】
+            // X軸回転（左右の揺れ）とZ軸回転（前後の揺れ）の計算
+            // 前後移動（X軸速度）に対して逆方向に傾くよう、Z方向の揺れ（clawTargetSway.z）の符号を反転（-currentVel.x）させます
+            Vector3 clawTargetSway = new Vector3(currentVel.z, 0f, -currentVel.x) * clawSwaySensitivity;
+            Vector3 clawAngleDiff = clawTargetSway - _clawSwayAngle;
+            Vector3 clawSpringAccel = (clawAngleDiff * clawSwaySpringForce) - (_clawSwayVelocity * clawSwayDamping);
+            _clawSwayVelocity += clawSpringAccel * dt;
+            _clawSwayAngle += _clawSwayVelocity * dt;
+            _clawSwayAngle.x = Mathf.Clamp(_clawSwayAngle.x, -50f, 50f);
+            _clawSwayAngle.z = Mathf.Clamp(_clawSwayAngle.z, -50f, 50f);
+            clawSwayRot = Quaternion.Euler(_clawSwayAngle.x, 0f, _clawSwayAngle.z);
+        }
     }
 
     void UpdateRailFollow()
