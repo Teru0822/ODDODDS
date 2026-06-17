@@ -127,6 +127,16 @@ public class UFOArmController : MonoBehaviour
     private float _jingleTimer = 0f;
     private AudioSource _audioSourceForJingle;
 
+    [Header("物理（Physics / AddForce）設定")]
+    [Tooltip("オンにすると、アームのXZ移動および揺れをUnityの物理演算（AddForce & Joint）で行います。")]
+    public bool usePhysicsSway = true;
+
+    [Tooltip("アーム移動時に加える力（物理移動用）")]
+    public float moveForce = 50f;
+
+    [Tooltip("物理アームの減衰（ドラッグ値）")]
+    public float carriageDrag = 5f;
+
     // ─────────────────────────────────────
     // 内部状態
     private ArmState _state = ArmState.Idle;
@@ -185,6 +195,17 @@ public class UFOArmController : MonoBehaviour
     private Vector3 _clawSwayVelocity;
     public Quaternion clawSwayRot { get; private set; } = Quaternion.identity;
 
+    // Rod Sway State
+    private Vector3 _rodSwayAngle;
+    private Vector3 _rodSwayVelocity;
+
+    // 物理揺れ・移動用
+    private Rigidbody _clawRigidbody;
+    private ConfigurableJoint _physicsJoint;
+    private Quaternion _originalClawLocalRotation;
+    public ConfigurableJoint physicsJoint => _physicsJoint;
+    public Vector3 originalClawLocalOffset { get; private set; }
+
     // ─────────────────────────────────────
     void Start()
     {
@@ -235,6 +256,64 @@ public class UFOArmController : MonoBehaviour
         if (armRoot != null) _lastWorldPos = armRoot.position;
         if (rail1 != null) _rail1InitialPos = rail1.position;
         if (rail2 != null) _rail2InitialPos = rail2.position;
+
+        if (usePhysicsSway)
+        {
+            if (_armRigidbody != null)
+            {
+                _armRigidbody.isKinematic = false;
+                _armRigidbody.useGravity = false;
+                _armRigidbody.linearDamping = carriageDrag;
+                _armRigidbody.angularDamping = 10f; // Prevent rotation
+                _armRigidbody.constraints = RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotation;
+            }
+
+            if (clawBaseParts != null && clawBaseParts.Length > 0 && clawBaseParts[0] != null)
+            {
+                var clawGo = clawBaseParts[0].gameObject;
+                _clawRigidbody = clawGo.GetComponent<Rigidbody>();
+                if (_clawRigidbody == null)
+                {
+                    _clawRigidbody = clawGo.AddComponent<Rigidbody>();
+                }
+                _clawRigidbody.isKinematic = false;
+                _clawRigidbody.useGravity = true;
+                _clawRigidbody.mass = 1f;
+                _clawRigidbody.linearDamping = 1f;
+                _clawRigidbody.angularDamping = 1f;
+                _clawRigidbody.constraints = RigidbodyConstraints.FreezeRotationY;
+
+                _originalClawLocalRotation = clawBaseParts[0].localRotation;
+
+                _physicsJoint = clawGo.GetComponent<ConfigurableJoint>();
+                if (_physicsJoint == null)
+                {
+                    _physicsJoint = clawGo.AddComponent<ConfigurableJoint>();
+                }
+                _physicsJoint.connectedBody = _armRigidbody;
+
+                // Lock translation relative to anchor
+                _physicsJoint.xMotion = ConfigurableJointMotion.Locked;
+                _physicsJoint.yMotion = ConfigurableJointMotion.Locked;
+                _physicsJoint.zMotion = ConfigurableJointMotion.Locked;
+
+                // Free sway rotations around X and Z, Lock Y (twist)
+                _physicsJoint.angularXMotion = ConfigurableJointMotion.Free;
+                _physicsJoint.angularYMotion = ConfigurableJointMotion.Locked;
+                _physicsJoint.angularZMotion = ConfigurableJointMotion.Free;
+
+                // Configure anchor
+                if (_armRigidbody != null)
+                {
+                    originalClawLocalOffset = _armRigidbody.transform.InverseTransformPoint(clawBaseParts[0].position);
+                }
+                else
+                {
+                    originalClawLocalOffset = clawBaseParts[0].localPosition;
+                }
+                _physicsJoint.connectedAnchor = originalClawLocalOffset;
+            }
+        }
     }
 
     // ─────────────────────────────────────
@@ -389,37 +468,74 @@ public class UFOArmController : MonoBehaviour
         if (_state == ArmState.Descending ||
             _state == ArmState.PostCollisionDescending ||
             _state == ArmState.Grabbing   ||
-            _state == ArmState.Ascending) return;
+            _state == ArmState.Ascending)
+        {
+            if (usePhysicsSway && _armRigidbody != null)
+            {
+                _armRigidbody.linearVelocity = new Vector3(0f, _armRigidbody.linearVelocity.y, 0f);
+            }
+            return;
+        }
         if (armRoot == null) return;
 
-        Vector3 pos = (_armRigidbody != null) ? _armRigidbody.position : armRoot.position;
-        pos.x += _leverInput.x * moveSpeed * Time.fixedDeltaTime;
-        pos.z += _leverInput.y * moveSpeed * Time.fixedDeltaTime;
-
-        // ピボットではなく、「実際の見た目の中心座標（visualPos）」を算出してClamp判定を行う
-        Vector3 visualPos = pos + _visualOffset;
-
-        // 移動範囲の中心座標を決定
-        Vector3 centerPos = _machineBasePos;
-
-        float halfX = playAreaSize.x / 2f;
-        float halfZ = playAreaSize.y / 2f;
-        float limitCenterX = centerPos.x + playAreaCenter.x;
-        float limitCenterZ = centerPos.z + playAreaCenter.y;
-
-        visualPos.x = Mathf.Clamp(visualPos.x, limitCenterX - halfX, limitCenterX + halfX);
-        visualPos.z = Mathf.Clamp(visualPos.z, limitCenterZ - halfZ, limitCenterZ + halfZ);
-
-        // Clampされた見た目の座標から、再びピボットの座標を逆算して適用する
-        pos = visualPos - _visualOffset;
-
-        if (_armRigidbody != null)
+        if (usePhysicsSway && _armRigidbody != null)
         {
-            _armRigidbody.MovePosition(pos);
+            // 物理移動（AddForce）
+            Vector3 force = new Vector3(_leverInput.x, 0f, _leverInput.y) * moveForce;
+            _armRigidbody.AddForce(force, ForceMode.Force);
+
+            // 移動範囲制限（クランプ）
+            Vector3 pos = _armRigidbody.position;
+            Vector3 visualPos = pos + _visualOffset;
+            Vector3 centerPos = _machineBasePos;
+            float halfX = playAreaSize.x / 2f;
+            float halfZ = playAreaSize.y / 2f;
+            float limitCenterX = centerPos.x + playAreaCenter.x;
+            float limitCenterZ = centerPos.z + playAreaCenter.y;
+
+            float clampedX = Mathf.Clamp(visualPos.x, limitCenterX - halfX, limitCenterX + halfX);
+            float clampedZ = Mathf.Clamp(visualPos.z, limitCenterZ - halfZ, limitCenterZ + halfZ);
+
+            if (clampedX != visualPos.x || clampedZ != visualPos.z)
+            {
+                // 範囲外に出た場合は速度を抑えて位置をクランプ
+                Vector3 newPos = new Vector3(clampedX, visualPos.y, clampedZ) - _visualOffset;
+                _armRigidbody.position = newPos;
+                _armRigidbody.linearVelocity = Vector3.zero;
+            }
         }
         else
         {
-            armRoot.position = pos;
+            // 従来のキネマティック移動
+            Vector3 pos = (_armRigidbody != null) ? _armRigidbody.position : armRoot.position;
+            pos.x += _leverInput.x * moveSpeed * Time.fixedDeltaTime;
+            pos.z += _leverInput.y * moveSpeed * Time.fixedDeltaTime;
+
+            // ピボットではなく、「実際の見た目の中心座標（visualPos）」を算出してClamp判定を行う
+            Vector3 visualPos = pos + _visualOffset;
+
+            // 移動範囲の中心座標を決定
+            Vector3 centerPos = _machineBasePos;
+
+            float halfX = playAreaSize.x / 2f;
+            float halfZ = playAreaSize.y / 2f;
+            float limitCenterX = centerPos.x + playAreaCenter.x;
+            float limitCenterZ = centerPos.z + playAreaCenter.y;
+
+            visualPos.x = Mathf.Clamp(visualPos.x, limitCenterX - halfX, limitCenterX + halfX);
+            visualPos.z = Mathf.Clamp(visualPos.z, limitCenterZ - halfZ, limitCenterZ + halfZ);
+
+            // Clampされた見た目の座標から、再びピボットの座標を逆算して適用する
+            pos = visualPos - _visualOffset;
+
+            if (_armRigidbody != null)
+            {
+                _armRigidbody.MovePosition(pos);
+            }
+            else
+            {
+                armRoot.position = pos;
+            }
         }
         
         // コントロール中のみ状態をMovingにする（操作不可ステート時は維持）
@@ -517,7 +633,8 @@ public class UFOArmController : MonoBehaviour
         }
 
         // 爪土台に対する揺れの適用（Claw設定）
-        if (clawBaseParts != null && clawBaseParts.Length > 0)
+        // 物理揺れ（usePhysicsSway）がONの場合は、Rigidbody/Jointによる自動的な物理回転を行うため手動の回転上書きをスキップします
+        if (!usePhysicsSway && clawBaseParts != null && clawBaseParts.Length > 0)
         {
             for (int i = 0; i < clawBaseParts.Length; i++)
             {
@@ -860,11 +977,13 @@ public class UFOArmController : MonoBehaviour
         _jingleTimer -= Time.deltaTime;
         if (_jingleTimer > 0f) return;
 
-        // 揺れの速度（物理的な揺れ速度）の大きさを計測
-        float swaySpeed = _clawSwayVelocity.magnitude;
+        // 揺れの速度（物理的な揺れ速度またはキネマティックな揺れ速度）の大きさを計測
+        float swaySpeed = usePhysicsSway && _clawRigidbody != null 
+            ? _clawRigidbody.angularVelocity.magnitude 
+            : _clawSwayVelocity.magnitude;
         
         // 揺れが一定以上ある場合のみ判定
-        if (swaySpeed > swayThreshold)
+        if (swaySpeed > (usePhysicsSway ? swayThreshold * 0.5f : swayThreshold))
         {
             // 爪の中に実際にコイン（UFOItem）があるか確認
             if (fingerParts != null && fingerParts.Length > 0 && fingerParts[0] != null)
