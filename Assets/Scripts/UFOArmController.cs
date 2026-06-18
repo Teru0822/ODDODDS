@@ -235,6 +235,15 @@ public class UFOArmController : MonoBehaviour
         if (armRoot != null) _lastWorldPos = armRoot.position;
         if (rail1 != null) _rail1InitialPos = rail1.position;
         if (rail2 != null) _rail2InitialPos = rail2.position;
+
+        if (stretchRope != null)
+        {
+            Debug.Log($"[UFOArmController] Referencing stretchRope: {stretchRope.gameObject.name} (Parent: {stretchRope.transform.parent?.name})");
+        }
+        else
+        {
+            Debug.LogError("[UFOArmController] stretchRope reference is NULL!");
+        }
     }
 
     // ─────────────────────────────────────
