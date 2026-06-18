@@ -3761,7 +3761,7 @@ GameObject:
   - component: {fileID: 1126775033}
   m_Layer: 0
   m_Name: Camera
-  m_TagString: Untagged
+  m_TagString: MainCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -7248,7 +7248,11 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 2453040640333516100, guid: fb4b70ec868530740a1b3f3d212336df, type: 3}
+    - {fileID: 3657356652117407047, guid: fb4b70ec868530740a1b3f3d212336df, type: 3}
+    - {fileID: 1709788067644541870, guid: fb4b70ec868530740a1b3f3d212336df, type: 3}
+    - {fileID: 8325856122169202108, guid: fb4b70ec868530740a1b3f3d212336df, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:

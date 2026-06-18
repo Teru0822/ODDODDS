@@ -13,7 +13,6 @@ GameObject:
   - component: {fileID: 679083649274451308}
   - component: {fileID: 3601176337990430220}
   - component: {fileID: 4774007295194906502}
-  - component: {fileID: 2821164310313469272}
   m_Layer: 0
   m_Name: newBall
   m_TagString: Ball
@@ -117,9 +116,9 @@ Rigidbody:
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 2
 --- !u!135 &4774007295194906502
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -141,54 +140,3 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.010000001
   m_Center: {x: -0.000000003259629, y: 0.0000000032596295, z: 1.2143064e-17}
---- !u!114 &2821164310313469272
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8751650990556213166}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 69a132aa3fec4c44cab2307c2e4a4956, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PinballBallController
-  mass: 0.5
-  bounciness: 0.5
-  friction: 0
-  frictionCombine: 3
-  splitTargetTag: Splitter
-  splitSpread: 1
-  splitCount: 2
-  splitScaleRatio: 0.905
-  spawnUpOffset: 0
-  spawnXOffset: 0.03
-  ignoreCollisionDuration: 0.4
-  initialDetectionRadius: 0.069
-  manualBoundsXMin: 0.81
-  manualBoundsXMax: 2.4257
-  manualBoundsZMax: 4.468
-  manualBoundsZMin: -2
-  enableBallBallCollision: 1
-  manualBounceFactor: 0.087
-  manualLifetime: 3
-  ballLayerName: Ball
-  particleGeneration: 14
-  splitParticlePrefab: {fileID: 60133669354249427, guid: e9db5443679e49e44b154e830629f207, type: 3}
-  hideParticleXMax: 0.75
-  hideParticleZMin: 4.515
-  generation: 0
-  enforceColors:
-  - {r: 0, g: 0, b: 0, a: 1}
-  - {r: 0, g: 1, b: 0, a: 1}
-  - {r: 0, g: 0.5, b: 1, a: 1}
-  - {r: 0.7, g: 0, b: 1, a: 1}
-  - {r: 1, g: 0.84, b: 0, a: 1}
-  - {r: 1, g: 0, b: 0, a: 1}
-  ballEmissionIntensity: 2
-  ballRenderer: {fileID: 0}
-  enforceLevel: 0
-  currentValue: 0
-  enforceValueMultiplier: 2
-  gravity: {x: 0, y: -9.81, z: 9.81}
-  onConveyorCount: 0
