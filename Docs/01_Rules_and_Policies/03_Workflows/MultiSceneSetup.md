@@ -87,7 +87,9 @@ MainScene には、常に必要な以下を残す：
 
 ### STEP 5. MultiSceneLoader を設定
 1. MainScene に空オブジェクト（例: `[MultiSceneLoader]`）を作り `MultiSceneLoader` をアタッチ。
-2. `Sub Scenes` に各サブシーン名（`Scene_Environment` 等）を追加し `Load On Start` をオン。
+2. `Sub Scenes` に各サブシーン名（`Scene_Environment` `Scene_UI` 等）を追加する。
+   **追加すれば既定でロードされる**（`Disable On Start` は通常オフのまま）。デバッグで一時的に外したいシーンだけ `Disable On Start` をオンにする。
+   - ⚠️ ロードしたいシーンを**リストに入れ忘れない**こと（特に `Scene_UI`）。リストに無いシーンはロードされない。
 3. `Active Scene After Load` に、ライティング基準にしたいシーン名を入れる（通常は `MainScene` か `Scene_Environment`）。
 
 ### STEP 6. 動作確認

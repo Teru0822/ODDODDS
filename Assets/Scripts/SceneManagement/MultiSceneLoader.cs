@@ -30,8 +30,8 @@ public class MultiSceneLoader : MonoBehaviour
         [Tooltip("Build Settings に登録したシーン名（拡張子・パスなし）")]
         public string sceneName;
 
-        [Tooltip("オフにすると起動時にロードしない（デバッグ用に一時的に外せる）")]
-        public bool loadOnStart;
+        [Tooltip("チェックすると起動時にロードしない。【既定（オフ）= ロードする】。デバッグで一時的に外したい時だけオンにする。")]
+        public bool disableOnStart;
     }
 
     [Tooltip("起動時に加法ロードするサブシーン群。すべて Build Settings に登録しておくこと。")]
@@ -44,7 +44,7 @@ public class MultiSceneLoader : MonoBehaviour
     {
         foreach (var s in subScenes)
         {
-            if (!s.loadOnStart || string.IsNullOrEmpty(s.sceneName)) continue;
+            if (s.disableOnStart || string.IsNullOrEmpty(s.sceneName)) continue;
 
             // 既にエディタで加法表示している/ロード済みなら二重に読まない
             if (SceneManager.GetSceneByName(s.sceneName).isLoaded) continue;
