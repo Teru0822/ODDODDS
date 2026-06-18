@@ -78,7 +78,9 @@ git はディスク上の内容しか見えないため、未保存の作業は 
 
 > 2026-05-27、タイプライターをシーンに配置したが未保存のまま `git checkout main` → `git merge` を実行し、配置とコンポーネント設定（キー47個のバインド含む）が全消失する事故が発生した。`Temp/__Backupscenes/` の Unity 自動バックアップから辛うじて復元できた。
 
-なお、これは SmartMerge（UnityYAMLMerge）とは無関係である。マージドライバはコミット済みの内容しか扱わないため、未保存＝コミット未存在の作業には一切関与しない。SmartMerge はシーン/Prefab の競合マージを安全化する有益なツールであり、削除してはならない。
+なお、これは SmartMerge（UnityYAMLMerge）とは無関係である。マージドライバはコミット済みの内容しか扱わないため、未保存＝コミット未存在の作業には一切関与しない。
+
+> 【2026-06 更新】本リポジトリでは Smart Merge（UnityYAMLMerge）が「衝突時にリモート側が一方的に残る」挙動を示したため、運用判断により **無効化**した（`.gitattributes` の `merge=unityyamlmerge` 割り当てと `.git/config` のドライバ定義を削除）。現在 Scene / Prefab の競合は git の通常テキストマージで処理され、**自動解決されず手動解決が必要**になる。競合する操作の詳細と解決手順は [SceneMergeConflicts.md](SceneMergeConflicts.md) を参照。なお「リモート側が残る」現象はドライバ設定（`--force` / `--fallback` / 引数順）の問題の可能性があり、将来 Smart Merge を正しく設定し直して再有効化する選択肢も残る。
 
 ### 6.5.2 遵守事項
 - ブランチ切替・マージ・pull・reset・stash の前に、Unity で**シーンと Prefab を保存**したことを確認する。
