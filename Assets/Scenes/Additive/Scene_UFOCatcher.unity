@@ -119,6 +119,32 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!4 &348180099 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4922076798179983177, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+  m_PrefabInstance: {fileID: 5351351319220983938}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &682920286 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6194131622346904002, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+  m_PrefabInstance: {fileID: 5351351319220983938}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f4e071ea88e6c8428c1b0ee1b8300d0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StretchRope
+--- !u!4 &1850162070 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1859291037574408468, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+  m_PrefabInstance: {fileID: 5351351319220983938}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &2036606100 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3561571661407418773, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+  m_PrefabInstance: {fileID: 5351351319220983938}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &5351351319220983938
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -175,6 +201,30 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6194131622346904002, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: slideDirection.z
+      value: -0.001
+      objectReference: {fileID: 0}
+    - target: {fileID: 6194131622346904002, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: attachedObjects.Array.size
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6194131622346904002, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: 'attachedObjects.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2036606100}
+    - target: {fileID: 6194131622346904002, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: 'attachedObjects.Array.data[1]'
+      value: 
+      objectReference: {fileID: 1850162070}
+    - target: {fileID: 6194131622346904002, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: 'attachedObjects.Array.data[2]'
+      value: 
+      objectReference: {fileID: 348180099}
+    - target: {fileID: 7587156506030312916, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: stretchRope
+      value: 
+      objectReference: {fileID: 682920286}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
