@@ -4643,33 +4643,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 5906365261789455472, guid: cbe9b1670d97e564eb32c3c73deaa709, type: 3}
   m_PrefabInstance: {fileID: 1801752602}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1555607629
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1555607627}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d2296fd19757a4d66a4029428fb7e3fc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Assets.App.Intercom.Scripts.IntercomButton
-  onClick:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1801752604}
-        m_TargetAssemblyTypeName: IntercomController, Assembly-CSharp
-        m_MethodName: OnClickCentralButton
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
 --- !u!65 &1555607632
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5177,33 +5150,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 8946750654652011534, guid: cbe9b1670d97e564eb32c3c73deaa709, type: 3}
   m_PrefabInstance: {fileID: 1801752602}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1656864453
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1656864451}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d2296fd19757a4d66a4029428fb7e3fc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Assets.App.Intercom.Scripts.IntercomButton
-  onClick:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1801752604}
-        m_TargetAssemblyTypeName: IntercomController, Assembly-CSharp
-        m_MethodName: OnClickLeftButton
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
 --- !u!65 &1656864456
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5528,6 +5474,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: "\u30A4\u30F3\u30BF\u30FC\u30DB\u30F3"
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: cbe9b1670d97e564eb32c3c73deaa709, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5906365261789455472, guid: cbe9b1670d97e564eb32c3c73deaa709, type: 3}
       propertyPath: m_Layer
       value: 6
@@ -5548,19 +5498,10 @@ PrefabInstance:
       addedObject: {fileID: 1801752604}
     - targetCorrespondingSourceObject: {fileID: 8946750654652011534, guid: cbe9b1670d97e564eb32c3c73deaa709, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1656864453}
-    - targetCorrespondingSourceObject: {fileID: 8946750654652011534, guid: cbe9b1670d97e564eb32c3c73deaa709, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 1656864456}
     - targetCorrespondingSourceObject: {fileID: 5906365261789455472, guid: cbe9b1670d97e564eb32c3c73deaa709, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1555607629}
-    - targetCorrespondingSourceObject: {fileID: 5906365261789455472, guid: cbe9b1670d97e564eb32c3c73deaa709, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 1555607632}
-    - targetCorrespondingSourceObject: {fileID: -5177227573164606147, guid: cbe9b1670d97e564eb32c3c73deaa709, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1812732503}
     - targetCorrespondingSourceObject: {fileID: -5177227573164606147, guid: cbe9b1670d97e564eb32c3c73deaa709, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1812732506}
@@ -5597,33 +5538,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: -5177227573164606147, guid: cbe9b1670d97e564eb32c3c73deaa709, type: 3}
   m_PrefabInstance: {fileID: 1801752602}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1812732503
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1812732501}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d2296fd19757a4d66a4029428fb7e3fc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Assets.App.Intercom.Scripts.IntercomButton
-  onClick:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1801752604}
-        m_TargetAssemblyTypeName: IntercomController, Assembly-CSharp
-        m_MethodName: OnClickRightButton
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
 --- !u!65 &1812732506
 BoxCollider:
   m_ObjectHideFlags: 0
