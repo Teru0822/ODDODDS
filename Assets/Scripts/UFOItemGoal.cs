@@ -41,6 +41,10 @@ public class UFOItemGoal : MonoBehaviour
     [Range(0f, 10f)]
     [SerializeField] private float soundVolume = 1.0f;
 
+    [Header("時計効果")]
+    [Tooltip("時計を落とし口に入れたときにUFOキャッチャーの残り時間を何秒延長するか")]
+    [SerializeField] public float watchTimeExtension = 20f;
+
     private void Start()
     {
         // AudioSourceの自動取得
@@ -127,7 +131,13 @@ public class UFOItemGoal : MonoBehaviour
                 case UFOItemType.Watch:
                     collectedWatches++;
                     Debug.Log($"[獲得] 時計！ (累計: {collectedWatches}個)");
-                    
+
+                    // UFOキャッチャーの残り時間を延長
+                    if (UFOCameraController.Instance != null)
+                    {
+                        UFOCameraController.Instance.AddPlayTime(watchTimeExtension);
+                    }
+
                     // 画面のUIテキストが設定されていれば表示を更新する
                     if (watchCountText != null)
                     {
