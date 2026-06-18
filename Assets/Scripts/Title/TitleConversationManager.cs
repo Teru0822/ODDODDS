@@ -46,6 +46,16 @@ namespace MiniGames.Title
 
         private void Start()
         {
+            // AudioSourceがInspectorでセットされていなければ、自身から取得または追加する
+            if (_audioSource == null)
+            {
+                _audioSource = GetComponent<AudioSource>();
+                if (_audioSource == null)
+                {
+                    _audioSource = gameObject.AddComponent<AudioSource>();
+                }
+            }
+
             if (_textBoxCanvasGroup != null)
             {
                 _textBoxCanvasGroup.alpha = 0f;
