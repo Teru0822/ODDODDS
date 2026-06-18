@@ -340,8 +340,8 @@ Light:
   serializedVersion: 12
   m_Type: 0
   m_Color: {r: 0.6320754, g: 0.41326645, b: 0.21764861, a: 1}
-  m_Intensity: 20
-  m_Range: 5.6699667
+  m_Intensity: 40
+  m_Range: 8
   m_SpotAngle: 90.5529
   m_InnerSpotAngle: 47.81882
   m_CookieSize2D: {x: 0.5, y: 0.5}
@@ -467,8 +467,8 @@ Light:
   serializedVersion: 12
   m_Type: 0
   m_Color: {r: 0.6320754, g: 0.41326645, b: 0.21764861, a: 1}
-  m_Intensity: 20
-  m_Range: 5.682076
+  m_Intensity: 40
+  m_Range: 8
   m_SpotAngle: 90.5529
   m_InnerSpotAngle: 47.81882
   m_CookieSize2D: {x: 0.5, y: 0.5}
@@ -668,8 +668,8 @@ Light:
   serializedVersion: 12
   m_Type: 0
   m_Color: {r: 0.6320754, g: 0.41326645, b: 0.21764861, a: 1}
-  m_Intensity: 20
-  m_Range: 5.686025
+  m_Intensity: 40
+  m_Range: 8
   m_SpotAngle: 90.5529
   m_InnerSpotAngle: 47.81882
   m_CookieSize2D: {x: 0.5, y: 0.5}
@@ -795,8 +795,8 @@ Light:
   serializedVersion: 12
   m_Type: 0
   m_Color: {r: 0.6320754, g: 0.41326645, b: 0.21764861, a: 1}
-  m_Intensity: 20
-  m_Range: 5.6391797
+  m_Intensity: 40
+  m_Range: 8
   m_SpotAngle: 90.5529
   m_InnerSpotAngle: 47.81882
   m_CookieSize2D: {x: 0.5, y: 0.5}
@@ -7947,6 +7947,18 @@ PrefabInstance:
       propertyPath: parentFolder
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: goldCoinPrefab
+      value: 
+      objectReference: {fileID: 8350361114308083434, guid: 2ace8664a70b8014da5cb933568ca21b, type: 3}
+    - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: copperCoinPrefab
+      value: 
+      objectReference: {fileID: 4563478140741147117, guid: c7b8b375e77d0f04dbe82caa5351db21, type: 3}
+    - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: silverCoinPrefab
+      value: 
+      objectReference: {fileID: 1801957764297551110, guid: 6581663a52055644e8b8de069e3e3c84, type: 3}
     - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: patterns.Array.size
       value: 0
