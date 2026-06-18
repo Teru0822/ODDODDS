@@ -357,6 +357,21 @@ public class UFOCameraController : MonoBehaviour
         return playCostBase * Mathf.Pow(costIncreaseMultiplier, _paymentCount);
     }
 
+    /// <summary>
+    /// UFOキャッチャーの残り時間を seconds 秒延長する。
+    /// スキルアイテム（時計）取得時などから呼び出す。
+    /// </summary>
+    public void AddPlayTime(float seconds)
+    {
+        if (!IsPlaySessionActive)
+        {
+            Debug.LogWarning("[UFOCameraController] AddPlayTime: ゲームセッションがアクティブではないため、時間延長をスキップします。");
+            return;
+        }
+        _playTimer += seconds;
+        Debug.Log($"[UFOCameraController] 残り時間を {seconds}秒延長しました。現在の残り時間: {_playTimer:F1}秒");
+    }
+
     private void PayAndStartPlay(float cost)
     {
         if (MoneyManager.Instance != null)

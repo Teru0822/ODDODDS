@@ -43,6 +43,22 @@ public class ItemSpawner : MonoBehaviour
     [Tooltip("コインと時計の降る確率のベースパターンリスト。空の場合はデフォルトの10パターンが自動生成されます。")]
     public System.Collections.Generic.List<SpawnRatePattern> ratePatterns = new System.Collections.Generic.List<SpawnRatePattern>();
 
+    [Header("除外セル設定")]
+    [Tooltip("コインを降らさないセル番号のリスト。\nGrid4: 0(左上) 1(右上) 2(右下) 3(左下)\nGrid9: 0(左上) 1(中上) 2(右上) 3(左中) 4(中央) 5(右中) 6(左下) 7(中下) 8(右下)")]
+    public System.Collections.Generic.List<int> excludedCellIndices = new System.Collections.Generic.List<int>();
+
+    [Header("セルサイズカスタマイズ (Grid4)")]
+    [Tooltip("列幅の比率 [左, 右]。値が大きいほどその列が広くなります。")]
+    public float[] grid4ColumnWeights = new float[] { 1f, 1f };
+    [Tooltip("行高さの比率 [奥（上）, 手前（下）]。値が大きいほどその行が長くなります。")]
+    public float[] grid4RowWeights    = new float[] { 1f, 1f };
+
+    [Header("セルサイズカスタマイズ (Grid9)")]
+    [Tooltip("列幅の比率 [左, 中, 右]。値が大きいほどその列が広くなります。")]
+    public float[] grid9ColumnWeights = new float[] { 1f, 1f, 1f };
+    [Tooltip("行高さの比率 [奥（上）, 中, 手前（下）]。値が大きいほどその行が長くなります。")]
+    public float[] grid9RowWeights    = new float[] { 1f, 1f, 1f };
+
     public static bool IsSpawning { get; private set; } = false;
 
     // 現在のウェーブの設定
@@ -139,8 +155,32 @@ public class ItemSpawner : MonoBehaviour
 
         int cellCount = (_currentWaveGridType == GridType.Grid4) ? 4 : 9;
 
-        // 2. エリアの組み合わせを決定 (1〜2^cellCount - 1のランダム数値)
+        // 2. エリアの組み合わせを決定 (1～2^cellCount - 1のランダム数値)
         _activeAreaMask = Random.Range(1, 1 << cellCount);
+
+        // 2b. 除外セルのビットをクリア
+        if (excludedCellIndices != null)
+        {
+            foreach (int idx in excludedCellIndices)
+            {
+                if (idx >= 0 && idx < cellCount)
+                    _activeAreaMask &= ~(1 << idx);
+            }
+        }
+        // 全セルが除外された場合は、除外されていない最初のセルを強制使用
+        if (_activeAreaMask == 0)
+        {
+            for (int i = 0; i < cellCount; i++)
+            {
+                if (excludedCellIndices == null || !excludedCellIndices.Contains(i))
+                {
+                    _activeAreaMask = 1 << i;
+                    break;
+                }
+            }
+            // 全セル除外されている場合はフォールバック
+            if (_activeAreaMask == 0) _activeAreaMask = 1;
+        }
 
         // 3. 確率パターンの選択 (nC_cellCount通りに対応する割り当て)
         if (ratePatterns != null && ratePatterns.Count > 0)
@@ -299,81 +339,9 @@ public class ItemSpawner : MonoBehaviour
         Vector3 center = (armRoot != null) ? armRoot.position : transform.position;
         center.y += spawnYOffset;
 
-        float offsetX = 0f;
-        float offsetZ = 0f;
-
-        if (_currentWaveGridType == GridType.Grid4)
-        {
-            float halfWidth = spawnArea.x;
-            float halfHeight = spawnArea.y;
-
-            switch (chosenCell)
-            {
-                case 0: // 左上 (X: [-halfWidth, 0], Z: [0, halfHeight])
-                    offsetX = Random.Range(-halfWidth, 0f);
-                    offsetZ = Random.Range(0f, halfHeight);
-                    break;
-                case 1: // 右上 (X: [0, halfWidth], Z: [0, halfHeight])
-                    offsetX = Random.Range(0f, halfWidth);
-                    offsetZ = Random.Range(0f, halfHeight);
-                    break;
-                case 2: // 右下 (X: [0, halfWidth], Z: [-halfHeight, 0])
-                    offsetX = Random.Range(0f, halfWidth);
-                    offsetZ = Random.Range(-halfHeight, 0f);
-                    break;
-                case 3: // 左下 (X: [-halfWidth, 0], Z: [-halfHeight, 0])
-                    offsetX = Random.Range(-halfWidth, 0f);
-                    offsetZ = Random.Range(-halfHeight, 0f);
-                    break;
-            }
-        }
-        else // Grid9
-        {
-            float thirdWidth = spawnArea.x / 3f;
-            float thirdHeight = spawnArea.y / 3f;
-
-            // Column: 0 = Left, 1 = Center, 2 = Right
-            int col = chosenCell % 3;
-            // Row: 0 = Top, 1 = Center, 2 = Bottom
-            int row = chosenCell / 3;
-
-            float minX = 0f, maxX = 0f;
-            if (col == 0) // Left
-            {
-                minX = -spawnArea.x;
-                maxX = -thirdWidth;
-            }
-            else if (col == 1) // Center
-            {
-                minX = -thirdWidth;
-                maxX = thirdWidth;
-            }
-            else // Right
-            {
-                minX = thirdWidth;
-                maxX = spawnArea.x;
-            }
-
-            float minZ = 0f, maxZ = 0f;
-            if (row == 0) // Top
-            {
-                minZ = thirdHeight;
-                maxZ = spawnArea.y;
-            }
-            else if (row == 1) // Center
-            {
-                minZ = -thirdHeight;
-                maxZ = thirdHeight;
-            }
-            else // Bottom
-            {
-                minZ = -spawnArea.y;
-                maxZ = -thirdHeight;
-            }
-
-            offsetX = Random.Range(minX, maxX);
-            offsetZ = Random.Range(minZ, maxZ);
-        }
+        var bounds = ComputeCellBounds(chosenCell, _currentWaveGridType);
+        float offsetX = Random.Range(bounds.minX, bounds.maxX);
+        float offsetZ = Random.Range(bounds.minZ, bounds.maxZ);
 
         // ばらつき（散らばり）を加える
         Vector3 randomPos = center + new Vector3(
@@ -393,6 +361,156 @@ public class ItemSpawner : MonoBehaviour
             spawnedRb.useGravity = true;
         }
     }
+
+    /// <summary>
+    /// セル番号とグリッドタイプから、そのセルの XZ 範囲（グリッド中心からのオフセット）を返す
+    /// 列幅・行高さは Inspector の Weight で等比分割する
+    /// </summary>
+    private (float minX, float maxX, float minZ, float maxZ) ComputeCellBounds(int cellIndex, GridType gridType)
+    {
+        float totalW = spawnArea.x * 2f;
+        float totalH = spawnArea.y * 2f;
+
+        if (gridType == GridType.Grid4)
+        {
+            // 列幅の比率計算
+            float[] cw = (grid4ColumnWeights != null && grid4ColumnWeights.Length >= 2)
+                ? grid4ColumnWeights : new float[] { 1f, 1f };
+            float cwSum = Mathf.Max(cw[0] + cw[1], 0.0001f);
+            float leftW  = (cw[0] / cwSum) * totalW;
+
+            // 行高さの比率計算
+            float[] rw = (grid4RowWeights != null && grid4RowWeights.Length >= 2)
+                ? grid4RowWeights : new float[] { 1f, 1f };
+            float rwSum = Mathf.Max(rw[0] + rw[1], 0.0001f);
+            float topH  = (rw[0] / rwSum) * totalH;
+
+            // X境界：-spawnArea.x から右方向に積み上げ
+            float colStart0 = -spawnArea.x;
+            float colEnd0   = colStart0 + leftW;           // = -spawnArea.x + leftW
+            float colStart1 = colEnd0;
+            float colEnd1   = spawnArea.x;
+
+            // Z境界：spawnArea.y から下方向に積み上げ
+            float rowEnd0   = spawnArea.y;
+            float rowStart0 = rowEnd0 - topH;              // 奥側（正Z）
+            float rowEnd1   = rowStart0;
+            float rowStart1 = -spawnArea.y;                // 手前側（負Z）
+
+            // cell 0:左上  1:右上  2:右下  3:左下
+            bool isRight  = (cellIndex == 1 || cellIndex == 2);
+            bool isBottom = (cellIndex >= 2);
+            float minX = isRight  ? colStart1 : colStart0;
+            float maxX = isRight  ? colEnd1   : colEnd0;
+            float minZ = isBottom ? rowStart1  : rowStart0;
+            float maxZ = isBottom ? rowEnd1    : rowEnd0;
+            return (minX, maxX, minZ, maxZ);
+        }
+        else // Grid9
+        {
+            float[] cw = (grid9ColumnWeights != null && grid9ColumnWeights.Length >= 3)
+                ? grid9ColumnWeights : new float[] { 1f, 1f, 1f };
+            float cwSum = Mathf.Max(cw[0] + cw[1] + cw[2], 0.0001f);
+            float leftW   = (cw[0] / cwSum) * totalW;
+            float centerW = (cw[1] / cwSum) * totalW;
+
+            float[] rw = (grid9RowWeights != null && grid9RowWeights.Length >= 3)
+                ? grid9RowWeights : new float[] { 1f, 1f, 1f };
+            float rwSum = Mathf.Max(rw[0] + rw[1] + rw[2], 0.0001f);
+            float topH    = (rw[0] / rwSum) * totalH;
+            float midH    = (rw[1] / rwSum) * totalH;
+
+            // 列境界
+            float[] colStarts = { -spawnArea.x, -spawnArea.x + leftW, -spawnArea.x + leftW + centerW };
+            float[] colEnds   = { colStarts[1],  colStarts[2],          spawnArea.x };
+
+            // 行境界（上から下へ）
+            float[] rowEnds   = { spawnArea.y,        spawnArea.y - topH, spawnArea.y - topH - midH };
+            float[] rowStarts = { spawnArea.y - topH,  spawnArea.y - topH - midH, -spawnArea.y };
+
+            int col = cellIndex % 3;
+            int row = cellIndex / 3;
+            return (colStarts[col], colEnds[col], rowStarts[row], rowEnds[row]);
+        }
+    }
+
+#if UNITY_EDITOR
+    private void OnDrawGizmos()
+    {
+        Vector3 center = (armRoot != null) ? armRoot.position : transform.position;
+        center.y += spawnYOffset;
+
+        // 実行中は _currentWaveGridType を使用、エディタ時は gridType を参照
+        GridType drawGrid = Application.isPlaying ? _currentWaveGridType : gridType;
+        int cellCount = (drawGrid == GridType.Grid4) ? 4 : 9;
+
+        string[] names4 = { "0:左上", "1:右上", "2:右下", "3:左下" };
+        string[] colName = { "左", "中", "右" };
+        string[] rowName = { "上", "中", "下" };
+
+        for (int i = 0; i < cellCount; i++)
+        {
+            var b = ComputeCellBounds(i, drawGrid);
+            string label = (drawGrid == GridType.Grid4)
+                ? names4[i]
+                : $"{i}:{colName[i % 3]}{rowName[i / 3]}";
+            DrawCell(center, b.minX, b.maxX, b.minZ, b.maxZ, i, cellCount, label);
+        }
+
+        // 中心点を描画
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawSphere(center, 0.1f);
+    }
+
+    private void DrawCell(Vector3 center, float minX, float maxX, float minZ, float maxZ,
+                          int cellIndex, int cellCount, string label)
+    {
+        // 除外セルは常に赤で表示
+        bool isExcluded = excludedCellIndices != null && excludedCellIndices.Contains(cellIndex);
+
+        bool isActive = !isExcluded && (Application.isPlaying
+            ? ((_activeAreaMask & (1 << cellIndex)) != 0)
+            : true);
+
+        Color fillColor;
+        Color wireColor;
+
+        if (isExcluded)
+        {
+            fillColor = new Color(1f, 0f, 0f, 0.12f);
+            wireColor = new Color(1f, 0f, 0f, 0.85f);
+        }
+        else if (Application.isPlaying)
+        {
+            fillColor = isActive ? new Color(0f, 1f, 0f, 0.15f) : new Color(1f, 0.6f, 0f, 0.08f);
+            wireColor = isActive ? new Color(0f, 1f, 0f, 0.9f)  : new Color(1f, 0.6f, 0f, 0.5f);
+        }
+        else
+        {
+            fillColor = new Color(0.7f, 0.7f, 0.7f, 0.12f);
+            wireColor = new Color(0.8f, 0.8f, 0.8f, 0.8f);
+        }
+
+        float cx = center.x + (minX + maxX) * 0.5f;
+        float cz = center.z + (minZ + maxZ) * 0.5f;
+        float sizeX = Mathf.Abs(maxX - minX);
+        float sizeZ = Mathf.Abs(maxZ - minZ);
+        Vector3 cellCenter = new Vector3(cx, center.y, cz);
+        Vector3 cellSize   = new Vector3(sizeX, 0.01f, sizeZ);
+
+        // 塗りつぶし
+        Gizmos.color = fillColor;
+        Gizmos.DrawCube(cellCenter, cellSize);
+
+        // 枠線
+        Gizmos.color = wireColor;
+        Gizmos.DrawWireCube(cellCenter, cellSize);
+
+        // ラベル
+        UnityEditor.Handles.color = wireColor;
+        UnityEditor.Handles.Label(cellCenter + Vector3.up * 0.05f, label);
+    }
+#endif
 }
 
 [System.Serializable]
