@@ -10,15 +10,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: a956eb0103916094fa731c8ce7d3b246, type: 3}
       propertyPath: m_LocalScale.x
-      value: 6
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a956eb0103916094fa731c8ce7d3b246, type: 3}
       propertyPath: m_LocalScale.y
-      value: 6
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a956eb0103916094fa731c8ce7d3b246, type: 3}
       propertyPath: m_LocalScale.z
-      value: 6
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a956eb0103916094fa731c8ce7d3b246, type: 3}
       propertyPath: m_LocalPosition.x
@@ -150,3 +150,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UFOItem
   itemType: 3
   baseValue: 0
+  hitSound: {fileID: 0}
+  minVelocityThreshold: 0.5
+  soundVolume: 0.8
+  pitchRange: {x: 0.85, y: 1.15}
