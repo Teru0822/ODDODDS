@@ -1,0 +1,194 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &8751650990556213166
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7305461745654988717}
+  - component: {fileID: 3761723481688669092}
+  - component: {fileID: 679083649274451308}
+  - component: {fileID: 3601176337990430220}
+  - component: {fileID: 4774007295194906502}
+  - component: {fileID: 2821164310313469272}
+  m_Layer: 0
+  m_Name: newBall
+  m_TagString: Ball
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7305461745654988717
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8751650990556213166}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.5929766, y: 0.012118459, z: -0.06543267, w: 0.80246526}
+  m_LocalPosition: {x: -1.2022, y: 11.1514, z: -12.1058}
+  m_LocalScale: {x: 10.005421, y: 10.00542, z: 10.00542}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &3761723481688669092
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8751650990556213166}
+  m_Mesh: {fileID: -2398734289532406346, guid: c0850b5e49385154bbe352244405fff1, type: 3}
+--- !u!23 &679083649274451308
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8751650990556213166}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: d12a564342e142243a48acde0f2ceed5, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!54 &3601176337990430220
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8751650990556213166}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!135 &4774007295194906502
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8751650990556213166}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.010000001
+  m_Center: {x: -0.000000003259629, y: 0.0000000032596295, z: 1.2143064e-17}
+--- !u!114 &2821164310313469272
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8751650990556213166}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69a132aa3fec4c44cab2307c2e4a4956, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PinballBallController
+  mass: 0.5
+  bounciness: 0.5
+  friction: 0
+  frictionCombine: 3
+  splitTargetTag: Splitter
+  splitSpread: 1
+  splitCount: 2
+  splitScaleRatio: 0.905
+  spawnUpOffset: 0
+  spawnXOffset: 0.03
+  ignoreCollisionDuration: 0.4
+  initialDetectionRadius: 0.069
+  manualBoundsXMin: 0.81
+  manualBoundsXMax: 2.4257
+  manualBoundsZMax: 4.468
+  manualBoundsZMin: -2
+  enableBallBallCollision: 1
+  manualBounceFactor: 0.087
+  manualLifetime: 3
+  ballLayerName: Ball
+  particleGeneration: 14
+  splitParticlePrefab: {fileID: 60133669354249427, guid: e9db5443679e49e44b154e830629f207, type: 3}
+  hideParticleXMax: 0.75
+  hideParticleZMin: 4.515
+  generation: 0
+  enforceColors:
+  - {r: 0, g: 0, b: 0, a: 1}
+  - {r: 0, g: 1, b: 0, a: 1}
+  - {r: 0, g: 0.5, b: 1, a: 1}
+  - {r: 0.7, g: 0, b: 1, a: 1}
+  - {r: 1, g: 0.84, b: 0, a: 1}
+  - {r: 1, g: 0, b: 0, a: 1}
+  ballEmissionIntensity: 2
+  ballRenderer: {fileID: 0}
+  enforceLevel: 0
+  currentValue: 0
+  enforceValueMultiplier: 2
+  gravity: {x: 0, y: -9.81, z: 9.81}
+  onConveyorCount: 0
