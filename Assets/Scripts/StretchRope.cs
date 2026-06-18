@@ -105,6 +105,7 @@ public class StretchRope : MonoBehaviour
     /// <summary>自動下降を開始（ stretchTime を 1 に向けて動かす）</summary>
     public void StartExternalDescent(float speedMultiplier = 1f)
     {
+        Debug.Log($"[StretchRope] StartExternalDescent called on {gameObject.name}. SpeedMul: {speedMultiplier}, current stretchTime: {_stretchTime}, usePoleSlide: {usePoleSlide}, poll2: {(poll2 != null ? poll2.name : "null")}, poll3: {(poll3 != null ? poll3.name : "null")}");
         _externalControl  = true;
         _externalDir      = 1f;
         _externalSpeedMul = speedMultiplier;
@@ -113,6 +114,7 @@ public class StretchRope : MonoBehaviour
     /// <summary>自動上昇を開始（ stretchTime を 0 に向けて動かす）</summary>
     public void StartExternalAscent(float speedMultiplier = 1f)
     {
+        Debug.Log($"[StretchRope] StartExternalAscent called on {gameObject.name}. SpeedMul: {speedMultiplier}, current stretchTime: {_stretchTime}, usePoleSlide: {usePoleSlide}");
         _externalControl  = true;
         _externalDir      = -1f;
         _externalSpeedMul = speedMultiplier;
