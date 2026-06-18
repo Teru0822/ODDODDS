@@ -34,6 +34,25 @@ public class StretchRope : MonoBehaviour
     [Tooltip("finger等の移動比率（元の動作は 0.0475）")]
     public float fingerRatio = 0.0475f;
 
+    [Header("Pole Slide Settings")]
+    [Tooltip("ポールスライドによる伸縮を使用するか")]
+    public bool usePoleSlide = true;
+
+    [Tooltip("スライドさせる第2ポール")]
+    public Transform poll2;
+
+    [Tooltip("スライドさせる第3ポール")]
+    public Transform poll3;
+
+    [Tooltip("各ポールのローカルスライド方向")]
+    public Vector3 slideDirection = new Vector3(0, 0, 1);
+
+    [Tooltip("poll2の最大移動距離")]
+    public float poll2MaxDistance = 1.5f;
+
+    [Tooltip("poll3の最大移動距離")]
+    public float poll3MaxDistance = 1.5f;
+
     [Header("Spaceキー操作")]
     [Tooltip("Spaceキーによる手動伸縮を許可するか")]
     public bool allowSpaceKey = true;
@@ -46,6 +65,9 @@ public class StretchRope : MonoBehaviour
 
     private Vector3[] _originalAttachedLocalPos;
 
+    private Vector3 _poll2InitialLocalPos;
+    private Vector3 _poll3InitialLocalPos;
+
     // 外部制御
     private bool  _externalControl  = false;  // true = UFOArmController が制御中
     private float _externalDir      = 0f;     // +1:伸びる  -1:縮む
@@ -56,6 +78,15 @@ public class StretchRope : MonoBehaviour
     {
         _originalScale    = transform.localScale;
         _originalPosition = transform.localPosition;
+
+        if (poll2 != null)
+        {
+            _poll2InitialLocalPos = poll2.localPosition;
+        }
+        if (poll3 != null)
+        {
+            _poll3InitialLocalPos = poll3.localPosition;
+        }
 
         if (attachedObjects != null && attachedObjects.Length > 0)
         {
@@ -132,25 +163,7 @@ public class StretchRope : MonoBehaviour
             _stretchTime  = Mathf.Clamp01(_stretchTime);
         }
 
-        float t        = Mathf.SmoothStep(0f, 1f, _stretchTime);
-        float scaleAdd = stretchIntensity * t;
-
-        // ── ロープ本体のスケール ──
-        Vector3 newScale = _originalScale;
-        switch (scaleAxis)
-        {
-            case Axis.X: newScale.x += scaleAdd; break;
-            case Axis.Y: newScale.y += scaleAdd; break;
-            case Axis.Z: newScale.z += scaleAdd; break;
-        }
-        transform.localScale = newScale;
-
-        // デバッグ用ログ（1秒間に数回だけ出すように調整）
-        if (Time.frameCount % 60 == 0 && (_externalControl || _stretchTime > 0f))
-        {
-            Debug.Log($"[StretchRope] _stretchTime: {_stretchTime}, Scale: {newScale}, isExternal: {_externalControl}");
-        }
-
+        float t = Mathf.SmoothStep(0f, 1f, _stretchTime);
 
         // ── 回転による振り子運動のための準備 ──
         UFOArmController arm = FindAnyObjectByType<UFOArmController>();
@@ -160,52 +173,109 @@ public class StretchRope : MonoBehaviour
         // ロープの根本（クレーン本体の中心）をすべての揺れの「共通の支点（Pivot）」として扱う
         Vector3 universalPivot = (arm != null && arm.armRoot != null) ? arm.armRoot.position : transform.position;
 
-        // ── ロープ本体の位置（中心補正＋Sway位置反映） ──
-        if (moveAxis != Axis.None)
+        if (usePoleSlide)
         {
-            float   dir    = moveNegative ? -1f : 1f;
-            float   move   = scaleAdd * moveRatio;
-            
-            // 親が動いた（横移動した）分を加味した現在の「本来あるべきワールド座標（揺れなし）」
-            Vector3 baseWorldPos = (transform.parent != null) 
-                                 ? transform.parent.TransformPoint(_originalPosition) 
-                                 : _originalPosition;
-
-            // どんなモデルの作りの向きであっても、重力に従って絶対に「ワールドの真下（Y軸マイナス方向）」に向かって落下・縮合させる
-            baseWorldPos.y -= Mathf.Abs(move);
-
-            // 支点から「真っ直ぐ下」へのベクトルを作り、揺れ角度で円を描くように振る
-            Vector3 downwardVec = baseWorldPos - universalPivot;
-            Vector3 swayedVec = ropeSwayRot * downwardVec;
-
-            transform.position = universalPivot + swayedVec;
-        }
-
-        // ── finger等の追従（Sway位置反映） ──
-        if (attachedObjects != null && attachedObjects.Length > 0)
-        {
-            float dir     = moveNegative ? -1f : 1f;
-            float moveAdd = scaleAdd * fingerRatio * dir;
-
-            for (int i = 0; i < attachedObjects.Length; i++)
+            // ── ポールスライドによる伸縮 ──
+            if (poll2 != null)
             {
-                if (attachedObjects[i] == null) continue;
+                poll2.localPosition = _poll2InitialLocalPos + slideDirection * (poll2MaxDistance * t);
+            }
+            if (poll3 != null)
+            {
+                poll3.localPosition = _poll3InitialLocalPos + slideDirection * (poll3MaxDistance * t);
+            }
 
-                // もし揺れていなかった場合の「本来の真下」にあるワールド座標
-                Vector3 baseWorldPos = (attachedObjects[i].parent != null)
-                                     ? attachedObjects[i].parent.TransformPoint(_originalAttachedLocalPos[i])
-                                     : _originalAttachedLocalPos[i];
+            // デバッグ用ログ（1秒間に数回だけ出すように調整）
+            if (Time.frameCount % 60 == 0 && (_externalControl || _stretchTime > 0f))
+            {
+                Debug.Log($"[StretchRope] Pole Slide Mode - _stretchTime: {_stretchTime}, t: {t}, isExternal: {_externalControl}");
+            }
 
-                // 爪の本体のY座標（高さ）を強制的にロープと同じ距離だけ下に落とす
-                baseWorldPos.y -= Mathf.Abs(moveAdd);
+            // ── attachedObjects の追従（Sway位置反映） ──
+            if (attachedObjects != null && attachedObjects.Length > 0)
+            {
+                float totalMove = (poll2MaxDistance + poll3MaxDistance) * t;
 
-                // ロープ本体と完全に同じ支点・同じ揺れ角度（ropeSwayRot）を使って位置をスイングさせる！
-                // これにより、6番が右に動けば絶対に爪も右に動く（絶対に分離しない）ようになる
+                for (int i = 0; i < attachedObjects.Length; i++)
+                {
+                    if (attachedObjects[i] == null) continue;
+
+                    // もし揺れていなかった場合の「本来の真下」にあるワールド座標
+                    Vector3 baseWorldPos = (attachedObjects[i].parent != null)
+                                         ? attachedObjects[i].parent.TransformPoint(_originalAttachedLocalPos[i])
+                                         : _originalAttachedLocalPos[i];
+
+                    // 合計スライド移動量だけ下に落とす
+                    baseWorldPos.y -= totalMove;
+
+                    // 共通の支点・同じ揺れ角度（ropeSwayRot）を使って位置をスイングさせる
+                    Vector3 downwardVec = baseWorldPos - universalPivot;
+                    Vector3 swayedVec = ropeSwayRot * downwardVec;
+
+                    attachedObjects[i].position = universalPivot + swayedVec;
+                }
+            }
+        }
+        else
+        {
+            // ── 従来のスケール伸縮 ──
+            float scaleAdd = stretchIntensity * t;
+
+            // ロープ本体のスケール
+            Vector3 newScale = _originalScale;
+            switch (scaleAxis)
+            {
+                case Axis.X: newScale.x += scaleAdd; break;
+                case Axis.Y: newScale.y += scaleAdd; break;
+                case Axis.Z: newScale.z += scaleAdd; break;
+            }
+            transform.localScale = newScale;
+
+            // デバッグ用ログ
+            if (Time.frameCount % 60 == 0 && (_externalControl || _stretchTime > 0f))
+            {
+                Debug.Log($"[StretchRope] Scale Mode - _stretchTime: {_stretchTime}, Scale: {newScale}, isExternal: {_externalControl}");
+            }
+
+            // ロープ本体の位置（中心補正＋Sway位置反映）
+            if (moveAxis != Axis.None)
+            {
+                float dir  = moveNegative ? -1f : 1f;
+                float move = scaleAdd * moveRatio;
+                
+                Vector3 baseWorldPos = (transform.parent != null) 
+                                     ? transform.parent.TransformPoint(_originalPosition) 
+                                     : _originalPosition;
+
+                baseWorldPos.y -= Mathf.Abs(move);
+
                 Vector3 downwardVec = baseWorldPos - universalPivot;
                 Vector3 swayedVec = ropeSwayRot * downwardVec;
 
-                // 最終的なワールド座標を更新
-                attachedObjects[i].position = universalPivot + swayedVec;
+                transform.position = universalPivot + swayedVec;
+            }
+
+            // finger等の追従（Sway位置反映）
+            if (attachedObjects != null && attachedObjects.Length > 0)
+            {
+                float dir     = moveNegative ? -1f : 1f;
+                float moveAdd = scaleAdd * fingerRatio * dir;
+
+                for (int i = 0; i < attachedObjects.Length; i++)
+                {
+                    if (attachedObjects[i] == null) continue;
+
+                    Vector3 baseWorldPos = (attachedObjects[i].parent != null)
+                                         ? attachedObjects[i].parent.TransformPoint(_originalAttachedLocalPos[i])
+                                         : _originalAttachedLocalPos[i];
+
+                    baseWorldPos.y -= Mathf.Abs(moveAdd);
+
+                    Vector3 downwardVec = baseWorldPos - universalPivot;
+                    Vector3 swayedVec = ropeSwayRot * downwardVec;
+
+                    attachedObjects[i].position = universalPivot + swayedVec;
+                }
             }
         }
     }
