@@ -30,8 +30,9 @@ public class GramophoneController : MonoBehaviour
     {
         _audioSource = GetComponent<AudioSource>();
         
-        // 空間オーディオ設定（距離によって音量を変えるため）
-        _audioSource.spatialBlend = 1.0f; 
+        // BGM は 2D 再生にする（SurroundBGMAudioSource の panStereo による左右定位を効かせるため。
+        // 3D にすると panStereo が無効になり、左右に振っても定位しない）
+        _audioSource.spatialBlend = 0.0f;
         _audioSource.loop = true;
 
         // 動的UIの生成
