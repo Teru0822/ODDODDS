@@ -1,15 +1,5 @@
-# Unity Smart Merge (UnityYAMLMerge) を使って Unity 専用 YAML ファイルをマージする
-# このファイルを置くことで git merge / git mergetool が自動で SmartMerge を呼ぶ
-*.unity   merge=unityyamlmerge
-*.prefab  merge=unityyamlmerge
-*.asset   merge=unityyamlmerge
-*.meta    merge=unityyamlmerge
-*.controller merge=unityyamlmerge
-*.anim    merge=unityyamlmerge
-*.physicMaterial merge=unityyamlmerge
-*.physicsMaterial2D merge=unityyamlmerge
-*.mat     merge=unityyamlmerge
-*.lighting merge=unityyamlmerge
+# Unity Smart Merge (UnityYAMLMerge) は衝突時に意図せずリモート側を残すことがあったため無効化。
+# Unity 専用 YAML ファイルは通常の git テキストマージに任せる。
 
 # 一般的なバイナリ: マージ衝突時は手動解決
 *.fbx     binary
