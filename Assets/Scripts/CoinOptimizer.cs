@@ -13,7 +13,7 @@ public class CoinOptimizer : MonoBehaviour
     private Rigidbody rb;
     private Collider _col;
     private float checkInterval = 0.5f; // 静止判定の間隔
-    private float sleepVelocity = 0.005f; // 静止とみなす速度しきい値 (めり込み凍結を防ぐため小さく設定)
+    private float sleepVelocity = 0.01f; // 静止とみなす速度しきい値 (めり込み凍結を防ぐため小さく設定)
     private float coinThickness = 0.05f;
 
     /// <summary>
