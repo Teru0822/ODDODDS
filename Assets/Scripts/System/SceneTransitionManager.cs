@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -48,9 +49,26 @@ namespace MiniGames.Transitions
         [Header("フェード設定")]
         [SerializeField] private float _fadeDuration = 1.5f;
 
+        [Header("特殊シーン連携")]
+        [Tooltip("コイン等が生成・落下し終わるまで追加で待機する時間（秒）")]
+        [SerializeField] private float _postSpawnWaitTime = 2.5f;
+
+        [Header("ローディング専用カメラ")]
+        [Tooltip("ロード中だけオンにする専用のカメラ（Unity上で作成してアタッチしてください）")]
+        [SerializeField] private Camera _loadingCamera;
+
         private Coroutine _loadingTextCoroutine;
         private Tween _loadingTextFadeTween;
         private Coroutine _blinkCoroutine;
+
+        // --- 追加: タイトルシーンのカメラを一緒に連れて行く用 ---
+        private Camera _preservedTitleCamera;
+
+        // 他のシーンのUIを一時的に隠すためのリスト
+        private List<Canvas> _hiddenCanvases = new List<Canvas>();
+        
+        // 隔離した距離を覚えておく（-10000だと浮動小数点精度の低下で影がチラつくため、-500に変更）
+        private Vector3 _hideOffset = new Vector3(0, -500f, 0);
 
         private void Awake()
         {
@@ -118,11 +136,29 @@ namespace MiniGames.Transitions
 
         private IEnumerator TransitionRoutine(string sceneName, Action onTransitionComplete)
         {
+            // --- 追加: 専用カメラをオンにする ---
+            if (_loadingCamera != null) _loadingCamera.enabled = true;
+
             // 1. フェードアウト（暗転・モヤ）
             if (_fadeCanvasGroup != null)
             {
                 _fadeCanvasGroup.gameObject.SetActive(true);
                 yield return _fadeCanvasGroup.DOFade(1f, _fadeDuration).WaitForCompletion();
+            }
+
+            // --- 追加: 画面が完全にモヤで隠れた後に、カメラを保護して地下へワープさせる ---
+            if (Camera.main != null)
+            {
+                _preservedTitleCamera = Camera.main;
+                _preservedTitleCamera.transform.SetParent(null);
+                DontDestroyOnLoad(_preservedTitleCamera.gameObject);
+                
+                // MainSceneのカメラに上書きされないよう、描画順を強制的に最前面にする
+                _preservedTitleCamera.depth = 1000;
+
+                // 他シーンの光を避けるため、ロード画面一式を遥か地下にワープさせる
+                _preservedTitleCamera.transform.position += _hideOffset;
+                transform.position += _hideOffset;
             }
 
             // ライトの切り替え
@@ -182,9 +218,51 @@ namespace MiniGames.Transitions
                 yield return null;
             }
 
-            // 新しいシーンでの開始処理を少し待つ
+            // 新しいシーンでの開始処理を少し待つ（AwakeやStartが呼ばれる猶予）
             yield return new WaitForSeconds(0.5f);
 
+            // --- 追加: 待機中、他シーンのUI（キャンバス）が湧いてきたら一時的に非表示にする ---
+            HideOtherCanvases();
+
+            // --- 待機処理の復活 ---
+            // MultiSceneLoader がサブシーンを読み込んでいる場合は終わるまで待機
+            while (MultiSceneLoader.IsLoadingSubScenes)
+            {
+                HideOtherCanvases(); // ロード中に追加されたCanvasも継続して隠す
+                yield return null;
+            }
+
+            Debug.Log("[SceneTransitionManager] MultiSceneLoaderのロードが完了しました。ItemSpawnerの待機へ移行します。");
+
+            // サブシーンロード完了後、UFOキャッチャーの ItemSpawner 等が Start() を呼ぶための猶予
+            yield return new WaitForSeconds(0.5f);
+            HideOtherCanvases();
+
+            Debug.Log($"[SceneTransitionManager] ItemSpawner待機チェック。IsSpawning: {ItemSpawner.IsSpawning}");
+
+            // --- 追加: UFOキャッチャー等でのコイン生成待機 ---
+            // ItemSpawnerがコインを生成中の場合は、それが終わるまでロード画面の裏で待機する
+            if (ItemSpawner.IsSpawning)
+            {
+                Debug.Log("[SceneTransitionManager] ItemSpawnerがスポーン中のため、完了を待機します。");
+                while (ItemSpawner.IsSpawning)
+                {
+                    yield return null;
+                }
+                
+                Debug.Log($"[SceneTransitionManager] スポーンが完了しました。追加待機({_postSpawnWaitTime}秒)を開始します。");
+                // コインがすべて生成された後、床に落ちて物理演算が落ち着くまでの追加待機
+                if (_postSpawnWaitTime > 0f)
+                {
+                    yield return new WaitForSeconds(_postSpawnWaitTime);
+                }
+            }
+            else
+            {
+                Debug.Log("[SceneTransitionManager] ItemSpawnerは動作していませんでした。追加待機をスキップします。");
+            }
+
+            Debug.Log("[SceneTransitionManager] 全ての待機処理が完了。ロード画面を消去しフェードインを開始します。");
             // 4. ロード画面の非表示
             if (_loadingScreenCanvasGroup != null)
             {
@@ -205,7 +283,53 @@ namespace MiniGames.Transitions
                 _fadeCanvasGroup.gameObject.SetActive(false);
             }
 
+            // --- 追加: 連れてきたタイトルカメラを破棄し、隠していたUIを元に戻す ---
+            if (_preservedTitleCamera != null)
+            {
+                // ロードが完全に終わってモヤが晴れたら、不要になったタイトルカメラを破棄して
+                // MainSceneのカメラに描画を完全に引き継ぐ
+                Destroy(_preservedTitleCamera.gameObject);
+                _preservedTitleCamera = null;
+
+                // 管理マネージャー自身の位置も元の正常な位置に戻しておく
+                transform.position -= _hideOffset;
+            }
+
+            RestoreOtherCanvases();
+
             onTransitionComplete?.Invoke();
+        }
+
+        private void HideOtherCanvases()
+        {
+            Canvas[] allCanvases = FindObjectsByType<Canvas>(FindObjectsSortMode.None);
+            foreach (var c in allCanvases)
+            {
+                // 自分が管理しているキャンバス以外で、現在表示されているものを隠す
+                if (_fadeCanvasGroup != null && c.gameObject == _fadeCanvasGroup.gameObject) continue;
+                if (_loadingScreenCanvasGroup != null && c.gameObject == _loadingScreenCanvasGroup.gameObject) continue;
+                
+                // 親階層も含めてチェック（自分の子キャンバスを誤爆しないため）
+                if (c.transform.IsChildOf(this.transform)) continue;
+
+                if (c.enabled)
+                {
+                    c.enabled = false;
+                    if (!_hiddenCanvases.Contains(c))
+                    {
+                        _hiddenCanvases.Add(c);
+                    }
+                }
+            }
+        }
+
+        private void RestoreOtherCanvases()
+        {
+            foreach (var c in _hiddenCanvases)
+            {
+                if (c != null) c.enabled = true;
+            }
+            _hiddenCanvases.Clear();
         }
 
         private void StartLoadingAnimation()
