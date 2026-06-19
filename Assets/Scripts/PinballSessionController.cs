@@ -68,6 +68,25 @@ public class PinballSessionController : MonoBehaviour
 
     private enum State { Idle, AtP1, AtP2, Playing }
     private State _state = State.Idle;
+
+    /// <summary>
+    /// 現在カメラがフォーカスしているピンボール段階。
+    /// P1=1 / P2=2 / P3(Playing)=3 / それ以外(Idle・遷移中)=0。
+    /// 他スクリプト（TrayController 等）がこの値の変化を見て連動する。
+    /// </summary>
+    public int PinBallState
+    {
+        get
+        {
+            switch (_state)
+            {
+                case State.AtP1: return 1;
+                case State.AtP2: return 2;
+                case State.Playing: return 3;
+                default: return 0;
+            }
+        }
+    }
     private bool _moving;
     private bool _pendingEnableFlippers;
     private GameObject _ball;
