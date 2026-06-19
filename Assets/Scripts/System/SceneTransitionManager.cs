@@ -234,8 +234,9 @@ namespace MiniGames.Transitions
 
                 // --- カメラワープの復活 ---
                 // Mainシーンの建物や影にロゴが干渉して暗くなるのを防ぐため、
-                // カメラ（とそれに追従するCanvas・ライト）を上空へ避難させる
-                _hideOffset = new Vector3(0, 5000f, 0); // 空高くへ移動
+                // カメラ（とそれに追従するCanvas・ライト）を地下へ避難させる
+                // (5000だと浮動小数点精度の低下で影がチラつくため、-500に設定)
+                _hideOffset = new Vector3(0, -500f, 0); // 地下へ移動
                 Debug.Log($"[STM-DEBUG] カメラワープ前: cam={_preservedTitleCamera.transform.position}");
                 _preservedTitleCamera.transform.position += _hideOffset;
                 Debug.Log($"[STM-DEBUG] カメラワープ後: cam={_preservedTitleCamera.transform.position}");
