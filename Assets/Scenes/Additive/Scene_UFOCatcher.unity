@@ -140,6 +140,55 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1859291037574408468, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
   m_PrefabInstance: {fileID: 5351351319220983938}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &2023033321 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1523333832638734422, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+  m_PrefabInstance: {fileID: 5351351319220983938}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2023033323
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2023033321}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02ef1eeba5cb7a146933401745b7392b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MouseHoverOutline
+  outlineColor: {r: 0.9907571, g: 1, b: 0, a: 1}
+  outlineWidth: 0.01
+  autoCollectRenderers: 1
+  highlightTargets: []
+  hoverCamera: {fileID: 0}
+  maxDistance: 1000
+  ignoreOcclusion: 0
+  raycastLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  hoverEnterClip: {fileID: 8300000, guid: 0d47aa5ef60e1224abda0e0568dd694b, type: 3}
+  audioSource: {fileID: 0}
+  hoverVolume: 0.22
+  hoverPitchRange: {x: 1, y: 1}
+  hoverEnterStartOffset: 0.18
+  pressDownClip: {fileID: 8300000, guid: 94826d03cfc2c8148be7e49800e98929, type: 3}
+  pressDownPitchRange: {x: 1, y: 1}
+  pressDownStartOffset: 0
+  releaseClip: {fileID: 8300000, guid: 112381306147a854d98aeea2714b9cff, type: 3}
+  releasePitchRange: {x: 1, y: 1}
+  releaseStartOffset: 0
+  clickVolume: 1
+  pressMoveEnabled: 1
+  pressMoveTarget: {fileID: 0}
+  pressMoveLocalX: -0.1
+  pressMoveDuration: 0.1
+  pressMoveLatchUntilRelease: 1
+  onClicked:
+    m_PersistentCalls:
+      m_Calls: []
+  audioSpatialBlend: 0
+  logEvents: 1
 --- !u!4 &2036606100 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3561571661407418773, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
@@ -361,10 +410,17 @@ PrefabInstance:
       propertyPath: m_Material
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 8514869435957483499, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: machineHover
+      value: 
+      objectReference: {fileID: 2023033323}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1523333832638734422, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2023033323}
   m_SourcePrefab: {fileID: 100100000, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using TMPro;
@@ -65,6 +66,17 @@ public class UFOCameraController : MonoBehaviour
     [Tooltip("Reference Transform for UFO center (autodetected if null)")]
     [SerializeField] private Transform ufoCenterTransform;
 
+    [Header("Camera Transition Settings")]
+    [Tooltip("UFOキャッチャー台にアタッチした MouseHoverOutline。ホバー判定とクリック開始に使う")]
+    [SerializeField] private MouseHoverOutline machineHover;
+
+    [Min(0.01f)]
+    [Tooltip("カメラ移動の所要時間（秒）")]
+    [SerializeField] private float transitionDuration = 1.0f;
+
+    [Tooltip("移動の緩急（0→1）")]
+    [SerializeField] private AnimationCurve transitionEase = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+
     private App.Player.FirstPersonController _fpController;
     private UFOArmController _ufoController;
     private Camera _activeCamera;
@@ -73,6 +85,10 @@ public class UFOCameraController : MonoBehaviour
 
     private int _paymentCount = 0;
     private float _playTimer = 0f;
+
+    private bool _isTransitioning = false;
+    private Vector3 _originalPlayerCamPos;
+    private Quaternion _originalPlayerCamRot;
 
     // 動的UI要素
     private Canvas _dynamicCanvas;
@@ -156,6 +172,11 @@ public class UFOCameraController : MonoBehaviour
 
         // 開始時はUFOプレイモードではない状態にする
         SetUfoMode(false);
+
+        if (machineHover != null)
+        {
+            machineHover.OnClicked += OnMachineClicked;
+        }
     }
 
     private void SetupDynamicCameras()
@@ -268,24 +289,19 @@ public class UFOCameraController : MonoBehaviour
 
         if (!IsPlayingUfo)
         {
-            // プレイ中でなく、かつ近ければプロンプトを表示。Fキーで開始
-            if (isClose)
+            bool canPlayUfo = RoundManager.Instance == null || RoundManager.Instance.CanPlayUfo();
+
+            // プレイ可能かつ遷移中でない場合のみ、ホバーアウトラインを有効化する
+            if (machineHover != null)
             {
-                bool canPlayUfo = RoundManager.Instance == null || RoundManager.Instance.CanPlayUfo();
+                machineHover.enabled = canPlayUfo && !_isTransitioning;
+            }
+
+            // プレイ不可かつ近くにいる場合のみ、ロックされている旨を表示
+            if (!canPlayUfo && isClose)
+            {
                 _showPrompt = true;
-                if (canPlayUfo)
-                {
-                    if (_promptText != null) _promptText.text = "[F] Play UFO Catcher";
-                    if (Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame)
-                    {
-                        Debug.Log("[UFOCameraController] Fキー検出！UFOモードに入ります");
-                        EnterUfoMode();
-                    }
-                }
-                else
-                {
-                    if (_promptText != null) _promptText.text = "UFO Locked: Finish Pinball Phase First";
-                }
+                if (_promptText != null) _promptText.text = "UFO Locked: Finish Pinball Phase First";
             }
             else
             {
@@ -393,6 +409,149 @@ public class UFOCameraController : MonoBehaviour
         Debug.Log($"[UFOCameraController] Started UFO play session. Cost: ¥{cost}, Limit: {playDuration}s, Total plays: {_paymentCount}");
     }
 
+    private void OnMachineClicked()
+    {
+        if (IsPlayingUfo || _isTransitioning) return;
+
+        bool canPlayUfo = RoundManager.Instance == null || RoundManager.Instance.CanPlayUfo();
+        if (!canPlayUfo) return;
+
+        StartCoroutine(TransitionToUfoCamera());
+    }
+
+    private System.Collections.IEnumerator TransitionToUfoCamera()
+    {
+        _isTransitioning = true;
+
+        if (machineHover != null)
+        {
+            machineHover.enabled = false;
+        }
+
+        if (_fpController != null)
+        {
+            _fpController.enabled = false;
+            _fpController.SetAvatarVisibility(false);
+            var animator = _fpController.GetComponentInChildren<Animator>();
+            if (animator != null)
+            {
+                animator.SetFloat("Speed", 0f);
+            }
+        }
+
+        if (playerCamera != null)
+        {
+            _originalPlayerCamPos = playerCamera.transform.position;
+            _originalPlayerCamRot = playerCamera.transform.rotation;
+        }
+
+        if (playerCamera != null && frontCamera != null)
+        {
+            Vector3 startPos = playerCamera.transform.position;
+            Quaternion startRot = playerCamera.transform.rotation;
+            Vector3 targetPos = frontCamera.transform.position;
+            Quaternion targetRot = frontCamera.transform.rotation;
+
+            float t = 0f;
+            while (t < 1f)
+            {
+                t += Time.deltaTime / transitionDuration;
+                float e = transitionEase.Evaluate(Mathf.Clamp01(t));
+                playerCamera.transform.position = Vector3.Lerp(startPos, targetPos, e);
+                playerCamera.transform.rotation = Quaternion.Slerp(startRot, targetRot, e);
+                yield return null;
+            }
+
+            playerCamera.transform.position = targetPos;
+            playerCamera.transform.rotation = targetRot;
+        }
+
+        _isTransitioning = false;
+        EnterUfoMode();
+    }
+
+    private System.Collections.IEnumerator TransitionBackToPlayerCamera()
+    {
+        _isTransitioning = true;
+
+        IsPlayingUfo = false;
+        IsPlaySessionActive = false;
+        if (playSpotlight != null)
+        {
+            playSpotlight.SetActive(false);
+        }
+
+        if (ufoUiCanvas != null)
+        {
+            ufoUiCanvas.SetActive(false);
+        }
+        if (_timerPanel != null) _timerPanel.SetActive(false);
+        if (_paymentPanel != null) _paymentPanel.SetActive(false);
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
+        if (playerCamera != null)
+        {
+            Camera activeCam = _activeCamera != null ? _activeCamera : frontCamera;
+            if (activeCam != null)
+            {
+                playerCamera.transform.position = activeCam.transform.position;
+                playerCamera.transform.rotation = activeCam.transform.rotation;
+            }
+            playerCamera.enabled = true;
+        }
+
+        if (frontCamera != null) frontCamera.enabled = false;
+        if (leftCamera != null) leftCamera.enabled = false;
+        if (rightCamera != null) rightCamera.enabled = false;
+        if (topCamera != null) topCamera.enabled = false;
+
+        if (_fpController != null)
+        {
+            _fpController.SetAvatarVisibility(true);
+        }
+
+        if (playerCamera != null)
+        {
+            Vector3 startPos = playerCamera.transform.position;
+            Quaternion startRot = playerCamera.transform.rotation;
+
+            float t = 0f;
+            while (t < 1f)
+            {
+                t += Time.deltaTime / transitionDuration;
+                float e = transitionEase.Evaluate(Mathf.Clamp01(t));
+                playerCamera.transform.position = Vector3.Lerp(startPos, _originalPlayerCamPos, e);
+                playerCamera.transform.rotation = Quaternion.Slerp(startRot, _originalPlayerCamRot, e);
+                yield return null;
+            }
+
+            playerCamera.transform.position = _originalPlayerCamPos;
+            playerCamera.transform.rotation = _originalPlayerCamRot;
+        }
+
+        if (_fpController != null)
+        {
+            _fpController.enabled = true;
+        }
+
+        var pickupController = FindAnyObjectByType<CupPickupController>();
+        if (pickupController != null)
+        {
+            pickupController.enabled = true;
+        }
+
+        bool canPlayUfo = RoundManager.Instance == null || RoundManager.Instance.CanPlayUfo();
+        if (machineHover != null)
+        {
+            machineHover.enabled = canPlayUfo;
+        }
+
+        _isTransitioning = false;
+        Debug.Log("[UFOCameraController] Exit UFO mode completed.");
+    }
+
     private void EnterUfoMode()
     {
         _paymentCount = 0;
@@ -413,12 +572,8 @@ public class UFOCameraController : MonoBehaviour
 
     private void ExitUfoMode()
     {
-        SetUfoMode(false);
-        IsPlaySessionActive = false;
-        if (playSpotlight != null)
-        {
-            playSpotlight.SetActive(false);
-        }
+        if (_isTransitioning) return;
+        StartCoroutine(TransitionBackToPlayerCamera());
     }
 
     private void SetUfoMode(bool active)
@@ -775,6 +930,11 @@ public class UFOCameraController : MonoBehaviour
         if (_dynamicCanvas != null)
         {
             Destroy(_dynamicCanvas.gameObject);
+        }
+
+        if (machineHover != null)
+        {
+            machineHover.OnClicked -= OnMachineClicked;
         }
     }
 
