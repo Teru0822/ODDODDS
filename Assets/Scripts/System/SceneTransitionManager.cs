@@ -174,17 +174,23 @@ namespace MiniGames.Transitions
             _isTransitioning = true;
             AudioListener.pause = true; // ロード中（裏）のBGM等が鳴らないように全体ミュート
 
+            Debug.Log("[STM-DEBUG] === TransitionRoutine 開始 ===");
+
             // --- 追加: 専用カメラをオンにする ---
             if (_loadingCamera != null) _loadingCamera.enabled = true;
 
             // 1. フェードアウト（暗転・モヤ）
+            Debug.Log($"[STM-DEBUG] Step1: _fadeCanvasGroup={(_fadeCanvasGroup != null ? "あり" : "null")}");
             if (_fadeCanvasGroup != null)
             {
                 _fadeCanvasGroup.gameObject.SetActive(true);
                 yield return _fadeCanvasGroup.DOFade(1f, _fadeDuration).WaitForCompletion();
             }
+            Debug.Log("[STM-DEBUG] Step1: フェードアウト完了");
 
-            // --- 追加: 画面が完全にモヤで隠れた後に、カメラを保護して地下へワープさせる ---
+
+            // --- カメラとTransitionCanvasをシーン遷移から保護する ---
+            Debug.Log($"[STM-DEBUG] Step2: Camera.main={Camera.main}");
             if (Camera.main != null)
             {
                 _preservedTitleCamera = Camera.main;
@@ -194,9 +200,17 @@ namespace MiniGames.Transitions
                 // MainSceneのカメラに上書きされないよう、描画順を強制的に最前面にする
                 _preservedTitleCamera.depth = 1000;
 
-                // 他シーンの光を避けるため、ロード画面一式を遥か地下にワープさせる
-                _preservedTitleCamera.transform.position += _hideOffset;
-                transform.position += _hideOffset;
+                // TransitionCanvasもシーン遷移で破棄されないように保護する
+                if (_fadeCanvasGroup != null)
+                {
+                    Transform canvasRoot = _fadeCanvasGroup.transform.root;
+                    DontDestroyOnLoad(canvasRoot.gameObject);
+                    Debug.Log($"[STM-DEBUG] TransitionCanvas '{canvasRoot.name}' をDontDestroyOnLoadに追加");
+                }
+
+                // ※ カメラの地下ワープは廃止。フェードパネル(alpha=1)が画面を完全に覆っているため、
+                //    裏のシーンはそもそも見えず、ワープする必要がない。
+                Debug.Log($"[STM-DEBUG] カメラ位置(変更なし): cam={_preservedTitleCamera.transform.position}");
             }
 
             // ライトの切り替え
@@ -212,11 +226,13 @@ namespace MiniGames.Transitions
                     {
                         l.gameObject.SetActive(true);
                         l.enabled = true;
+                        Debug.Log($"[STM-DEBUG] ライトON: {l.name}, pos={l.transform.position}");
                     }
                 }
             }
 
             // 2. ロード画面の表示
+            Debug.Log($"[STM-DEBUG] Step3: _loadingScreenCanvasGroup={(_loadingScreenCanvasGroup != null ? "あり" : "null")}, _floatingLogoParent={(_floatingLogoParent != null ? "あり" : "null")}");
             if (_loadingScreenCanvasGroup != null)
             {
                 _loadingScreenCanvasGroup.gameObject.SetActive(true);
@@ -224,8 +240,12 @@ namespace MiniGames.Transitions
             if (_floatingLogoParent != null)
             {
                 _floatingLogoParent.gameObject.SetActive(true);
+                _floatingLogoParent.localScale = _originalLogoScale; // DOScaleで0にされている場合に備えて復元
+                Debug.Log($"[STM-DEBUG] ロゴ位置: world={_floatingLogoParent.position}, local={_floatingLogoParent.localPosition}, scale={_floatingLogoParent.localScale}");
+                Debug.Log($"[STM-DEBUG] ロゴ親: {(_floatingLogoParent.parent != null ? _floatingLogoParent.parent.name : "null")}");
             }
             
+            Debug.Log($"[STM-DEBUG] StartLoadingAnimation呼び出し: _logoSkinnedMeshRenderer={(_logoSkinnedMeshRenderer != null ? "あり" : "null")}, _floatDistance={_floatDistance}");
             StartLoadingAnimation();
 
             if (_loadingScreenCanvasGroup != null)
@@ -236,8 +256,17 @@ namespace MiniGames.Transitions
             {
                 yield return new WaitForSeconds(0.5f);
             }
+            Debug.Log("[STM-DEBUG] Step3: ロード画面フェードイン完了");
 
             // 3. 非同期シーンロード
+            // --- ロード中のロゴ照明を維持するため、現在の環境光設定を保存する ---
+            var savedAmbientMode = RenderSettings.ambientMode;
+            var savedAmbientLight = RenderSettings.ambientLight;
+            var savedAmbientIntensity = RenderSettings.ambientIntensity;
+            var savedAmbientSkyColor = RenderSettings.ambientSkyColor;
+            var savedAmbientEquatorColor = RenderSettings.ambientEquatorColor;
+            var savedAmbientGroundColor = RenderSettings.ambientGroundColor;
+
             AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName);
             asyncLoad.allowSceneActivation = false;
 
@@ -258,6 +287,14 @@ namespace MiniGames.Transitions
 
             // 新しいシーンでの開始処理を少し待つ（AwakeやStartが呼ばれる猶予）
             yield return new WaitForSeconds(0.5f);
+
+            // --- Mainシーンの環境光がロゴを暗くするのを防ぐため、タイトルシーンの環境光を一時復元 ---
+            RenderSettings.ambientMode = savedAmbientMode;
+            RenderSettings.ambientLight = savedAmbientLight;
+            RenderSettings.ambientIntensity = savedAmbientIntensity;
+            RenderSettings.ambientSkyColor = savedAmbientSkyColor;
+            RenderSettings.ambientEquatorColor = savedAmbientEquatorColor;
+            RenderSettings.ambientGroundColor = savedAmbientGroundColor;
 
             // --- 待機処理の復活 ---
             // MultiSceneLoader がサブシーンを読み込んでいる場合は終わるまで待機
@@ -296,6 +333,13 @@ namespace MiniGames.Transitions
             }
 
             Debug.Log("[SceneTransitionManager] 全ての待機処理が完了。ロード画面を消去しフェードインを開始します。");
+
+            // --- Mainシーンのカメラ映像を保持するため、ClearFlagsをDepthに変更 ---
+            // SolidColor(黒)のままだと、フェードアウト時にMainシーンの描画が黒で上書きされてしまう
+            if (_preservedTitleCamera != null)
+            {
+                _preservedTitleCamera.clearFlags = CameraClearFlags.Depth;
+            }
             // 4. ロード画面の非表示
             if (_floatingLogoParent != null)
             {
@@ -328,17 +372,37 @@ namespace MiniGames.Transitions
                 _fadeCanvasGroup.gameObject.SetActive(false);
             }
 
-            // --- 追加: 連れてきたタイトルカメラを破棄し、隠していたUIを元に戻す ---
+            // --- ライトの復元 ---
+            // ロード用に消していたシーンのライトを元に戻す
+            if (_lightsToTurnOff != null)
+            {
+                foreach (var l in _lightsToTurnOff)
+                {
+                    if (l != null) l.enabled = true;
+                }
+            }
+            // ロード用に点けていたライトを消す
+            if (_lightsToTurnOn != null)
+            {
+                foreach (var l in _lightsToTurnOn)
+                {
+                    if (l != null) l.gameObject.SetActive(false);
+                }
+            }
+
+            // --- 連れてきたタイトルカメラを破棄し、隠していたUIを元に戻す ---
             if (_preservedTitleCamera != null)
             {
                 // ロードが完全に終わってモヤが晴れたら、不要になったタイトルカメラを破棄して
                 // MainSceneのカメラに描画を完全に引き継ぐ
                 Destroy(_preservedTitleCamera.gameObject);
                 _preservedTitleCamera = null;
-
-                // 管理マネージャー自身の位置も元の正常な位置に戻しておく
-                transform.position -= _hideOffset;
             }
+
+            // --- Mainシーン本来の環境光に戻す ---
+            // ロード中はタイトルシーンの環境光を維持していたため、
+            // フェードアウト完了後にMainシーンのLighting設定を再適用する
+            SceneManager.SetActiveScene(SceneManager.GetSceneByName(sceneName));
 
             RestoreOtherCanvases();
             _isTransitioning = false;
@@ -354,6 +418,10 @@ namespace MiniGames.Transitions
                 // 自分が管理しているキャンバス以外で、現在表示されているものを隠す
                 if (_fadeCanvasGroup != null && c.gameObject == _fadeCanvasGroup.gameObject) continue;
                 if (_loadingScreenCanvasGroup != null && c.gameObject == _loadingScreenCanvasGroup.gameObject) continue;
+                
+                // TransitionCanvas自体を保護する（_fadeCanvasGroupや_loadingScreenCanvasGroupは
+                // TransitionCanvasの「子」であり、Canvas.gameObjectチェックでは「親」のCanvasを保護できない）
+                if (_fadeCanvasGroup != null && c.gameObject == _fadeCanvasGroup.transform.root.gameObject) continue;
                 
                 // 親階層も含めてチェック（自分の子キャンバスを誤爆しないため）
                 if (c.transform.IsChildOf(this.transform)) continue;
@@ -392,8 +460,23 @@ namespace MiniGames.Transitions
 
             if (_floatingLogoParent != null)
             {
-                // 現在の位置から相対的に _floatDistance 分上に移動し、戻るのを繰り返す
-                _floatingLogoParent.DOLocalMoveY(_floatDistance, _floatDuration)
+                // ScreenSpace-Camera Canvasの子オブジェクトは、Canvasのスケール（非常に小さい）が適用されるため、
+                // _floatDistanceをそのまま使うと動きが極めて微小になる。
+                // Canvas座標系で意味のある移動量に変換する（ロゴのlocalScaleで割って正規化）。
+                float adjustedFloatDistance = _floatDistance;
+                if (_floatingLogoParent.parent != null)
+                {
+                    // ロゴのlocalScaleが大きい（例: 1870）場合、
+                    // 世界座標での動きを揃えるため、同じ比率で距離を拡大する
+                    float parentScale = _floatingLogoParent.localScale.y;
+                    if (parentScale > 1f)
+                    {
+                        adjustedFloatDistance = _floatDistance * parentScale;
+                        Debug.Log($"[STM-DEBUG] 浮遊距離を補正: {_floatDistance} -> {adjustedFloatDistance} (scale={parentScale})");
+                    }
+                }
+                
+                _floatingLogoParent.DOLocalMoveY(adjustedFloatDistance, _floatDuration)
                     .SetRelative(true)
                     .SetLoops(-1, LoopType.Yoyo)
                     .SetEase(Ease.InOutSine);

@@ -40,8 +40,11 @@ public class MultiSceneLoader : MonoBehaviour
     [Tooltip("全サブシーンのロード後にアクティブにするシーン名。空ならこのシーンのまま。")]
     [SerializeField] private string activeSceneAfterLoad = "";
 
+    public static bool IsLoadingSubScenes { get; private set; } = false;
+
     private IEnumerator Start()
     {
+        IsLoadingSubScenes = true;
         foreach (var s in subScenes)
         {
             if (s.disableOnStart || string.IsNullOrEmpty(s.sceneName)) continue;
@@ -67,5 +70,7 @@ public class MultiSceneLoader : MonoBehaviour
             else
                 Debug.LogWarning($"[MultiSceneLoader] アクティブ化対象 '{activeSceneAfterLoad}' が見つかりません。");
         }
+
+        IsLoadingSubScenes = false;
     }
 }

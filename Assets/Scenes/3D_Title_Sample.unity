@@ -1159,9 +1159,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 178737255}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.175, z: -9.735}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: -0.11445723, y: -0, z: -0, w: 0.99342823}
+  m_LocalPosition: {x: 0, y: 18.278767, z: -273.00742}
+  m_LocalScale: {x: 1870.6147, y: 1870.6147, z: 1870.6147}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 362613910}
@@ -1170,7 +1170,7 @@ Transform:
   - {fileID: 1512353145}
   - {fileID: 620583001}
   - {fileID: 1248279188}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 2032842740}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &233372533
 GameObject:
@@ -1392,6 +1392,7 @@ MonoBehaviour:
   displayIndexToActivate: 3
   slideAwayAudioSource: {fileID: 281216371}
   slideAwaySound: {fileID: 8300000, guid: ea17c0d2c234949fba38874acb7bceae, type: 3}
+  slideAwaySoundDelay: 0.5
   titleConversationManager: {fileID: 1144681784}
   sceneTransitionManager: {fileID: 978189054}
 --- !u!64 &281216366
@@ -1904,12 +1905,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 369972494}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.15766448, y: 0.075604066, z: 0.0043226336, w: 0.9845848}
-  m_LocalPosition: {x: -0.124, y: 1.405, z: -10.215}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: 0.043935493, y: 0.07560197, z: -0.0043592057, w: 0.9961602}
+  m_LocalPosition: {x: -231.95622, y: 233.05687, z: -1245.219}
+  m_LocalScale: {x: 1870.6147, y: 1870.6147, z: 1870.6147}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 2032842740}
   m_LocalEulerAnglesHint: {x: 18.048, y: 9.092, z: 1.95}
 --- !u!1 &421803668 stripped
 GameObject:
@@ -3243,6 +3244,8 @@ MonoBehaviour:
   _loadingText: {fileID: 2058439447}
   _loadingFontAsset: {fileID: 11400000, guid: 4ed5b47db8cb6426a8d0424a0bb3e79d, type: 2}
   _fadeDuration: 1
+  _postSpawnWaitTime: 2.5
+  _loadingCamera: {fileID: 0}
 --- !u!4 &978189055
 Transform:
   m_ObjectHideFlags: 0
@@ -8110,8 +8113,10 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 369972497}
   - {fileID: 1551644505}
   - {fileID: 154383417}
+  - {fileID: 178737256}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -8763,11 +8768,9 @@ SceneRoots:
   - {fileID: 1528451707}
   - {fileID: 1914480239}
   - {fileID: 1017876950}
-  - {fileID: 369972497}
   - {fileID: 1018833848}
   - {fileID: 2080772017}
   - {fileID: 1211029105}
   - {fileID: 1144681785}
   - {fileID: 2032842740}
   - {fileID: 978189055}
-  - {fileID: 178737256}
