@@ -208,28 +208,40 @@ namespace MiniGames.Transitions
                     Debug.Log($"[STM-DEBUG] TransitionCanvas '{canvasRoot.name}' をDontDestroyOnLoadに追加");
                 }
 
-                // ※ カメラの地下ワープは廃止。フェードパネル(alpha=1)が画面を完全に覆っているため、
-                //    裏のシーンはそもそも見えず、ワープする必要がない。
-                Debug.Log($"[STM-DEBUG] カメラ位置(変更なし): cam={_preservedTitleCamera.transform.position}");
-            }
-
-            // ライトの切り替え
-            if (_lightsToTurnOff != null)
-            {
-                foreach (var l in _lightsToTurnOff) if (l != null) l.enabled = false;
-            }
-            if (_lightsToTurnOn != null)
-            {
-                foreach (var l in _lightsToTurnOn) 
+                // --- ライトの保護と切り替えを先に行う ---
+                // カメラをワープさせる前にライトを子にしておかないと、ワープ後にSetParent(true)した場合に
+                // ライトが地上の元の世界座標に取り残されてしまう。
+                if (_lightsToTurnOff != null)
                 {
-                    if (l != null) 
+                    foreach (var l in _lightsToTurnOff) if (l != null) l.enabled = false;
+                }
+                if (_lightsToTurnOn != null)
+                {
+                    foreach (var l in _lightsToTurnOn) 
                     {
-                        l.gameObject.SetActive(true);
-                        l.enabled = true;
-                        Debug.Log($"[STM-DEBUG] ライトON: {l.name}, pos={l.transform.position}");
+                        if (l != null) 
+                        {
+                            l.gameObject.SetActive(true);
+                            l.enabled = true;
+                            
+                            // シーンが破棄されてもライトが消えないように、保存カメラの子にして一緒に連れて行く
+                            l.transform.SetParent(_preservedTitleCamera.transform, true);
+                            
+                            Debug.Log($"[STM-DEBUG] ライトON(ワープ前): {l.name}, pos={l.transform.position}");
+                        }
                     }
                 }
+
+                // --- カメラワープの復活 ---
+                // Mainシーンの建物や影にロゴが干渉して暗くなるのを防ぐため、
+                // カメラ（とそれに追従するCanvas・ライト）を上空へ避難させる
+                _hideOffset = new Vector3(0, 5000f, 0); // 空高くへ移動
+                Debug.Log($"[STM-DEBUG] カメラワープ前: cam={_preservedTitleCamera.transform.position}");
+                _preservedTitleCamera.transform.position += _hideOffset;
+                Debug.Log($"[STM-DEBUG] カメラワープ後: cam={_preservedTitleCamera.transform.position}");
             }
+
+            // （ライト処理はワープ前に移動済み）
 
             // 2. ロード画面の表示
             Debug.Log($"[STM-DEBUG] Step3: _loadingScreenCanvasGroup={(_loadingScreenCanvasGroup != null ? "あり" : "null")}, _floatingLogoParent={(_floatingLogoParent != null ? "あり" : "null")}");
