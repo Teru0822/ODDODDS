@@ -84,6 +84,8 @@ public class UFOArmController : MonoBehaviour
     [Header("コイン最適化解除（WakeUp）設定")]
     [Tooltip("アームが下降する際、どれくらいの範囲のコインを叩き起こすか")]
     public float wakeUpRadius = 1.0f;
+    [Tooltip("指（爪パーツ）のローカル座標から見た、判定範囲の中心オフセット")]
+    public Vector3 wakeUpOffset = Vector3.zero;
     [Tooltip("叩き起こし処理を実行する間隔（秒）。処理落ちを防ぐため毎フレームは行いません")]
     public float wakeUpInterval = 0.2f;
 
@@ -333,7 +335,9 @@ public class UFOArmController : MonoBehaviour
         {
             if (finger != null)
             {
-                WakeUpInSphere(finger.position, wakeUpRadius);
+                // 指（爪）のローカル座標オフセットを加味した位置を判定中心とする
+                Vector3 targetPos = finger.TransformPoint(wakeUpOffset);
+                WakeUpInSphere(targetPos, wakeUpRadius);
             }
         }
     }
@@ -854,6 +858,22 @@ public class UFOArmController : MonoBehaviour
         // 半透明の赤い塗りつぶし（見やすさ向上）
         Gizmos.color = new Color(1f, 0f, 0f, 0.15f);
         Gizmos.DrawCube(center, size);
+
+        // WakeUpRadiusの可視化 (黄色)
+        // 実際のコイン衝突判定が発生する「指先（爪パーツ）」の周囲のみを描画します。
+        // 実質コインに触れないアーム上部（根元や手首部分）の球体は非表示にしています。
+        if (wakeUpRadius > 0f && fingerParts != null)
+        {
+            Gizmos.color = Color.yellow;
+            foreach (Transform finger in fingerParts)
+            {
+                if (finger != null)
+                {
+                    // オフセットを適用した座標に球体を描画
+                    Gizmos.DrawWireSphere(finger.TransformPoint(wakeUpOffset), wakeUpRadius);
+                }
+            }
+        }
     }
 
     /// <summary>

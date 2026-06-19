@@ -31,7 +31,7 @@ public class UFOClawCarrier : MonoBehaviour
 
     [Header("デバッグ表示")]
     [Tooltip("コンソールへのデバッグログ出力を有効にするか")]
-    public bool showDebugLogs = true;
+    public bool showDebugLogs = false;
 
     private Vector3 _lastPosition;
     private UFOArmController _armController;
@@ -144,8 +144,8 @@ public class UFOClawCarrier : MonoBehaviour
                 Vector3 newPos = rb.position + appliedDelta;
                 rb.MovePosition(newPos);
                 
-                // 見た目の同期
-                rb.transform.position = newPos;
+                // 見た目の同期 (★物理的な瞬間ワープによる処理スパイクを防ぐため、MovePositionのみにします)
+                // rb.transform.position = newPos;
 
                 carriedCount++;
                 if (showDebugLogs)

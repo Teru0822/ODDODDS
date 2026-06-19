@@ -153,6 +153,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: totalItems
+      value: 1500
+      objectReference: {fileID: 0}
+    - target: {fileID: 467170731885350686, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 567408658187761308, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 1503717751264703810, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: m_LocalPosition.x
       value: 16.38
@@ -221,13 +233,29 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: -0.00503
       objectReference: {fileID: 0}
+    - target: {fileID: 4824326599815904788, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 5178585562298964632, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 5329975963708985348, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5374315265751056616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 5807422996577333388, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6194131622346904002, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: stretchSpeed
-      value: 0.8
+      value: 0.4
       objectReference: {fileID: 0}
     - target: {fileID: 6194131622346904002, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: slideDirection.z
@@ -249,10 +277,42 @@ PrefabInstance:
       propertyPath: 'attachedObjects.Array.data[2]'
       value: 
       objectReference: {fileID: 348180099}
+    - target: {fileID: 6282017185801748267, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 6517693215301133732, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.001
+      objectReference: {fileID: 0}
+    - target: {fileID: 7369352865912020978, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 7587156506030312916, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: stretchRope
       value: 
       objectReference: {fileID: 682920286}
+    - target: {fileID: 7587156506030312916, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: wakeUpRadius
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7587156506030312916, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: wakeUpInterval
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7587156506030312916, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: wakeUpOffset.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7587156506030312916, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: wakeUpOffset.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7587156506030312916, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: closeLimitRatio
+      value: 0.8
+      objectReference: {fileID: 0}
     - target: {fileID: 7587156506030312916, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: grabWaitSeconds
       value: 1.5
@@ -260,6 +320,10 @@ PrefabInstance:
     - target: {fileID: 7587156506030312916, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: postCollisionDescentSeconds
       value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8209002438679241151, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_Material
+      value: 
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
