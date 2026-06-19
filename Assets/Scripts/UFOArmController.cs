@@ -86,6 +86,12 @@ public class UFOArmController : MonoBehaviour
     public float wakeUpRadius = 1.0f;
     [Tooltip("指（爪パーツ）のローカル座標から見た、判定範囲の中心オフセット")]
     public Vector3 wakeUpOffset = Vector3.zero;
+    [Tooltip("アーム動作中（降下〜上昇中）に、アーム直下のコインを起こす判定の長さ（下方向の距離）")]
+    public float wakeUpDownwardsLength = 0.3f;
+    [Tooltip("アーム動作中（降下〜上昇中）に、アーム直下のコインを起こす判定の横幅（半径）")]
+    public float wakeUpDownwardsWidth = 1.2f;
+    [Tooltip("アーム動作中（降下〜上昇中）に、アーム直下のコインを起こす判定の中心オフセット")]
+    public Vector3 wakeUpDownwardsOffset = Vector3.zero;
     [Tooltip("叩き起こし処理を実行する間隔（秒）。処理落ちを防ぐため毎フレームは行いません")]
     public float wakeUpInterval = 0.2f;
 
@@ -325,19 +331,50 @@ public class UFOArmController : MonoBehaviour
 
         if (fingerParts == null || fingerParts.Length == 0 || fingerParts[0] == null) return;
 
-        // まずアームの中心（指の親オブジェクト）の周囲を起こす
+        // アームの中心（指の親オブジェクト）の位置を取得
         Transform parentFolder = fingerParts[0].parent;
         Vector3 centerPos = (parentFolder != null) ? parentFolder.position : transform.position;
-        WakeUpInSphere(centerPos, wakeUpRadius);
 
-        // さらに、それぞれの指の周囲も起こす（爪が大きく広がっているLv2やLv3の形状でも確実に起こすため）
-        foreach (Transform finger in fingerParts)
+        // アーム降下中・爪閉じ中（下降開始〜掴み完了まで）は、アーム直下のコインを徐々にスリープ解除
+        // 上昇中（Ascending）は無駄な物理演算を防ぐため、この直下ボックス判定は行いません
+        bool isDescendingOrGrabbing = (_state == ArmState.OpeningClaw || 
+                                       _state == ArmState.Descending || 
+                                       _state == ArmState.PostCollisionDescending || 
+                                       _state == ArmState.Grabbing);
+
+        if (isDescendingOrGrabbing)
         {
-            if (finger != null)
+            // 手首位置から指定のオフセットだけズラした位置を基準にする
+            Vector3 boxCenter = centerPos + wakeUpDownwardsOffset;
+            boxCenter.y -= wakeUpDownwardsLength * 0.5f; // 中心点を真下にずらす
+            
+            Vector3 halfExtents = new Vector3(
+                wakeUpDownwardsWidth,
+                wakeUpDownwardsLength * 0.5f,
+                wakeUpDownwardsWidth
+            );
+            
+            Collider[] hits = Physics.OverlapBox(boxCenter, halfExtents, Quaternion.identity);
+            foreach (var hit in hits)
             {
-                // 指（爪）のローカル座標オフセットを加味した位置を判定中心とする
-                Vector3 targetPos = finger.TransformPoint(wakeUpOffset);
-                WakeUpInSphere(targetPos, wakeUpRadius);
+                CoinOptimizer coin = hit.GetComponent<CoinOptimizer>();
+                if (coin != null)
+                {
+                    coin.WakeUp();
+                }
+            }
+        }
+        else
+        {
+            // 待機中/移動中/上昇中は従来通り、爪のパーツ（指パーツ）の周囲のみ
+            foreach (Transform finger in fingerParts)
+            {
+                if (finger != null)
+                {
+                    // 指（爪）のローカル座標オフセットを加味した位置を判定中心とする
+                    Vector3 targetPos = finger.TransformPoint(wakeUpOffset);
+                    WakeUpInSphere(targetPos, wakeUpRadius);
+                }
             }
         }
     }
@@ -860,17 +897,85 @@ public class UFOArmController : MonoBehaviour
         Gizmos.DrawCube(center, size);
 
         // WakeUpRadiusの可視化 (黄色)
-        // 実際のコイン衝突判定が発生する「指先（爪パーツ）」の周囲のみを描画します。
-        // 実質コインに触れないアーム上部（根元や手首部分）の球体は非表示にしています。
-        if (wakeUpRadius > 0f && fingerParts != null)
+        if (wakeUpRadius > 0f)
         {
             Gizmos.color = Color.yellow;
-            foreach (Transform finger in fingerParts)
+
+            // エディタ非実行時は、調整しやすいように両方（指先球体 ＆ 直下判定ボックス）を薄く描画します
+            if (!Application.isPlaying)
             {
-                if (finger != null)
+                // 1. 指先（爪）の球体判定
+                if (fingerParts != null)
                 {
-                    // オフセットを適用した座標に球体を描画
-                    Gizmos.DrawWireSphere(finger.TransformPoint(wakeUpOffset), wakeUpRadius);
+                    foreach (Transform finger in fingerParts)
+                    {
+                        if (finger != null)
+                        {
+                            Gizmos.DrawWireSphere(finger.TransformPoint(wakeUpOffset), wakeUpRadius);
+                        }
+                    }
+                }
+
+                // 2. 直下ボックス判定
+                if (fingerParts != null && fingerParts.Length > 0 && fingerParts[0] != null)
+                {
+                    Transform parentFolder = fingerParts[0].parent;
+                    Vector3 centerPos = (parentFolder != null) ? parentFolder.position : transform.position;
+
+                    Vector3 boxCenter = centerPos + wakeUpDownwardsOffset;
+                    boxCenter.y -= wakeUpDownwardsLength * 0.5f;
+                    Vector3 boxSize = new Vector3(wakeUpDownwardsWidth * 2f, wakeUpDownwardsLength, wakeUpDownwardsWidth * 2f);
+
+                    // 枠線
+                    Gizmos.color = Color.yellow;
+                    Gizmos.DrawWireCube(boxCenter, boxSize);
+
+                    // 半透明の塗りつぶし（見やすさ向上）
+                    Gizmos.color = new Color(1f, 0.92f, 0.016f, 0.08f);
+                    Gizmos.DrawCube(boxCenter, boxSize);
+                }
+            }
+            else
+            {
+                // ゲーム実行中：ステート（動作中か否か）に応じて切り替え
+                bool isDescendingOrGrabbing = (_state == ArmState.OpeningClaw || 
+                                               _state == ArmState.Descending || 
+                                               _state == ArmState.PostCollisionDescending || 
+                                               _state == ArmState.Grabbing);
+                if (isDescendingOrGrabbing)
+                {
+                    // 降下中・掴み中は直下ボックスのみ
+                    if (fingerParts != null && fingerParts.Length > 0 && fingerParts[0] != null)
+                    {
+                        Transform parentFolder = fingerParts[0].parent;
+                        Vector3 centerPos = (parentFolder != null) ? parentFolder.position : transform.position;
+
+                        Vector3 boxCenter = centerPos + wakeUpDownwardsOffset;
+                        boxCenter.y -= wakeUpDownwardsLength * 0.5f;
+                        Vector3 boxSize = new Vector3(wakeUpDownwardsWidth * 2f, wakeUpDownwardsLength, wakeUpDownwardsWidth * 2f);
+
+                        // 枠線
+                        Gizmos.color = Color.yellow;
+                        Gizmos.DrawWireCube(boxCenter, boxSize);
+
+                        // 半透明の塗りつぶし（動作中は少し濃くして視認性を上げる）
+                        Gizmos.color = new Color(1f, 0.92f, 0.016f, 0.15f);
+                        Gizmos.DrawCube(boxCenter, boxSize);
+                    }
+                }
+                else
+                {
+                    // 待機/移動中は指先球体のみ
+                    if (fingerParts != null)
+                    {
+                        foreach (Transform finger in fingerParts)
+                        {
+                            if (finger != null)
+                            {
+                                Gizmos.DrawWireSphere(finger.TransformPoint(wakeUpOffset), wakeUpRadius);
+                            }
+                        }
+                    }
                 }
             }
         }

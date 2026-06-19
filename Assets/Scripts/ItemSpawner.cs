@@ -111,6 +111,11 @@ public class ItemSpawner : MonoBehaviour
 
     private IEnumerator SpawnRoutine()
     {
+        // 2000枚の時は15秒、0枚の時は0秒で一次関数的に時間を変更
+        totalItems = Mathf.Max(0, totalItems);
+        spawnDuration = (15f / 2000f) * totalItems;
+        Debug.Log($"[ItemSpawner] スポーン開始: totalItems={totalItems}, spawnDuration={spawnDuration:F2}秒");
+
         IsSpawning = true;
         int spawnedCount = 0;
         float startTime = Time.time;

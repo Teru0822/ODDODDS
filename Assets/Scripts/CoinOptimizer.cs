@@ -13,7 +13,7 @@ public class CoinOptimizer : MonoBehaviour
     private Rigidbody rb;
     private Collider _col;
     private float checkInterval = 0.5f; // 静止判定の間隔
-    private float sleepVelocity = 0.05f; // 静止とみなす速度しきい値
+    private float sleepVelocity = 0.005f; // 静止とみなす速度しきい値 (めり込み凍結を防ぐため小さく設定)
     private float coinThickness = 0.05f;
 
     /// <summary>
@@ -121,6 +121,10 @@ public class CoinOptimizer : MonoBehaviour
         if (rb != null && rb.isKinematic)
         {
             rb.isKinematic = false;
+            // 起動時の初期速度・角速度の微動をゼロクリア
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+
             StartCoroutine(CheckAndFreezeRoutine(1.0f));
 
             // 初回の呼び出し時のみ、周囲のコインも連鎖的に起こす（下のコインが抜けて上のコインが空中に浮いたままになるのを防ぐ）
