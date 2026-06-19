@@ -76,6 +76,8 @@ public class TitlePlayButton : MonoBehaviour
     public AudioSource slideAwayAudioSource;
     [Tooltip("鳴らすAudioClip")]
     public AudioClip slideAwaySound;
+    [Tooltip("SEを鳴らすまでの遅延時間（秒）。映像に対して音が早い場合はこの数値を大きくしてください")]
+    public float slideAwaySoundDelay = 0.5f;
 
     [Header("シーケンス (悪魔会話・遷移)")]
     [Tooltip("タイトル専用の悪魔会話マネージャー")]
@@ -136,11 +138,8 @@ public class TitlePlayButton : MonoBehaviour
 
         DisableMotionOverrides();
 
-        // SE再生
-        if (slideAwayAudioSource != null && slideAwaySound != null)
-        {
-            slideAwayAudioSource.PlayOneShot(slideAwaySound);
-        }
+        // SE再生 (タイミング調整のため遅延再生コルーチンを使用)
+        StartCoroutine(PlayDelayedSound(slideAwaySoundDelay));
 
         // Imp を pos1 に配置 + 歩行方向に向ける + walk アニメ開始
         if (imp != null && pos1 != null)
@@ -197,6 +196,19 @@ public class TitlePlayButton : MonoBehaviour
             // TransitionManager が無い場合のフォールバック（既存のロード）
             if (logEvents) Debug.LogWarning("[TitlePlayButton] SceneTransitionManager が設定されていません。通常の LoadScene を実行します。", this);
             StartCoroutine(LoadGameScene());
+        }
+    }
+
+    private IEnumerator PlayDelayedSound(float delay)
+    {
+        if (delay > 0f)
+        {
+            yield return new WaitForSeconds(delay);
+        }
+
+        if (slideAwayAudioSource != null && slideAwaySound != null)
+        {
+            slideAwayAudioSource.PlayOneShot(slideAwaySound);
         }
     }
 
