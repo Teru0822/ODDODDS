@@ -172,6 +172,7 @@ namespace MiniGames.Transitions
         private IEnumerator TransitionRoutine(string sceneName, Action onTransitionComplete)
         {
             _isTransitioning = true;
+            AudioListener.pause = true; // ロード中（裏）のBGM等が鳴らないように全体ミュート
 
             // --- 追加: 専用カメラをオンにする ---
             if (_loadingCamera != null) _loadingCamera.enabled = true;
@@ -318,6 +319,9 @@ namespace MiniGames.Transitions
             StopLoadingAnimation();
 
             // 5. フェードイン（モヤが晴れる）
+            // モヤが晴れ始めるタイミングでBGMの再生を解禁する
+            AudioListener.pause = false;
+
             if (_fadeCanvasGroup != null)
             {
                 yield return _fadeCanvasGroup.DOFade(0f, _fadeDuration).WaitForCompletion();
