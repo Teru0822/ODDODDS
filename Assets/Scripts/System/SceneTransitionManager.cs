@@ -70,18 +70,42 @@ namespace MiniGames.Transitions
         // 隔離した距離を覚えておく（-10000だと浮動小数点精度の低下で影がチラつくため、-500に変更）
         private Vector3 _hideOffset = new Vector3(0, -500f, 0);
 
+        private bool _isTransitioning = false;
+        private Vector3 _originalLogoScale = Vector3.one;
+
         private void Awake()
         {
             if (Instance == null)
             {
                 Instance = this;
                 DontDestroyOnLoad(gameObject);
+
+                if (_floatingLogoParent != null)
+                {
+                    _originalLogoScale = _floatingLogoParent.localScale;
+                }
+
                 InitializeUI();
             }
             else
             {
                 Destroy(gameObject);
             }
+        }
+
+        private void OnEnable()
+        {
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        private void OnDisable()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            // (LateUpdateで毎フレーム監視するため、ここは不要になりました)
         }
 
         private void InitializeUI()
@@ -100,6 +124,7 @@ namespace MiniGames.Transitions
 
             if (_floatingLogoParent != null)
             {
+                _floatingLogoParent.localScale = _originalLogoScale;
                 _floatingLogoParent.gameObject.SetActive(false);
             }
 
@@ -126,6 +151,16 @@ namespace MiniGames.Transitions
             }
         }
 
+        private void LateUpdate()
+        {
+            // トランジション中は、他スクリプトが生成したUI（RoundTextなど）が
+            // 画面に描画される直前（LateUpdate）で強制的に隠蔽し続ける
+            if (_isTransitioning)
+            {
+                HideOtherCanvases();
+            }
+        }
+
         /// <summary>
         /// 指定したシーンへモヤフェードと専用ロード画面を挟んで非同期遷移します。
         /// </summary>
@@ -136,6 +171,8 @@ namespace MiniGames.Transitions
 
         private IEnumerator TransitionRoutine(string sceneName, Action onTransitionComplete)
         {
+            _isTransitioning = true;
+
             // --- 追加: 専用カメラをオンにする ---
             if (_loadingCamera != null) _loadingCamera.enabled = true;
 
@@ -221,14 +258,10 @@ namespace MiniGames.Transitions
             // 新しいシーンでの開始処理を少し待つ（AwakeやStartが呼ばれる猶予）
             yield return new WaitForSeconds(0.5f);
 
-            // --- 追加: 待機中、他シーンのUI（キャンバス）が湧いてきたら一時的に非表示にする ---
-            HideOtherCanvases();
-
             // --- 待機処理の復活 ---
             // MultiSceneLoader がサブシーンを読み込んでいる場合は終わるまで待機
             while (MultiSceneLoader.IsLoadingSubScenes)
             {
-                HideOtherCanvases(); // ロード中に追加されたCanvasも継続して隠す
                 yield return null;
             }
 
@@ -236,7 +269,6 @@ namespace MiniGames.Transitions
 
             // サブシーンロード完了後、UFOキャッチャーの ItemSpawner 等が Start() を呼ぶための猶予
             yield return new WaitForSeconds(0.5f);
-            HideOtherCanvases();
 
             Debug.Log($"[SceneTransitionManager] ItemSpawner待機チェック。IsSpawning: {ItemSpawner.IsSpawning}");
 
@@ -264,14 +296,23 @@ namespace MiniGames.Transitions
 
             Debug.Log("[SceneTransitionManager] 全ての待機処理が完了。ロード画面を消去しフェードインを開始します。");
             // 4. ロード画面の非表示
+            if (_floatingLogoParent != null)
+            {
+                // ロゴをシュッと縮小させて消す（キャンバスのフェードアウトと並行して実行）
+                _floatingLogoParent.DOScale(Vector3.zero, 0.5f).SetEase(Ease.InBack).OnComplete(() => 
+                {
+                    _floatingLogoParent.gameObject.SetActive(false);
+                });
+            }
+
             if (_loadingScreenCanvasGroup != null)
             {
                 yield return _loadingScreenCanvasGroup.DOFade(0f, 0.5f).WaitForCompletion();
                 _loadingScreenCanvasGroup.gameObject.SetActive(false);
             }
-            if (_floatingLogoParent != null)
+            else
             {
-                _floatingLogoParent.gameObject.SetActive(false);
+                yield return new WaitForSeconds(0.5f);
             }
             
             StopLoadingAnimation();
@@ -296,6 +337,7 @@ namespace MiniGames.Transitions
             }
 
             RestoreOtherCanvases();
+            _isTransitioning = false;
 
             onTransitionComplete?.Invoke();
         }
