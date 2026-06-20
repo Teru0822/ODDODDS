@@ -346,7 +346,8 @@ public class UFOArmController : MonoBehaviour
 
     void Update()
     {
-        UpdateColliderStateForSpawning();
+        // コイン投入時にアームコライダーを動的に無効化する処理は、時間経過による引っかかり・逆揺れの原因となるため廃止します
+        // UpdateColliderStateForSpawning();
         UpdateFingersAndSway();
         UpdateStateMachine();
         WakeUpNearbyCoins();
@@ -602,8 +603,7 @@ public class UFOArmController : MonoBehaviour
             UpdateFingersKinematic();
         }
 
-        // 毎フレームのジョイント制限値の書き換えは、物理演算の累積誤差（経時ドリフトによる逆揺れ）の原因となるため廃止します
-        // UpdateSwayJointLimit();
+        UpdateSwayJointLimit();
     }
 
     private float _currentSwayLimit = 0f;
