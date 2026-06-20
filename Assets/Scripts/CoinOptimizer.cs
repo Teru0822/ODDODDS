@@ -34,6 +34,13 @@ public class CoinOptimizer : MonoBehaviour
         {
             ReplaceWithSphereCollider();
         }
+
+        // UFOArmControllerを探し、そのコライダーとの衝突を一時的に無視する
+        UFOArmController arm = FindFirstObjectByType<UFOArmController>();
+        if (arm != null)
+        {
+            arm.IgnoreCollisionWithCoin(_col);
+        }
         
         // 1万枚が同時に計算しないよう、最初の確認タイミングを0〜2秒の間でランダムにばらけさせる
         float randomStartDelay = Random.Range(0f, 2.0f);
