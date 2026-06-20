@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 679083649274451308}
   - component: {fileID: 3601176337990430220}
   - component: {fileID: 4774007295194906502}
+  - component: {fileID: -7494731376879772739}
   m_Layer: 0
   m_Name: newBall
   m_TagString: Ball
@@ -140,3 +141,54 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.010000001
   m_Center: {x: -0.000000003259629, y: 0.0000000032596295, z: 1.2143064e-17}
+--- !u!114 &-7494731376879772739
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8751650990556213166}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69a132aa3fec4c44cab2307c2e4a4956, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PinballBallController
+  mass: 0.5
+  bounciness: 0.3
+  friction: 0
+  frictionCombine: 3
+  splitTargetTag: Splitter
+  splitSpread: 0.1
+  splitCount: 2
+  splitScaleRatio: 0.9
+  spawnUpOffset: 0.05
+  spawnXOffset: 0.05
+  ignoreCollisionDuration: 0.4
+  initialDetectionRadius: 0.08
+  manualBoundsXMin: 0.81
+  manualBoundsXMax: 2.4257
+  manualBoundsZMax: 4.468
+  manualBoundsZMin: -2
+  enableBallBallCollision: 1
+  manualBounceFactor: 0.6
+  manualLifetime: 5
+  ballLayerName: Ball
+  particleGeneration: 4
+  splitParticlePrefab: {fileID: 0}
+  hideParticleXMax: 0.75
+  hideParticleZMin: 4.515
+  generation: 0
+  enforceColors:
+  - {r: 0, g: 0, b: 0, a: 1}
+  - {r: 0, g: 1, b: 0, a: 1}
+  - {r: 0, g: 0.5, b: 1, a: 1}
+  - {r: 0.7, g: 0, b: 1, a: 1}
+  - {r: 1, g: 0.84, b: 0, a: 1}
+  - {r: 1, g: 0, b: 0, a: 1}
+  ballEmissionIntensity: 2
+  ballRenderer: {fileID: 0}
+  enforceLevel: 0
+  currentValue: 0
+  enforceValueMultiplier: 2
+  gravity: {x: 0, y: 0, z: 0}
+  onConveyorCount: 0

@@ -6,11 +6,13 @@ using UnityEngine.InputSystem;
 /// ピンボール台への一連のインタラクションを管理する状態機械。
 ///
 ///   [Idle]    台に視点を向けると MouseHoverOutline が輪郭をハイライト。
-///             左クリック → カメラが P1CAM へ Slerp 移動・回転。
-///   [AtP1]    左クリック → カメラが P2CAM へ移動し、BallSpawner の位置に newBall を召喚（落下はまだ）。
-///   [AtP2]    左クリック → newBall の Rigidbody を起動して落下開始、カメラが P3CAM へ移動、
-///             同時にフリッパー操作（左右クリックで newpinball_rebar22/21）を有効化。
+///             左クリック → カメラが P1CAM へ Slerp 移動・回転（State==1 へ）。
+///   [AtP1]    ショップ/エイミング画面。左クリックでの自動遷移はしない（PinballShopView /
+///             PinballPlaybaseButton 等が State==1 を見て動く）。playbase2 ボタンが押されると
+///             LaunchBall() が呼ばれ、選択中のボールを召喚→落下開始→カメラ P3CAM、Playing へ。
 ///   [Playing] 以降クリックは PinballFlipperController（フリッパー）へ。状態遷移はしない。
+///
+/// どの非 Idle 状態でも Escape キーで ReturnToIdle()（カメラをプレイヤーに戻し、召喚ボールも破棄）。
 ///
 /// カメラは位置を補間 + 回転を Quaternion.Slerp で滑らかに移動する。
 /// アウトライン表示は既存の MouseHoverOutline を流用（台にアタッチして参照を割り当てる）。
@@ -47,12 +49,18 @@ public class PinballSessionController : MonoBehaviour
     [Tooltip("召喚する newBall の Prefab")]
     public GameObject newBallPrefab;
 
-    [Min(0f)]
-    [Tooltip("落下開始時に加えるランダムな力の大きさ（impulse）。0 なら自由落下のみ")]
-    public float releaseForce = 1.5f;
+    [Header("発射（playbase2 → 2秒後に newpinballvec のローカル -Y へ）")]
+    [Tooltip("発射方向の基準となる newpinballvec の Transform。playbase2 押下時の『ローカル -Y 方向』を" +
+             "記録して発射に使う。必ず割り当てること（未割り当てだと方向が定まらず自由落下になる）")]
+    public Transform newpinballvec;
 
-    [Tooltip("ランダム力を水平方向(XZ)のみにする。オフなら上下も含む全方向ランダム")]
-    public bool releaseForceHorizontalOnly = true;
+    [Min(0f)]
+    [Tooltip("発射の impulse 強さ。0 なら自由落下のみ（向きの力なし）")]
+    public float launchForce = 3f;
+
+    [Min(0f)]
+    [Tooltip("playbase2 でスポーン（State2）してから実際に発射（State3）するまでの待機秒数")]
+    public float launchDelay = 2f;
 
     [Header("ボールへの追加力（台ローカル -Y）")]
     [Tooltip("追加力の向きの基準となるピンボール台の Transform。この台のローカル -Y 方向へ力を加える")]
@@ -92,6 +100,18 @@ public class PinballSessionController : MonoBehaviour
     private GameObject _ball;
     private Rigidbody _ballRb;
     private App.Player.FirstPersonController _playerController;
+
+    /// <summary>
+    /// playbase2 ボタン押下時に発射するボール prefab。PinballShopView が選択中ショップボールを
+    /// セットする。null の間は newBallPrefab にフォールバックする。
+    /// </summary>
+    private GameObject _selectedBallPrefab;
+
+    /// <summary>
+    /// 発射に使うボール prefab を外部（PinballShopView の選択）から指定する。
+    /// null を渡すと newBallPrefab にフォールバックする。
+    /// </summary>
+    public void SetSelectedBallPrefab(GameObject prefab) => _selectedBallPrefab = prefab;
 
     private void Awake()
     {
@@ -135,35 +155,105 @@ public class PinballSessionController : MonoBehaviour
             _pendingEnableFlippers = false;
         }
 
+        // どの非 Idle 状態でも Escape でプレイヤー視点へ戻す（移動アニメ中も受け付ける）
+        var keyboard = Keyboard.current;
+        if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame && _state != State.Idle)
+        {
+            ReturnToIdle();
+            return;
+        }
+
         if (_moving) return;
-        if (_state == State.Playing) return; // 以降のクリックはフリッパーへ
+        if (_state != State.Idle) return; // AtP1 以降のクリックは新コンポーネント（ショップ/ボタン）が処理する
 
         var mouse = Mouse.current;
         if (mouse == null) return;
         if (!mouse.leftButton.wasPressedThisFrame) return;
 
-        switch (_state)
+        // Idle: 台を見ている（ホバー）ときだけ開始 → カメラ P1（State==1）へ
+        if (machineHover != null && !machineHover.IsHovered) return;
+        if (machineHover != null) machineHover.enabled = false; // ハイライト終了
+        SetPlayerControl(false); // プレイヤーの視点操作を止める（カメラ Slerp が上書きで戻らないように）
+        StartCoroutine(MoveCamera(p1Cam, () => _state = State.AtP1));
+    }
+
+    private Vector3 _launchDir;
+
+    /// <summary>
+    /// playbase2 ボタンから呼ばれる「発射開始」。State==1（AtP1）のときのみ作動。
+    ///   1) 選択中（または既定）のボールを召喚（まだ落下させない）。
+    ///   2) このときの newpinballvec の「ローカル -Y」方向を発射方向として記録。
+    ///   3) State を 2（AtP2）にし、カメラを P2CAM へ。
+    ///   4) launchDelay 秒後に記録した向きへボールを発射し、State を 3（Playing）へ、カメラ P3CAM。
+    /// 移動アニメ中・AtP1 以外では無視する。
+    /// </summary>
+    public void LaunchBall()
+    {
+        if (_state != State.AtP1) return;
+
+        SpawnBall();
+
+        // playbase2 を押した瞬間の newpinballvec の「ローカル -Y」方向を発射方向として確定。
+        // newpinballvec はローカル Z 軸まわりに回転するので、-Y は回転角に応じて向きが変わる。
+        if (newpinballvec != null)
         {
-            case State.Idle:
-                // 台を見ている（ホバー）ときだけ開始
-                if (machineHover != null && !machineHover.IsHovered) return;
-                if (machineHover != null) machineHover.enabled = false; // ハイライト終了
-                SetPlayerControl(false); // プレイヤーの視点操作を止める（カメラ Slerp が上書きで戻らないように）
-                StartCoroutine(MoveCamera(p1Cam, () => _state = State.AtP1));
-                break;
+            // 角度が 0° ちょうどだと真下に落ちてスタックするため、±1° にランダムへ振る
+            var rotator = newpinballvec.GetComponent<PinballVecRotator>();
+            if (rotator != null && Mathf.Abs(rotator.CurrentAngle) < 0.01f)
+            {
+                rotator.SetAngle(Random.value < 0.5f ? 1f : -1f);
+            }
 
-            case State.AtP1:
-                SpawnBall();
-                StartCoroutine(MoveCamera(p2Cam, () => _state = State.AtP2));
-                break;
-
-            case State.AtP2:
-                ReleaseBall();
-                _state = State.Playing;            // 即 Playing（以降クリックはフリッパーへ）
-                _pendingEnableFlippers = true;     // 次フレームでフリッパー有効化
-                StartCoroutine(MoveCamera(p3Cam, null));
-                break;
+            _launchDir = (-newpinballvec.up).normalized; // -up = ローカル -Y のワールド方向
         }
+        else
+        {
+            _launchDir = Vector3.zero;
+            Debug.LogWarning("[PinballSessionController] newpinballvec が未割り当てのため発射方向が定まりません（自由落下）。Inspector で newpinballvec を割り当ててください。");
+        }
+
+        _state = State.AtP2;
+        StartCoroutine(MoveCamera(p2Cam, null));
+        StartCoroutine(LaunchAfterDelay());
+    }
+
+    /// <summary>launchDelay 秒待ってから、記録済みの向きへボールを発射し Playing へ。</summary>
+    private IEnumerator LaunchAfterDelay()
+    {
+        yield return new WaitForSeconds(launchDelay);
+
+        ReleaseBall(_launchDir);
+        _state = State.Playing;            // 以降クリックはフリッパーへ
+        _pendingEnableFlippers = true;     // 次フレームでフリッパー有効化
+        StartCoroutine(MoveCamera(p3Cam, null));
+    }
+
+    /// <summary>
+    /// 非 Idle 状態から最初の Idle 状態へ完全に戻す（Escape）。
+    /// カメラはプレイヤー操作の再有効化で自動的にプレイヤー視点へ復帰する。
+    /// 召喚済みボールは破棄し、フリッパーとハイライトを初期状態に戻す。
+    /// </summary>
+    public void ReturnToIdle()
+    {
+        StopAllCoroutines();
+        _moving = false;
+        _pendingEnableFlippers = false;
+
+        // 召喚済みボールを破棄
+        if (_ball != null) Destroy(_ball);
+        _ball = null;
+        _ballRb = null;
+
+        // フリッパーを無効化
+        if (flipperController != null) flipperController.enabled = false;
+
+        // ハイライト（台ホバー）を再有効化
+        if (machineHover != null) machineHover.enabled = true;
+
+        _state = State.Idle;
+
+        // プレイヤーの視点・移動操作を戻す（カメラはこれで自動的にプレイヤーへ復帰）
+        SetPlayerControl(true);
     }
 
     /// <summary>カメラを target の位置・回転へ補間移動（回転は Slerp）。</summary>
@@ -199,14 +289,16 @@ public class PinballSessionController : MonoBehaviour
 
     private void SpawnBall()
     {
-        if (newBallPrefab == null || ballSpawner == null)
+        // 選択中ボールがあればそれを、無ければ既定の newBallPrefab を使う
+        GameObject prefab = _selectedBallPrefab != null ? _selectedBallPrefab : newBallPrefab;
+        if (prefab == null || ballSpawner == null)
         {
-            Debug.LogWarning("[PinballSessionController] newBallPrefab または ballSpawner が未設定です。");
+            Debug.LogWarning("[PinballSessionController] 発射するボール prefab（選択 or newBallPrefab）または ballSpawner が未設定です。");
             return;
         }
         if (_ball != null) Destroy(_ball); // 念のため前のボールを除去
 
-        _ball = Instantiate(newBallPrefab, ballSpawner.position, ballSpawner.rotation);
+        _ball = Instantiate(prefab, ballSpawner.position, ballSpawner.rotation);
         _ballRb = _ball.GetComponent<Rigidbody>();
         if (_ballRb != null)
         {
@@ -221,21 +313,18 @@ public class PinballSessionController : MonoBehaviour
         localGravity.extraForce = ballExtraForce;
     }
 
-    private void ReleaseBall()
+    /// <summary>ボールの物理を起動し、worldDir 方向へ launchForce の impulse で発射する。</summary>
+    private void ReleaseBall(Vector3 worldDir)
     {
         if (_ballRb == null) return;
         // Rigidbody を起動して落下開始（重力は LocalGravityBody が台ローカル -Y 方向にかけるので useGravity は OFF のまま）
         _ballRb.isKinematic = false;
         _ballRb.WakeUp();
 
-        // 自由落下ではなく、ランダムな向きに少しだけ弾く（毎回違う落ち方になる）
-        if (releaseForce > 0f)
+        // playbase2 押下時の newpinballvec の向きへ発射（向き未設定なら自由落下）
+        if (launchForce > 0f && worldDir.sqrMagnitude > 1e-6f)
         {
-            Vector3 dir = releaseForceHorizontalOnly
-                ? new Vector3(Random.Range(-1f, 1f), 0f, Random.Range(-1f, 1f)).normalized
-                : Random.onUnitSphere;
-            if (dir.sqrMagnitude < 1e-6f) dir = Vector3.forward; // 念のためゼロ回避
-            _ballRb.AddForce(dir * releaseForce, ForceMode.Impulse);
+            _ballRb.AddForce(worldDir.normalized * launchForce, ForceMode.Impulse);
         }
     }
 }
