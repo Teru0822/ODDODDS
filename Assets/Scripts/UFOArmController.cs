@@ -99,6 +99,20 @@ public class UFOArmController : MonoBehaviour
     [Tooltip("ステージ側の判定コライダー（Claw_RiseCollider等）")]
     public Collider clawRiseCollider;
 
+    [Header("【新規】物理ジョイント揺れ（Sway）設定")]
+    [Tooltip("アームを吊り下げている Configurable Joint")]
+    public ConfigurableJoint swayJoint;
+    [Tooltip("移動時の最大揺れ角度")]
+    public float swayRangeAngle = 25f;
+    [Tooltip("非移動時にジョイントを締めてまっすぐに戻す速さ")]
+    public float jointStabilizeSpeed = 10f;
+    [Tooltip("下降時にジョイントの揺れを抑えて垂直に安定化させるか（オフの場合、下降中も揺れます）")]
+    public bool stabilizeOnDescent = false;
+    [Tooltip("揺れを垂直（中心）に引き戻すバネの強さ（値が小さいほど大きく揺れ、大きいほど引き戻しが強くなります）")]
+    public float jointSpringForce = 2f;
+    [Tooltip("揺れのバネのダンパー（揺れの収束のしやすさ）")]
+    public float jointSpringDamper = 1f;
+
     [Header("コイン最適化解除（WakeUp）設定")]
     [Tooltip("アームが下降する際、どれくらいの範囲のコインを叩き起こすか")]
     public float wakeUpRadius = 1.0f;
@@ -243,6 +257,63 @@ public class UFOArmController : MonoBehaviour
         {
             Debug.LogError("[UFOArmController] stretchRope reference is NULL!");
         }
+
+        // 物理ジョイント（SwayJoint）の初期化
+        if (swayJoint != null)
+        {
+            // Transformの親子関係による物理挙動の競合（揺れが逆になる現象）を防ぐため、
+            // 実行時に親オブジェクトから切り離し、静的な親（あるいはルート）に配置します。
+            if (swayJoint.transform.parent != null)
+            {
+                swayJoint.transform.SetParent(armRoot != null ? armRoot.parent : null, true);
+                Debug.Log($"[UFOArmController] Auto-unparented {swayJoint.name} to prevent double-transform physics conflicts.");
+            }
+
+            Rigidbody swayRb = swayJoint.GetComponent<Rigidbody>();
+            if (swayRb != null)
+            {
+                if (swayRb.isKinematic)
+                {
+                    swayRb.isKinematic = false;
+                    Debug.Log($"[UFOArmController] Auto-set {swayRb.name}'s Rigidbody to dynamic (isKinematic = false) for physical sway.");
+                }
+            }
+            else
+            {
+                Debug.LogError($"[UFOArmController] The swayJoint object ({swayJoint.name}) does not have a Rigidbody component! Physics sway will not work.");
+            }
+
+            if (swayJoint.connectedBody == null)
+            {
+                Debug.LogWarning($"[UFOArmController] swayJoint.connectedBody is null. Please make sure to add a Rigidbody (isKinematic=true) to your pole tip (e.g., poll3) and assign it to the Connected Body of the Configurable Joint.");
+            }
+
+            if (swayJoint.angularXMotion == ConfigurableJointMotion.Locked)
+                swayJoint.angularXMotion = ConfigurableJointMotion.Limited;
+            if (swayJoint.angularYMotion == ConfigurableJointMotion.Locked)
+                swayJoint.angularYMotion = ConfigurableJointMotion.Limited;
+            if (swayJoint.angularZMotion == ConfigurableJointMotion.Locked)
+                swayJoint.angularZMotion = ConfigurableJointMotion.Limited;
+
+            // バネドライブ（自動復元力）の設定
+            swayJoint.rotationDriveMode = RotationDriveMode.XYAndZ;
+
+            JointDrive xDrive = swayJoint.angularXDrive;
+            xDrive.positionSpring = jointSpringForce;
+            xDrive.positionDamper = jointSpringDamper;
+            xDrive.maximumForce = 10000f;
+            swayJoint.angularXDrive = xDrive;
+
+            JointDrive yzDrive = swayJoint.angularYZDrive;
+            yzDrive.positionSpring = jointSpringForce;
+            yzDrive.positionDamper = jointSpringDamper;
+            yzDrive.maximumForce = 10000f;
+            swayJoint.angularYZDrive = yzDrive;
+
+            _currentSwayLimit = swayRangeAngle;
+            SetJointLimits(_currentSwayLimit);
+            Debug.Log($"[UFOArmController] Initialized swayJoint: {swayJoint.name} with angular range limit: {swayRangeAngle} degrees and auto-centering spring: {jointSpringForce}.");
+        }
     }
 
     // ─────────────────────────────────────
@@ -275,7 +346,8 @@ public class UFOArmController : MonoBehaviour
 
     void Update()
     {
-        UpdateColliderStateForSpawning();
+        // コイン投入時にアームコライダーを動的に無効化する処理は、時間経過による引っかかり・逆揺れの原因となるため廃止します
+        // UpdateColliderStateForSpawning();
         UpdateFingersAndSway();
         UpdateStateMachine();
         WakeUpNearbyCoins();
@@ -284,7 +356,16 @@ public class UFOArmController : MonoBehaviour
 
     void UpdateColliderStateForSpawning()
     {
-        if (armRoot == null) return;
+        // armRoot と swayJoint（実行時に親子関係が切り離されるため）の両方からコライダーを集める
+        var colliders = new System.Collections.Generic.List<Collider>();
+        if (armRoot != null)
+        {
+            colliders.AddRange(armRoot.GetComponentsInChildren<Collider>(true));
+        }
+        if (swayJoint != null)
+        {
+            colliders.AddRange(swayJoint.GetComponentsInChildren<Collider>(true));
+        }
 
         // コインが降っている最中、および落下中の時間帯を判定する
         bool shouldDisable = ItemSpawner.IsSpawning || (Time.time < CoinOptimizer.freezeStartTime);
@@ -292,9 +373,9 @@ public class UFOArmController : MonoBehaviour
         if (shouldDisable != _collidersDisabledForSpawn)
         {
             _collidersDisabledForSpawn = shouldDisable;
-            Collider[] colliders = armRoot.GetComponentsInChildren<Collider>();
             foreach (var col in colliders)
             {
+                if (col == null) continue;
                 // トリガー（UFOClawCarrierなど運搬用の領域判定コライダー）は動作を維持するため除外し、
                 // 物理衝突判定用のコライダーのみ無効化する
                 if (col.isTrigger) continue;
@@ -521,6 +602,66 @@ public class UFOArmController : MonoBehaviour
         {
             UpdateFingersKinematic();
         }
+
+        UpdateSwayJointLimit();
+    }
+
+    private float _currentSwayLimit = 0f;
+
+    private void UpdateSwayJointLimit()
+    {
+        if (swayJoint == null) return;
+
+        // プレイ中や静止中は swayRangeAngle まで揺れることを許可
+        // stabilizeOnDescent が true でかつ自動昇降動作中 (IsBusy) の場合のみ 0 に締める
+        float targetAngle = swayRangeAngle;
+        if (stabilizeOnDescent && IsBusy)
+        {
+            targetAngle = 0f;
+        }
+
+        _currentSwayLimit = Mathf.Lerp(_currentSwayLimit, targetAngle, Time.deltaTime * jointStabilizeSpeed);
+        if (Mathf.Abs(_currentSwayLimit - targetAngle) < 0.05f)
+        {
+            _currentSwayLimit = targetAngle;
+        }
+
+        SetJointLimits(_currentSwayLimit);
+
+        // 垂直に固定する際、残った物理的な速度を減衰（ダンピング）させて揺れを速やかに抑える
+        if (targetAngle == 0f)
+        {
+            Rigidbody rb = swayJoint.GetComponent<Rigidbody>();
+            if (rb != null && !rb.isKinematic)
+            {
+                rb.angularVelocity = Vector3.Lerp(rb.angularVelocity, Vector3.zero, Time.deltaTime * jointStabilizeSpeed);
+                rb.linearVelocity = Vector3.Lerp(rb.linearVelocity, Vector3.zero, Time.deltaTime * jointStabilizeSpeed);
+            }
+        }
+    }
+
+    private void SetJointLimits(float angle)
+    {
+        if (swayJoint == null) return;
+
+        // X軸の回転制限を設定
+        SoftJointLimit xHigh = swayJoint.highAngularXLimit;
+        xHigh.limit = angle;
+        swayJoint.highAngularXLimit = xHigh;
+
+        SoftJointLimit xLow = swayJoint.lowAngularXLimit;
+        xLow.limit = -angle;
+        swayJoint.lowAngularXLimit = xLow;
+
+        // Y軸の回転制限を設定（主にねじれ防止）
+        SoftJointLimit yLimit = swayJoint.angularYLimit;
+        yLimit.limit = angle;
+        swayJoint.angularYLimit = yLimit;
+
+        // Z軸の回転制限を設定
+        SoftJointLimit zLimit = swayJoint.angularZLimit;
+        zLimit.limit = angle;
+        swayJoint.angularZLimit = zLimit;
     }
 
     private void UpdateFingersKinematic()
@@ -644,6 +785,16 @@ public class UFOArmController : MonoBehaviour
         {
             _armRigidbody.linearVelocity = Vector3.zero;
             _armRigidbody.angularVelocity = Vector3.zero;
+        }
+
+        if (swayJoint != null)
+        {
+            Rigidbody swayRb = swayJoint.GetComponent<Rigidbody>();
+            if (swayRb != null)
+            {
+                swayRb.linearVelocity = Vector3.zero;
+                swayRb.angularVelocity = Vector3.zero;
+            }
         }
 
         if (fingerParts != null)
