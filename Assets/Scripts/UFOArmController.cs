@@ -263,11 +263,12 @@ public class UFOArmController : MonoBehaviour
         {
             // Transformの親子関係による物理挙動の競合（揺れが逆になる現象）を防ぐため、
             // 実行時に親オブジェクトから切り離し、静的な親（あるいはルート）に配置します。
-            if (swayJoint.transform.parent != null)
-            {
-                swayJoint.transform.SetParent(armRoot != null ? armRoot.parent : null, true);
-                Debug.Log($"[UFOArmController] Auto-unparented {swayJoint.name} to prevent double-transform physics conflicts.");
-            }
+            // ※ 時間経過によるジョイント累積誤差やねじれを防ぐため、現在は切り離し処理を無効化しています。
+            // if (swayJoint.transform.parent != null)
+            // {
+            //     swayJoint.transform.SetParent(armRoot != null ? armRoot.parent : null, true);
+            //     Debug.Log($"[UFOArmController] Auto-unparented {swayJoint.name} to prevent double-transform physics conflicts.");
+            // }
 
             Rigidbody swayRb = swayJoint.GetComponent<Rigidbody>();
             if (swayRb != null)
