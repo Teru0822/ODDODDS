@@ -277,6 +277,7 @@ public class UFOArmController : MonoBehaviour
                     swayRb.isKinematic = false;
                     Debug.Log($"[UFOArmController] Auto-set {swayRb.name}'s Rigidbody to dynamic (isKinematic = false) for physical sway.");
                 }
+                swayRb.sleepThreshold = 0f;
             }
             else
             {
@@ -638,6 +639,19 @@ public class UFOArmController : MonoBehaviour
                 rb.linearVelocity = Vector3.Lerp(rb.linearVelocity, Vector3.zero, Time.deltaTime * jointStabilizeSpeed);
             }
         }
+        else
+        {
+            // プレイ中や静止中（揺れを許容する状態）は物理演算の休止（Sleep）を防止し、微弱な揺れを維持し続ける
+            Rigidbody rb = swayJoint.GetComponent<Rigidbody>();
+            if (rb != null && !rb.isKinematic)
+            {
+                rb.sleepThreshold = 0f;
+                if (rb.IsSleeping())
+                {
+                    rb.WakeUp();
+                }
+            }
+        }
     }
 
     private void SetJointLimits(float angle)
@@ -781,7 +795,7 @@ public class UFOArmController : MonoBehaviour
 
     private void ResetArmAndClawPhysicsVelocity()
     {
-        if (_armRigidbody != null)
+        if (_armRigidbody != null && !_armRigidbody.isKinematic)
         {
             _armRigidbody.linearVelocity = Vector3.zero;
             _armRigidbody.angularVelocity = Vector3.zero;
@@ -790,7 +804,7 @@ public class UFOArmController : MonoBehaviour
         if (swayJoint != null)
         {
             Rigidbody swayRb = swayJoint.GetComponent<Rigidbody>();
-            if (swayRb != null)
+            if (swayRb != null && !swayRb.isKinematic)
             {
                 swayRb.linearVelocity = Vector3.zero;
                 swayRb.angularVelocity = Vector3.zero;
@@ -804,7 +818,7 @@ public class UFOArmController : MonoBehaviour
                 if (finger != null)
                 {
                     Rigidbody rb = finger.GetComponent<Rigidbody>();
-                    if (rb != null)
+                    if (rb != null && !rb.isKinematic)
                     {
                         rb.linearVelocity = Vector3.zero;
                         rb.angularVelocity = Vector3.zero;
