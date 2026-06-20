@@ -108,6 +108,10 @@ public class UFOArmController : MonoBehaviour
     public float jointStabilizeSpeed = 10f;
     [Tooltip("下降時にジョイントの揺れを抑えて垂直に安定化させるか（オフの場合、下降中も揺れます）")]
     public bool stabilizeOnDescent = false;
+    [Tooltip("揺れを垂直（中心）に引き戻すバネの強さ（値が小さいほど大きく揺れ、大きいほど引き戻しが強くなります）")]
+    public float jointSpringForce = 5f;
+    [Tooltip("揺れのバネのダンパー（揺れの収束のしやすさ）")]
+    public float jointSpringDamper = 1f;
 
     [Header("コイン最適化解除（WakeUp）設定")]
     [Tooltip("アームが下降する際、どれくらいの範囲のコインを叩き起こすか")]
@@ -283,9 +287,24 @@ public class UFOArmController : MonoBehaviour
             if (swayJoint.angularZMotion == ConfigurableJointMotion.Locked)
                 swayJoint.angularZMotion = ConfigurableJointMotion.Limited;
 
+            // バネドライブ（自動復元力）の設定
+            swayJoint.rotationDriveMode = RotationDriveMode.XYAndZ;
+
+            JointDrive xDrive = swayJoint.angularXDrive;
+            xDrive.positionSpring = jointSpringForce;
+            xDrive.positionDamper = jointSpringDamper;
+            xDrive.maximumForce = 10000f;
+            swayJoint.angularXDrive = xDrive;
+
+            JointDrive yzDrive = swayJoint.angularYZDrive;
+            yzDrive.positionSpring = jointSpringForce;
+            yzDrive.positionDamper = jointSpringDamper;
+            yzDrive.maximumForce = 10000f;
+            swayJoint.angularYZDrive = yzDrive;
+
             _currentSwayLimit = swayRangeAngle;
             SetJointLimits(_currentSwayLimit);
-            Debug.Log($"[UFOArmController] Initialized swayJoint: {swayJoint.name} with angular range limit: {swayRangeAngle} degrees.");
+            Debug.Log($"[UFOArmController] Initialized swayJoint: {swayJoint.name} with angular range limit: {swayRangeAngle} degrees and auto-centering spring: {jointSpringForce}.");
         }
     }
 
