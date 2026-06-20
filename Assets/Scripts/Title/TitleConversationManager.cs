@@ -7,13 +7,18 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using DG.Tweening;
+using UnityEngine.Serialization;
 
 namespace MiniGames.Title
 {
     public class TitleConversationManager : MonoBehaviour
     {
+        public enum Language { JP, EN }
+
         [Header("会話用データパス")]
-        [SerializeField] private string _jsonFilePath = "Assets/Resources/Conversations/DevilConversations_JP.json";
+        [SerializeField] private Language _language = Language.JP;
+        [SerializeField, FormerlySerializedAs("_jsonFilePath")] private string _jsonFilePathJP = "Assets/Resources/Conversations/DevilConversations_JP.json";
+        [SerializeField] private string _jsonFilePathEN = "Assets/Resources/Conversations/DevilConversations_EN.json";
         [Tooltip("タイトルで再生する会話のキー（テスト用など）")]
         [SerializeField] private string _targetConversationKey = "TitleTest";
 
@@ -31,7 +36,10 @@ namespace MiniGames.Title
         private Dictionary<string, AudioClip> _clipDictionary = new Dictionary<string, AudioClip>();
 
         [Header("設定")]
-        [SerializeField] private TMP_FontAsset _fontAsset;
+        [SerializeField, FormerlySerializedAs("_fontAsset")] private TMP_FontAsset _japaneseFontAsset;
+        [SerializeField] private TMP_FontAsset _englishFontAsset;
+        private TMP_FontAsset _currentFontAsset;
+        private string _devilName = "悪魔";
         private float _characterSpeed = 0.1f;
 
         [Header("文字送り音（タイピングSE）")]
@@ -67,23 +75,42 @@ namespace MiniGames.Title
                 _clipDictionary = _clipSerializeDictionary.GetDictionary;
             }
 
-            if (_fontAsset != null && _nameText != null && _mainSentenceText != null)
+            AdjustLanguageSetting();
+            
+            if (_currentFontAsset != null && _nameText != null && _mainSentenceText != null)
             {
-                _nameText.font = _fontAsset;
-                _mainSentenceText.font = _fontAsset;
+                _nameText.font = _currentFontAsset;
+                _mainSentenceText.font = _currentFontAsset;
             }
             
             LoadConversationData();
         }
 
+        private void AdjustLanguageSetting()
+        {
+            if (_language == Language.JP)
+            {
+                _currentFontAsset = _japaneseFontAsset;
+                _devilName = "悪魔";
+                _characterSpeed = 0.1f;
+            }
+            else
+            {
+                _currentFontAsset = _englishFontAsset;
+                _devilName = "Demon";
+                _characterSpeed = 0.05f;
+            }
+        }
+
         private void LoadConversationData()
         {
-            if (string.IsNullOrEmpty(_jsonFilePath)) return;
+            string jsonFilePath = _language == Language.JP ? _jsonFilePathJP : _jsonFilePathEN;
+            if (string.IsNullOrEmpty(jsonFilePath)) return;
 
-            string fullPath = _jsonFilePath;
+            string fullPath = jsonFilePath;
             if (!Path.IsPathRooted(fullPath))
             {
-                fullPath = Path.Combine(Application.dataPath, "..", _jsonFilePath);
+                fullPath = Path.Combine(Application.dataPath, "..", jsonFilePath);
             }
 
             if (File.Exists(fullPath))
@@ -168,7 +195,7 @@ namespace MiniGames.Title
                 _audioSource.Play();
             }
 
-            if (_nameText != null) _nameText.text = "悪魔";
+            if (_nameText != null) _nameText.text = _devilName;
 
             // テキストの1文字ずつの表示
             float lastTypingTime = 0f;
