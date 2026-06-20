@@ -70,6 +70,18 @@ public class UFOArmController : MonoBehaviour
         new Vector3(-56.53f, 90f, 0f)
     };
 
+    [Header("【新規】爪の Hinge Joint 物理開閉設定")]
+    [Tooltip("オンにすると、Transform直接書き換えではなく、HingeJointのMotorを使って物理的に開閉します（爪にHingeJointとRigidbodyが必要です）")]
+    public bool useHingeJointPhysics = false;
+
+    [Tooltip("開閉時のモーターの目標回転速度（度/秒）")]
+    public float jointMotorSpeed = 150f;
+
+    [Tooltip("開閉時のモーターの最大出力トルク")]
+    public float jointMotorForce = 50f;
+
+    private HingeJoint[] _fingerJoints;
+
     // ─────────────────────────────────────
     [Header("昇降設定")]
     [Tooltip("自動下降時の StretchRope の速度倍率")]
@@ -80,6 +92,12 @@ public class UFOArmController : MonoBehaviour
     public float postCollisionDescentSeconds = 0.15f;
     [Tooltip("指定されたコライダーに入った場合、追加下降をスキップして即座に爪を閉じて上昇します")]
     public Collider immediateGrabArea;
+
+    [Header("【新規】ClawCarrieZone / Claw_RiseCollider 接触設定")]
+    [Tooltip("アーム側の当たり判定ゾーン（ClawCarrieZone等）")]
+    public Collider clawCarrieZone;
+    [Tooltip("ステージ側の判定コライダー（Claw_RiseCollider等）")]
+    public Collider clawRiseCollider;
 
     [Header("コイン最適化解除（WakeUp）設定")]
     [Tooltip("アームが下降する際、どれくらいの範囲のコインを叩き起こすか")]
@@ -114,25 +132,11 @@ public class UFOArmController : MonoBehaviour
     [Tooltip("がさがさ音用のコイン検知半径")]
     [SerializeField] private float rustleDetectRadius = 1.5f;
 
-    [Header("【新規】つかみ中のじゃらじゃら効果音")]
-    [Tooltip("つかみ中（揺れ時）のじゃらじゃら効果音")]
-    [SerializeField] private AudioClip grabJingleSound;
-    [Tooltip("効果音の音量調整 (1.0より大きい値で音量増幅可能)")]
-    [Range(0f, 10f)]
-    [SerializeField] private float jingleVolume = 0.8f;
-    [Tooltip("コインを検知する爪の中心からの半径")]
-    [SerializeField] private float grabDetectRadius = 1.2f;
-    [Tooltip("音が鳴る揺れの速度しきい値")]
-    [SerializeField] private float swayThreshold = 0.5f;
-    [Tooltip("効果音の連続再生を防ぐインターバル（秒）")]
-    [SerializeField] private float jingleInterval = 0.15f;
-
     [Header("【新規】音量増幅設定（音が小さい場合）")]
     [Tooltip("音源を重ねて再生して音量を限界突破させます（1で通常、2で2倍、3で3倍）")]
     [Range(1, 4)]
     [SerializeField] private int volumeBoost = 1;
 
-    private float _jingleTimer = 0f;
     private AudioSource _audioSourceForJingle;
 
     // ─────────────────────────────────────
@@ -166,32 +170,7 @@ public class UFOArmController : MonoBehaviour
     public bool IsBusy => _state != ArmState.Idle && _state != ArmState.Moving;
 
     // ─────────────────────────────────────
-    [Header("揺れ（Sway）設定")]
-    [Tooltip("揺れ（慣性・振り子挙動）を有効にするか")]
-    public bool enableSway = true;
 
-
-
-    [Header("爪の揺れ設定（Finger Parts用）")]
-    [Tooltip("爪の土台（finger）など、開閉アニメはないが爪と同じ強さで揺れてほしいパーツ")]
-    public Transform[] clawBaseParts;
-    private Quaternion[] _clawBaseDefaultRot;
-
-    [UnityEngine.Serialization.FormerlySerializedAs("swaySensitivity")]
-    public float clawSwaySensitivity = 2f;
-    [UnityEngine.Serialization.FormerlySerializedAs("swayDamping")]
-    public float clawSwayDamping = 3f;
-    [UnityEngine.Serialization.FormerlySerializedAs("swaySpringForce")]
-    public float clawSwaySpringForce = 15f;
-
-    private Vector3 _lastWorldPos;
-    
-    public Quaternion ropeSwayRot { get; private set; } = Quaternion.identity;
-
-    // Claw Sway State
-    private Vector3 _clawSwayAngle;
-    private Vector3 _clawSwayVelocity;
-    public Quaternion clawSwayRot { get; private set; } = Quaternion.identity;
 
     // ─────────────────────────────────────
     void Start()
@@ -226,21 +205,33 @@ public class UFOArmController : MonoBehaviour
 
         // 爪の初期/開いた回転と座標を記録
         InitializeFingers();
+        InitializeFingerJoints();
 
-
-
-        // 爪土台の初期回転を記録
-        if (clawBaseParts != null && clawBaseParts.Length > 0)
+        // 【新規】ClawCarrieZone と Claw_RiseCollider に自動的に検知スクリプトをアタッチする
+        if (clawCarrieZone != null)
         {
-            _clawBaseDefaultRot = new Quaternion[clawBaseParts.Length];
-            for (int i = 0; i < clawBaseParts.Length; i++)
+            UFOClawCollisionDetector detector = clawCarrieZone.GetComponent<UFOClawCollisionDetector>();
+            if (detector == null)
             {
-                if (clawBaseParts[i] != null)
-                    _clawBaseDefaultRot[i] = clawBaseParts[i].localRotation;
+                detector = clawCarrieZone.gameObject.AddComponent<UFOClawCollisionDetector>();
             }
+            detector.armController = this;
+            Debug.Log($"[UFOArmController] Auto-attached UFOClawCollisionDetector to clawCarrieZone ({clawCarrieZone.name})");
         }
 
-        if (armRoot != null) _lastWorldPos = armRoot.position;
+        if (clawRiseCollider != null)
+        {
+            UFOClawCollisionDetector detector = clawRiseCollider.GetComponent<UFOClawCollisionDetector>();
+            if (detector == null)
+            {
+                detector = clawRiseCollider.gameObject.AddComponent<UFOClawCollisionDetector>();
+            }
+            detector.armController = this;
+            Debug.Log($"[UFOArmController] Auto-attached UFOClawCollisionDetector to clawRiseCollider ({clawRiseCollider.name})");
+        }
+
+
+
         if (rail1 != null) _rail1InitialPos = rail1.position;
         if (rail2 != null) _rail2InitialPos = rail2.position;
 
@@ -289,7 +280,6 @@ public class UFOArmController : MonoBehaviour
         UpdateStateMachine();
         WakeUpNearbyCoins();
         UpdateMagnet();
-        UpdateGrabJingleSound();
     }
 
     void UpdateColliderStateForSpawning()
@@ -318,7 +308,6 @@ public class UFOArmController : MonoBehaviour
     void FixedUpdate()
     {
         UpdateMovement();
-        UpdateSwayPhysics();
         UpdateRailFollow();
     }
 
@@ -479,43 +468,7 @@ public class UFOArmController : MonoBehaviour
         }
     }
 
-    void UpdateSwayPhysics()
-    {
-        if (armRoot == null) return;
-        
-        float dt = Time.fixedDeltaTime;
-        if (dt == 0f) return;
 
-        if (!enableSway)
-        {
-            _clawSwayAngle = Vector3.zero;
-            _clawSwayVelocity = Vector3.zero;
-            ropeSwayRot = Quaternion.identity;
-            clawSwayRot = Quaternion.identity;
-            _lastWorldPos = (_armRigidbody != null) ? _armRigidbody.position : armRoot.position;
-            return;
-        }
-
-        // 座標から現在の移動速度（Velocity）を取得
-        Vector3 currentPos = (_armRigidbody != null) ? _armRigidbody.position : armRoot.position;
-        Vector3 currentVel = (currentPos - _lastWorldPos) / dt;
-        _lastWorldPos = currentPos;
-
-        // 【ロープ（Extra）側の揺れは計算せず、常に無効（Identity）にする】
-        ropeSwayRot = Quaternion.identity;
-
-        // 【爪（Claw）側の揺れ計算】
-        // X軸回転（左右の揺れ）とZ軸回転（前後の揺れ）の計算
-        // 前後移動（X軸速度）に対して逆方向に傾くよう、Z方向の揺れ（clawTargetSway.z）の符号を反転（-currentVel.x）させます
-        Vector3 clawTargetSway = new Vector3(currentVel.z, 0f, -currentVel.x) * clawSwaySensitivity;
-        Vector3 clawAngleDiff = clawTargetSway - _clawSwayAngle;
-        Vector3 clawSpringAccel = (clawAngleDiff * clawSwaySpringForce) - (_clawSwayVelocity * clawSwayDamping);
-        _clawSwayVelocity += clawSpringAccel * dt;
-        _clawSwayAngle += _clawSwayVelocity * dt;
-        _clawSwayAngle.x = Mathf.Clamp(_clawSwayAngle.x, -50f, 50f);
-        _clawSwayAngle.z = Mathf.Clamp(_clawSwayAngle.z, -50f, 50f);
-        clawSwayRot = Quaternion.Euler(_clawSwayAngle.x, 0f, _clawSwayAngle.z);
-    }
 
     void UpdateRailFollow()
     {
@@ -542,7 +495,35 @@ public class UFOArmController : MonoBehaviour
         }
     }
 
+    private void UpdateFingerKinematicState()
+    {
+        if (fingerParts == null) return;
+        for (int i = 0; i < fingerParts.Length; i++)
+        {
+            if (fingerParts[i] == null) continue;
+            Rigidbody rb = fingerParts[i].GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.isKinematic = !useHingeJointPhysics;
+            }
+        }
+    }
+
     void UpdateFingersAndSway()
+    {
+        UpdateFingerKinematicState();
+
+        if (useHingeJointPhysics)
+        {
+            UpdateFingersPhysics();
+        }
+        else
+        {
+            UpdateFingersKinematic();
+        }
+    }
+
+    private void UpdateFingersKinematic()
     {
         // 爪（finger）に対する開閉と揺れの合成
         if (fingerParts != null && fingerParts.Length > 0)
@@ -561,23 +542,34 @@ public class UFOArmController : MonoBehaviour
                 // 1. 純粋なローカル回転と座標（開閉）をセット
                 fingerParts[i].localRotation = _fingerCurrentBaseRot[i];
                 fingerParts[i].localPosition = _fingerCurrentBasePos[i];
-
-                // 2. 爪（finger）の個別揺れは適用しない（親オブジェクトである structure の揺れをそのまま引き継ぐため）
             }
         }
+    }
 
-        // 爪土台に対する揺れの適用（Claw設定）
-        if (clawBaseParts != null && clawBaseParts.Length > 0)
+    private void UpdateFingersPhysics()
+    {
+        if (_fingerJoints == null) return;
+
+        for (int i = 0; i < _fingerJoints.Length; i++)
         {
-            for (int i = 0; i < clawBaseParts.Length; i++)
-            {
-                if (clawBaseParts[i] == null) continue;
-                clawBaseParts[i].localRotation = _clawBaseDefaultRot[i];
-                clawBaseParts[i].rotation = clawSwayRot * clawBaseParts[i].rotation;
-            }
-        }
+            HingeJoint joint = _fingerJoints[i];
+            if (joint == null) continue;
 
-        // その他（6番ロープなど）に対する揺れの適用（個別揺れはすべて無効化されました）
+            JointMotor motor = joint.motor;
+
+            bool invert = (invertFingerAngle != null && i < invertFingerAngle.Length && invertFingerAngle[i]);
+            
+            float speed = _wantFingerOpen ? jointMotorSpeed : -jointMotorSpeed;
+            if (invert)
+            {
+                speed = -speed;
+            }
+
+            motor.targetVelocity = speed;
+            motor.force = jointMotorForce;
+            joint.motor = motor;
+            joint.useMotor = true;
+        }
     }
 
     public void OnClawCollided()
@@ -587,35 +579,50 @@ public class UFOArmController : MonoBehaviour
 
     public void OnClawCollided(Collider hitCollider)
     {
-        if (hitCollider == null)
-        {
-            // フォールバック（引数がnullの場合）
-            if (_state == ArmState.Descending)
-            {
-                _state = ArmState.PostCollisionDescending;
-                _stateTimer = postCollisionDescentSeconds;
-            }
-            return;
-        }
+        if (hitCollider == null) return;
 
-        // ユーザー指定の即時掴みエリア判定
+        // 1. ユーザー指定の即時掴みエリア判定
         bool isImmediateArea = false;
         if (immediateGrabArea != null)
         {
-            if (hitCollider == immediateGrabArea || 
-                hitCollider.gameObject == immediateGrabArea.gameObject || 
-                hitCollider.transform.IsChildOf(immediateGrabArea.transform))
+            // コインや景品アイテムの場合は、即時掴みエリアとしての接触判定から除外する
+            bool isCoinOrItem = hitCollider.GetComponent<UFOItem>() != null || 
+                               hitCollider.GetComponentInParent<UFOItem>() != null ||
+                               hitCollider.GetComponent<CoinOptimizer>() != null ||
+                               hitCollider.GetComponentInParent<CoinOptimizer>() != null;
+
+            if (!isCoinOrItem)
             {
-                isImmediateArea = true;
+                if (hitCollider == immediateGrabArea || 
+                    hitCollider.gameObject == immediateGrabArea.gameObject ||
+                    hitCollider.transform.IsChildOf(immediateGrabArea.transform))
+                {
+                    isImmediateArea = true;
+                }
             }
         }
 
-        if (isImmediateArea)
+        // 2. ClawCarrieZone と Claw_RiseCollider の接触判定
+        bool isClawRiseContact = false;
+        if (clawCarrieZone != null && clawRiseCollider != null)
+        {
+            if (hitCollider == clawRiseCollider || 
+                hitCollider.gameObject == clawRiseCollider.gameObject || 
+                hitCollider.transform.IsChildOf(clawRiseCollider.transform) ||
+                hitCollider == clawCarrieZone || 
+                hitCollider.gameObject == clawCarrieZone.gameObject || 
+                hitCollider.transform.IsChildOf(clawCarrieZone.transform))
+            {
+                isClawRiseContact = true;
+            }
+        }
+
+        if (isImmediateArea || isClawRiseContact)
         {
             // 指定エリアに入った場合、下降中または少しだけ下降中のステートであれば、即座に掴む（Grabbing）状態に移行する
             if (_state == ArmState.Descending || _state == ArmState.PostCollisionDescending)
             {
-                Debug.Log($"[UFOArmController] Entered immediate grab area with {hitCollider.name}. Bypassing extra descent. State: {_state} -> Grabbing");
+                Debug.Log($"[UFOArmController] Entered grab trigger area (immediateArea={isImmediateArea}, clawRiseContact={isClawRiseContact}) with {hitCollider.name}. Bypassing extra descent. State: {_state} -> Grabbing");
                 _state = ArmState.Grabbing;
                 _wantFingerOpen = false;
                 _stateTimer = grabWaitSeconds;
@@ -624,18 +631,34 @@ public class UFOArmController : MonoBehaviour
                 PlayDescentRustleSound();
 
                 if (stretchRope != null) stretchRope.PauseExternalControl(); // 掴み中はピタッと停止
+
+                // 物理的な速度と慣性をクリアしてその場で即時停止させる
+                ResetArmAndClawPhysicsVelocity();
             }
         }
-        else
-        {
-            // それ以外の衝突（コインや通常の床・壁など）の場合、下降中であれば少しだけ下降を継続する（従来通り）
-            if (_state == ArmState.Descending)
-            {
-                _state = ArmState.PostCollisionDescending;
-                _stateTimer = postCollisionDescentSeconds;
+    }
 
-                // コインの山に衝突したときのがさがさ音を再生
-                PlayDescentRustleSound();
+    private void ResetArmAndClawPhysicsVelocity()
+    {
+        if (_armRigidbody != null)
+        {
+            _armRigidbody.linearVelocity = Vector3.zero;
+            _armRigidbody.angularVelocity = Vector3.zero;
+        }
+
+        if (fingerParts != null)
+        {
+            foreach (var finger in fingerParts)
+            {
+                if (finger != null)
+                {
+                    Rigidbody rb = finger.GetComponent<Rigidbody>();
+                    if (rb != null)
+                    {
+                        rb.linearVelocity = Vector3.zero;
+                        rb.angularVelocity = Vector3.zero;
+                    }
+                }
             }
         }
     }
@@ -758,6 +781,7 @@ public class UFOArmController : MonoBehaviour
 
         // もう一度初期化処理を走らせる
         InitializeFingers();
+        InitializeFingerJoints();
     }
 
     // ─────────────────────────────────────
@@ -829,6 +853,7 @@ public class UFOArmController : MonoBehaviour
 
         // もう一度初期化処理を走らせる
         InitializeFingers();
+        InitializeFingerJoints();
     }
 
     public void InitializeFingers()
@@ -876,6 +901,49 @@ public class UFOArmController : MonoBehaviour
                 }
             }
         }
+    }
+
+    private void InitializeFingerJoints()
+    {
+        if (fingerParts != null && fingerParts.Length > 0)
+        {
+            _fingerJoints = new HingeJoint[fingerParts.Length];
+            for (int i = 0; i < fingerParts.Length; i++)
+            {
+                if (fingerParts[i] != null)
+                {
+                    _fingerJoints[i] = fingerParts[i].GetComponent<HingeJoint>();
+                }
+            }
+
+            // 爪パーツ（指同士）の衝突を自動で無視する設定を適用
+            IgnoreCollisionsBetweenClaws();
+        }
+    }
+
+    private void IgnoreCollisionsBetweenClaws()
+    {
+        var collidersList = new System.Collections.Generic.List<Collider>();
+        for (int i = 0; i < fingerParts.Length; i++)
+        {
+            if (fingerParts[i] != null)
+            {
+                var cols = fingerParts[i].GetComponentsInChildren<Collider>(true);
+                collidersList.AddRange(cols);
+            }
+        }
+
+        for (int i = 0; i < collidersList.Count; i++)
+        {
+            for (int j = i + 1; j < collidersList.Count; j++)
+            {
+                if (collidersList[i] != null && collidersList[j] != null)
+                {
+                    Physics.IgnoreCollision(collidersList[i], collidersList[j], true);
+                }
+            }
+        }
+        Debug.Log($"[UFOArmController] Ignored collisions between {collidersList.Count} claw colliders.");
     }
 
     private void OnDrawGizmosSelected()
@@ -981,80 +1049,7 @@ public class UFOArmController : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// つかみ中（揺れ時）のじゃらじゃら効果音の再生管理
-    /// </summary>
-    private void UpdateGrabJingleSound()
-    {
-        if (grabJingleSound == null) return;
-        
-        // 爪が開いている（何も掴んでいない、またはリリース中）なら鳴らさない
-        if (_wantFingerOpen) return;
 
-        _jingleTimer -= Time.deltaTime;
-        if (_jingleTimer > 0f) return;
-
-        // 揺れの速度（物理的な揺れ速度）の大きさを計測
-        float swaySpeed = _clawSwayVelocity.magnitude;
-        
-        // 揺れが一定以上ある場合のみ判定
-        if (swaySpeed > swayThreshold)
-        {
-            // 爪の中に実際にコイン（UFOItem）があるか確認
-            if (fingerParts != null && fingerParts.Length > 0 && fingerParts[0] != null)
-            {
-                Transform parentFolder = fingerParts[0].parent;
-                Vector3 centerPos = (parentFolder != null) ? parentFolder.position : transform.position;
-                centerPos.y -= 0.5f; // 爪の底付近
-
-                Collider[] hits = Physics.OverlapSphere(centerPos, grabDetectRadius);
-                int coinCount = 0;
-                foreach (var hit in hits)
-                {
-                    if (hit.GetComponent<UFOItem>() != null)
-                    {
-                        coinCount++;
-                    }
-                }
-
-                // コインが1つ以上アームの中にあれば音を鳴らす！
-                if (coinCount > 0)
-                {
-                    PlayJingle(swaySpeed, coinCount);
-                    _jingleTimer = jingleInterval;
-                }
-            }
-        }
-    }
-
-    private void PlayJingle(float swaySpeed, int coinCount)
-    {
-        if (_audioSourceForJingle == null)
-        {
-            _audioSourceForJingle = GetComponent<AudioSource>();
-            if (_audioSourceForJingle == null)
-            {
-                _audioSourceForJingle = gameObject.AddComponent<AudioSource>();
-                _audioSourceForJingle.playOnAwake = false;
-                _audioSourceForJingle.spatialBlend = 0f; // 2Dとしてハッキリ再生
-            }
-        }
-
-        // コインの数と揺れの速度に応じて音量を動的に変化させる
-        // コインが多いほど、激しく揺れるほど大きな音になる
-        float speedFactor = Mathf.Clamp01((swaySpeed - swayThreshold) / 10f);
-        float coinFactor = Mathf.Clamp01(coinCount / 5f); // 5個以上で最大
-        float volume = (speedFactor * 0.5f + coinFactor * 0.5f) * jingleVolume;
-
-        // ピッチも若干ランダムにして自然さを出す
-        _audioSourceForJingle.pitch = Random.Range(0.85f, 1.15f);
-        
-        // volumeBoostの回数だけ重ねて再生して音量を限界突破
-        for (int i = 0; i < volumeBoost; i++)
-        {
-            _audioSourceForJingle.PlayOneShot(grabJingleSound, volume);
-        }
-    }
 
     /// <summary>
     /// 降下衝突時にコインの山に当たった際のがさがさ効果音を再生する
