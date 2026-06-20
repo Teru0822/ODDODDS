@@ -178,6 +178,9 @@ public class UFOArmController : MonoBehaviour
     private bool         _wantFingerOpen = false;
     public bool WantFingerOpen => _wantFingerOpen;
 
+    private System.Collections.Generic.List<Collider> _armSolidColliders = new System.Collections.Generic.List<Collider>();
+    private System.Collections.Generic.List<Collider> _ignoredCoinColliders = new System.Collections.Generic.List<Collider>();
+
     /// <summary>
     /// アームが下降・掴み・上昇などの一連の動作中（Busy）であるかどうか。
     /// </summary>
@@ -347,12 +350,11 @@ public class UFOArmController : MonoBehaviour
 
     void Update()
     {
-        // コイン投入時にアームコライダーを動的に無効化する処理は、時間経過による引っかかり・逆揺れの原因となるため廃止します
-        // UpdateColliderStateForSpawning();
         UpdateFingersAndSway();
         UpdateStateMachine();
         WakeUpNearbyCoins();
         UpdateMagnet();
+        UpdateSpawningCollisionState();
     }
 
     void UpdateColliderStateForSpawning()
@@ -384,6 +386,86 @@ public class UFOArmController : MonoBehaviour
                 col.enabled = !shouldDisable;
             }
             Debug.Log($"[UFOArmController] Spawning coin collision state changed: Arm Solid Colliders Enabled = {!shouldDisable}");
+        }
+    }
+
+    /// <summary>
+    /// アームおよびSwayJoint以下の非トリガーコライダーをすべて事前収集します。
+    /// </summary>
+    private void CollectArmColliders()
+    {
+        _armSolidColliders.Clear();
+        if (armRoot != null)
+        {
+            foreach (var col in armRoot.GetComponentsInChildren<Collider>(true))
+            {
+                if (col != null && !col.isTrigger)
+                {
+                    _armSolidColliders.Add(col);
+                }
+            }
+        }
+        if (swayJoint != null)
+        {
+            foreach (var col in swayJoint.GetComponentsInChildren<Collider>(true))
+            {
+                if (col != null && !col.isTrigger && !_armSolidColliders.Contains(col))
+                {
+                    _armSolidColliders.Add(col);
+                }
+            }
+        }
+        Debug.Log($"[UFOArmController] Collected {_armSolidColliders.Count} solid arm colliders for dynamic collision ignore.");
+    }
+
+    /// <summary>
+    /// コインが生成された際に呼ばれ、アームのコライダーとの物理衝突を無視リストに登録して無効化します。
+    /// </summary>
+    public void IgnoreCollisionWithCoin(Collider coinCol)
+    {
+        if (coinCol == null) return;
+
+        foreach (var armCol in _armSolidColliders)
+        {
+            if (armCol != null)
+            {
+                Physics.IgnoreCollision(armCol, coinCol, true);
+            }
+        }
+
+        if (!_ignoredCoinColliders.Contains(coinCol))
+        {
+            _ignoredCoinColliders.Add(coinCol);
+        }
+    }
+
+    /// <summary>
+    /// コインのスポーン状況を毎フレーム監視し、スポーンが終了してコインが静止した段階で、衝突を安全に再有効化します。
+    /// </summary>
+    private void UpdateSpawningCollisionState()
+    {
+        bool isSpawningActive = ItemSpawner.IsSpawning || (Time.time < CoinOptimizer.freezeStartTime);
+
+        // スポーン期間が終了し、無視リストに未処理のコライダーが残っている場合、衝突を再有効化する
+        if (!isSpawningActive && _ignoredCoinColliders.Count > 0)
+        {
+            int count = 0;
+            foreach (var coinCol in _ignoredCoinColliders)
+            {
+                if (coinCol != null)
+                {
+                    foreach (var armCol in _armSolidColliders)
+                    {
+                        if (armCol != null)
+                        {
+                            Physics.IgnoreCollision(armCol, coinCol, false);
+                        }
+                    }
+                    count++;
+                }
+            }
+            _ignoredCoinColliders.Clear();
+            Debug.Log($"[UFOArmController] Coin spawning and settling complete. Re-enabled physics collision between arm and {count} coins.");
         }
     }
 
@@ -1066,6 +1148,9 @@ public class UFOArmController : MonoBehaviour
                 }
             }
         }
+
+        // アームの全ソリッドコライダーを収集
+        CollectArmColliders();
     }
 
     private void InitializeFingerJoints()
