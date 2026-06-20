@@ -795,7 +795,7 @@ public class UFOArmController : MonoBehaviour
 
     private void ResetArmAndClawPhysicsVelocity()
     {
-        if (_armRigidbody != null)
+        if (_armRigidbody != null && !_armRigidbody.isKinematic)
         {
             _armRigidbody.linearVelocity = Vector3.zero;
             _armRigidbody.angularVelocity = Vector3.zero;
@@ -804,7 +804,7 @@ public class UFOArmController : MonoBehaviour
         if (swayJoint != null)
         {
             Rigidbody swayRb = swayJoint.GetComponent<Rigidbody>();
-            if (swayRb != null)
+            if (swayRb != null && !swayRb.isKinematic)
             {
                 swayRb.linearVelocity = Vector3.zero;
                 swayRb.angularVelocity = Vector3.zero;
@@ -818,7 +818,7 @@ public class UFOArmController : MonoBehaviour
                 if (finger != null)
                 {
                     Rigidbody rb = finger.GetComponent<Rigidbody>();
-                    if (rb != null)
+                    if (rb != null && !rb.isKinematic)
                     {
                         rb.linearVelocity = Vector3.zero;
                         rb.angularVelocity = Vector3.zero;
