@@ -103,13 +103,13 @@ public class UFOArmController : MonoBehaviour
     [Tooltip("アームを吊り下げている Configurable Joint")]
     public ConfigurableJoint swayJoint;
     [Tooltip("移動時の最大揺れ角度")]
-    public float swayRangeAngle = 15f;
+    public float swayRangeAngle = 25f;
     [Tooltip("非移動時にジョイントを締めてまっすぐに戻す速さ")]
     public float jointStabilizeSpeed = 10f;
     [Tooltip("下降時にジョイントの揺れを抑えて垂直に安定化させるか（オフの場合、下降中も揺れます）")]
     public bool stabilizeOnDescent = false;
     [Tooltip("揺れを垂直（中心）に引き戻すバネの強さ（値が小さいほど大きく揺れ、大きいほど引き戻しが強くなります）")]
-    public float jointSpringForce = 5f;
+    public float jointSpringForce = 2f;
     [Tooltip("揺れのバネのダンパー（揺れの収束のしやすさ）")]
     public float jointSpringDamper = 1f;
 
