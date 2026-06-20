@@ -5919,9 +5919,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1476968837462745527}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.7071069, y: -0, z: -0, w: 0.70710665}
+  m_LocalRotation: {x: -0.70710695, y: -0, z: -0, w: 0.7071067}
   m_LocalPosition: {x: 0.014000278, y: 0.09259992, z: 0.08510029}
-  m_LocalScale: {x: 2.3995225, y: 2.399523, z: 2.399522}
+  m_LocalScale: {x: 2.3995233, y: 2.399523, z: 2.3995209}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3561571661407418773}
@@ -9129,6 +9129,32 @@ MonoBehaviour:
   soundVolume: 2.15
   interactionDistance: 3
   ufoCenterTransform: {fileID: 5966704856110214195}
+  machineHover: {fileID: 0}
+  transitionDuration: 1
+  transitionEase:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &6070065694838482442
 GameObject:
   m_ObjectHideFlags: 0
@@ -9360,22 +9386,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StretchRope
   stretchSpeed: 0.5
-  stretchIntensity: 35
-  scaleAxis: 2
-  moveAxis: 3
-  moveNegative: 1
-  moveRatio: 0.03
-  attachedObjects:
-  - {fileID: 3561571661407418773}
-  - {fileID: 1859291037574408468}
-  - {fileID: 4922076798179983177}
-  fingerRatio: 0.08
-  usePoleSlide: 1
   poll2: {fileID: 0}
   poll3: {fileID: 0}
   slideDirection: {x: 0, y: 0, z: 1}
   poll2MaxDistance: 1.5
   poll3MaxDistance: 1.5
+  attachedObjects:
+  - {fileID: 3561571661407418773}
+  - {fileID: 1859291037574408468}
+  - {fileID: 4922076798179983177}
   allowSpaceKey: 0
 --- !u!1 &6473984530653917637
 GameObject:
@@ -10349,9 +10368,9 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5976965666660537570}
+  - {fileID: 369881072506351000}
   - {fileID: 6768528815946182934}
   - {fileID: 853639917024673789}
-  - {fileID: 369881072506351000}
   m_Father: {fileID: 1503717751264703810}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8003510271745777097
@@ -10760,11 +10779,20 @@ MonoBehaviour:
   - {x: 0, y: 90, z: -27.501}
   - {x: 0, y: 90, z: 29.862}
   - {x: 29.249, y: 90, z: 0}
+  useHingeJointPhysics: 0
+  jointMotorSpeed: 150
+  jointMotorForce: 50
   descentSpeedMultiplier: 0.65
   grabWaitSeconds: 2
   postCollisionDescentSeconds: 1
   immediateGrabArea: {fileID: 4374941144845892052}
+  clawCarrieZone: {fileID: 0}
+  clawRiseCollider: {fileID: 0}
   wakeUpRadius: 0.3
+  wakeUpOffset: {x: 0, y: 0, z: 0}
+  wakeUpDownwardsLength: 0.3
+  wakeUpDownwardsWidth: 1.2
+  wakeUpDownwardsOffset: {x: 0, y: 0, z: 0}
   wakeUpInterval: 0.2
   isMagnetMode: 0
   magnetRadius: 3
@@ -10773,18 +10801,7 @@ MonoBehaviour:
   rustleVolume: 0.8
   minCoinsForRustle: 3
   rustleDetectRadius: 1.5
-  grabJingleSound: {fileID: 0}
-  jingleVolume: 0.8
-  grabDetectRadius: 1.2
-  swayThreshold: 0.5
-  jingleInterval: 0.15
   volumeBoost: 1
-  enableSway: 1
-  clawBaseParts:
-  - {fileID: 369881072506351000}
-  clawSwaySensitivity: 5
-  clawSwayDamping: 3
-  clawSwaySpringForce: 15
 --- !u!1 &8539734575700534499
 GameObject:
   m_ObjectHideFlags: 0
@@ -12596,6 +12613,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7696097022878629670, guid: c122fd2589a048145ad177c9735742a1, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6194131622346904002}
+    - targetCorrespondingSourceObject: {fileID: 7696097022878629670, guid: c122fd2589a048145ad177c9735742a1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 834577992429594404}
   m_SourcePrefab: {fileID: 100100000, guid: c122fd2589a048145ad177c9735742a1, type: 3}
 --- !u!4 &5976965666660537570 stripped
 Transform:
@@ -12620,20 +12640,40 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StretchRope
   stretchSpeed: 2
-  stretchIntensity: 35
-  scaleAxis: 2
-  moveAxis: 1
-  moveNegative: 1
-  moveRatio: 0.01
-  attachedObjects: []
-  fingerRatio: 0.0475
-  usePoleSlide: 1
   poll2: {fileID: 3931892738796612916}
   poll3: {fileID: 4553534210085332297}
   slideDirection: {x: 0, y: 0, z: -4}
   poll2MaxDistance: 1.5
   poll3MaxDistance: 1.5
+  attachedObjects: []
   allowSpaceKey: 1
+--- !u!54 &834577992429594404
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6465377100910136920}
+  serializedVersion: 5
+  m_Mass: 5
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1001 &3778795533486852035
 PrefabInstance:
   m_ObjectHideFlags: 0

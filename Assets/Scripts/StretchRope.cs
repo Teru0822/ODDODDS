@@ -139,13 +139,6 @@ public class StretchRope : MonoBehaviour
 
         float t = Mathf.SmoothStep(0f, 1f, _stretchTime);
 
-        // ── 回転による振り子運動のための準備 ──
-        UFOArmController arm = FindAnyObjectByType<UFOArmController>();
-        Quaternion ropeSwayRot = (arm != null) ? arm.ropeSwayRot : Quaternion.identity;
-        
-        // アームの根本（クレーン本体の中心）をすべての揺れの「共通の支点（Pivot）」として扱う
-        Vector3 universalPivot = (arm != null && arm.armRoot != null) ? arm.armRoot.position : transform.position;
-
         // ── ポールスライドによる伸縮 ──
         if (poll2 != null)
         {
@@ -162,7 +155,7 @@ public class StretchRope : MonoBehaviour
             Debug.Log($"[StretchRope] Pole Slide Mode - _stretchTime: {_stretchTime}, t: {t}, isExternal: {_externalControl}");
         }
 
-        // ── attachedObjects の追従（Sway位置反映） ──
+        // ── attachedObjects の追従（真下への移動のみ） ──
         if (attachedObjects != null && attachedObjects.Length > 0)
         {
             float totalMove = (poll2MaxDistance + poll3MaxDistance) * t;
@@ -171,7 +164,7 @@ public class StretchRope : MonoBehaviour
             {
                 if (attachedObjects[i] == null) continue;
 
-                // もし揺れていなかった場合の「本来の真下」にあるワールド座標
+                // 本来の真下にあるワールド座標
                 Vector3 baseWorldPos = (attachedObjects[i].parent != null)
                                      ? attachedObjects[i].parent.TransformPoint(_originalAttachedLocalPos[i])
                                      : _originalAttachedLocalPos[i];
@@ -179,11 +172,7 @@ public class StretchRope : MonoBehaviour
                 // 合計スライド移動量だけ下に落とす
                 baseWorldPos.y -= totalMove;
 
-                // 共通の支点・同じ揺れ角度（ropeSwayRot）を使って位置をスイングさせる
-                Vector3 downwardVec = baseWorldPos - universalPivot;
-                Vector3 swayedVec = ropeSwayRot * downwardVec;
-
-                attachedObjects[i].position = universalPivot + swayedVec;
+                attachedObjects[i].position = baseWorldPos;
             }
         }
     }
