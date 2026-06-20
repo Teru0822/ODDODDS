@@ -1057,39 +1057,34 @@ public class UFOArmController : MonoBehaviour
                 }
             }
 
-            // アームの全パーツ（ポール、レール、アーム先端、爪）間の自己衝突を無視する
-            IgnoreCollisionsBetweenArmParts();
+            // 爪パーツ（指同士）の衝突を自動で無視する設定を適用
+            IgnoreCollisionsBetweenClaws();
         }
     }
 
-    private void IgnoreCollisionsBetweenArmParts()
+    private void IgnoreCollisionsBetweenClaws()
     {
-        var allColliders = new System.Collections.Generic.List<Collider>();
-
-        // 1. armRoot 配下のコライダーを集める（レール、ポール等）
-        if (armRoot != null)
+        var collidersList = new System.Collections.Generic.List<Collider>();
+        for (int i = 0; i < fingerParts.Length; i++)
         {
-            allColliders.AddRange(armRoot.GetComponentsInChildren<Collider>(true));
-        }
-
-        // 2. swayJoint 配下のコライダーを集める（アーム先端、爪等）
-        if (swayJoint != null)
-        {
-            allColliders.AddRange(swayJoint.GetComponentsInChildren<Collider>(true));
-        }
-
-        // 全てパーツ間の組み合わせで衝突を無視する
-        for (int i = 0; i < allColliders.Count; i++)
-        {
-            for (int j = i + 1; j < allColliders.Count; j++)
+            if (fingerParts[i] != null)
             {
-                if (allColliders[i] != null && allColliders[j] != null && allColliders[i] != allColliders[j])
+                var cols = fingerParts[i].GetComponentsInChildren<Collider>(true);
+                collidersList.AddRange(cols);
+            }
+        }
+
+        for (int i = 0; i < collidersList.Count; i++)
+        {
+            for (int j = i + 1; j < collidersList.Count; j++)
+            {
+                if (collidersList[i] != null && collidersList[j] != null)
                 {
-                    Physics.IgnoreCollision(allColliders[i], allColliders[j], true);
+                    Physics.IgnoreCollision(collidersList[i], collidersList[j], true);
                 }
             }
         }
-        Debug.Log($"[UFOArmController] Ignored self-collisions between {allColliders.Count} arm and claw colliders.");
+        Debug.Log($"[UFOArmController] Ignored collisions between {collidersList.Count} claw colliders.");
     }
 
     private void OnDrawGizmosSelected()
