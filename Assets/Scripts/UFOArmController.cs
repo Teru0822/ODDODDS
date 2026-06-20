@@ -257,6 +257,25 @@ public class UFOArmController : MonoBehaviour
         // 物理ジョイント（SwayJoint）の初期化
         if (swayJoint != null)
         {
+            Rigidbody swayRb = swayJoint.GetComponent<Rigidbody>();
+            if (swayRb != null)
+            {
+                if (swayRb.isKinematic)
+                {
+                    swayRb.isKinematic = false;
+                    Debug.Log($"[UFOArmController] Auto-set {swayRb.name}'s Rigidbody to dynamic (isKinematic = false) for physical sway.");
+                }
+            }
+            else
+            {
+                Debug.LogError($"[UFOArmController] The swayJoint object ({swayJoint.name}) does not have a Rigidbody component! Physics sway will not work.");
+            }
+
+            if (swayJoint.connectedBody == null)
+            {
+                Debug.LogWarning($"[UFOArmController] swayJoint.connectedBody is null. Please make sure to add a Rigidbody (isKinematic=true) to your pole tip (e.g., poll3) and assign it to the Connected Body of the Configurable Joint.");
+            }
+
             if (swayJoint.angularXMotion == ConfigurableJointMotion.Locked)
                 swayJoint.angularXMotion = ConfigurableJointMotion.Limited;
             if (swayJoint.angularYMotion == ConfigurableJointMotion.Locked)
