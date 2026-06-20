@@ -176,7 +176,9 @@ namespace MiniGames.Title
                 data = new DevilConversationData
                 {
                     key = _targetConversationKey,
-                    lines = new string[] { "よく来たな、哀れな人間よ。↓ここがお前の最後の場所だ。", "準備はいいか？↓フフフ……。" },
+                    lines = _language == Language.JP
+                        ? new string[] { "よく来たな、哀れな人間よ。↓ここがお前の最後の場所だ。", "準備はいいか？↓フフフ……。" }
+                        : new string[] { "Welcome, pitiful human.↓This is your final destination.", "Are you ready?↓Hehehe..." },
                     bgmKey = ""
                 };
             }
