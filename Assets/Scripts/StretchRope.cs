@@ -164,6 +164,14 @@ public class StretchRope : MonoBehaviour
             {
                 if (attachedObjects[i] == null) continue;
 
+                // 物理演算（Configurable Joint等）が有効な非KinematicなRigidbodyを持つ場合は、
+                // 強制的な座標書き換えを行うと物理挙動と競合（ガタツキ等）するため処理をスキップする
+                Rigidbody rb = attachedObjects[i].GetComponent<Rigidbody>();
+                if (rb != null && !rb.isKinematic)
+                {
+                    continue;
+                }
+
                 // 本来の真下にあるワールド座標
                 Vector3 baseWorldPos = (attachedObjects[i].parent != null)
                                      ? attachedObjects[i].parent.TransformPoint(_originalAttachedLocalPos[i])
