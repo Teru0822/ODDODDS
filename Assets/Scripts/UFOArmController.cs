@@ -355,7 +355,16 @@ public class UFOArmController : MonoBehaviour
 
     void UpdateColliderStateForSpawning()
     {
-        if (armRoot == null) return;
+        // armRoot と swayJoint（実行時に親子関係が切り離されるため）の両方からコライダーを集める
+        var colliders = new System.Collections.Generic.List<Collider>();
+        if (armRoot != null)
+        {
+            colliders.AddRange(armRoot.GetComponentsInChildren<Collider>(true));
+        }
+        if (swayJoint != null)
+        {
+            colliders.AddRange(swayJoint.GetComponentsInChildren<Collider>(true));
+        }
 
         // コインが降っている最中、および落下中の時間帯を判定する
         bool shouldDisable = ItemSpawner.IsSpawning || (Time.time < CoinOptimizer.freezeStartTime);
@@ -363,9 +372,9 @@ public class UFOArmController : MonoBehaviour
         if (shouldDisable != _collidersDisabledForSpawn)
         {
             _collidersDisabledForSpawn = shouldDisable;
-            Collider[] colliders = armRoot.GetComponentsInChildren<Collider>();
             foreach (var col in colliders)
             {
+                if (col == null) continue;
                 // トリガー（UFOClawCarrierなど運搬用の領域判定コライダー）は動作を維持するため除外し、
                 // 物理衝突判定用のコライダーのみ無効化する
                 if (col.isTrigger) continue;
