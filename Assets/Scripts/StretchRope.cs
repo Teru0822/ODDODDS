@@ -164,9 +164,9 @@ public class StretchRope : MonoBehaviour
             {
                 if (attachedObjects[i] == null) continue;
 
-                // 物理演算（Configurable Joint等）が有効な非KinematicなRigidbodyを持つ場合は、
+                // 物理演算（Configurable Joint等）が有効な非KinematicなRigidbodyが自身または親にある場合は、
                 // 強制的な座標書き換えを行うと物理挙動と競合（ガタツキ等）するため処理をスキップする
-                Rigidbody rb = attachedObjects[i].GetComponent<Rigidbody>();
+                Rigidbody rb = attachedObjects[i].GetComponentInParent<Rigidbody>();
                 if (rb != null && !rb.isKinematic)
                 {
                     continue;
