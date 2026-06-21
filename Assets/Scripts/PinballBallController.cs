@@ -51,13 +51,12 @@ public class PinballBallController : MonoBehaviour
     [Tooltip("gen 1 分裂子の検知半径。以降の世代は splitScaleRatio で縮小")]
     public float initialDetectionRadius = 0.08f;
 
-    [Header("移動境界 (gen ≥ 1)")]
-    public float manualBoundsXMin = 0.81f;
-    public float manualBoundsXMax = 2.4257f;
-    public float manualBoundsZMax = 4.468f;
-
-    [Tooltip("空間ハッシュの範囲下限 Z (壁としては作用せずグリッド最小値のみ)")]
-    public float manualBoundsZMin = -2f;
+    // 互換用フィールド: Inspector からは隠す（設定不要）。PinballBallManager が gen≥1 ボールの
+    // 範囲（空間ハッシュ／境界）の算出にまだ参照するため、フィールド自体は残している。
+    [HideInInspector] public float manualBoundsXMin = 0.81f;
+    [HideInInspector] public float manualBoundsXMax = 2.4257f;
+    [HideInInspector] public float manualBoundsZMax = 4.468f;
+    [HideInInspector] public float manualBoundsZMin = -2f;
 
     [Header("ボール同士の衝突")]
     [Tooltip("gen ≥ 1 同士の位置分離 + 法線方向の弱い反発を行うか")]
@@ -118,11 +117,9 @@ public class PinballBallController : MonoBehaviour
 
     private Material _ballMaterialInstance;
 
-    [Header("重力 (このボール固有)")]
-    [Tooltip("このボールに毎 FixedUpdate で掛ける重力ベクトル (m/s²)。Awake 時に Config.EffectiveGravity で初期化されるが、Conveyor 等で個別に上書き可能。")]
-    public Vector3 gravity = new Vector3(0f, -9.81f, 9.81f);
-
-    /// <summary>現在いくつのコンベアに乗っているか (>0 の間は重力適用をスキップしてスイーッと運ばれる)</summary>
+    // 互換用フィールド: PinballBallController 自体はもう重力を適用しない（標準 Unity 重力 + LocalGravityBody に委譲）。
+    // PinballBallManager / PinballGravityZone / PinballConveyor がまだ参照・書き込みするため残しているが、本コンポーネントは未使用。
+    [HideInInspector] public Vector3 gravity = new Vector3(0f, -9.81f, 9.81f);
     [HideInInspector] public int onConveyorCount = 0;
     public bool IsOnConveyor => onConveyorCount > 0;
 
@@ -130,9 +127,6 @@ public class PinballBallController : MonoBehaviour
 
     private Rigidbody rb;
     private SphereCollider sphereCol;
-    private PinballBallConfig _config;
-    // pinballRoot でスケール追従する時は Unity 重力を切って手動で Y/Z 双方に scaled gravity を掛ける
-    private bool _useManualGravity = false;
 
     private static int _ballLayer = -1;
     private static bool _ballLayerCollisionConfigured = false;
@@ -145,16 +139,9 @@ public class PinballBallController : MonoBehaviour
 
     void Awake()
     {
-        _config = FindFirstObjectByType<PinballBallConfig>();
-        // pinballRoot が設定されている時は Unity 重力を切って手動適用
-        // (Unity のグローバル gravity は scaleFactor で変更できないため)
-        _useManualGravity = _config != null && _config.pinballRoot != null;
-        // 個別 gravity を Config から初期化 (Spawn 後の上書きがなければ Config 値で動く)
-        if (_config != null) gravity = _config.EffectiveGravity;
-
         rb = GetComponent<Rigidbody>();
         rb.mass = mass;
-        rb.useGravity = !_useManualGravity;
+        rb.useGravity = true; // 重力は標準 Unity 重力（+ 必要なら LocalGravityBody）に委譲
         rb.constraints = RigidbodyConstraints.None;
         rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
 
@@ -199,22 +186,8 @@ public class PinballBallController : MonoBehaviour
 
     void FixedUpdate()
     {
+        // 重力適用は廃止（標準 Unity 重力 + LocalGravityBody に委譲）。分裂ガードのフラグのみリセットする。
         _isSplitting = false;
-        // コンベアに乗っている間は重力をスキップ (コンベア側が velocity を支配)
-        if (IsOnConveyor) return;
-
-        if (_useManualGravity)
-        {
-            // この玉固有の gravity を scale 倍して手動適用 (Unity 重力は OFF)
-            float s = _config != null ? _config.CurrentScaleFactor : 1f;
-            rb.AddForce(rb.mass * s * gravity, ForceMode.Force);
-        }
-        else
-        {
-            // 従来互換: Unity 重力 (-Y) + Z+ 方向の相殺力
-            float g = Mathf.Abs(Physics.gravity.y);
-            rb.AddForce(new Vector3(0f, 0f, rb.mass * g), ForceMode.Force);
-        }
     }
 
     void OnCollisionEnter(Collision collision)
@@ -227,14 +200,18 @@ public class PinballBallController : MonoBehaviour
         if (pin == null) pin = collision.collider.GetComponentInParent<PinballPin>();
         if (pin != null && !pin.IsConsumed)
         {
+            // 衝突点（取れなければ自分の位置）でこのピン個別のヒット SFX / VFX を再生
+            Vector3 hitPos = collision.contactCount > 0 ? collision.GetContact(0).point : transform.position;
             switch (pin.Type)
             {
                 case PinballPin.PinType.Enforce:
                     pin.TryConsume();
+                    pin.PlayHitFX(hitPos);
                     EnforceLevelUp();
                     return;
                 case PinballPin.PinType.Split:
                     pin.TryConsume();
+                    pin.PlayHitFX(hitPos);
                     BeginSplit(collision);
                     return;
             }
