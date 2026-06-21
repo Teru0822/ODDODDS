@@ -10,15 +10,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 2b7d6666ef809b443bcd61245d95ce6b, type: 3}
       propertyPath: m_LocalScale.x
-      value: 9.218796
+      value: 7.2632127
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2b7d6666ef809b443bcd61245d95ce6b, type: 3}
       propertyPath: m_LocalScale.y
-      value: 9.218796
+      value: 7.2632127
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2b7d6666ef809b443bcd61245d95ce6b, type: 3}
       propertyPath: m_LocalScale.z
-      value: 9.218796
+      value: 7.2632127
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2b7d6666ef809b443bcd61245d95ce6b, type: 3}
       propertyPath: m_LocalPosition.x
@@ -67,5 +67,118 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2b7d6666ef809b443bcd61245d95ce6b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -7442710501649334862}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2b7d6666ef809b443bcd61245d95ce6b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -8600061515524986602}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2b7d6666ef809b443bcd61245d95ce6b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -7699788097865763588}
   m_SourcePrefab: {fileID: 100100000, guid: 2b7d6666ef809b443bcd61245d95ce6b, type: 3}
+--- !u!1 &3627601468241650935 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 2b7d6666ef809b443bcd61245d95ce6b, type: 3}
+  m_PrefabInstance: {fileID: 4510000439163853222}
+  m_PrefabAsset: {fileID: 0}
+--- !u!135 &-7442710501649334862
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3627601468241650935}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.009999998
+  m_Center: {x: -0.000000003259629, y: 0.0000000032596283, z: -2.3161057e-23}
+--- !u!54 &-8600061515524986602
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3627601468241650935}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &-7699788097865763588
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3627601468241650935}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69a132aa3fec4c44cab2307c2e4a4956, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PinballBallController
+  mass: 0.5
+  bounciness: 0.3
+  friction: 0
+  frictionCombine: 3
+  splitTargetTag: Splitter
+  splitSpread: 0.1
+  splitCount: 2
+  splitScaleRatio: 0.9
+  spawnUpOffset: 0.05
+  spawnXOffset: 0.05
+  ignoreCollisionDuration: 0.4
+  initialDetectionRadius: 0.08
+  manualBoundsXMin: 0.81
+  manualBoundsXMax: 2.4257
+  manualBoundsZMax: 4.468
+  manualBoundsZMin: -2
+  enableBallBallCollision: 1
+  manualBounceFactor: 0.6
+  manualLifetime: 5
+  ballLayerName: Ball
+  particleGeneration: 4
+  splitParticlePrefab: {fileID: 0}
+  hideParticleXMax: 0.75
+  hideParticleZMin: 4.515
+  generation: 0
+  enforceColors:
+  - {r: 0, g: 0, b: 0, a: 1}
+  - {r: 0, g: 1, b: 0, a: 1}
+  - {r: 0, g: 0.5, b: 1, a: 1}
+  - {r: 0.7, g: 0, b: 1, a: 1}
+  - {r: 1, g: 0.84, b: 0, a: 1}
+  - {r: 1, g: 0, b: 0, a: 1}
+  ballEmissionIntensity: 2
+  ballRenderer: {fileID: 0}
+  enforceLevel: 0
+  currentValue: 0
+  enforceValueMultiplier: 2
+  gravity: {x: 0, y: 0, z: 0}
+  onConveyorCount: 0
