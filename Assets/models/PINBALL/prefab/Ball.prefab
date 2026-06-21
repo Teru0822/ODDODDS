@@ -10,15 +10,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 2b7d6666ef809b443bcd61245d95ce6b, type: 3}
       propertyPath: m_LocalScale.x
-      value: 9.218796
+      value: 7.2632127
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2b7d6666ef809b443bcd61245d95ce6b, type: 3}
       propertyPath: m_LocalScale.y
-      value: 9.218796
+      value: 7.2632127
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2b7d6666ef809b443bcd61245d95ce6b, type: 3}
       propertyPath: m_LocalScale.z
-      value: 9.218796
+      value: 7.2632127
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2b7d6666ef809b443bcd61245d95ce6b, type: 3}
       propertyPath: m_LocalPosition.x
@@ -144,15 +144,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PinballBallController
   mass: 0.5
-  bounciness: 0.5
+  bounciness: 0.3
   friction: 0
   frictionCombine: 3
   splitTargetTag: Splitter
-  splitSpread: 1
+  splitSpread: 0.1
   splitCount: 2
-  splitScaleRatio: 0.5
-  spawnUpOffset: 0.5
-  spawnXOffset: 0.5
+  splitScaleRatio: 0.9
+  spawnUpOffset: 0.05
+  spawnXOffset: 0.05
   ignoreCollisionDuration: 0.4
   initialDetectionRadius: 0.08
   manualBoundsXMin: 0.81

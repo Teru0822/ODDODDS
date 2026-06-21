@@ -687,6 +687,17 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1.6865958, z: 1}
   m_Center: {x: 0.000000004525978, y: 0.3432963, z: 0.000000042766903}
+--- !u!114 &978461721 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8732777780117315343, guid: 29bb5e3d595e25b4889ea50d1fdff635, type: 3}
+  m_PrefabInstance: {fileID: 7396899447293769217}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4745c74e4a81d0144ae5a36603f4d4ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BallWarpCatcher
 --- !u!1 &999830977 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4893153985800821236, guid: 29bb5e3d595e25b4889ea50d1fdff635, type: 3}
@@ -1259,6 +1270,71 @@ MonoBehaviour:
   spotLightName: Spot Light
   spotLightObject: {fileID: 307780413}
   manageCursor: 1
+--- !u!114 &2206659404811244389
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1942527355}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 77e6385ac3ea4664dbe010c0bb03decc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PinballExchangeSequence
+  session: {fileID: 0}
+  mainCamera: {fileID: 0}
+  warpCatcher: {fileID: 978461721}
+  ballWarpPoint2: {fileID: 0}
+  ballWarpPoint2Name: BallWarpPoint2
+  cupSpawnPos: {fileID: 0}
+  cupSpawnPosName: cupSpawnPos
+  exCamPos1: {fileID: 0}
+  exCamPos1Name: ex_cam_pos1
+  exCamPos2: {fileID: 0}
+  exCamPos2Name: ex_cam_pos2
+  exExchange: {fileID: 0}
+  exExchangeName: Ex_exchange
+  cupPrefab: {fileID: 4267183928840789123, guid: 603aa5395538f0f499fb817bb4fc20db, type: 3}
+  exchangeStation: {fileID: 0}
+  exchangeButton: {fileID: 0}
+  camDuration: 1.2
+  camEase:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reEmitInterval: 0.5
+  delayBeforeCupRotate: 1
+  reEmitPhysicMaterial: {fileID: 0}
+  reEmitFriction: 0.4
+  reEmitBounciness: 0.15
+  cupPopScale: 1.15
+  cupPopDuration: 0.18
+  cupRotateEuler: {x: 0, y: 120, z: 0}
+  cupRotateDuration: 1
+  drainTimeout: 15
+  dispenseTimeout: 20
+  logEvents: 1
 --- !u!1001 &7396899447293769217
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1359,6 +1435,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: P1
       objectReference: {fileID: 0}
+    - target: {fileID: 6749697756927335078, guid: 29bb5e3d595e25b4889ea50d1fdff635, type: 3}
+      propertyPath: maxHits
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 7943012723874607637, guid: 29bb5e3d595e25b4889ea50d1fdff635, type: 3}
       propertyPath: m_Enabled
       value: 0
@@ -1445,6 +1525,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 4304903515630343758, guid: 29bb5e3d595e25b4889ea50d1fdff635, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2206659404811244387}
+    - targetCorrespondingSourceObject: {fileID: 4304903515630343758, guid: 29bb5e3d595e25b4889ea50d1fdff635, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2206659404811244389}
     - targetCorrespondingSourceObject: {fileID: 4874788922600917329, guid: 29bb5e3d595e25b4889ea50d1fdff635, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7396899447293769230}

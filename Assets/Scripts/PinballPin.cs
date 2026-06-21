@@ -26,10 +26,12 @@ public class PinballPin : MonoBehaviour
              "（例: 3 なら 3 回目までは分裂/強化が起き、4 回目以降は無効）")]
     [SerializeField, Min(1)] private int maxHits = 1;
 
-    [Tooltip("規定回数に達して効果が尽きたときに非表示 (SetActive(false)) にする GameObject。" +
-             "※ Collider はここで消さない。Collider を含むオブジェクトを指定すると物理判定も消えるので、" +
-             "見た目用の子オブジェクト（メッシュ等）を指定すること。null なら何も隠さない")]
+    [Tooltip("規定回数に達して効果が尽きたときに非表示 (SetActive(false)) にする GameObject（見た目用）。null なら何も隠さない")]
     [SerializeField] private GameObject hideOnExhaust;
+
+    [Tooltip("効果が尽きたときに、このピン配下の全 Collider を無効化する（玉が素通りするようになる）。" +
+             "Exchange 換金で再有効化される")]
+    [SerializeField] private bool disableCollidersOnExhaust = true;
 
     [Header("ヒット時の SFX / VFX (このピン個別)")]
     [Tooltip("玉がこのピンに当たった瞬間に再生する効果音。ピンごとに別の音を割り当てられる。null なら無音")]
@@ -55,6 +57,7 @@ public class PinballPin : MonoBehaviour
 
     private int _hits = 0;
     private ExchangeStation _exchangeStation;
+    private Collider[] _colliders;
 
     /// <summary>効果が尽きた（規定ヒット回数に達した）か。Collider は消さないので物理判定は残る。</summary>
     public bool IsConsumed => _hits >= maxHits;
@@ -62,6 +65,9 @@ public class PinballPin : MonoBehaviour
 
     void Start()
     {
+        // 効果切れ時にコライダーを無効化できるよう、配下の Collider をキャッシュ
+        _colliders = GetComponentsInChildren<Collider>(true);
+
         if (!reactivateOnExchangeDispense) return;
         _exchangeStation = FindAnyObjectByType<ExchangeStation>();
         if (_exchangeStation == null) return;
@@ -80,28 +86,42 @@ public class PinballPin : MonoBehaviour
         }
     }
 
-    /// <summary>ヒット数をリセットして再び効果を発動できるようにし、隠したオブジェクトを再表示する。</summary>
+    /// <summary>ヒット数をリセットして再び効果を発動できるようにし、見た目とコライダーを復帰する。</summary>
     public void Reactivate()
     {
         if (_hits == 0) return;
         _hits = 0;
-        if (hideOnExhaust != null) hideOnExhaust.SetActive(true);
+        ApplyExhaustState(false);
     }
 
     /// <summary>
     /// 玉が触れた時に呼ぶ。まだ規定回数に達していなければヒットを 1 加算して true（効果発動）。
-    /// 規定回数に達した時点で hideOnExhaust を非表示にする。Collider は一切無効化しない。
+    /// 規定回数に達した時点で hideOnExhaust を非表示にし、（設定時は）配下の Collider を無効化する。
     /// 既に効果が尽きていれば false。
     /// </summary>
     public bool TryConsume()
     {
         if (_hits >= maxHits) return false;
         _hits++;
-        if (_hits >= maxHits && hideOnExhaust != null)
-        {
-            hideOnExhaust.SetActive(false);
-        }
+        if (_hits >= maxHits) ApplyExhaustState(true);
         return true;
+    }
+
+    /// <summary>効果切れ状態（exhausted）に応じて、見た目の非表示とコライダーの有効/無効を切り替える。</summary>
+    private void ApplyExhaustState(bool exhausted)
+    {
+        // 復帰時は先に見た目を戻してから Collider を有効化（非アクティブ配下の Collider も拾えるように）
+        if (!exhausted && hideOnExhaust != null) hideOnExhaust.SetActive(true);
+
+        if (disableCollidersOnExhaust && _colliders != null)
+        {
+            for (int i = 0; i < _colliders.Length; i++)
+            {
+                if (_colliders[i] != null) _colliders[i].enabled = !exhausted;
+            }
+        }
+
+        if (exhausted && hideOnExhaust != null) hideOnExhaust.SetActive(false);
     }
 
     /// <summary>
