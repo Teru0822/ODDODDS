@@ -1297,6 +1297,33 @@ public class UFOArmController : MonoBehaviour
                 }
             }
         }
+
+        // 【新規】swayJoint の Anchor / Connected Anchor の可視化
+        if (swayJoint != null)
+        {
+            // ジョイントのローカルアンカーをワールド座標に変換 (緑の球体)
+            Vector3 anchorWorldPos = swayJoint.transform.TransformPoint(swayJoint.anchor);
+            Gizmos.color = Color.green;
+            Gizmos.DrawSphere(anchorWorldPos, 0.05f);
+
+            // 接続相手（ConnectedBody）のローカルアンカーをワールド座標に変換 (青の球体)
+            Vector3 connectedAnchorWorldPos;
+            if (swayJoint.connectedBody != null)
+            {
+                connectedAnchorWorldPos = swayJoint.connectedBody.transform.TransformPoint(swayJoint.connectedAnchor);
+            }
+            else
+            {
+                connectedAnchorWorldPos = swayJoint.transform.TransformPoint(swayJoint.connectedAnchor);
+            }
+
+            Gizmos.color = Color.blue;
+            Gizmos.DrawSphere(connectedAnchorWorldPos, 0.05f);
+
+            // 二つのアンカーを赤い線で結ぶ
+            Gizmos.color = Color.red;
+            Gizmos.DrawLine(anchorWorldPos, connectedAnchorWorldPos);
+        }
     }
 
 
