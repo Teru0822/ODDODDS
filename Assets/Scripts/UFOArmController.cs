@@ -6,7 +6,7 @@ using UnityEngine;
 /// </summary>
 public class UFOArmController : MonoBehaviour
 {
-    public enum ArmState { Idle, Moving, OpeningClaw, Descending, PostCollisionDescending, Grabbing, Ascending }
+    public enum ArmState { Idle, Moving, OpeningClaw, Descending, Grabbing, Ascending }
 
     // ─────────────────────────────────────
     [Header("アーム参照")]
@@ -88,8 +88,7 @@ public class UFOArmController : MonoBehaviour
     public float descentSpeedMultiplier = 1.5f;
     [Tooltip("掴んでから上昇を開始するまでの待機秒数")]
     public float grabWaitSeconds = 0.5f;
-    [Tooltip("何かにぶつかった後、さらに下降を続ける秒数（コインをしっかり掴むため）")]
-    public float postCollisionDescentSeconds = 0.15f;
+
     [Tooltip("指定されたコライダーに入った場合、追加下降をスキップして即座に爪を閉じて上昇します")]
     public Collider immediateGrabArea;
 
@@ -178,13 +177,17 @@ public class UFOArmController : MonoBehaviour
     private bool         _wantFingerOpen = false;
     public bool WantFingerOpen => _wantFingerOpen;
 
-    private System.Collections.Generic.List<Collider> _armSolidColliders = new System.Collections.Generic.List<Collider>();
-    private System.Collections.Generic.List<Collider> _ignoredCoinColliders = new System.Collections.Generic.List<Collider>();
+
 
     /// <summary>
     /// アームが下降・掴み・上昇などの一連の動作中（Busy）であるかどうか。
     /// </summary>
     public bool IsBusy => _state != ArmState.Idle && _state != ArmState.Moving;
+
+    /// <summary>
+    /// アームが下降・掴み・上昇などの動作中（IsBusy）、または手動開閉コルーチンが実行中であるかを示します。
+    /// </summary>
+    public bool IsInputLocked => IsBusy || (_toggleClawCoroutine != null);
 
     // ─────────────────────────────────────
 
@@ -266,11 +269,12 @@ public class UFOArmController : MonoBehaviour
         {
             // Transformの親子関係による物理挙動の競合（揺れが逆になる現象）を防ぐため、
             // 実行時に親オブジェクトから切り離し、静的な親（あるいはルート）に配置します。
-            if (swayJoint.transform.parent != null)
-            {
-                swayJoint.transform.SetParent(armRoot != null ? armRoot.parent : null, true);
-                Debug.Log($"[UFOArmController] Auto-unparented {swayJoint.name} to prevent double-transform physics conflicts.");
-            }
+            // 一旦親子関係の解除を停止して挙動を確認するためコメントアウトします
+            // if (swayJoint.transform.parent != null)
+            // {
+            //     swayJoint.transform.SetParent(armRoot != null ? armRoot.parent : null, true);
+            //     Debug.Log($"[UFOArmController] Auto-unparented {swayJoint.name} to prevent double-transform physics conflicts.");
+            // }
 
             Rigidbody swayRb = swayJoint.GetComponent<Rigidbody>();
             if (swayRb != null)
@@ -330,7 +334,7 @@ public class UFOArmController : MonoBehaviour
     /// <summary>ButtonController から呼ばれる：下降サイクルを開始</summary>
     public void StartDescentCycle()
     {
-        if (_state != ArmState.Idle && _state != ArmState.Moving) return;
+        if (IsInputLocked) return;
         
         // すぐ下降せず、まず爪を上に開くフェーズに入る
         _state = ArmState.OpeningClaw;
@@ -338,23 +342,39 @@ public class UFOArmController : MonoBehaviour
         _stateTimer = 1.0f; // 1秒間待機する
     }
 
-    /// <summary>ButtonController から呼ばれる：アームを手動で開閉する（トグル）</summary>
+    private Coroutine _toggleClawCoroutine;
+
+    /// <summary>ButtonController から呼ばれる：アームを手動で開閉する</summary>
     public void ToggleClaw()
     {
-        // 今の状態の逆にする（開いていれば閉じ、閉じていれば開く）
-        _wantFingerOpen = !_wantFingerOpen;
-        Debug.Log($"[UFOArmController] 手動開閉ボタンが押されました！ 開く={_wantFingerOpen}");
+        if (IsInputLocked) return;
+        _toggleClawCoroutine = StartCoroutine(ToggleClawRoutine());
     }
 
+    private System.Collections.IEnumerator ToggleClawRoutine()
+    {
+        _wantFingerOpen = true;
+        Debug.Log($"[UFOArmController] 手動開閉ボタンが押されました！ 開きます。");
+
+        // アームが開ききるまでの時間（0.5秒） ＋ 開ききってからの待機（0.3秒）＝合計 0.8秒
+        yield return new WaitForSeconds(0.8f);
+
+        _wantFingerOpen = false;
+        Debug.Log($"[UFOArmController] 自動的に閉じます。");
+
+        // アームが閉じきる時間（0.5秒）待ってからコルーチンを解放する
+        yield return new WaitForSeconds(0.5f);
+        _toggleClawCoroutine = null;
+    }
     private bool _collidersDisabledForSpawn = false;
 
     void Update()
     {
+        UpdateColliderStateForSpawning();
         UpdateFingersAndSway();
         UpdateStateMachine();
         WakeUpNearbyCoins();
         UpdateMagnet();
-        UpdateSpawningCollisionState();
     }
 
     void UpdateColliderStateForSpawning()
@@ -389,85 +409,9 @@ public class UFOArmController : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// アームおよびSwayJoint以下の非トリガーコライダーをすべて事前収集します。
-    /// </summary>
-    private void CollectArmColliders()
-    {
-        _armSolidColliders.Clear();
-        if (armRoot != null)
-        {
-            foreach (var col in armRoot.GetComponentsInChildren<Collider>(true))
-            {
-                if (col != null && !col.isTrigger)
-                {
-                    _armSolidColliders.Add(col);
-                }
-            }
-        }
-        if (swayJoint != null)
-        {
-            foreach (var col in swayJoint.GetComponentsInChildren<Collider>(true))
-            {
-                if (col != null && !col.isTrigger && !_armSolidColliders.Contains(col))
-                {
-                    _armSolidColliders.Add(col);
-                }
-            }
-        }
-        Debug.Log($"[UFOArmController] Collected {_armSolidColliders.Count} solid arm colliders for dynamic collision ignore.");
-    }
 
-    /// <summary>
-    /// コインが生成された際に呼ばれ、アームのコライダーとの物理衝突を無視リストに登録して無効化します。
-    /// </summary>
-    public void IgnoreCollisionWithCoin(Collider coinCol)
-    {
-        if (coinCol == null) return;
 
-        foreach (var armCol in _armSolidColliders)
-        {
-            if (armCol != null)
-            {
-                Physics.IgnoreCollision(armCol, coinCol, true);
-            }
-        }
 
-        if (!_ignoredCoinColliders.Contains(coinCol))
-        {
-            _ignoredCoinColliders.Add(coinCol);
-        }
-    }
-
-    /// <summary>
-    /// コインのスポーン状況を毎フレーム監視し、スポーンが終了してコインが静止した段階で、衝突を安全に再有効化します。
-    /// </summary>
-    private void UpdateSpawningCollisionState()
-    {
-        bool isSpawningActive = ItemSpawner.IsSpawning || (Time.time < CoinOptimizer.freezeStartTime);
-
-        // スポーン期間が終了し、無視リストに未処理のコライダーが残っている場合、衝突を再有効化する
-        if (!isSpawningActive && _ignoredCoinColliders.Count > 0)
-        {
-            int count = 0;
-            foreach (var coinCol in _ignoredCoinColliders)
-            {
-                if (coinCol != null)
-                {
-                    foreach (var armCol in _armSolidColliders)
-                    {
-                        if (armCol != null)
-                        {
-                            Physics.IgnoreCollision(armCol, coinCol, false);
-                        }
-                    }
-                    count++;
-                }
-            }
-            _ignoredCoinColliders.Clear();
-            Debug.Log($"[UFOArmController] Coin spawning and settling complete. Re-enabled physics collision between arm and {count} coins.");
-        }
-    }
 
     void FixedUpdate()
     {
@@ -492,7 +436,6 @@ public class UFOArmController : MonoBehaviour
         // 上昇中（Ascending）は無駄な物理演算を防ぐため、この直下ボックス判定は行いません
         bool isDescendingOrGrabbing = (_state == ArmState.OpeningClaw || 
                                        _state == ArmState.Descending || 
-                                       _state == ArmState.PostCollisionDescending || 
                                        _state == ArmState.Grabbing);
 
         if (isDescendingOrGrabbing)
@@ -588,11 +531,8 @@ public class UFOArmController : MonoBehaviour
 
     void UpdateMovement()
     {
-        // 下降中・掴み中・上昇中はXZ移動しない
-        if (_state == ArmState.Descending ||
-            _state == ArmState.PostCollisionDescending ||
-            _state == ArmState.Grabbing   ||
-            _state == ArmState.Ascending) return;
+        // アーム動作中、または手動開閉中は移動を禁止する
+        if (IsInputLocked) return;
         if (armRoot == null) return;
 
         Vector3 pos = (_armRigidbody != null) ? _armRigidbody.position : armRoot.position;
@@ -857,7 +797,7 @@ public class UFOArmController : MonoBehaviour
         if (isImmediateArea || isClawRiseContact)
         {
             // 指定エリアに入った場合、下降中または少しだけ下降中のステートであれば、即座に掴む（Grabbing）状態に移行する
-            if (_state == ArmState.Descending || _state == ArmState.PostCollisionDescending)
+            if (_state == ArmState.Descending)
             {
                 Debug.Log($"[UFOArmController] Entered grab trigger area (immediateArea={isImmediateArea}, clawRiseContact={isClawRiseContact}) with {hitCollider.name}. Bypassing extra descent. State: {_state} -> Grabbing");
                 _state = ArmState.Grabbing;
@@ -938,19 +878,7 @@ public class UFOArmController : MonoBehaviour
                 }
                 break;
 
-            case ArmState.PostCollisionDescending:
-                // 少しだけ下降を継続する
-                _stateTimer -= Time.deltaTime;
-                if (_stateTimer <= 0f || (stretchRope != null && stretchRope.IsAtMax()))
-                {
-                    Debug.Log("[UFOArmController] State changed: PostCollisionDescending -> Grabbing.");
-                    _state = ArmState.Grabbing;
-                    _wantFingerOpen = false;
-                    _stateTimer = grabWaitSeconds;
-                    
-                    if (stretchRope != null) stretchRope.PauseExternalControl(); // 掴み中はピタッと停止
-                }
-                break;
+
 
             case ArmState.Grabbing:
                 _stateTimer -= Time.deltaTime;
@@ -1031,77 +959,7 @@ public class UFOArmController : MonoBehaviour
         InitializeFingerJoints();
     }
 
-    // ─────────────────────────────────────
-    // アーム（指）の動的交換処理（プレハブ生成版・旧方式）
-    // ─────────────────────────────────────
-    public void ChangeClaw(GameObject newClawPrefab)
-    {
-        if (fingerParts == null || fingerParts.Length == 0 || fingerParts[0] == null) return;
 
-        // 今のfinger達の親（通常は "finger" という名前のオブジェクト）を取得
-        Transform parentFolder = fingerParts[0].parent;
-
-        // 既存の指（finger1〜4など）をすべて削除
-        foreach (Transform child in parentFolder)
-        {
-            Destroy(child.gameObject);
-        }
-
-        // 新しいアーム（プレハブ）を生成
-        GameObject newClawObj = Instantiate(newClawPrefab, parentFolder);
-        newClawObj.transform.localPosition = Vector3.zero;
-        newClawObj.transform.localRotation = Quaternion.identity;
-
-        // 新しいプレハブの中に UFOClawData がついていれば、各種設定（開く角度など）を上書きする
-        UFOClawData data = newClawObj.GetComponent<UFOClawData>();
-        if (data != null)
-        {
-            this.fingerOpenAngle = data.fingerOpenAngle;
-            this.useCustomOpenTransform = data.useCustomOpenTransform;
-
-            this.invertFingerAngle = (data.invertFingerAngle != null && data.invertFingerAngle.Length > 0) ? data.invertFingerAngle : null;
-            this.fingerAngleOffsets = (data.fingerAngleOffsets != null && data.fingerAngleOffsets.Length > 0) ? data.fingerAngleOffsets : null;
-            this.customOpenLocalPositions = (data.customOpenLocalPositions != null && data.customOpenLocalPositions.Length > 0) ? data.customOpenLocalPositions : null;
-            this.customOpenLocalRotations = (data.customOpenLocalRotations != null && data.customOpenLocalRotations.Length > 0) ? data.customOpenLocalRotations : null;
-
-            // インスペクターで指パーツが明示されている場合はそれを使う
-            if (data.fingerParts != null && data.fingerParts.Length > 0)
-            {
-                this.fingerParts = data.fingerParts;
-            }
-            else
-            {
-                // 指定されていなければ、従来通り直下の子オブジェクトを登録する
-                int childCount = newClawObj.transform.childCount;
-                this.fingerParts = new Transform[childCount];
-                for (int i = 0; i < childCount; i++)
-                {
-                    this.fingerParts[i] = newClawObj.transform.GetChild(i);
-                }
-            }
-        }
-        else
-        {
-            // 新しいアームに設定が無い場合は、前回の設定を引き継がずにリセットする
-            this.useCustomOpenTransform = false;
-            this.invertFingerAngle = null;
-            this.fingerAngleOffsets = null;
-            this.customOpenLocalPositions = null;
-            this.customOpenLocalRotations = null;
-
-            // 従来通り直下の子オブジェクトを登録する
-            int childCount = newClawObj.transform.childCount;
-            this.fingerParts = new Transform[childCount];
-            for (int i = 0; i < childCount; i++)
-            {
-                this.fingerParts[i] = newClawObj.transform.GetChild(i);
-            }
-        }
-
-        // もう一度初期化処理を走らせる
-        InitializeFingers();
-        InitializeFingerJoints();
-    }
 
     public void InitializeFingers()
     {
@@ -1149,8 +1007,7 @@ public class UFOArmController : MonoBehaviour
             }
         }
 
-        // アームの全ソリッドコライダーを収集
-        CollectArmColliders();
+
     }
 
     private void InitializeFingerJoints()
@@ -1258,7 +1115,6 @@ public class UFOArmController : MonoBehaviour
                 // ゲーム実行中：ステート（動作中か否か）に応じて切り替え
                 bool isDescendingOrGrabbing = (_state == ArmState.OpeningClaw || 
                                                _state == ArmState.Descending || 
-                                               _state == ArmState.PostCollisionDescending || 
                                                _state == ArmState.Grabbing);
                 if (isDescendingOrGrabbing)
                 {
