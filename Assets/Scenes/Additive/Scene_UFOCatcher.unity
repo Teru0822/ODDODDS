@@ -163,6 +163,37 @@ HingeJoint:
   m_EnablePreprocessing: 1
   m_MassScale: 1
   m_ConnectedMassScale: 1
+--- !u!1 &166663205
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 166663206}
+  m_Layer: 0
+  m_Name: coin_generate
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &166663206
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 166663205}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0.7071068, z: -0, w: 0.7071068}
+  m_LocalPosition: {x: 4.0148997, y: 6.5579996, z: -3.1549997}
+  m_LocalScale: {x: 1.9636799, y: 1.9636799, z: 1.9636799}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2023033324}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &186524382 stripped
 BoxCollider:
   m_CorrespondingSourceObject: {fileID: 2361784797221088014, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
@@ -495,6 +526,11 @@ MonoBehaviour:
       m_Calls: []
   audioSpatialBlend: 0
   logEvents: 1
+--- !u!4 &2023033324 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1503717751264703810, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+  m_PrefabInstance: {fileID: 5351351319220983938}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &2036606100 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3561571661407418773, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
@@ -659,6 +695,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: armRoot
+      value: 
+      objectReference: {fileID: 166663206}
     - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: totalItems
       value: 1500
@@ -1137,7 +1177,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7587156506030312916, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: useCustomOpenTransform
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7587156506030312916, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: wakeUpDownwardsOffset.x
@@ -1227,6 +1267,9 @@ PrefabInstance:
     - {fileID: 834577992429594404, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 1503717751264703810, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      insertIndex: 2
+      addedObject: {fileID: 166663206}
     - targetCorrespondingSourceObject: {fileID: 3561571661407418773, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       insertIndex: 0
       addedObject: {fileID: 945589371}
