@@ -45,6 +45,18 @@ public class UFOItemGoal : MonoBehaviour
     [Tooltip("時計を落とし口に入れたときにUFOキャッチャーの残り時間を何秒延長するか")]
     [SerializeField] public float watchTimeExtension = 20f;
 
+    [Header("ジャックポット設定")]
+    [Tooltip("ジャックポット発生時に降らせるオブジェクトのプレハブリスト（空の場合はゴールドコインになります）")]
+    public System.Collections.Generic.List<GameObject> jackpotRainPrefabs = new System.Collections.Generic.List<GameObject>();
+    [Tooltip("ジャックポット発生時に降らせるコインの枚数")]
+    public int jackpotRainCoinCount = 100;
+    [Tooltip("ジャックポット発生時に降らせる時間（秒）")]
+    public float jackpotRainDuration = 5.0f;
+    [Tooltip("ジャックポット発生時に降らせる範囲のスケール（1でエリア0の全域、小さいほど中心部に狭まります）")]
+    public Vector2 jackpotRainAreaScale = new Vector2(0.5f, 0.5f);
+    [Tooltip("ジャックポット発生時に降らせる範囲のオフセット（エリア0の中心からの位置のズレ）")]
+    public Vector2 jackpotRainAreaOffset = Vector2.zero;
+
     private void Start()
     {
         // AudioSourceの自動取得
@@ -128,6 +140,38 @@ public class UFOItemGoal : MonoBehaviour
                     // コイン獲得音の再生
                     PlaySound(coinGetSound);
                     break;
+                case UFOItemType.Jackpot:
+                    // メインのお金（MoneyManager）ではなく、未洗浄メダルとして別に貯める
+                    if (UnwashedMoneyManager.Instance != null)
+                    {
+                        UnwashedMoneyManager.Instance.Add(finalValue);
+                    }
+                    else
+                    {
+                        unwashedMoney += finalValue;
+                        UpdateUnwashedMoneyText();
+                    }
+                    Debug.Log($"[獲得] Jackpot！ (未洗浄メダル総額: {unwashedMoney}円)");
+                    
+                    // コイン獲得音の再生
+                    PlaySound(coinGetSound);
+
+                    // ジャックポット発生時にコイン雨を降らせる
+                    if (ItemSpawner.Instance != null)
+                    {
+                        System.Collections.Generic.List<GameObject> prefabsToSpawn = new System.Collections.Generic.List<GameObject>();
+                        if (jackpotRainPrefabs != null && jackpotRainPrefabs.Count > 0)
+                        {
+                            prefabsToSpawn.AddRange(jackpotRainPrefabs);
+                        }
+                        else
+                        {
+                            // フォールバック
+                            prefabsToSpawn.Add(ItemSpawner.Instance.goldCoinPrefab);
+                        }
+                        ItemSpawner.Instance.StartJackpotRain(prefabsToSpawn, jackpotRainCoinCount, jackpotRainDuration, jackpotRainAreaScale, jackpotRainAreaOffset);
+                    }
+                    break;
                 case UFOItemType.Watch:
                     collectedWatches++;
                     Debug.Log($"[獲得] 時計！ (累計: {collectedWatches}個)");
@@ -175,5 +219,41 @@ public class UFOItemGoal : MonoBehaviour
         }
     }
 
+#if UNITY_EDITOR
+    private void OnDrawGizmosSelected()
+    {
+        // 開発中にジャックポットのコイン雨の発生範囲を可視化します
+        ItemSpawner spawner = FindObjectOfType<ItemSpawner>();
+        if (spawner == null) return;
 
+        // エリア0（左上）の基本バウンズを取得
+        var bounds = spawner.ComputeCellBounds(0, spawner.gridType);
+
+        Vector3 spawnerCenter = (spawner.armRoot != null) ? spawner.armRoot.position : spawner.transform.position;
+        spawnerCenter.y += spawner.spawnYOffset;
+
+        // エリア0の中心
+        float cellCenterX = (bounds.minX + bounds.maxX) * 0.5f;
+        float cellCenterZ = (bounds.minZ + bounds.maxZ) * 0.5f;
+
+        // オフセットとスケールを適用
+        float rainCenterX = cellCenterX + jackpotRainAreaOffset.x;
+        float rainCenterZ = cellCenterZ + jackpotRainAreaOffset.y;
+        float halfW = (bounds.maxX - bounds.minX) * 0.5f * jackpotRainAreaScale.x;
+        float halfH = (bounds.maxZ - bounds.minZ) * 0.5f * jackpotRainAreaScale.y;
+
+        Vector3 rainCenter = spawnerCenter + new Vector3(rainCenterX, 0f, rainCenterZ);
+        Vector3 rainSize = new Vector3(halfW * 2f, 0.1f, halfH * 2f);
+
+        // シーンビューに水色のボックスを表示
+        Gizmos.color = new Color(0f, 0.8f, 1f, 0.18f);
+        Gizmos.DrawCube(rainCenter, rainSize);
+        Gizmos.color = new Color(0f, 0.8f, 1f, 0.85f);
+        Gizmos.DrawWireCube(rainCenter, rainSize);
+
+        // ラベルの描画
+        UnityEditor.Handles.color = new Color(0f, 0.8f, 1f, 0.95f);
+        UnityEditor.Handles.Label(rainCenter + Vector3.up * 0.1f, "Jackpot Rain Area (Cell 0)");
+    }
+#endif
 }
