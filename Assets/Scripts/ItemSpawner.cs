@@ -64,6 +64,7 @@ public class ItemSpawner : MonoBehaviour
 
     public static ItemSpawner Instance { get; private set; }
     public static bool IsSpawning { get; private set; } = false;
+    public static bool IsInitialSpawning { get; private set; } = false;
 
     // 現在のウェーブの設定
     private GridType _currentWaveGridType;
@@ -116,6 +117,7 @@ public class ItemSpawner : MonoBehaviour
 
     private IEnumerator SpawnRoutine()
     {
+        IsInitialSpawning = true;
         // 2000枚の時は10秒、0枚の時は0秒で一次関数的に時間を変更
         totalItems = Mathf.Max(0, totalItems);
         spawnDuration = (10f / 2000f) * totalItems;
@@ -149,6 +151,9 @@ public class ItemSpawner : MonoBehaviour
         IsSpawning = false;
         CoinOptimizer.freezeStartTime = Time.time + 3.0f;
         Debug.Log($"[ItemSpawner] スポーン完了。{CoinOptimizer.freezeStartTime:F1}秒後から凍結チェック開始");
+
+        yield return new WaitForSeconds(3.0f);
+        IsInitialSpawning = false;
     }
 
     private void PrepareWaveSettings()

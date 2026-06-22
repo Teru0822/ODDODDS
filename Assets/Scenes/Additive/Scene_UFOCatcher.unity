@@ -700,9 +700,21 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 166663206}
     - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: goldRate
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: totalItems
       value: 1500
       objectReference: {fileID: 0}
+    - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: jackpotRate
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: jackpotPrefab
+      value: 
+      objectReference: {fileID: 956049678534534962, guid: eb976495a9121fc4f897464c41d3becd, type: 3}
     - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: goldCoinPrefab
       value: 
@@ -715,6 +727,42 @@ PrefabInstance:
       propertyPath: silverCoinPrefab
       value: 
       objectReference: {fileID: 1801957764297551110, guid: 6581663a52055644e8b8de069e3e3c84, type: 3}
+    - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: ratePatterns.Array.data[1].jackpotRate
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: ratePatterns.Array.data[2].jackpotRate
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: ratePatterns.Array.data[3].jackpotRate
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: ratePatterns.Array.data[4].jackpotRate
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: ratePatterns.Array.data[5].jackpotRate
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: ratePatterns.Array.data[6].jackpotRate
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: ratePatterns.Array.data[7].jackpotRate
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: ratePatterns.Array.data[8].jackpotRate
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: ratePatterns.Array.data[9].jackpotRate
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 213259912475814928, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: m_Enabled
       value: 1
@@ -759,6 +807,10 @@ PrefabInstance:
       propertyPath: m_Material
       value: 
       objectReference: {fileID: 13400000, guid: b71bca0c3db850943904da9b02355579, type: 2}
+    - target: {fileID: 826121839856065627, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 938787215703067818, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: m_Enabled
       value: 0
@@ -879,6 +931,42 @@ PrefabInstance:
       propertyPath: m_IsKinematic
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3334286059385818906, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: jackpotRainDuration
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 3334286059385818906, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: jackpotRainCoinCount
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 3334286059385818906, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: jackpotRainCoinPrefab
+      value: 
+      objectReference: {fileID: 956049678534534962, guid: eb976495a9121fc4f897464c41d3becd, type: 3}
+    - target: {fileID: 3334286059385818906, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: jackpotRainAreaScale.x
+      value: 0.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 3334286059385818906, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: jackpotRainAreaScale.y
+      value: 0.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 3334286059385818906, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: jackpotRainAreaOffset.x
+      value: -0.19
+      objectReference: {fileID: 0}
+    - target: {fileID: 3334286059385818906, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: jackpotRainAreaOffset.y
+      value: 0.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 3334286059385818906, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: jackpotRainPrefabs.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3334286059385818906, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: 'jackpotRainPrefabs.Array.data[0]'
+      value: 
+      objectReference: {fileID: 4563478140741147117, guid: c7b8b375e77d0f04dbe82caa5351db21, type: 3}
     - target: {fileID: 3561571661407418773, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: m_LocalPosition.z
       value: -0.1117
@@ -1087,6 +1175,10 @@ PrefabInstance:
       propertyPath: m_Material
       value: 
       objectReference: {fileID: 13400000, guid: b71bca0c3db850943904da9b02355579, type: 2}
+    - target: {fileID: 7381280736474704578, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7530154189205399653, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: m_Enabled
       value: 1
