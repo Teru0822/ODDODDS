@@ -390,8 +390,8 @@ public class UFOArmController : MonoBehaviour
             colliders.AddRange(swayJoint.GetComponentsInChildren<Collider>(true));
         }
 
-        // コインが降っている最中、および落下中の時間帯を判定する
-        bool shouldDisable = ItemSpawner.IsSpawning || (Time.time < CoinOptimizer.freezeStartTime);
+        // 初期ウェーブ生成中（およびその後の3秒間の沈殿待ち時間）のみコライダーを無効化する
+        bool shouldDisable = ItemSpawner.IsInitialSpawning;
 
         if (shouldDisable != _collidersDisabledForSpawn)
         {
