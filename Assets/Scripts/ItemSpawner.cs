@@ -32,6 +32,9 @@ public class ItemSpawner : MonoBehaviour
     public GameObject hourglassPrefab;
     public float hourglassRate = 5f;
 
+    public GameObject jackpotPrefab;
+    public float jackpotRate = 0f;
+
     [Header("グリッド設定")]
     [Tooltip("グリッド分割数 (4面 または 9面)")]
     public GridType gridType = GridType.Grid4;
@@ -59,6 +62,7 @@ public class ItemSpawner : MonoBehaviour
     [Tooltip("行高さの比率 [奥（上）, 中, 手前（下）]。値が大きいほどその行が長くなります。")]
     public float[] grid9RowWeights    = new float[] { 1f, 1f, 1f };
 
+    public static ItemSpawner Instance { get; private set; }
     public static bool IsSpawning { get; private set; } = false;
 
     // 現在のウェーブの設定
@@ -68,21 +72,22 @@ public class ItemSpawner : MonoBehaviour
 
     void Awake()
     {
+        Instance = this;
         // インスペクターで設定されていない場合、デフォルトの10パターンを生成
         if (ratePatterns == null || ratePatterns.Count == 0)
         {
             ratePatterns = new System.Collections.Generic.List<SpawnRatePattern>()
             {
-                new SpawnRatePattern("Pattern 1 (標準)", 60f, 25f, 10f, 5f),
-                new SpawnRatePattern("Pattern 2 (コイン多め)", 40f, 35f, 20f, 5f),
-                new SpawnRatePattern("Pattern 3 (高レア多め)", 20f, 40f, 30f, 10f),
-                new SpawnRatePattern("Pattern 4 (時計特化)", 30f, 30f, 15f, 25f),
-                new SpawnRatePattern("Pattern 5 (フィーバー)", 10f, 20f, 40f, 30f),
-                new SpawnRatePattern("Pattern 6 (銅特化)", 90f, 8f, 1f, 1f),
-                new SpawnRatePattern("Pattern 7 (銀特化)", 10f, 75f, 10f, 5f),
-                new SpawnRatePattern("Pattern 8 (金特化)", 5f, 15f, 75f, 5f),
-                new SpawnRatePattern("Pattern 9 (バランス時計)", 25f, 25f, 25f, 25f),
-                new SpawnRatePattern("Pattern 10 (スーパーフィーバー)", 0f, 10f, 50f, 40f)
+                new SpawnRatePattern("Pattern 1 (標準)", 60f, 25f, 10f, 5f, 0f),
+                new SpawnRatePattern("Pattern 2 (コイン多め)", 40f, 35f, 20f, 5f, 0f),
+                new SpawnRatePattern("Pattern 3 (高レア多め)", 20f, 40f, 30f, 10f, 0f),
+                new SpawnRatePattern("Pattern 4 (時計特化)", 30f, 30f, 15f, 25f, 0f),
+                new SpawnRatePattern("Pattern 5 (フィーバー)", 10f, 20f, 40f, 30f, 0f),
+                new SpawnRatePattern("Pattern 6 (銅特化)", 90f, 8f, 1f, 1f, 0f),
+                new SpawnRatePattern("Pattern 7 (銀特化)", 10f, 75f, 10f, 5f, 0f),
+                new SpawnRatePattern("Pattern 8 (金特化)", 5f, 15f, 75f, 5f, 0f),
+                new SpawnRatePattern("Pattern 9 (バランス時計)", 25f, 25f, 25f, 25f, 0f),
+                new SpawnRatePattern("Pattern 10 (スーパーフィーバー)", 0f, 10f, 50f, 40f, 0f)
             };
         }
     }
@@ -197,7 +202,7 @@ public class ItemSpawner : MonoBehaviour
         else
         {
             // フォールバック用のデフォルトレート
-            var fallback = new SpawnRatePattern("Fallback", copperRate, silverRate, goldRate, hourglassRate);
+            var fallback = new SpawnRatePattern("Fallback", copperRate, silverRate, goldRate, hourglassRate, jackpotRate);
             _activeRates = new SpawnRatePattern[cellCount];
             for (int i = 0; i < cellCount; i++)
             {
@@ -313,7 +318,8 @@ public class ItemSpawner : MonoBehaviour
         float silver = ratePattern.silverRate;
         float gold = ratePattern.goldRate;
         float hourglass = ratePattern.hourglassRate;
-        float totalRate = copper + silver + gold + hourglass;
+        float jackpot = ratePattern.jackpotRate;
+        float totalRate = copper + silver + gold + hourglass + jackpot;
 
         if (totalRate <= 0f) return;
 
@@ -333,9 +339,13 @@ public class ItemSpawner : MonoBehaviour
         {
             prefabToSpawn = goldCoinPrefab;
         }
-        else 
+        else if (rand < copper + silver + gold + hourglass) 
         {
             prefabToSpawn = hourglassPrefab;
+        }
+        else 
+        {
+            prefabToSpawn = jackpotPrefab;
         }
 
         if (prefabToSpawn == null) return;
@@ -368,10 +378,95 @@ public class ItemSpawner : MonoBehaviour
     }
 
     /// <summary>
+    /// ジャックポット発生時に指定のプレハブリストからランダムに指定数だけエリア0（左上）に降らせる
+    /// </summary>
+    public void StartJackpotRain(System.Collections.Generic.List<GameObject> prefabs, int count, float duration, Vector2 areaScale, Vector2 areaOffset)
+    {
+        if (prefabs == null || prefabs.Count == 0 || count <= 0) return;
+        StartCoroutine(JackpotRainRoutine(prefabs, count, duration, areaScale, areaOffset));
+    }
+
+    private IEnumerator JackpotRainRoutine(System.Collections.Generic.List<GameObject> prefabs, int count, float duration, Vector2 areaScale, Vector2 areaOffset)
+    {
+        Debug.Log($"[ItemSpawner] ジャックポット発生: {count}枚のオブジェクトをエリア0に降らせます（期間: {duration}秒、範囲スケール: {areaScale}、オフセット: {areaOffset}）");
+        
+        bool wasSpawning = IsSpawning;
+        IsSpawning = true;
+
+        float startTime = Time.time;
+        int spawnedCount = 0;
+
+        // 生成中・非生成中にかかわらず、現在のグリッドタイプで位置決定。無効なら fallback として gridType を参照
+        GridType activeGrid = wasSpawning ? _currentWaveGridType : gridType;
+
+        while (spawnedCount < count)
+        {
+            float elapsedTime = Time.time - startTime;
+            float progress = duration > 0f ? Mathf.Clamp01(elapsedTime / duration) : 1f;
+            int targetCount = duration > 0f ? Mathf.FloorToInt(progress * count) : count;
+
+            while (spawnedCount < targetCount && spawnedCount < count)
+            {
+                // リストからランダムにプレハブを選択
+                GameObject coinPrefab = prefabs[Random.Range(0, prefabs.Count)];
+                SpawnJackpotSingleItem(coinPrefab, activeGrid, areaScale, areaOffset);
+                spawnedCount++;
+            }
+
+            yield return null;
+        }
+
+        // 全コインが降ってきた後に凍凍チェックが走るように、凍結開始時刻を延長
+        CoinOptimizer.freezeStartTime = Time.time + 3.0f;
+        
+        // 元々スポーン中ではなかった場合のみ、IsSpawning を解除する
+        if (!wasSpawning)
+        {
+            IsSpawning = false;
+        }
+    }
+
+    private void SpawnJackpotSingleItem(GameObject coinPrefab, GridType activeGrid, Vector2 areaScale, Vector2 areaOffset)
+    {
+        if (coinPrefab == null) return;
+
+        // エリア0（左上）に座標計算
+        Vector3 center = (armRoot != null) ? armRoot.position : transform.position;
+        center.y += spawnYOffset;
+
+        var bounds = ComputeCellBounds(0, activeGrid);
+        
+        // 中心点と幅・高さを計算してスケールとオフセットを適用する
+        float centerX = (bounds.minX + bounds.maxX) * 0.5f + areaOffset.x;
+        float centerZ = (bounds.minZ + bounds.maxZ) * 0.5f + areaOffset.y;
+        float halfW = (bounds.maxX - bounds.minX) * 0.5f * areaScale.x;
+        float halfH = (bounds.maxZ - bounds.minZ) * 0.5f * areaScale.y;
+
+        float offsetX = Random.Range(centerX - halfW, centerX + halfW);
+        float offsetZ = Random.Range(centerZ - halfH, centerZ + halfH);
+
+        Vector3 randomPos = center + new Vector3(
+            offsetX,
+            Random.Range(-0.5f, 0.5f), // 上下のブレも少しだけ加える
+            offsetZ
+        );
+
+        GameObject spawnedObj = Instantiate(coinPrefab, randomPos, Random.rotation, parentFolder);
+
+        // プレハブのisKinematicがtrueになっていても必ず落下するよう強制解除する
+        Rigidbody spawnedRb = spawnedObj.GetComponent<Rigidbody>();
+        if (spawnedRb != null)
+        {
+            spawnedRb.isKinematic = false;
+            spawnedRb.useGravity = true;
+        }
+    }
+
+    /// <summary>
     /// セル番号とグリッドタイプから、そのセルの XZ 範囲（グリッド中心からのオフセット）を返す
     /// 列幅・行高さは Inspector の Weight で等比分割する
     /// </summary>
-    private (float minX, float maxX, float minZ, float maxZ) ComputeCellBounds(int cellIndex, GridType gridType)
+    public (float minX, float maxX, float minZ, float maxZ) ComputeCellBounds(int cellIndex, GridType gridType)
     {
         float totalW = spawnArea.x * 2f;
         float totalH = spawnArea.y * 2f;
@@ -528,14 +623,16 @@ public class SpawnRatePattern
     public float silverRate = 25f;
     public float goldRate = 10f;
     public float hourglassRate = 5f;
+    public float jackpotRate = 0f;
 
-    public SpawnRatePattern(string name, float copper, float silver, float gold, float hourglass)
+    public SpawnRatePattern(string name, float copper, float silver, float gold, float hourglass, float jackpot)
     {
         this.name = name;
         this.copperRate = copper;
         this.silverRate = silver;
         this.goldRate = gold;
         this.hourglassRate = hourglass;
+        this.jackpotRate = jackpot;
     }
 }
 
