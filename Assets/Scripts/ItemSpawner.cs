@@ -35,6 +35,9 @@ public class ItemSpawner : MonoBehaviour
     public GameObject jackpotPrefab;
     public float jackpotRate = 0f;
 
+    public GameObject blackDiamondPrefab;
+    public float blackDiamondRate = 0f;
+
     [Header("グリッド設定")]
     [Tooltip("グリッド分割数 (4面 または 9面)")]
     public GridType gridType = GridType.Grid4;
@@ -79,16 +82,16 @@ public class ItemSpawner : MonoBehaviour
         {
             ratePatterns = new System.Collections.Generic.List<SpawnRatePattern>()
             {
-                new SpawnRatePattern("Pattern 1 (標準)", 60f, 25f, 10f, 5f, 0f),
-                new SpawnRatePattern("Pattern 2 (コイン多め)", 40f, 35f, 20f, 5f, 0f),
-                new SpawnRatePattern("Pattern 3 (高レア多め)", 20f, 40f, 30f, 10f, 0f),
-                new SpawnRatePattern("Pattern 4 (時計特化)", 30f, 30f, 15f, 25f, 0f),
-                new SpawnRatePattern("Pattern 5 (フィーバー)", 10f, 20f, 40f, 30f, 0f),
-                new SpawnRatePattern("Pattern 6 (銅特化)", 90f, 8f, 1f, 1f, 0f),
-                new SpawnRatePattern("Pattern 7 (銀特化)", 10f, 75f, 10f, 5f, 0f),
-                new SpawnRatePattern("Pattern 8 (金特化)", 5f, 15f, 75f, 5f, 0f),
-                new SpawnRatePattern("Pattern 9 (バランス時計)", 25f, 25f, 25f, 25f, 0f),
-                new SpawnRatePattern("Pattern 10 (スーパーフィーバー)", 0f, 10f, 50f, 40f, 0f)
+                new SpawnRatePattern("Pattern 1 (標準)", 60f, 25f, 10f, 5f, 0f, 0f),
+                new SpawnRatePattern("Pattern 2 (コイン多め)", 40f, 35f, 20f, 5f, 0f, 0f),
+                new SpawnRatePattern("Pattern 3 (高レア多め)", 20f, 40f, 30f, 10f, 0f, 0f),
+                new SpawnRatePattern("Pattern 4 (時計特化)", 30f, 30f, 15f, 25f, 0f, 0f),
+                new SpawnRatePattern("Pattern 5 (フィーバー)", 10f, 20f, 40f, 30f, 0f, 0f),
+                new SpawnRatePattern("Pattern 6 (銅特化)", 90f, 8f, 1f, 1f, 0f, 0f),
+                new SpawnRatePattern("Pattern 7 (銀特化)", 10f, 75f, 10f, 5f, 0f, 0f),
+                new SpawnRatePattern("Pattern 8 (金特化)", 5f, 15f, 75f, 5f, 0f, 0f),
+                new SpawnRatePattern("Pattern 9 (バランス時計)", 25f, 25f, 25f, 25f, 0f, 0f),
+                new SpawnRatePattern("Pattern 10 (スーパーフィーバー)", 0f, 10f, 50f, 40f, 0f, 0f)
             };
         }
     }
@@ -207,7 +210,7 @@ public class ItemSpawner : MonoBehaviour
         else
         {
             // フォールバック用のデフォルトレート
-            var fallback = new SpawnRatePattern("Fallback", copperRate, silverRate, goldRate, hourglassRate, jackpotRate);
+            var fallback = new SpawnRatePattern("Fallback", copperRate, silverRate, goldRate, hourglassRate, jackpotRate, blackDiamondRate);
             _activeRates = new SpawnRatePattern[cellCount];
             for (int i = 0; i < cellCount; i++)
             {
@@ -324,7 +327,8 @@ public class ItemSpawner : MonoBehaviour
         float gold = ratePattern.goldRate;
         float hourglass = ratePattern.hourglassRate;
         float jackpot = ratePattern.jackpotRate;
-        float totalRate = copper + silver + gold + hourglass + jackpot;
+        float blackDiamond = ratePattern.blackDiamondRate;
+        float totalRate = copper + silver + gold + hourglass + jackpot + blackDiamond;
 
         if (totalRate <= 0f) return;
 
@@ -348,9 +352,13 @@ public class ItemSpawner : MonoBehaviour
         {
             prefabToSpawn = hourglassPrefab;
         }
-        else 
+        else if (rand < copper + silver + gold + hourglass + jackpot) 
         {
             prefabToSpawn = jackpotPrefab;
+        }
+        else
+        {
+            prefabToSpawn = blackDiamondPrefab;
         }
 
         if (prefabToSpawn == null) return;
@@ -629,8 +637,9 @@ public class SpawnRatePattern
     public float goldRate = 10f;
     public float hourglassRate = 5f;
     public float jackpotRate = 0f;
+    public float blackDiamondRate = 0f;
 
-    public SpawnRatePattern(string name, float copper, float silver, float gold, float hourglass, float jackpot)
+    public SpawnRatePattern(string name, float copper, float silver, float gold, float hourglass, float jackpot, float blackDiamond = 0f)
     {
         this.name = name;
         this.copperRate = copper;
@@ -638,6 +647,7 @@ public class SpawnRatePattern
         this.goldRate = gold;
         this.hourglassRate = hourglass;
         this.jackpotRate = jackpot;
+        this.blackDiamondRate = blackDiamond;
     }
 }
 
