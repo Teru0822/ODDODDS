@@ -95,6 +95,9 @@ public class RouletteFloater : MonoBehaviour
     [Tooltip("カメラ方向への回転追従速度（度/秒的なイメージ）。0 で即座にスナップ")]
     [SerializeField, Min(0f)] private float cameraFacingSpeed = 5f;
 
+    [Tooltip("カメラ方向に向いたときの Y 軸補正角度（度）。モデルの正面がズレている場合に調整する")]
+    [SerializeField] private float cameraFacingYOffset = -90f;
+
     // -----------------------------------------------------------------------
     // 内部状態
     // -----------------------------------------------------------------------
@@ -169,7 +172,7 @@ public class RouletteFloater : MonoBehaviour
         dir.y = 0f;
         if (dir.sqrMagnitude < 1e-4f) return;
 
-        Quaternion targetRot = Quaternion.LookRotation(dir);
+        Quaternion targetRot = Quaternion.LookRotation(dir) * Quaternion.Euler(0f, cameraFacingYOffset, 0f);
         transform.rotation = cameraFacingSpeed <= 0f
             ? targetRot
             : Quaternion.Slerp(transform.rotation, targetRot, cameraFacingSpeed * Time.deltaTime);
