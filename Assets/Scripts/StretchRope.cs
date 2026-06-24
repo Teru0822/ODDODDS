@@ -122,9 +122,8 @@ public class StretchRope : MonoBehaviour
             _stretchTime += _externalDir * Time.deltaTime * stretchSpeed * _externalSpeedMul;
             _stretchTime  = Mathf.Clamp01(_stretchTime);
 
-            // 目標に到達したら外部制御を自動解除
-            if ((_externalDir > 0f && _stretchTime >= 1f) ||
-                (_externalDir < 0f && _stretchTime <= 0f))
+            // 上昇して完全に縮みきった（最上点に達した）時のみ、自動で外部制御を解除する
+            if (_externalDir < 0f && _stretchTime <= 0f)
             {
                 StopExternalControl();
             }
