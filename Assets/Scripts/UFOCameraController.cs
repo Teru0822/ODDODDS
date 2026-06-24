@@ -55,6 +55,8 @@ public class UFOCameraController : MonoBehaviour
     [SerializeField] private AudioSource audioSource;
     [Tooltip("コイン投入時（ゲーム開始時）の効果音")]
     [SerializeField] private AudioClip coinInsertSound;
+    [Tooltip("残り10秒を切ったとき（警告時）の効果音")]
+    [SerializeField] private AudioClip lowTimeWarningSound;
     [Tooltip("効果音の音量調整 (1.0より大きい値で音量増幅可能)")]
     [Range(0f, 10f)]
     [SerializeField] private float soundVolume = 1.0f;
@@ -87,6 +89,7 @@ public class UFOCameraController : MonoBehaviour
     private float _playTimer = 0f;
 
     private bool _isTransitioning = false;
+    private bool _hasPlayedLowTimeWarning = false;
     private Vector3 _originalPlayerCamPos;
     private Quaternion _originalPlayerCamRot;
 
@@ -316,6 +319,7 @@ public class UFOCameraController : MonoBehaviour
             if (IsPlaySessionActive)
             {
                 _playTimer -= Time.deltaTime;
+
                 if (_playTimer <= 0f)
                 {
                     bool isBusy = _ufoController != null && _ufoController.IsBusy;
@@ -359,6 +363,9 @@ public class UFOCameraController : MonoBehaviour
 
         // 毎フレーム動的UIの状態を更新
         UpdateDynamicUI();
+
+        // 警告音（残り時間10秒以下）の再生・停止管理
+        UpdateWarningSound();
     }
 
     public int PaymentCount => _paymentCount;
@@ -386,6 +393,10 @@ public class UFOCameraController : MonoBehaviour
             return;
         }
         _playTimer += seconds;
+        if (_playTimer > 10f)
+        {
+            _hasPlayedLowTimeWarning = false; // 時間延長で10秒を超えた場合は警告音再生フラグをリセット
+        }
         Debug.Log($"[UFOCameraController] 残り時間を {seconds}秒延長しました。現在の残り時間: {_playTimer:F1}秒");
     }
 
@@ -398,6 +409,7 @@ public class UFOCameraController : MonoBehaviour
         _paymentCount++;
         _playTimer = playDuration;
         IsPlaySessionActive = true;
+        _hasPlayedLowTimeWarning = false; // 新規セッション開始時に警告音再生フラグをリセット
 
         if (playSpotlight != null)
         {
@@ -918,6 +930,52 @@ public class UFOCameraController : MonoBehaviour
             _promptText.gameObject.SetActive(false);
             _paymentPanel.SetActive(false);
             _timerPanel.SetActive(false);
+        }
+    }
+
+    private void UpdateWarningSound()
+    {
+        bool shouldPlay = IsPlaySessionActive && _playTimer > 0f && _playTimer <= 10f;
+
+        if (shouldPlay)
+        {
+            if (!_hasPlayedLowTimeWarning)
+            {
+                _hasPlayedLowTimeWarning = true;
+                if (lowTimeWarningSound != null)
+                {
+                    if (audioSource == null)
+                    {
+                        audioSource = GetComponent<AudioSource>();
+                        if (audioSource == null)
+                        {
+                            audioSource = gameObject.AddComponent<AudioSource>();
+                            audioSource.playOnAwake = false;
+                            audioSource.spatialBlend = 0f;
+                        }
+                    }
+                    if (audioSource != null)
+                    {
+                        audioSource.clip = lowTimeWarningSound;
+                        audioSource.loop = true;
+                        audioSource.volume = soundVolume;
+                        audioSource.Play();
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (_hasPlayedLowTimeWarning)
+            {
+                _hasPlayedLowTimeWarning = false;
+                if (audioSource != null && audioSource.clip == lowTimeWarningSound)
+                {
+                    audioSource.Stop();
+                    audioSource.clip = null;
+                    audioSource.loop = false;
+                }
+            }
         }
     }
 
