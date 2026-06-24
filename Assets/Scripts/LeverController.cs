@@ -32,6 +32,10 @@ public class LeverController : MonoBehaviour
     public bool invertHorizontal = false;
     public bool invertVertical   = false;
 
+    [Header("ピボット補正")]
+    [Tooltip("回転の基準（ピボット）とするオブジェクト。未指定の場合は自身のピボットを使用します。")]
+    public Transform pivotOverride;
+
     // 内部状態
     private bool       _isDragging      = false;
     private float      _targetAngleH    = 0f;   // マウス入力による目標角度
@@ -41,12 +45,19 @@ public class LeverController : MonoBehaviour
     private Quaternion _initialWorldRot;         // レバーの初期ワールド回転
     private Vector3    _leverInitialUp;          // レバー棒の初期ワールド上方向
     private Collider   _collider;
+    private Vector3    _localOffsetFromPivot;    // ピボットからの初期ローカル座標オフセット
 
     void Start()
     {
         _initialWorldRot = transform.rotation;
         _leverInitialUp  = transform.up;          // レバーが +Y 以外を向いていても対応
         _collider        = GetComponent<Collider>();
+
+        if (pivotOverride != null)
+        {
+            // ピボット基準点から見た自身の初期ローカル座標オフセットを記録
+            _localOffsetFromPivot = pivotOverride.InverseTransformPoint(transform.position);
+        }
     }
 
     void Update()
@@ -117,22 +128,38 @@ public class LeverController : MonoBehaviour
         Vector3 moveDir = camXZRight * normH + camXZForward * normV;
         
         float tiltMagnitude = new Vector2(_angleH, _angleV).magnitude;
+        
+        Quaternion targetWorld;
+        Quaternion additionalRot = Quaternion.identity;
+        float tiltAngle = Mathf.Min(tiltMagnitude, leverMaxAngle);
+
         if (tiltMagnitude < 0.001f || moveDir.sqrMagnitude < 0.001f)
         {
             // 完全に中立: 初期回転に戻す
-            ApplyWorldRotation(_initialWorldRot);
-            return;
+            targetWorld = _initialWorldRot;
+        }
+        else
+        {
+            // 【修正ポイント2】FBXのローカル軸（_leverInitialUp）がズレているとコマ回転してしまうため、
+            // どんなFBXモデルでも常に純粋なワールドの真上(Vector3.up)を直交計算の基準にして、倒れる回転軸を作ります
+            Vector3 rotAxis = Vector3.Cross(Vector3.up, moveDir.normalized).normalized;
+            additionalRot = Quaternion.AngleAxis(tiltAngle, rotAxis);
+            targetWorld = additionalRot * _initialWorldRot;
         }
 
-        // 【修正ポイント2】FBXのローカル軸（_leverInitialUp）がズレているとコマ回転してしまうため、
-        // どんなFBXモデルでも常に純粋なワールドの真上(Vector3.up)を直交計算の基準にして、倒れる回転軸を作ります
-        Vector3 rotAxis = Vector3.Cross(Vector3.up, moveDir.normalized).normalized;
-        
-        float tiltAngle = Mathf.Min(tiltMagnitude, leverMaxAngle);
-        Quaternion additionalRot = Quaternion.AngleAxis(tiltAngle, rotAxis);
-        Quaternion targetWorld   = additionalRot * _initialWorldRot;
-
-        ApplyWorldRotation(targetWorld);
+        if (pivotOverride != null)
+        {
+            // ピボット基準点の位置から傾きを適用した位置を算出
+            Vector3 neutralMeshPos = pivotOverride.TransformPoint(_localOffsetFromPivot);
+            Vector3 tiltedOffset = additionalRot * (neutralMeshPos - pivotOverride.position);
+            
+            transform.position = pivotOverride.position + tiltedOffset;
+            transform.rotation = targetWorld;
+        }
+        else
+        {
+            ApplyWorldRotation(targetWorld);
+        }
     }
 
     void ApplyWorldRotation(Quaternion worldRot)
