@@ -85,6 +85,19 @@ public class RouletteFloater : MonoBehaviour
     [Tooltip("速度の減衰率。大きいほどすぐ止まる")]
     [SerializeField, Min(0f)] private float damping = 3f;
 
+    [Header("カメラ追従（Y軸ビルボード）")]
+    [Tooltip("常に向き続けるカメラの Transform。null なら Camera.main を自動取得")]
+    [SerializeField] private Transform targetCamera;
+
+    [Tooltip("カメラ追従を有効にする")]
+    [SerializeField] private bool enableCameraFacing = true;
+
+    [Tooltip("カメラ方向への回転追従速度（度/秒的なイメージ）。0 で即座にスナップ")]
+    [SerializeField, Min(0f)] private float cameraFacingSpeed = 5f;
+
+    [Tooltip("カメラ方向に向いたときの Y 軸補正角度（度）。モデルの正面がズレている場合に調整する")]
+    [SerializeField] private float cameraFacingYOffset = -90f;
+
     // -----------------------------------------------------------------------
     // 内部状態
     // -----------------------------------------------------------------------
@@ -140,6 +153,29 @@ public class RouletteFloater : MonoBehaviour
         float wobbleZ = Mathf.Cos(time * wobbleFrequency * 0.9f + _timeOffset) * wobbleAmplitude;
 
         transform.position = _basePosition + new Vector3(wobbleX, floatY, wobbleZ);
+
+        // ---- カメラ追従 ------------------------------------------------
+        if (enableCameraFacing) ApplyCameraFacing();
+    }
+
+    // -----------------------------------------------------------------------
+    // カメラ追従（Y軸ビルボード）
+    // -----------------------------------------------------------------------
+
+    private void ApplyCameraFacing()
+    {
+        Transform cam = targetCamera != null ? targetCamera : Camera.main?.transform;
+        if (cam == null) return;
+
+        // カメラへの方向を水平面（XZ）に投影して Y 軸のみ回転
+        Vector3 dir = cam.position - transform.position;
+        dir.y = 0f;
+        if (dir.sqrMagnitude < 1e-4f) return;
+
+        Quaternion targetRot = Quaternion.LookRotation(dir) * Quaternion.Euler(0f, cameraFacingYOffset, 0f);
+        transform.rotation = cameraFacingSpeed <= 0f
+            ? targetRot
+            : Quaternion.Slerp(transform.rotation, targetRot, cameraFacingSpeed * Time.deltaTime);
     }
 
     // -----------------------------------------------------------------------
