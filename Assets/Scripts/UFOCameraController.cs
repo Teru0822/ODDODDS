@@ -362,6 +362,7 @@ public class UFOCameraController : MonoBehaviour
     }
 
     public int PaymentCount => _paymentCount;
+    public float RemainingTime => _playTimer;
 
     public void ResetPaymentCount()
     {
