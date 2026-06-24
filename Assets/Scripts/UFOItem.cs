@@ -6,7 +6,8 @@ public enum UFOItemType
     SilverCoin,
     GoldCoin,
     Watch,
-    Jackpot
+    Jackpot,
+    BlackDiamond
 }
 
 /// <summary>

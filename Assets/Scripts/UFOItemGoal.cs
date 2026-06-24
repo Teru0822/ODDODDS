@@ -37,6 +37,9 @@ public class UFOItemGoal : MonoBehaviour
     [Tooltip("時計獲得時の効果音（未設定の場合はコインと同じ音が鳴ります）")]
     [SerializeField] private AudioClip watchGetSound;
 
+    [Tooltip("ブラックダイヤモンド獲得時の効果音（未設定の場合はコインと同じ音が鳴ります）")]
+    [SerializeField] private AudioClip blackDiamondGetSound;
+
     [Tooltip("効果音の音量調整 (1.0より大きい値で音量増幅可能)")]
     [Range(0f, 10f)]
     [SerializeField] private float soundVolume = 1.0f;
@@ -190,6 +193,16 @@ public class UFOItemGoal : MonoBehaviour
 
                     // 時計獲得音の再生（未設定ならコイン音で代用）
                     PlaySound(watchGetSound != null ? watchGetSound : coinGetSound);
+                    break;
+                case UFOItemType.BlackDiamond:
+                    if (MoneyManager.Instance != null)
+                    {
+                        // baseValueが負の値（または正の値であっても絶対値）を減算として扱う設計
+                        float valToReduce = Mathf.Abs(finalValue);
+                        MoneyManager.Instance.ReduceMoney(valToReduce);
+                        Debug.Log($"[獲得] BlackDiamond！ 洗浄されたお金を {valToReduce}円減らしました。");
+                    }
+                    PlaySound(blackDiamondGetSound != null ? blackDiamondGetSound : coinGetSound);
                     break;
             }
 

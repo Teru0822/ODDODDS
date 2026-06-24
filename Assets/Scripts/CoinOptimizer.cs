@@ -30,6 +30,13 @@ public class CoinOptimizer : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         _col = GetComponent<Collider>();
 
+        if (rb == null)
+        {
+            Debug.LogWarning($"[CoinOptimizer] {gameObject.name} に Rigidbody がアタッチされていません。最適化処理をスキップします。", this);
+            enabled = false;
+            return;
+        }
+
         if (useSphereColliderAutoReplacement)
         {
             ReplaceWithSphereCollider();
