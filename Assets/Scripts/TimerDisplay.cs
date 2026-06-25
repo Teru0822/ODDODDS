@@ -36,23 +36,13 @@ public class TimerDisplay : MonoBehaviour
     [SerializeField] private string idleText = "00:00.0";
 
     // -----------------------------------------------------------------------
-    // 内部状態
-    // -----------------------------------------------------------------------
-
-    private bool _isWarning = false;
-
-    // -----------------------------------------------------------------------
     // Unity ライフサイクル
     // -----------------------------------------------------------------------
 
     private void Awake()
     {
         if (timerText == null)
-        {
             Debug.LogWarning("[TimerDisplay] timerText が未設定です。Inspector で TextMeshProUGUI を割り当ててください。");
-            return;
-        }
-        ApplyColor(false);
     }
 
     private void Update()
@@ -60,29 +50,26 @@ public class TimerDisplay : MonoBehaviour
         if (timerText == null) return;
 
         float remaining = GetRemainingTime();
+        bool isWarning;
 
         if (remaining < 0f)
         {
             timerText.text = idleText;
-            SetWarning(false);
-            return;
+            isWarning = false;
+        }
+        else
+        {
+            remaining = Mathf.Max(0f, remaining);
+            timerText.text = FormatTime(remaining);
+            isWarning = remaining <= warningThreshold;
         }
 
-        remaining = Mathf.Max(0f, remaining);
-        timerText.text = FormatTime(remaining);
-        SetWarning(remaining <= warningThreshold);
+        ApplyColor(isWarning);
     }
 
     // -----------------------------------------------------------------------
     // 色制御
     // -----------------------------------------------------------------------
-
-    private void SetWarning(bool warning)
-    {
-        if (_isWarning == warning) return;
-        _isWarning = warning;
-        ApplyColor(warning);
-    }
 
     private void ApplyColor(bool isWarning)
     {
