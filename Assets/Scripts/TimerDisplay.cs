@@ -5,8 +5,8 @@ using UnityEngine;
 /// UFOキャッチャーの残り時間を7セグメント風フォントで表示する。
 ///
 /// 表示フォーマット: MM:SS.C（例: "01:30.5"）
-/// 残り時間が warningThreshold 秒以下になると Glow 色が warningColor に変わる。
-/// changeFaceColorOnWarning を有効にすると文字の中の色も変わる。
+/// 残り時間が warningThreshold 秒以下になると警告時の色に切り替わる。
+/// 通常時・警告時それぞれの文字内色（Face）と発光色（Glow）を Inspector で個別に設定できる。
 /// </summary>
 public class TimerDisplay : MonoBehaviour
 {
@@ -14,18 +14,22 @@ public class TimerDisplay : MonoBehaviour
     [Tooltip("タイマーを表示する TextMeshProUGUI コンポーネント")]
     [SerializeField] private TextMeshProUGUI timerText;
 
-    [Header("色設定")]
-    [Tooltip("通常時の文字色・Glow 色")]
-    [SerializeField] private Color normalColor = new Color(0f, 1f, 0.27f, 1f);
+    [Header("通常時の色")]
+    [Tooltip("通常時の文字の中の色")]
+    [SerializeField] private Color normalFaceColor = new Color(0f, 1f, 0.27f, 1f);
 
-    [Tooltip("警告時の Glow 色（残り時間が warningThreshold 以下になったとき）")]
-    [SerializeField] private Color warningColor = new Color(1f, 0.15f, 0.1f, 1f);
+    [Tooltip("通常時の発光（Glow）色")]
+    [SerializeField] private Color normalGlowColor = new Color(0f, 1f, 0.27f, 1f);
+
+    [Header("警告時の色（残り warningThreshold 秒以下）")]
+    [Tooltip("警告時の文字の中の色")]
+    [SerializeField] private Color warningFaceColor = Color.black;
+
+    [Tooltip("警告時の発光（Glow）色")]
+    [SerializeField] private Color warningGlowColor = new Color(1f, 0.15f, 0.1f, 1f);
 
     [Tooltip("警告色に切り替わる残り時間（秒）")]
     [SerializeField, Min(0f)] private float warningThreshold = 10f;
-
-    [Tooltip("ON: 警告時に文字の中の色も warningColor に変更する\nOFF: Glow 色のみ変更し、文字の中は normalColor のまま")]
-    [SerializeField] private bool changeFaceColorOnWarning = true;
 
     [Header("非プレイ中の表示")]
     [Tooltip("UFOCameraController が存在しない・プレイ中でないときに表示するテキスト")]
@@ -80,17 +84,10 @@ public class TimerDisplay : MonoBehaviour
         ApplyColor(warning);
     }
 
-    /// <summary>
-    /// isWarning に応じて Face Color と Glow Color を切り替える。
-    /// changeFaceColorOnWarning が OFF のとき、Face Color は常に normalColor のまま。
-    /// </summary>
     private void ApplyColor(bool isWarning)
     {
-        Color glowColor = isWarning ? warningColor : normalColor;
-        Color faceColor = (isWarning && changeFaceColorOnWarning) ? warningColor : normalColor;
-
-        timerText.color = faceColor;
-        timerText.fontMaterial.SetColor(ShaderUtilities.ID_GlowColor, glowColor);
+        timerText.color = isWarning ? warningFaceColor : normalFaceColor;
+        timerText.fontMaterial.SetColor(ShaderUtilities.ID_GlowColor, isWarning ? warningGlowColor : normalGlowColor);
     }
 
     // -----------------------------------------------------------------------
