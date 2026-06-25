@@ -30,7 +30,7 @@ public class TimerDisplay : MonoBehaviour
 
     [Header("非プレイ中の表示")]
     [Tooltip("UFOCameraController が存在しない・プレイ中でないときに表示するテキスト")]
-    [SerializeField] private string idleText = "--:--.--";
+    [SerializeField] private string idleText = "00:00.0";
 
     // -----------------------------------------------------------------------
     // Unity ライフサイクル
