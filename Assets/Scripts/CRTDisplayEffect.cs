@@ -68,18 +68,19 @@ public class CRTDisplayEffect : MonoBehaviour
     // 内部状態
     // -----------------------------------------------------------------------
 
-    private RawImage _scanlineImage;
-    private RawImage _scanWaveImage;
-    private RawImage _vignetteImage;
-    private RawImage _phosphorImage;
-    private Vector2  _baseTextPosition;
-    private float    _jitterTimer;
-    private bool     _jittering;
-    private float    _panelH;
-    private float    _waveBandH;
+    private RawImage      _scanlineImage;
+    private RawImage      _scanWaveImage;
+    private RawImage      _vignetteImage;
+    private RawImage      _phosphorImage;
+    private RectTransform _overlayContainer;   // RectMask2D で範囲をクリップするコンテナ
+    private Vector2       _baseTextPosition;
+    private float         _jitterTimer;
+    private bool          _jittering;
+    private float         _panelH;
+    private float         _waveBandH;
     // 変更検知用（テクスチャ再構築が必要なプロパティ）
-    private int      _lastScanlineSpacing;
-    private float    _lastVignetteRadius;
+    private int           _lastScanlineSpacing;
+    private float         _lastVignetteRadius;
 
     // -----------------------------------------------------------------------
     // Unity ライフサイクル
@@ -101,6 +102,9 @@ public class CRTDisplayEffect : MonoBehaviour
         if (textTransform != null)
             _baseTextPosition = textTransform.anchoredPosition;
 
+        // オーバーレイ専用コンテナ（RectMask2D で displayPanel 範囲外をクリップ）
+        _overlayContainer = CreateOverlayContainer();
+
         if (enableScanlines) BuildScanlineOverlay();
         if (enableVignette)  BuildVignetteOverlay();
         if (enablePhosphor)  BuildPhosphorOverlay();
@@ -112,9 +116,10 @@ public class CRTDisplayEffect : MonoBehaviour
 
     private void Update()
     {
+        // _panelH を先に更新してから各演出に使わせる
+        UpdateDynamicProperties();
         if (enableJitter)   UpdateJitter();
         if (enableScanWave) UpdateScanWave();
-        UpdateDynamicProperties();
     }
 
     // -----------------------------------------------------------------------
@@ -157,7 +162,7 @@ public class CRTDisplayEffect : MonoBehaviour
         _waveBandH = _panelH * scanWaveWidth;
 
         var go = new GameObject("ScanWaveOverlay", typeof(RectTransform), typeof(RawImage));
-        go.transform.SetParent(displayPanel, false);
+        go.transform.SetParent(_overlayContainer, false);
 
         // 帯は全幅・固定高さ。anchoredPosition で上→下に動かす
         var rt        = go.GetComponent<RectTransform>();
@@ -253,9 +258,18 @@ public class CRTDisplayEffect : MonoBehaviour
 
     private void UpdateDynamicProperties()
     {
-        // スキャンライン: alpha
+        // パネル高さを毎フレーム更新（Start 時に 0 だった場合も自動回復）
+        if (displayPanel != null)
+            _panelH = displayPanel.rect.height;
+
+        // スキャンライン: alpha + uvRect（_panelH が変わっても正しいタイル数に追従）
         if (_scanlineImage != null)
+        {
             _scanlineImage.color = new Color(1f, 1f, 1f, scanlineAlpha);
+            int sp = Mathf.Max(2, scanlineSpacing);
+            if (_panelH > 0f)
+                _scanlineImage.uvRect = new Rect(0f, 0f, 1f, _panelH / sp);
+        }
 
         // スキャンライン: 間隔変更 → テクスチャ再構築
         if (_scanlineImage != null && scanlineSpacing != _lastScanlineSpacing)
@@ -334,8 +348,9 @@ public class CRTDisplayEffect : MonoBehaviour
 
     private RawImage CreateOverlayImage(string goName)
     {
-        var go = new GameObject(goName, typeof(RectTransform), typeof(RawImage));
-        go.transform.SetParent(displayPanel, false);
+        var parent = _overlayContainer != null ? (Transform)_overlayContainer : displayPanel;
+        var go     = new GameObject(goName, typeof(RectTransform), typeof(RawImage));
+        go.transform.SetParent(parent, false);
 
         var rt       = go.GetComponent<RectTransform>();
         rt.anchorMin = Vector2.zero;
@@ -344,5 +359,21 @@ public class CRTDisplayEffect : MonoBehaviour
         rt.SetAsLastSibling();
 
         return go.GetComponent<RawImage>();
+    }
+
+    // 全オーバーレイを収める RectMask2D コンテナを displayPanel 内に作成する
+    private RectTransform CreateOverlayContainer()
+    {
+        var go = new GameObject("CRTOverlays", typeof(RectTransform));
+        go.transform.SetParent(displayPanel, false);
+
+        var rt       = go.GetComponent<RectTransform>();
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.sizeDelta = Vector2.zero;
+
+        // RectMask2D でコンテナ境界外を完全にクリップする
+        go.AddComponent<RectMask2D>();
+        return rt;
     }
 }
