@@ -7,22 +7,47 @@ Shader "Custom/TMP_Hologram"
     Properties
     {
         // === TMP 必須プロパティ（Inspector では非表示）===
-        [HideInInspector] _MainTex          ("Font Atlas",          2D)           = "white" {}
-        [HideInInspector] _FaceDilate       ("Face Dilate",         Range(-1,1))  = 0
-        [HideInInspector] _GradientScale    ("Gradient Scale",      Float)        = 5.0
-        [HideInInspector] _ScaleRatioA      ("Scale Ratio A",       Float)        = 1.0
-        [HideInInspector] _Sharpness        ("Sharpness",           Range(-1,1))  = 0
-        [HideInInspector] _VertexOffsetX    ("Vertex OffsetX",      Float)        = 0
-        [HideInInspector] _VertexOffsetY    ("Vertex OffsetY",      Float)        = 0
-        [HideInInspector] _StencilComp      ("Stencil Comparison",  Float)        = 8
-        [HideInInspector] _Stencil          ("Stencil ID",          Float)        = 0
-        [HideInInspector] _StencilOp        ("Stencil Operation",   Float)        = 0
-        [HideInInspector] _StencilWriteMask ("Stencil Write Mask",  Float)        = 255
-        [HideInInspector] _StencilReadMask  ("Stencil Read Mask",   Float)        = 255
-        [HideInInspector] _ColorMask        ("Color Mask",          Float)        = 15
-        [HideInInspector] _ClipRect         ("Clip Rect",           Vector)       = (-32767,-32767,32767,32767)
-        [HideInInspector] _MaskSoftnessX    ("Mask Softness X",     Float)        = 0
-        [HideInInspector] _MaskSoftnessY    ("Mask Softness Y",     Float)        = 0
+        // ShaderUtilities.GetFloat / UpdateShaderRatios が参照するもの全て
+        [HideInInspector] _MainTex          ("Font Atlas",              2D)           = "white" {}
+        [HideInInspector] _FaceDilate       ("Face Dilate",             Range(-1,1))  = 0
+        [HideInInspector] _FaceColor        ("Face Color",              Color)        = (1,1,1,1)
+        [HideInInspector] _GradientScale    ("Gradient Scale",          Float)        = 5.0
+        [HideInInspector] _ScaleRatioA      ("Scale Ratio A",           Float)        = 1.0
+        [HideInInspector] _ScaleRatioB      ("Scale Ratio B",           Float)        = 1.0
+        [HideInInspector] _ScaleRatioC      ("Scale Ratio C",           Float)        = 1.0
+        [HideInInspector] _ScaleX           ("Scale X",                 Float)        = 1.0
+        [HideInInspector] _ScaleY           ("Scale Y",                 Float)        = 1.0
+        [HideInInspector] _Sharpness        ("Sharpness",               Range(-1,1))  = 0
+        [HideInInspector] _OutlineColor     ("Outline Color",           Color)        = (0,0,0,1)
+        [HideInInspector] _OutlineWidth     ("Outline Thickness",       Range(0,1))   = 0
+        [HideInInspector] _OutlineSoftness  ("Outline Softness",        Range(0,1))   = 0
+        [HideInInspector] _WeightNormal     ("Weight Normal",           Float)        = 0
+        [HideInInspector] _WeightBold       ("Weight Bold",             Float)        = 0.5
+        [HideInInspector] _GlowColor        ("Glow Color",              Color)        = (0,0,1,0.5)
+        [HideInInspector] _GlowOffset       ("Glow Offset",             Range(-1,1))  = 0
+        [HideInInspector] _GlowInner        ("Glow Inner",              Range(0,1))   = 0.05
+        [HideInInspector] _GlowOuter        ("Glow Outer",              Range(0,1))   = 0.05
+        [HideInInspector] _GlowPower        ("Glow Power",              Range(0,1))   = 0.75
+        [HideInInspector] _UnderlayColor    ("Underlay Color",          Color)        = (0,0,0,0.5)
+        [HideInInspector] _UnderlayOffsetX  ("Underlay OffsetX",        Range(-1,1))  = 0
+        [HideInInspector] _UnderlayOffsetY  ("Underlay OffsetY",        Range(-1,1))  = 0
+        [HideInInspector] _UnderlayDilate   ("Underlay Dilate",         Range(-1,1))  = 0
+        [HideInInspector] _UnderlaySoftness ("Underlay Softness",       Range(0,1))   = 0
+        [HideInInspector] _PerspectiveFilter("Perspective Correction",  Range(0,1))   = 0.875
+        [HideInInspector] _TextureWidth     ("Texture Width",           Float)        = 512
+        [HideInInspector] _TextureHeight    ("Texture Height",          Float)        = 512
+        [HideInInspector] _Padding          ("Padding",                 Float)        = 0
+        [HideInInspector] _VertexOffsetX    ("Vertex OffsetX",          Float)        = 0
+        [HideInInspector] _VertexOffsetY    ("Vertex OffsetY",          Float)        = 0
+        [HideInInspector] _StencilComp      ("Stencil Comparison",      Float)        = 8
+        [HideInInspector] _Stencil          ("Stencil ID",              Float)        = 0
+        [HideInInspector] _StencilOp        ("Stencil Operation",       Float)        = 0
+        [HideInInspector] _StencilWriteMask ("Stencil Write Mask",      Float)        = 255
+        [HideInInspector] _StencilReadMask  ("Stencil Read Mask",       Float)        = 255
+        [HideInInspector] _ColorMask        ("Color Mask",              Float)        = 15
+        [HideInInspector] _ClipRect         ("Clip Rect",               Vector)       = (-32767,-32767,32767,32767)
+        [HideInInspector] _MaskSoftnessX    ("Mask Softness X",         Float)        = 0
+        [HideInInspector] _MaskSoftnessY    ("Mask Softness Y",         Float)        = 0
 
         // === ホログラム全般 ===
         [Header(Hologram)]
