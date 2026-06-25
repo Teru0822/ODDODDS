@@ -70,11 +70,16 @@ public class CRTDisplayEffect : MonoBehaviour
 
     private RawImage _scanlineImage;
     private RawImage _scanWaveImage;
+    private RawImage _vignetteImage;
+    private RawImage _phosphorImage;
     private Vector2  _baseTextPosition;
     private float    _jitterTimer;
     private bool     _jittering;
     private float    _panelH;
     private float    _waveBandH;
+    // 変更検知用（テクスチャ再構築が必要なプロパティ）
+    private int      _lastScanlineSpacing;
+    private float    _lastVignetteRadius;
 
     // -----------------------------------------------------------------------
     // Unity ライフサイクル
@@ -100,12 +105,16 @@ public class CRTDisplayEffect : MonoBehaviour
         if (enableVignette)  BuildVignetteOverlay();
         if (enablePhosphor)  BuildPhosphorOverlay();
         if (enableScanWave)  BuildScanWaveOverlay();
+
+        _lastScanlineSpacing = scanlineSpacing;
+        _lastVignetteRadius  = vignetteRadius;
     }
 
     private void Update()
     {
         if (enableJitter)   UpdateJitter();
         if (enableScanWave) UpdateScanWave();
+        UpdateDynamicProperties();
     }
 
     // -----------------------------------------------------------------------
@@ -115,15 +124,20 @@ public class CRTDisplayEffect : MonoBehaviour
     private void BuildScanlineOverlay()
     {
         _scanlineImage = CreateOverlayImage("ScanlineOverlay");
+        ApplyScanlineTexture();
+    }
 
-        int texH = scanlineSpacing * 2;
-        var tex  = new Texture2D(2, texH, TextureFormat.RGBA32, false);
+    private void ApplyScanlineTexture()
+    {
+        int spacing = Mathf.Max(2, scanlineSpacing);
+        int texH    = spacing * 2;
+        var tex     = new Texture2D(2, texH, TextureFormat.RGBA32, false);
         tex.wrapMode   = TextureWrapMode.Repeat;
         tex.filterMode = FilterMode.Point;
 
         for (int y = 0; y < texH; y++)
         {
-            Color c = (y % scanlineSpacing == 0) ? new Color(0f, 0f, 0f, 1f) : Color.clear;
+            Color c = (y % spacing == 0) ? new Color(0f, 0f, 0f, 1f) : Color.clear;
             tex.SetPixel(0, y, c);
             tex.SetPixel(1, y, c);
         }
@@ -131,9 +145,7 @@ public class CRTDisplayEffect : MonoBehaviour
 
         _scanlineImage.texture = tex;
         _scanlineImage.color   = new Color(1f, 1f, 1f, scanlineAlpha);
-        // パネル高さ / ライン間隔 = 必要なタイル数
-        float tilingY = _panelH / scanlineSpacing;
-        _scanlineImage.uvRect = new Rect(0f, 0f, 1f, tilingY);
+        _scanlineImage.uvRect  = new Rect(0f, 0f, 1f, _panelH / spacing);
     }
 
     // -----------------------------------------------------------------------
@@ -191,9 +203,14 @@ public class CRTDisplayEffect : MonoBehaviour
 
     private void BuildVignetteOverlay()
     {
-        var img = CreateOverlayImage("VignetteOverlay");
-        img.transform.SetSiblingIndex(0); // 一番後ろ
+        _vignetteImage = CreateOverlayImage("VignetteOverlay");
+        _vignetteImage.transform.SetSiblingIndex(0); // 一番後ろ
+        _vignetteImage.texture = BuildVignetteTexture();
+        _vignetteImage.color   = new Color(1f, 1f, 1f, vignetteAlpha);
+    }
 
+    private Texture2D BuildVignetteTexture()
+    {
         int size = 128;
         var tex  = new Texture2D(size, size, TextureFormat.RGBA32, false);
         tex.wrapMode   = TextureWrapMode.Clamp;
@@ -206,15 +223,13 @@ public class CRTDisplayEffect : MonoBehaviour
                 float nx    = (x / (float)(size - 1)) * 2f - 1f;
                 float ny    = (y / (float)(size - 1)) * 2f - 1f;
                 float dist  = Mathf.Sqrt(nx * nx + ny * ny);
-                float alpha = Mathf.Clamp01(
-                    Mathf.SmoothStep(vignetteRadius, 1.4f, dist)) * vignetteAlpha;
+                // alpha はシェイプのみ（vignetteAlpha は img.color.a で制御）
+                float alpha = Mathf.Clamp01(Mathf.SmoothStep(vignetteRadius, 1.4f, dist));
                 tex.SetPixel(x, y, new Color(0f, 0f, 0f, alpha));
             }
         }
         tex.Apply();
-
-        img.texture = tex;
-        img.color   = Color.white;
+        return tex;
     }
 
     // -----------------------------------------------------------------------
@@ -223,13 +238,63 @@ public class CRTDisplayEffect : MonoBehaviour
 
     private void BuildPhosphorOverlay()
     {
-        var img   = CreateOverlayImage("PhosphorOverlay");
-        img.transform.SetSiblingIndex(1);
-        img.texture = null;
+        _phosphorImage = CreateOverlayImage("PhosphorOverlay");
+        _phosphorImage.transform.SetSiblingIndex(1);
+        _phosphorImage.texture = null;
 
         Color c   = phosphorColor;
         c.a       = phosphorAlpha;
-        img.color = c;
+        _phosphorImage.color = c;
+    }
+
+    // -----------------------------------------------------------------------
+    // 動的プロパティ更新（Inspector の変更を毎フレーム反映）
+    // -----------------------------------------------------------------------
+
+    private void UpdateDynamicProperties()
+    {
+        // スキャンライン: alpha
+        if (_scanlineImage != null)
+            _scanlineImage.color = new Color(1f, 1f, 1f, scanlineAlpha);
+
+        // スキャンライン: 間隔変更 → テクスチャ再構築
+        if (_scanlineImage != null && scanlineSpacing != _lastScanlineSpacing)
+        {
+            _lastScanlineSpacing = scanlineSpacing;
+            ApplyScanlineTexture();
+        }
+
+        // スキャン波: alpha と帯幅
+        if (_scanWaveImage != null)
+        {
+            _scanWaveImage.color = new Color(1f, 1f, 1f, scanWaveAlpha);
+
+            float newBandH = _panelH * scanWaveWidth;
+            if (!Mathf.Approximately(newBandH, _waveBandH))
+            {
+                _waveBandH = newBandH;
+                _scanWaveImage.rectTransform.sizeDelta = new Vector2(0f, _waveBandH);
+            }
+        }
+
+        // ビネット: alpha
+        if (_vignetteImage != null)
+            _vignetteImage.color = new Color(1f, 1f, 1f, vignetteAlpha);
+
+        // ビネット: 半径変更 → テクスチャ再構築
+        if (_vignetteImage != null && !Mathf.Approximately(vignetteRadius, _lastVignetteRadius))
+        {
+            _lastVignetteRadius  = vignetteRadius;
+            _vignetteImage.texture = BuildVignetteTexture();
+        }
+
+        // フォスファー: color + alpha
+        if (_phosphorImage != null)
+        {
+            Color c = phosphorColor;
+            c.a = phosphorAlpha;
+            _phosphorImage.color = c;
+        }
     }
 
     // -----------------------------------------------------------------------
