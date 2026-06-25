@@ -656,8 +656,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TimerDisplay
   timerText: {fileID: 1515140331}
-  normalColor: {r: 0, g: 1, b: 0.27, a: 1}
-  warningColor: {r: 1, g: 0.15, b: 0.1, a: 1}
+  normalFaceColor: {r: 0, g: 0.9716981, b: 0.10744733, a: 1}
+  normalGlowColor: {r: 0, g: 1, b: 0.27, a: 1}
+  warningFaceColor: {r: 1, g: 0, b: 0, a: 1}
+  warningGlowColor: {r: 1, g: 0.15, b: 0.1, a: 1}
   warningThreshold: 10
   idleText: 00:00.0
 --- !u!4 &1928096893 stripped
