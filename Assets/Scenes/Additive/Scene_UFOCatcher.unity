@@ -1762,7 +1762,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1665499477}
   m_LocalRotation: {x: 0.28736433, y: 0.64608186, z: -0.28736433, w: 0.64608186}
-  m_LocalPosition: {x: 0, y: 0, z: 344.995}
+  m_LocalPosition: {x: 0, y: 0, z: 344.9994}
   m_LocalScale: {x: 0.005, y: 0.005, z: 0.005}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -1772,7 +1772,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 730.3256, y: 64.614}
-  m_SizeDelta: {x: 400, y: 100}
+  m_SizeDelta: {x: 342.7856, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1665499479
 MonoBehaviour:
@@ -2006,6 +2006,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1914852550}
   - component: {fileID: 1914852551}
+  - component: {fileID: 1914852552}
   m_Layer: 0
   m_Name: TimerObject
   m_TagString: Untagged
@@ -2042,12 +2043,52 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TimerDisplay
   timerText: {fileID: 1515140331}
+  hideUntilStart: 0
+  displayRoot: {fileID: 1914852549}
   normalFaceColor: {r: 0, g: 0.9716981, b: 0.10744733, a: 1}
   normalGlowColor: {r: 0, g: 1, b: 0.27, a: 1}
   warningFaceColor: {r: 1, g: 0, b: 0, a: 1}
   warningGlowColor: {r: 1, g: 0.15, b: 0.1, a: 1}
   warningThreshold: 10
+  enableFlicker: 1
+  flickerRate: 2
+  flickerMinBrightness: 0.818
+  flickerDuration: 0.07
+  enableGlowFluctuation: 1
+  glowFluctuationSpeed: 1.2
+  baseGlowOuter: 0.4
+  glowFluctuationAmount: 0.3
   idleText: 00:00.0
+--- !u!114 &1914852552
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1914852549}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8fcef3a5c70914b04aad1796938c0a26, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CRTDisplayEffect
+  displayPanel: {fileID: 1665499478}
+  textTransform: {fileID: 1515140330}
+  enableScanlines: 1
+  scanlineAlpha: 0.069
+  scanlineSpacing: 4
+  enableScanWave: 1
+  scanWaveSpeed: 0.25
+  scanWaveAlpha: 0.013
+  scanWaveWidth: 0.413
+  enableVignette: 1
+  vignetteAlpha: 0.55
+  vignetteRadius: 0.65
+  enablePhosphor: 0
+  phosphorColor: {r: 0.6, g: 1, b: 0.7, a: 1}
+  phosphorAlpha: 0.04
+  enableJitter: 1
+  jitterAmount: 0.8
+  jitterRate: 4
 --- !u!4 &1928096893 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3359797426665849927, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
