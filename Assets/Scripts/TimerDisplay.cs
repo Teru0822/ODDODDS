@@ -7,12 +7,20 @@ using UnityEngine;
 /// 表示フォーマット: MM:SS.C（例: "01:30.5"）
 /// 残り時間が warningThreshold 秒以下になると警告時の色に切り替わる。
 /// ちらつき（A）と Glow 揺らぎ（C）のノイズ演出付き。
+/// hideUntilStart を有効にするとプレイ開始まで非表示になる。
 /// </summary>
 public class TimerDisplay : MonoBehaviour
 {
     [Header("表示")]
     [Tooltip("タイマーを表示する TextMeshProUGUI コンポーネント")]
     [SerializeField] private TextMeshProUGUI timerText;
+
+    [Header("表示タイミング")]
+    [Tooltip("プレイセッションが開始するまでタイマーを非表示にする")]
+    [SerializeField] private bool hideUntilStart = true;
+    [Tooltip("表示/非表示の切り替え対象 GameObject（Canvas や Panel など）。\n" +
+             "未設定の場合は timerText の親 GameObject を自動使用。")]
+    [SerializeField] private GameObject displayRoot;
 
     [Header("通常時の色")]
     [Tooltip("通常時の文字の中の色")]
@@ -65,8 +73,10 @@ public class TimerDisplay : MonoBehaviour
     // 内部状態
     // -----------------------------------------------------------------------
 
-    private float _flickerTimer = 0f;
-    private float _noiseOffset;
+    private float        _flickerTimer;
+    private float        _noiseOffset;
+    private CanvasGroup  _canvasGroup;
+    private bool         _lastSessionState;
 
     // -----------------------------------------------------------------------
     // Unity ライフサイクル
@@ -78,10 +88,37 @@ public class TimerDisplay : MonoBehaviour
             Debug.LogWarning("[TimerDisplay] timerText が未設定です。Inspector で TextMeshProUGUI を割り当ててください。");
 
         _noiseOffset = Random.Range(0f, 100f);
+
+        // displayRoot が未設定の場合は timerText の親を使う
+        if (displayRoot == null && timerText != null)
+            displayRoot = timerText.transform.parent.gameObject;
+
+        // CanvasGroup で alpha 制御（SetActive より安全: Update が止まらない）
+        if (displayRoot != null)
+        {
+            _canvasGroup = displayRoot.GetComponent<CanvasGroup>();
+            if (_canvasGroup == null)
+                _canvasGroup = displayRoot.AddComponent<CanvasGroup>();
+        }
+
+        _lastSessionState = IsSessionCurrentlyActive();
+        if (hideUntilStart)
+            ApplyVisibility(_lastSessionState);
     }
 
     private void Update()
     {
+        // 表示タイミング制御
+        if (hideUntilStart)
+        {
+            bool current = IsSessionCurrentlyActive();
+            if (current != _lastSessionState)
+            {
+                _lastSessionState = current;
+                ApplyVisibility(current);
+            }
+        }
+
         if (timerText == null) return;
 
         UpdateFlicker();
@@ -102,6 +139,23 @@ public class TimerDisplay : MonoBehaviour
         }
 
         ApplyColor(isWarning);
+    }
+
+    // -----------------------------------------------------------------------
+    // 表示制御
+    // -----------------------------------------------------------------------
+
+    private void ApplyVisibility(bool visible)
+    {
+        if (_canvasGroup == null) return;
+        _canvasGroup.alpha          = visible ? 1f : 0f;
+        _canvasGroup.blocksRaycasts = visible;
+    }
+
+    private static bool IsSessionCurrentlyActive()
+    {
+        var ctrl = UFOCameraController.Instance;
+        return ctrl != null && UFOCameraController.IsPlaySessionActive;
     }
 
     // -----------------------------------------------------------------------
