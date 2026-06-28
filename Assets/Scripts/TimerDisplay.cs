@@ -86,6 +86,7 @@ public class TimerDisplay : MonoBehaviour
     const float RoundDisplayDuration = 1.5f;
     const float PlayInfoDuration     = 1.5f;
     const float FinishDuration       = 2.0f;
+    const float AlternateDuration    = 2.5f;   // LimitTime ↔ PlayInfo 切り替え間隔
 
     // -----------------------------------------------------------------------
     // 内部状態
@@ -102,9 +103,11 @@ public class TimerDisplay : MonoBehaviour
     private CanvasGroup _canvasGroup;
     private GameObject  _displayRoot;
 
-    private bool _lastIsPlayingUfo;
-    private bool _lastIsSessionActive;
-    private int  _roundAtEntry;   // UFO モード開始時のラウンド番号
+    private bool  _lastIsPlayingUfo;
+    private bool  _lastIsSessionActive;
+    private int   _roundAtEntry;       // UFO モード開始時のラウンド番号
+    private bool  _limitTimePhase;     // LimitTime 交互表示: true=制限時間, false=PlayInfo
+    private float _alternateTimer;     // 交互表示切り替えタイマー
 
     // -----------------------------------------------------------------------
     // Unity ライフサイクル
@@ -181,6 +184,9 @@ public class TimerDisplay : MonoBehaviour
 
         if (_state == DisplayState.Countdown)
             UpdateFlicker();
+
+        if (_state == DisplayState.LimitTime && _fadeTimer <= 0f)
+            UpdateAlternate();
     }
 
     private void LateUpdate()
@@ -238,6 +244,8 @@ public class TimerDisplay : MonoBehaviour
 
             case DisplayState.LimitTime:
                 ApplyAlpha(1f);
+                _limitTimePhase = true;
+                _alternateTimer = AlternateDuration;
                 ApplyColorForState(next);
                 RefreshLimitTime();
                 break;
@@ -394,6 +402,30 @@ public class TimerDisplay : MonoBehaviour
     }
 
     // -----------------------------------------------------------------------
+    // LimitTime 交互表示（PlayInfo ↔ LimitTime を AlternateDuration ごとに切替）
+    // -----------------------------------------------------------------------
+
+    void UpdateAlternate()
+    {
+        _alternateTimer -= Time.deltaTime;
+        if (_alternateTimer > 0f) return;
+
+        _alternateTimer = AlternateDuration;
+        _limitTimePhase = !_limitTimePhase;
+
+        if (_limitTimePhase)
+        {
+            ApplyColorForState(DisplayState.LimitTime);
+            RefreshLimitTime();
+        }
+        else
+        {
+            ApplyColorForState(DisplayState.PlayInfo);
+            RefreshPlayInfo();
+        }
+    }
+
+    // -----------------------------------------------------------------------
     // 色・Glow 制御
     // -----------------------------------------------------------------------
 
@@ -498,33 +530,37 @@ public class TimerDisplay : MonoBehaviour
         go.transform.SetParent(timerText.transform.parent, false);
         go.transform.SetSiblingIndex(timerText.transform.GetSiblingIndex());
 
-        // timerText の RectTransform はそのまま維持。
-        // ラベルは timerText の親の上半分に配置し、メインテキストと重ならないようにする。
-        var timerRt = timerText.GetComponent<RectTransform>();
-        // ラベルを timerText の anchoredPosition より上に float させる
-        float mainH   = timerRt.rect.height > 0f ? timerRt.rect.height : timerRt.sizeDelta.y;
-        float labelH  = mainH * 0.5f;
-        float offsetY = timerRt.anchoredPosition.y + mainH * 0.5f + labelH * 0.5f + 2f;
+        // timerText の RectTransform は一切変更しない。
+        // timerText 自体に localScale が掛かっている場合、その視覚的な上端は
+        //   anchoredPosition.y + sizeDelta.y/2 * scale
+        // になるため、その上に gap を空けてラベルを配置する。
+        var timerRt   = timerText.GetComponent<RectTransform>();
+        float scaleY  = timerRt.localScale.y;
+        float visHalf = timerRt.sizeDelta.y * 0.5f * scaleY;   // 視覚的な上端 (canvas 座標)
+        float fs      = labelFontSize > 0f
+                        ? labelFontSize
+                        : Mathf.Max(8f, timerText.fontSizeMax * 0.3f);
+        float labelH  = fs * 1.4f;                             // フォントサイズ + 行高余白
+        float gap     = 4f;
+        float centerY = timerRt.anchoredPosition.y + visHalf + gap + labelH * 0.5f;
 
-        var rt = go.GetComponent<RectTransform>();
-        // timerText と同じアンカー方式（center）で配置
+        var rt              = go.GetComponent<RectTransform>();
         rt.anchorMin        = timerRt.anchorMin;
         rt.anchorMax        = timerRt.anchorMax;
         rt.pivot            = new Vector2(0.5f, 0.5f);
         rt.sizeDelta        = new Vector2(timerRt.sizeDelta.x, labelH);
-        rt.anchoredPosition = new Vector2(timerRt.anchoredPosition.x, offsetY);
+        rt.anchoredPosition = new Vector2(timerRt.anchoredPosition.x, centerY);
 
-        float fs = labelFontSize > 0f
-            ? labelFontSize
-            : Mathf.Max(10f, timerText.fontSizeMax * 0.35f);
+        // DSEG7 はアルファベットが不完全なため Liberation Sans SDF を使用する
+        var liberationFont = Resources.Load<TMP_FontAsset>("Fonts & Materials/LiberationSans SDF");
 
-        var tmp                = go.GetComponent<TextMeshProUGUI>();
-        tmp.font               = timerText.font;
-        tmp.fontSize           = fs;
-        tmp.enableAutoSizing   = false;
-        tmp.alignment          = TextAlignmentOptions.Bottom;
-        tmp.color              = timerText.color;
-        tmp.text               = "";
+        var tmp              = go.GetComponent<TextMeshProUGUI>();
+        tmp.font             = liberationFont != null ? liberationFont : timerText.font;
+        tmp.fontSize         = fs;
+        tmp.enableAutoSizing = false;
+        tmp.alignment        = TextAlignmentOptions.Center;
+        tmp.color            = timerText.color;
+        tmp.text             = "";
 
         return tmp;
     }
