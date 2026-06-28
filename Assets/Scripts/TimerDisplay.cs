@@ -41,6 +41,9 @@ public class TimerDisplay : MonoBehaviour
     [Tooltip("上段ラベル用 TMP（未設定時は Awake で自動生成）")]
     [SerializeField] private TextMeshProUGUI labelText;
 
+    [Tooltip("自動生成した LabelText のフォントサイズ（0 = timerText.fontSizeMax の 35%）")]
+    [SerializeField, Min(0f)] private float labelFontSize = 0f;
+
     [Header("ラウンド設定")]
     [Tooltip("ラウンドの最大数。0 にすると分母を非表示")]
     [SerializeField] private int maxRound = 3;
@@ -101,6 +104,7 @@ public class TimerDisplay : MonoBehaviour
 
     private bool _lastIsPlayingUfo;
     private bool _lastIsSessionActive;
+    private int  _roundAtEntry;   // UFO モード開始時のラウンド番号
 
     // -----------------------------------------------------------------------
     // Unity ライフサイクル
@@ -144,11 +148,14 @@ public class TimerDisplay : MonoBehaviour
             return;
         }
 
-        // UFO モード開始 → RoundDisplay へ
+        // UFO モード開始 → RoundDisplay or PlayInfo へ
         if (!_lastIsPlayingUfo && isPlayingUfo)
         {
             _lastIsPlayingUfo = true;
-            TransitionTo(DisplayState.RoundDisplay);
+            var rm = RoundManager.Instance;
+            _roundAtEntry = rm != null ? rm.currentRound : -1;
+            // RoundManager がなければラウンド表示をスキップして PlayInfo へ
+            TransitionTo(rm != null ? DisplayState.RoundDisplay : DisplayState.PlayInfo);
         }
 
         // セッション開始（LimitTime・PlayInfo 等どこからでも）→ Countdown へ
@@ -263,11 +270,26 @@ public class TimerDisplay : MonoBehaviour
                 break;
 
             case DisplayState.Finish:
-                if (UFOCameraController.IsPlayingUfo)
-                    TransitionTo(DisplayState.RoundDisplay);
-                else
+            {
+                if (!UFOCameraController.IsPlayingUfo)
+                {
                     TransitionTo(DisplayState.Hidden);
+                    break;
+                }
+                // ラウンドが変わっていれば RoundDisplay、同じラウンドなら PlayInfo
+                var rmF      = RoundManager.Instance;
+                int nowRound = rmF != null ? rmF.currentRound : _roundAtEntry;
+                if (rmF != null && nowRound != _roundAtEntry)
+                {
+                    _roundAtEntry = nowRound;
+                    TransitionTo(DisplayState.RoundDisplay);
+                }
+                else
+                {
+                    TransitionTo(DisplayState.PlayInfo);
+                }
                 break;
+            }
         }
     }
 
@@ -476,26 +498,33 @@ public class TimerDisplay : MonoBehaviour
         go.transform.SetParent(timerText.transform.parent, false);
         go.transform.SetSiblingIndex(timerText.transform.GetSiblingIndex());
 
-        var rt       = go.GetComponent<RectTransform>();
-        rt.anchorMin = new Vector2(0f, 0.6f);
-        rt.anchorMax = new Vector2(1f, 1.0f);
-        rt.sizeDelta = Vector2.zero;
-        rt.offsetMin = Vector2.zero;
-        rt.offsetMax = Vector2.zero;
+        // timerText の RectTransform はそのまま維持。
+        // ラベルは timerText の親の上半分に配置し、メインテキストと重ならないようにする。
+        var timerRt = timerText.GetComponent<RectTransform>();
+        // ラベルを timerText の anchoredPosition より上に float させる
+        float mainH   = timerRt.rect.height > 0f ? timerRt.rect.height : timerRt.sizeDelta.y;
+        float labelH  = mainH * 0.5f;
+        float offsetY = timerRt.anchoredPosition.y + mainH * 0.5f + labelH * 0.5f + 2f;
 
-        var tmp       = go.GetComponent<TextMeshProUGUI>();
-        tmp.font      = timerText.font;
-        tmp.fontSize  = timerText.fontSize * 0.4f;
-        tmp.alignment = TextAlignmentOptions.Center;
-        tmp.color     = timerText.color;
-        tmp.text      = "";
+        var rt = go.GetComponent<RectTransform>();
+        // timerText と同じアンカー方式（center）で配置
+        rt.anchorMin        = timerRt.anchorMin;
+        rt.anchorMax        = timerRt.anchorMax;
+        rt.pivot            = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta        = new Vector2(timerRt.sizeDelta.x, labelH);
+        rt.anchoredPosition = new Vector2(timerRt.anchoredPosition.x, offsetY);
 
-        // timerText を下 60 % 領域に収める
-        var mainRt       = timerText.GetComponent<RectTransform>();
-        mainRt.anchorMin = new Vector2(0f, 0f);
-        mainRt.anchorMax = new Vector2(1f, 0.65f);
-        mainRt.offsetMin = Vector2.zero;
-        mainRt.offsetMax = Vector2.zero;
+        float fs = labelFontSize > 0f
+            ? labelFontSize
+            : Mathf.Max(10f, timerText.fontSizeMax * 0.35f);
+
+        var tmp                = go.GetComponent<TextMeshProUGUI>();
+        tmp.font               = timerText.font;
+        tmp.fontSize           = fs;
+        tmp.enableAutoSizing   = false;
+        tmp.alignment          = TextAlignmentOptions.BottomCenter;
+        tmp.color              = timerText.color;
+        tmp.text               = "";
 
         return tmp;
     }
