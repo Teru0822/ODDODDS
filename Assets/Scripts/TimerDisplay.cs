@@ -522,7 +522,7 @@ public class TimerDisplay : MonoBehaviour
         tmp.font               = timerText.font;
         tmp.fontSize           = fs;
         tmp.enableAutoSizing   = false;
-        tmp.alignment          = TextAlignmentOptions.BottomCenter;
+        tmp.alignment          = TextAlignmentOptions.Bottom;
         tmp.color              = timerText.color;
         tmp.text               = "";
 
