@@ -150,6 +150,10 @@ public class UFOArmController : MonoBehaviour
     [Range(1, 4)]
     [SerializeField] private int volumeBoost = 1;
 
+    [Header("【デバッグ設定】")]
+    [Tooltip("オンにすると、アームの揺れ（Sway）を完全に無効化（揺れなし）にします")]
+    [SerializeField] private bool disableSway = false;
+
     private AudioSource _audioSourceForJingle;
 
     // ─────────────────────────────────────
@@ -636,9 +640,13 @@ public class UFOArmController : MonoBehaviour
         if (swayJoint == null) return;
 
         // プレイ中や静止中は swayRangeAngle まで揺れることを許可
-        // stabilizeOnDescent が true でかつ自動昇降動作中 (IsBusy) の場合のみ 0 に締める
+        // デバッグ用 disableSway がオンの場合、または stabilizeOnDescent が有効で自動昇降動作中 (IsBusy) の場合は揺れ限界を 0 に固定する
         float targetAngle = swayRangeAngle;
-        if (stabilizeOnDescent && IsBusy)
+        if (disableSway)
+        {
+            targetAngle = 0f;
+        }
+        else if (stabilizeOnDescent && IsBusy)
         {
             targetAngle = 0f;
         }

@@ -935,7 +935,8 @@ public class UFOCameraController : MonoBehaviour
 
     private void UpdateWarningSound()
     {
-        bool shouldPlay = IsPlaySessionActive && _playTimer > 0f && _playTimer <= 10f;
+        // UFOItemGoal.IsFlashing (アイテム演出中) は警告音を鳴らさない
+        bool shouldPlay = IsPlaySessionActive && _playTimer > 0f && _playTimer <= 10f && !UFOItemGoal.IsFlashing;
 
         if (shouldPlay)
         {
