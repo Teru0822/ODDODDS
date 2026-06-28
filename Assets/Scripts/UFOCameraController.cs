@@ -368,8 +368,10 @@ public class UFOCameraController : MonoBehaviour
         UpdateWarningSound();
     }
 
-    public int PaymentCount => _paymentCount;
+    public int   PaymentCount  => _paymentCount;
     public float RemainingTime => _playTimer;
+    public int   MaxPlayCount  => maxPlayCount;
+    public float PlayDuration  => playDuration;
 
     public void ResetPaymentCount()
     {
