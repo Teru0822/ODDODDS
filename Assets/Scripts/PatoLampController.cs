@@ -36,11 +36,11 @@ public class PatoLampController : MonoBehaviour
     {
         bool shouldBeActive = false;
 
-        // セッションが有効かつ残り時間が10秒以下の時のみアクティブにする
+        // セッションが有効かつ残り時間が10秒以下で、かつアイテム獲得演出中でない時のみアクティブにする
         if (UFOCameraController.Instance != null && UFOCameraController.IsPlaySessionActive)
         {
             float remaining = UFOCameraController.Instance.RemainingTime;
-            if (remaining > 0f && remaining <= 10f)
+            if (remaining > 0f && remaining <= 10f && !UFOItemGoal.IsFlashing)
             {
                 shouldBeActive = true;
             }
