@@ -33,6 +33,9 @@ public class TimerDisplay : MonoBehaviour
     [Tooltip("上段ラベル用 TMP（未設定時は Awake で自動生成）")]
     [SerializeField] private TextMeshProUGUI labelText;
 
+    [Tooltip("ラベル用フォント（DSEG14 SDF など）。未設定時は timerText と同じフォントを使用")]
+    [SerializeField] private TMP_FontAsset labelFont;
+
     [Tooltip("自動生成ラベルのフォントサイズ（0 = timerText.fontSizeMax の 30%）")]
     [SerializeField, Min(0f)] private float labelFontSize = 0f;
 
@@ -611,7 +614,8 @@ public class TimerDisplay : MonoBehaviour
                                           timerRt.anchoredPosition.y + visHalf + 4f + labelH * 0.5f);
 
         var tmp                  = go.GetComponent<TextMeshProUGUI>();
-        tmp.font                 = timerText.font;            // DSEG7（timerText と同じ）
+        // labelFont が設定されていれば（DSEG14 など）それを優先、なければ timerText と同じ DSEG7
+        tmp.font                 = labelFont != null ? labelFont : timerText.font;
         tmp.fontMaterial         = new Material(timerText.fontMaterial); // ホログラムマテリアルをコピー
         tmp.fontSize             = fs;
         tmp.enableAutoSizing     = false;
