@@ -2043,13 +2043,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TimerDisplay
   timerText: {fileID: 1515140331}
-  hideUntilStart: 0
-  displayRoot: {fileID: 1914852549}
+  labelText: {fileID: 0}
+  labelFont: {fileID: 11400000, guid: 0d2743b660ad541e89b3e29b583dbb10, type: 2}
+  labelFontSize: 0
+  roundIndicatorText: {fileID: 0}
+  maxRound: 3
+  indicatorChar: ~
+  indicatorDimAlpha: 0.12
   normalFaceColor: {r: 0, g: 0.9716981, b: 0.10744733, a: 1}
   normalGlowColor: {r: 0, g: 1, b: 0.27, a: 1}
   warningFaceColor: {r: 1, g: 0, b: 0, a: 1}
   warningGlowColor: {r: 1, g: 0.15, b: 0.1, a: 1}
   warningThreshold: 10
+  limitTimeColor: {r: 1, g: 0.7, b: 0.1, a: 1}
+  finishColor: {r: 0.8, g: 1, b: 1, a: 1}
   enableFlicker: 1
   flickerRate: 2
   flickerMinBrightness: 0.818

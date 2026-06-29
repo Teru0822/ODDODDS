@@ -46,8 +46,8 @@ public class TimerDisplay : MonoBehaviour
     [Tooltip("ラウンドの最大数。0 にすると分母・インジケーターを非表示")]
     [SerializeField] private int maxRound = 3;
 
-    [Tooltip("インジケーターに使う文字（DSEG7 で描ける文字: 0, 8, -, _ など）")]
-    [SerializeField] private string indicatorChar = "0";
+    [Tooltip("インジケーターに使う文字（labelFont が DSEG14 なら ~ など、DSEG7 なら 0, 8, - など）")]
+    [SerializeField] private string indicatorChar = "~";
 
     [Tooltip("非アクティブなピップのアルファ（消灯セグメントの見え方）")]
     [SerializeField, Range(0f, 1f)] private float indicatorDimAlpha = 0.12f;
@@ -181,11 +181,16 @@ public class TimerDisplay : MonoBehaviour
         }
 
         // セッション開始 → Countdown
-        if (_state != DisplayState.Countdown && _state != DisplayState.Finish && _state != DisplayState.Hidden
-            && !_lastIsSessionActive && isSessionActive)
+        // エッジ検出でなくレベル検出にすることでフレームスキップによる取りこぼしを防ぐ。
+        // フェード中に再発火しないよう「すでに Countdown へ向かっている」場合は除外する。
+        bool alreadyGoingToCountdown = _isFadingOut && _pendingState == DisplayState.Countdown;
+        if (!alreadyGoingToCountdown && isSessionActive
+            && _state != DisplayState.Countdown
+            && _state != DisplayState.Finish
+            && _state != DisplayState.Hidden)
             TransitionTo(DisplayState.Countdown);
 
-        // セッション終了 → Finish
+        // セッション終了 → Finish（エッジ検出）
         if (_state == DisplayState.Countdown && _lastIsSessionActive && !isSessionActive)
             TransitionTo(DisplayState.Finish);
 
@@ -203,15 +208,14 @@ public class TimerDisplay : MonoBehaviour
 
         if (_state == DisplayState.Countdown)  UpdateFlicker();
         if (_state == DisplayState.LimitTime && _fadeTimer <= 0f) UpdateAlternate();
-
-        // インジケーターは毎フレーム更新（PaymentCount がセッション中に変化するため）
-        if (_state != DisplayState.Hidden) UpdateRoundIndicator();
     }
 
     private void LateUpdate()
     {
         if (_state == DisplayState.Countdown && _fadeTimer <= 0f)
             UpdateCountdownText();
+        if (_state != DisplayState.Hidden)
+            UpdateRoundIndicator();
     }
 
     // -----------------------------------------------------------------------
@@ -452,10 +456,10 @@ public class TimerDisplay : MonoBehaviour
         // UFO 単体でも変化する PaymentCount でインジケーターを駆動する
         var ctrl    = UFOCameraController.Instance;
         int current = ctrl != null ? ctrl.PaymentCount : 0;
-        string ch   = string.IsNullOrEmpty(indicatorChar) ? "0" : indicatorChar;
+        string ch   = string.IsNullOrEmpty(indicatorChar) ? "~" : indicatorChar;
 
-        // 非アクティブピップ: 同じ色でアルファだけ落として「消灯セグメント」に見せる
-        Color c      = normalFaceColor;
+        // timerText.color = ApplyColorForState / ApplyCountdownColor が毎フレーム更新する現在色
+        Color c       = timerText != null ? timerText.color : normalFaceColor;
         string dimHex = ColorUtility.ToHtmlStringRGBA(new Color(c.r, c.g, c.b, indicatorDimAlpha));
 
         var sb = new StringBuilder();
@@ -468,7 +472,7 @@ public class TimerDisplay : MonoBehaviour
                 sb.Append($"<color=#{dimHex}>{ch}</color>");
         }
         roundIndicatorText.text  = sb.ToString();
-        roundIndicatorText.color = normalFaceColor;
+        roundIndicatorText.color = c;
     }
 
     // -----------------------------------------------------------------------
@@ -684,17 +688,27 @@ public class TimerDisplay : MonoBehaviour
                                           timerRt.anchoredPosition.y - visHalf - 4f - indH * 0.5f);
 
         var tmp                = go.GetComponent<TextMeshProUGUI>();
-        // timerText と同じ DSEG7 フォント + ホログラムマテリアル（アトラス一致のためそのままコピー可）
-        tmp.font               = timerText.font;
-        tmp.fontMaterial       = new Material(timerText.fontMaterial);
         tmp.fontSize           = fs;
         tmp.enableAutoSizing   = false;
         tmp.enableWordWrapping = false;
         tmp.overflowMode       = TextOverflowModes.Overflow;
-        tmp.richText           = true; // アクティブ/非アクティブのアルファ制御に必要
+        tmp.richText           = true;
         tmp.alignment          = TextAlignmentOptions.Center;
         tmp.color              = normalFaceColor;
         tmp.text               = "";
+
+        if (labelFont != null)
+        {
+            // DSEG14 など labelFont が設定されている場合: ~ など 14 セグメント文字を使える
+            tmp.font = labelFont;
+            ApplyHologramToLabel(tmp);
+        }
+        else
+        {
+            // フォールバック: DSEG7 + ホログラムマテリアル
+            tmp.font         = timerText.font;
+            tmp.fontMaterial = new Material(timerText.fontMaterial);
+        }
 
         return tmp;
     }
