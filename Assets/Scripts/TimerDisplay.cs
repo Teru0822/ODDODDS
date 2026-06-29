@@ -123,6 +123,7 @@ public class TimerDisplay : MonoBehaviour
         _canvasGroup = displayRoot.GetComponent<CanvasGroup>()
                        ?? displayRoot.AddComponent<CanvasGroup>();
         ApplyAlpha(0f);
+        _canvasGroup.ignoreParentGroups = false;
 
         if (labelText == null)
             labelText = CreateLabel();
@@ -142,8 +143,17 @@ public class TimerDisplay : MonoBehaviour
         _lastIsSessionActive = UFOCameraController.IsPlaySessionActive;
     }
 
+    private void Start()
+    {
+        // Awake 後に他のコンポーネントが alpha をリセットした場合への保険
+        if (_state == DisplayState.Hidden) ApplyAlpha(0f);
+    }
+
     private void Update()
     {
+        // Hidden 中は毎フレーム alpha=0 を強制（他コンポーネントのリセット対策）
+        if (_state == DisplayState.Hidden) { ApplyAlpha(0f); }
+
         bool isPlayingUfo    = UFOCameraController.IsPlayingUfo;
         bool isSessionActive = UFOCameraController.IsPlaySessionActive;
 
@@ -527,13 +537,16 @@ public class TimerDisplay : MonoBehaviour
         var rt      = labelText.rectTransform;
         var timerRt = timerText.rectTransform;
 
-        // timerText と同じ位置・同じ高さに拡大して FINISH を大きく表示
+        // timerText と同じ位置に拡大して FINISH を大きく表示
+        // 幅はtimerTextの2.5倍にしてHが折り返されないようにする
         float bigFs     = timerText.fontSizeMax;
         float bigH      = bigFs * 1.8f;
-        rt.sizeDelta        = new Vector2(_labelNormalSizeDelta.x, bigH);
-        rt.anchoredPosition = new Vector2(_labelNormalPosition.x, timerRt.anchoredPosition.y);
-        labelText.fontSize  = bigFs;
-        labelText.alignment = TextAlignmentOptions.Center;
+        rt.sizeDelta            = new Vector2(timerRt.sizeDelta.x * 2.5f, bigH);
+        rt.anchoredPosition     = new Vector2(timerRt.anchoredPosition.x, timerRt.anchoredPosition.y);
+        labelText.fontSize      = bigFs;
+        labelText.enableWordWrapping = false;
+        labelText.overflowMode  = TextOverflowModes.Overflow;
+        labelText.alignment     = TextAlignmentOptions.Center;
     }
 
     void RestoreLabel()
@@ -576,7 +589,7 @@ public class TimerDisplay : MonoBehaviour
     }
 
     // -----------------------------------------------------------------------
-    // 動的生成: LabelText（上段ラベル、Liberation Sans + グロー）
+    // 動的生成: LabelText（上段ラベル — timerText と同じ DSEG7 + ホログラムマテリアル）
     // -----------------------------------------------------------------------
 
     TextMeshProUGUI CreateLabel()
@@ -595,28 +608,26 @@ public class TimerDisplay : MonoBehaviour
         rt.anchorMin        = timerRt.anchorMin;
         rt.anchorMax        = timerRt.anchorMax;
         rt.pivot            = new Vector2(0.5f, 0.5f);
-        rt.sizeDelta        = new Vector2(timerRt.sizeDelta.x, labelH);
+        rt.sizeDelta        = new Vector2(timerRt.sizeDelta.x * 1.5f, labelH);
         rt.anchoredPosition = new Vector2(timerRt.anchoredPosition.x,
                                           timerRt.anchoredPosition.y + visHalf + 4f + labelH * 0.5f);
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts & Materials/LiberationSans SDF");
-
-        var tmp              = go.GetComponent<TextMeshProUGUI>();
-        tmp.font             = font != null ? font : timerText.font;
-        tmp.fontSize         = fs;
-        tmp.enableAutoSizing = false;
-        tmp.alignment        = TextAlignmentOptions.Center;
-        tmp.color            = normalFaceColor;
-        tmp.text             = "";
-
-        // TMP 組み込みグロー有効化
-        EnableTMPGlow(tmp, normalGlowColor);
+        var tmp                  = go.GetComponent<TextMeshProUGUI>();
+        tmp.font                 = timerText.font;            // DSEG7（timerText と同じ）
+        tmp.fontMaterial         = new Material(timerText.fontMaterial); // ホログラムマテリアルをコピー
+        tmp.fontSize             = fs;
+        tmp.enableAutoSizing     = false;
+        tmp.enableWordWrapping   = false;
+        tmp.overflowMode         = TextOverflowModes.Overflow;
+        tmp.alignment            = TextAlignmentOptions.Center;
+        tmp.color                = normalFaceColor;
+        tmp.text                 = "";
 
         return tmp;
     }
 
     // -----------------------------------------------------------------------
-    // 動的生成: RoundIndicator（下段 ●○ ドット、Liberation Sans）
+    // 動的生成: RoundIndicator（下段 ●○ ドット — timerText と同じマテリアル）
     // -----------------------------------------------------------------------
 
     TextMeshProUGUI CreateRoundIndicator()
@@ -626,8 +637,8 @@ public class TimerDisplay : MonoBehaviour
         var go = new GameObject("RoundIndicator", typeof(RectTransform), typeof(TextMeshProUGUI));
         go.transform.SetParent(timerText.transform.parent, false);
 
-        var timerRt  = timerText.GetComponent<RectTransform>();
-        float scaleY = timerRt.localScale.y;
+        var timerRt   = timerText.GetComponent<RectTransform>();
+        float scaleY  = timerRt.localScale.y;
         float visHalf = timerRt.sizeDelta.y * 0.5f * scaleY;
         float fs      = Mathf.Max(6f, timerText.fontSizeMax * 0.22f);
         float indH    = fs * 1.5f;
@@ -636,26 +647,30 @@ public class TimerDisplay : MonoBehaviour
         rt.anchorMin        = timerRt.anchorMin;
         rt.anchorMax        = timerRt.anchorMax;
         rt.pivot            = new Vector2(0.5f, 0.5f);
-        rt.sizeDelta        = new Vector2(timerRt.sizeDelta.x, indH);
+        rt.sizeDelta        = new Vector2(timerRt.sizeDelta.x * 1.5f, indH);
         rt.anchoredPosition = new Vector2(timerRt.anchoredPosition.x,
                                           timerRt.anchoredPosition.y - visHalf - 4f - indH * 0.5f);
 
-        var font = Resources.Load<TMP_FontAsset>("Fonts & Materials/LiberationSans SDF");
+        // ●○ はDSEG7に含まれないため LiberationSans SDF を使用
+        var libFont = Resources.Load<TMP_FontAsset>("Fonts & Materials/LiberationSans SDF");
 
-        var tmp              = go.GetComponent<TextMeshProUGUI>();
-        tmp.font             = font != null ? font : timerText.font;
-        tmp.fontSize         = fs;
-        tmp.enableAutoSizing = false;
-        tmp.alignment        = TextAlignmentOptions.Center;
-        tmp.color            = normalFaceColor;
-        tmp.text             = "";
+        var tmp                = go.GetComponent<TextMeshProUGUI>();
+        tmp.font               = libFont != null ? libFont : timerText.font;
+        tmp.fontSize           = fs;
+        tmp.enableAutoSizing   = false;
+        tmp.enableWordWrapping = false;
+        tmp.overflowMode       = TextOverflowModes.Overflow;
+        tmp.alignment          = TextAlignmentOptions.Center;
+        tmp.color              = normalFaceColor;
+        tmp.text               = "";
 
+        // LiberationSans は独自マテリアルを持つので GLOW_ON キーワードで有効化
         EnableTMPGlow(tmp, normalGlowColor);
 
         return tmp;
     }
 
-    // TMP Distance Field シェーダーのグローを有効化する
+    // TMP Distance Field シェーダーのグローを有効化する（LiberationSans など専用マテリアル向け）
     static void EnableTMPGlow(TextMeshProUGUI tmp, Color glowColor)
     {
         if (tmp == null || tmp.fontMaterial == null) return;
