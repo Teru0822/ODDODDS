@@ -76,6 +76,38 @@ public class UFOItemGoal : MonoBehaviour
     [Tooltip("ジャックポット獲得時のランプ点滅間隔（秒）")]
     [SerializeField] private float jackpotBlinkInterval = 0.15f;
 
+    [Header("フィーバータイム設定")]
+    [Tooltip("フィーバータイム有効時間（秒）")]
+    [SerializeField] private float feverDuration = 10f;
+
+    [Tooltip("フィーバータイム用の金貨プレハブ")]
+    [SerializeField] private GameObject feverGoldPrefab;
+    [Tooltip("フィーバータイム用の銀貨プレハブ")]
+    [SerializeField] private GameObject feverSilverPrefab;
+    [Tooltip("フィーバータイム用の銅貨プレハブ")]
+    [SerializeField] private GameObject feverCopperPrefab;
+
+    [Tooltip("金貨の降る割合（比率）")]
+    [Range(0f, 100f)]
+    [SerializeField] private float feverGoldRatio = 20f;
+
+    [Tooltip("銀貨の降る割合（比率）")]
+    [Range(0f, 100f)]
+    [SerializeField] private float feverSilverRatio = 30f;
+
+    [Tooltip("銅貨の降る割合（比率）")]
+    [Range(0f, 100f)]
+    [SerializeField] private float feverCopperRatio = 50f;
+
+    [Tooltip("フィーバータイム中に降らせるコインの総枚数")]
+    [SerializeField] private int feverRainCoinCount = 100;
+
+    [Tooltip("フィーバータイム中に降らせる範囲のスケール")]
+    [SerializeField] private Vector2 feverRainAreaScale = new Vector2(0.5f, 0.5f);
+
+    [Tooltip("フィーバータイム中に降らせる範囲 of オフセット")]
+    [SerializeField] private Vector2 feverRainAreaOffset = Vector2.zero;
+
     [Header("ジャックポット設定")]
     [Tooltip("ジャックポット発生時に降らせるオブジェクトのプレハブリスト（空の場合はゴールドコインになります）")]
     public System.Collections.Generic.List<GameObject> jackpotRainPrefabs = new System.Collections.Generic.List<GameObject>();
@@ -476,6 +508,52 @@ public class UFOItemGoal : MonoBehaviour
         _originalEmissionColors.Clear();
 
         IsFlashing = false; // 演出終了
+    }
+
+    /// <summary>
+    /// フィーバータイムを起動します。制限時間がストップし、設定された比率でコインが降ります。
+    /// </summary>
+    public void StartFeverTime()
+    {
+        // 1. 制限時間のストップ（UFOCameraControllerに通知）
+        if (UFOCameraController.Instance != null)
+        {
+            UFOCameraController.Instance.StartFeverTime(feverDuration);
+        }
+
+        // 2. コイン雨の発生
+        if (ItemSpawner.Instance != null)
+        {
+            System.Collections.Generic.List<GameObject> prefabsToSpawn = new System.Collections.Generic.List<GameObject>();
+            
+            float total = feverGoldRatio + feverSilverRatio + feverCopperRatio;
+            if (total <= 0f) total = 1f;
+
+            // 比率をプール内の個数として再現
+            int poolSize = 100;
+            int goldCount = Mathf.RoundToInt((feverGoldRatio / total) * poolSize);
+            int silverCount = Mathf.RoundToInt((feverSilverRatio / total) * poolSize);
+            int copperCount = poolSize - (goldCount + silverCount);
+
+            for (int i = 0; i < goldCount; i++) if (feverGoldPrefab != null) prefabsToSpawn.Add(feverGoldPrefab);
+            for (int i = 0; i < silverCount; i++) if (feverSilverPrefab != null) prefabsToSpawn.Add(feverSilverPrefab);
+            for (int i = 0; i < copperCount; i++) if (feverCopperPrefab != null) prefabsToSpawn.Add(feverCopperPrefab);
+
+            if (prefabsToSpawn.Count > 0)
+            {
+                ItemSpawner.Instance.StartJackpotRain(
+                    prefabsToSpawn, 
+                    feverRainCoinCount, 
+                    feverDuration, 
+                    feverRainAreaScale, 
+                    feverRainAreaOffset
+                );
+            }
+            else
+            {
+                Debug.LogWarning("[UFOItemGoal] フィーバータイム用のプレハブが設定されていません。");
+            }
+        }
     }
 
 #if UNITY_EDITOR
