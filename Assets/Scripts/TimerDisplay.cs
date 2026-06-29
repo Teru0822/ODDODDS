@@ -96,6 +96,7 @@ public class TimerDisplay : MonoBehaviour
     private float       _flickerTimer;
     private float       _noiseOffset;
     private CanvasGroup _canvasGroup;
+    private GameObject  _displayCanvas; // TimerCanvas GameObjet（SetActive で表示制御）
 
     private bool  _lastIsPlayingUfo;
     private bool  _lastIsSessionActive;
@@ -119,11 +120,12 @@ public class TimerDisplay : MonoBehaviour
 
         _noiseOffset = Random.Range(0f, 100f);
 
-        var displayRoot = timerText.transform.parent.gameObject;
-        _canvasGroup = displayRoot.GetComponent<CanvasGroup>()
-                       ?? displayRoot.AddComponent<CanvasGroup>();
-        ApplyAlpha(0f);
-        _canvasGroup.ignoreParentGroups = false;
+        _displayCanvas = timerText.transform.parent.gameObject; // TimerCanvas
+        _canvasGroup = _displayCanvas.GetComponent<CanvasGroup>()
+                       ?? _displayCanvas.AddComponent<CanvasGroup>();
+
+        // SetActive で確実に非表示（CanvasGroup alpha だけでは不確実なため）
+        _displayCanvas.SetActive(false);
 
         if (labelText == null)
             labelText = CreateLabel();
@@ -143,17 +145,8 @@ public class TimerDisplay : MonoBehaviour
         _lastIsSessionActive = UFOCameraController.IsPlaySessionActive;
     }
 
-    private void Start()
-    {
-        // Awake 後に他のコンポーネントが alpha をリセットした場合への保険
-        if (_state == DisplayState.Hidden) ApplyAlpha(0f);
-    }
-
     private void Update()
     {
-        // Hidden 中は毎フレーム alpha=0 を強制（他コンポーネントのリセット対策）
-        if (_state == DisplayState.Hidden) { ApplyAlpha(0f); }
-
         bool isPlayingUfo    = UFOCameraController.IsPlayingUfo;
         bool isSessionActive = UFOCameraController.IsPlaySessionActive;
 
@@ -219,7 +212,12 @@ public class TimerDisplay : MonoBehaviour
         _pendingState = next;
 
         if (_state == DisplayState.Hidden || next == DisplayState.Hidden)
+        {
+            // Hidden への/からの遷移はフェードなしで即時切替
+            if (next != DisplayState.Hidden)
+                _displayCanvas?.SetActive(true); // 非表示 → 表示: Canvas を先に有効化
             ApplyState(next);
+        }
         else
         {
             _isFadingOut = true;
@@ -241,6 +239,7 @@ public class TimerDisplay : MonoBehaviour
             case DisplayState.Hidden:
                 ApplyAlpha(0f);
                 SetTexts("", "");
+                _displayCanvas?.SetActive(false); // Canvas を非アクティブにして確実に非表示
                 break;
 
             case DisplayState.RoundDisplay:
@@ -571,8 +570,7 @@ public class TimerDisplay : MonoBehaviour
     void ApplyAlpha(float alpha)
     {
         if (_canvasGroup == null) return;
-        _canvasGroup.alpha          = alpha;
-        _canvasGroup.blocksRaycasts = alpha > 0.5f;
+        _canvasGroup.alpha = alpha;
     }
 
     static float GetRemainingTime()
