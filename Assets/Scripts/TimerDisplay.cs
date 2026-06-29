@@ -614,9 +614,6 @@ public class TimerDisplay : MonoBehaviour
                                           timerRt.anchoredPosition.y + visHalf + 4f + labelH * 0.5f);
 
         var tmp                  = go.GetComponent<TextMeshProUGUI>();
-        // labelFont が設定されていれば（DSEG14 など）それを優先、なければ timerText と同じ DSEG7
-        tmp.font                 = labelFont != null ? labelFont : timerText.font;
-        tmp.fontMaterial         = new Material(timerText.fontMaterial); // ホログラムマテリアルをコピー
         tmp.fontSize             = fs;
         tmp.enableAutoSizing     = false;
         tmp.enableWordWrapping   = false;
@@ -624,6 +621,19 @@ public class TimerDisplay : MonoBehaviour
         tmp.alignment            = TextAlignmentOptions.Center;
         tmp.color                = normalFaceColor;
         tmp.text                 = "";
+
+        if (labelFont != null)
+        {
+            // DSEG14 等の別フォント: フォント自身のアトラスを使い、そこへ glow だけ追加
+            tmp.font = labelFont;
+            ApplyHologramToLabel(tmp);
+        }
+        else
+        {
+            // 同じ DSEG7: ホログラムマテリアルをそのままコピーしてアトラスも一致
+            tmp.font         = timerText.font;
+            tmp.fontMaterial = new Material(timerText.fontMaterial);
+        }
 
         return tmp;
     }
@@ -670,6 +680,27 @@ public class TimerDisplay : MonoBehaviour
         EnableTMPGlow(tmp, normalGlowColor);
 
         return tmp;
+    }
+
+    // 別フォント（DSEG14 等）にホログラムシェーダー設定を移植する。
+    // フォント自身のアトラスを保持しつつ timerText のシェーダーとグロー設定をコピーする。
+    void ApplyHologramToLabel(TextMeshProUGUI tmp)
+    {
+        if (tmp == null || timerText?.fontMaterial == null || tmp.font == null) return;
+
+        var src  = timerText.fontMaterial;
+        var font = tmp.font;
+
+        // timerText のシェーダーをベースにマテリアルを作成
+        var mat = new Material(src);
+
+        // フォントアトラスを labelFont のものに差し替える（これが表示されない原因の核心）
+        mat.mainTexture = font.atlasTexture;
+        mat.SetFloat(Shader.PropertyToID("_TextureWidth"),  font.atlasWidth);
+        mat.SetFloat(Shader.PropertyToID("_TextureHeight"), font.atlasHeight);
+        mat.SetFloat(Shader.PropertyToID("_GradientScale"), font.atlasPadding + 1);
+
+        tmp.fontMaterial = mat;
     }
 
     // TMP Distance Field シェーダーのグローを有効化する（LiberationSans など専用マテリアル向け）
