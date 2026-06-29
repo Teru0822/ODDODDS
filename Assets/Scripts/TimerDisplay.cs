@@ -203,6 +203,9 @@ public class TimerDisplay : MonoBehaviour
 
         if (_state == DisplayState.Countdown)  UpdateFlicker();
         if (_state == DisplayState.LimitTime && _fadeTimer <= 0f) UpdateAlternate();
+
+        // インジケーターは毎フレーム更新（PaymentCount がセッション中に変化するため）
+        if (_state != DisplayState.Hidden) UpdateRoundIndicator();
     }
 
     private void LateUpdate()
@@ -444,8 +447,11 @@ public class TimerDisplay : MonoBehaviour
             return;
         }
 
-        var rm      = RoundManager.Instance;
-        int current = rm != null ? rm.currentRound : (_roundAtEntry > 0 ? _roundAtEntry : 1);
+        // PaymentCount = UFO セッションをプレイした回数（セッション終了で +1）
+        // ゲームラウンド（RoundManager.currentRound）はUFO+ピンボール両方でしか進まないため
+        // UFO 単体でも変化する PaymentCount でインジケーターを駆動する
+        var ctrl    = UFOCameraController.Instance;
+        int current = ctrl != null ? ctrl.PaymentCount : 0;
         string ch   = string.IsNullOrEmpty(indicatorChar) ? "0" : indicatorChar;
 
         // 非アクティブピップ: 同じ色でアルファだけ落として「消灯セグメント」に見せる
