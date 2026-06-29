@@ -46,6 +46,12 @@ public class TimerDisplay : MonoBehaviour
     [Tooltip("ラウンドの最大数。0 にすると分母・インジケーターを非表示")]
     [SerializeField] private int maxRound = 3;
 
+    [Tooltip("インジケーターに使う文字（DSEG7 で描ける文字: 0, 8, -, _ など）")]
+    [SerializeField] private string indicatorChar = "0";
+
+    [Tooltip("非アクティブなピップのアルファ（消灯セグメントの見え方）")]
+    [SerializeField, Range(0f, 1f)] private float indicatorDimAlpha = 0.12f;
+
     [Header("通常時の色")]
     [SerializeField] private Color normalFaceColor = new Color(0f, 1f, 0.27f, 1f);
     [SerializeField] private Color normalGlowColor = new Color(0f, 1f, 0.27f, 1f);
@@ -440,12 +446,20 @@ public class TimerDisplay : MonoBehaviour
 
         var rm      = RoundManager.Instance;
         int current = rm != null ? rm.currentRound : (_roundAtEntry > 0 ? _roundAtEntry : 1);
+        string ch   = string.IsNullOrEmpty(indicatorChar) ? "0" : indicatorChar;
+
+        // 非アクティブピップ: 同じ色でアルファだけ落として「消灯セグメント」に見せる
+        Color c      = normalFaceColor;
+        string dimHex = ColorUtility.ToHtmlStringRGBA(new Color(c.r, c.g, c.b, indicatorDimAlpha));
 
         var sb = new StringBuilder();
         for (int i = 1; i <= maxRound; i++)
         {
-            if (i > 1) sb.Append("  ");
-            sb.Append(i <= current ? "●" : "○");
+            if (i > 1) sb.Append(" ");
+            if (i <= current)
+                sb.Append(ch);
+            else
+                sb.Append($"<color=#{dimHex}>{ch}</color>");
         }
         roundIndicatorText.text  = sb.ToString();
         roundIndicatorText.color = normalFaceColor;
@@ -639,7 +653,7 @@ public class TimerDisplay : MonoBehaviour
     }
 
     // -----------------------------------------------------------------------
-    // 動的生成: RoundIndicator（下段 ●○ ドット — timerText と同じマテリアル）
+    // 動的生成: RoundIndicator（下段 セグメントピップ — DSEG7 + ホログラムマテリアル）
     // -----------------------------------------------------------------------
 
     TextMeshProUGUI CreateRoundIndicator()
@@ -652,7 +666,7 @@ public class TimerDisplay : MonoBehaviour
         var timerRt   = timerText.GetComponent<RectTransform>();
         float scaleY  = timerRt.localScale.y;
         float visHalf = timerRt.sizeDelta.y * 0.5f * scaleY;
-        float fs      = Mathf.Max(6f, timerText.fontSizeMax * 0.22f);
+        float fs      = Mathf.Max(6f, timerText.fontSizeMax * 0.28f); // 0.22 → 0.28 で少し大きく
         float indH    = fs * 1.5f;
 
         var rt              = go.GetComponent<RectTransform>();
@@ -663,21 +677,18 @@ public class TimerDisplay : MonoBehaviour
         rt.anchoredPosition = new Vector2(timerRt.anchoredPosition.x,
                                           timerRt.anchoredPosition.y - visHalf - 4f - indH * 0.5f);
 
-        // ●○ はDSEG7に含まれないため LiberationSans SDF を使用
-        var libFont = Resources.Load<TMP_FontAsset>("Fonts & Materials/LiberationSans SDF");
-
         var tmp                = go.GetComponent<TextMeshProUGUI>();
-        tmp.font               = libFont != null ? libFont : timerText.font;
+        // timerText と同じ DSEG7 フォント + ホログラムマテリアル（アトラス一致のためそのままコピー可）
+        tmp.font               = timerText.font;
+        tmp.fontMaterial       = new Material(timerText.fontMaterial);
         tmp.fontSize           = fs;
         tmp.enableAutoSizing   = false;
         tmp.enableWordWrapping = false;
         tmp.overflowMode       = TextOverflowModes.Overflow;
+        tmp.richText           = true; // アクティブ/非アクティブのアルファ制御に必要
         tmp.alignment          = TextAlignmentOptions.Center;
         tmp.color              = normalFaceColor;
         tmp.text               = "";
-
-        // LiberationSans は独自マテリアルを持つので GLOW_ON キーワードで有効化
-        EnableTMPGlow(tmp, normalGlowColor);
 
         return tmp;
     }
@@ -703,16 +714,4 @@ public class TimerDisplay : MonoBehaviour
         tmp.fontMaterial = mat;
     }
 
-    // TMP Distance Field シェーダーのグローを有効化する（LiberationSans など専用マテリアル向け）
-    static void EnableTMPGlow(TextMeshProUGUI tmp, Color glowColor)
-    {
-        if (tmp == null || tmp.fontMaterial == null) return;
-        var mat = new Material(tmp.fontMaterial);
-        mat.EnableKeyword("GLOW_ON");
-        mat.SetColor(ShaderUtilities.ID_GlowColor, glowColor);
-        mat.SetFloat(ShaderUtilities.ID_GlowOuter,  0.4f);
-        mat.SetFloat(ShaderUtilities.ID_GlowPower,  0.75f);
-        mat.SetFloat(ShaderUtilities.ID_GlowOffset, 0f);
-        tmp.fontMaterial = mat;
-    }
 }
