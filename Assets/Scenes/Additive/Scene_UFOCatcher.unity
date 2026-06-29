@@ -1725,6 +1725,16 @@ MonoBehaviour:
   jackpotFlashColor: {r: 0.033018887, g: 1, b: 1, a: 1}
   blackDiamondFlashColor: {r: 2.4, g: 0, b: 3, a: 3}
   jackpotBlinkInterval: 0.15
+  feverDuration: 10
+  feverGoldPrefab: {fileID: 8350361114308083434, guid: 2ace8664a70b8014da5cb933568ca21b, type: 3}
+  feverSilverPrefab: {fileID: 1801957764297551110, guid: 6581663a52055644e8b8de069e3e3c84, type: 3}
+  feverCopperPrefab: {fileID: 4563478140741147117, guid: c7b8b375e77d0f04dbe82caa5351db21, type: 3}
+  feverGoldRatio: 10
+  feverSilverRatio: 30
+  feverCopperRatio: 60
+  feverRainCoinCount: 100
+  feverRainAreaScale: {x: 1, y: 1}
+  feverRainAreaOffset: {x: -0.1, y: 0.5}
   jackpotRainPrefabs: []
   jackpotRainCoinCount: 100
   jackpotRainDuration: 10
@@ -2176,6 +2186,52 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: -9054645495440942475, guid: 8c75173cdea759b49a5dd7c905badadb, type: 3}
+--- !u!1 &1610942384 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3076969637275410905, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+  m_PrefabInstance: {fileID: 5351351319220983938}
+  m_PrefabAsset: {fileID: 0}
+--- !u!64 &1610942388
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1610942384}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 2608254245402394468, guid: 76d95e6d3255d7740a878b845fc093e2, type: 3}
+--- !u!114 &1610942389
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1610942384}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4568b001dc5ae8748838a2b4b2d3634a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonController
+  armController: {fileID: 543586318}
+  buttonType: 2
+  pressDepth: 0.05
+  pressSpeed: 20
+  audioSource: {fileID: 0}
+  clickSound: {fileID: 0}
+  soundVolume: 1
 --- !u!1 &1640478945 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 778b21d69f07bd24d98b1a7cbfa64497, type: 3}
@@ -3175,7 +3231,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7587156506030312916, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: disableSway
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8209002438679241151, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: m_Enabled
@@ -3244,6 +3300,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1210348856363055311, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 540379771}
+    - targetCorrespondingSourceObject: {fileID: 3076969637275410905, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1610942389}
+    - targetCorrespondingSourceObject: {fileID: 3076969637275410905, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1610942388}
   m_SourcePrefab: {fileID: 100100000, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

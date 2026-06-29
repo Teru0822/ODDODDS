@@ -87,6 +87,12 @@ public class UFOCameraController : MonoBehaviour
 
     private int _paymentCount = 0;
     private float _playTimer = 0f;
+    private float _feverTimer = 0f; // フィーバータイム残り時間
+
+    /// <summary>
+    /// フィーバータイム（制限時間ストップ）が現在有効かどうか
+    /// </summary>
+    public static bool IsFeverTimeActive => Instance != null && Instance._feverTimer > 0f;
 
     private bool _isTransitioning = false;
     private bool _hasPlayedLowTimeWarning = false;
@@ -315,10 +321,25 @@ public class UFOCameraController : MonoBehaviour
         {
             _showPrompt = false;
 
+            // フィーバータイムのカウントダウン
+            if (_feverTimer > 0f)
+            {
+                _feverTimer -= Time.deltaTime;
+                if (_feverTimer <= 0f)
+                {
+                    _feverTimer = 0f;
+                    Debug.Log("[UFOCameraController] Fever Time Ended.");
+                }
+            }
+
             // Decrement timer if play session is active
             if (IsPlaySessionActive)
             {
-                _playTimer -= Time.deltaTime;
+                // フィーバータイム中でない時のみタイマーを減少させる
+                if (_feverTimer <= 0f)
+                {
+                    _playTimer -= Time.deltaTime;
+                }
 
                 if (_playTimer <= 0f)
                 {
@@ -379,6 +400,15 @@ public class UFOCameraController : MonoBehaviour
     public float GetCurrentPlayCost()
     {
         return playCostBase * Mathf.Pow(costIncreaseMultiplier, _paymentCount);
+    }
+
+    /// <summary>
+    /// フィーバータイムを開始し、制限時間を指定秒数間ストップさせます。
+    /// </summary>
+    public void StartFeverTime(float duration)
+    {
+        _feverTimer = duration;
+        Debug.Log($"[UFOCameraController] Fever Time Started for {duration} seconds!");
     }
 
     /// <summary>
