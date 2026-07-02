@@ -2,6 +2,29 @@
 
 このプロジェクトでは、以下の原則をシステムの絶対ルールとして遵守します。
 
+## 0. git 初期設定（プロジェクト参加時に必ず実行）
+
+プロジェクトに参加したら、以下のコマンドをターミナルで一度だけ実行すること。
+
+```bash
+git config --global pull.rebase false
+```
+
+**なぜ必要か**: デフォルトまたは `pull.rebase true` の設定では `git pull` がリベース方式で動作する。リベース中にコンフリクトが発生すると途中で処理が止まり、中断されたまま放置されると他のメンバーの作業ツリーが壊れた状態になる。`false` にすることで `git pull` が常にマージ方式になり、コンフリクトが発生しても安全に解消できる。
+
+> 【実際に起きた事故】2026年6月、リベースが途中で中断・放置されたことで `author-script` 等の必須ファイルが欠損し、`git rebase --continue` も `--abort` も正常に動作しない壊れた状態になった。結果としてタイマー表示の実装が一時的に消失した。
+
+### 0.1 設定の確認方法
+
+```bash
+git config --global --list | grep pull.rebase
+# pull.rebase=false と表示されれば完了
+```
+
+> macOS の Unicode 正規化設定（`core.precomposeunicode`）については [EnvironmentRules.md](../02_Development_Guidelines/EnvironmentRules.md) を参照。
+
+---
+
 ## 1. 【絶対禁止事項】
 **`main` または `master` ブランチへ直接コミットおよび直接プッシュすることは絶対に禁止する。**
 
