@@ -7,7 +7,7 @@ using UnityEngine.InputSystem;
 /// </summary>
 public class ButtonController : MonoBehaviour
 {
-    public enum ButtonType { StartDescent, ToggleClaw }
+    public enum ButtonType { StartDescent, ToggleClaw, FeverTime }
 
     [Header("連携")]
     [Tooltip("UFOArmController が付いているオブジェクト")]
@@ -85,6 +85,18 @@ public class ButtonController : MonoBehaviour
                     else if (buttonType == ButtonType.ToggleClaw)
                     {
                         armController.ToggleClaw();
+                    }
+                    else if (buttonType == ButtonType.FeverTime)
+                    {
+                        UFOItemGoal goal = FindAnyObjectByType<UFOItemGoal>();
+                        if (goal != null)
+                        {
+                            goal.StartFeverTime();
+                        }
+                        else
+                        {
+                            Debug.LogError("[ButtonController] UFOItemGoal がシーン内に見つかりません。");
+                        }
                     }
                 }
             }

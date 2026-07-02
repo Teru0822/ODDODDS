@@ -18,6 +18,12 @@ public class UFOItemGoal : MonoBehaviour
     [Tooltip("獲得した未洗浄メダルの総額")]
     public float unwashedMoney = 0f;
 
+    /// <summary>
+    /// ランプの獲得演出が実行中かどうかを示します。
+    /// UFOCameraController や PatoLampController から参照されます。
+    /// </summary>
+    public static bool IsFlashing { get; private set; } = false;
+
     [Header("画面表示(UI)")]
     [Tooltip("時計の数を表示するUIテキスト")]
     public TextMeshProUGUI watchCountText;
@@ -47,6 +53,60 @@ public class UFOItemGoal : MonoBehaviour
     [Header("時計効果")]
     [Tooltip("時計を落とし口に入れたときにUFOキャッチャーの残り時間を何秒延長するか")]
     [SerializeField] public float watchTimeExtension = 20f;
+
+    [Header("ランプ連動設定")]
+    [Tooltip("時計獲得時に緑色に光らせる対象 of ランプについたタグ名")]
+    [SerializeField] private string lampTag = "InsertableItem";
+
+    [Tooltip("ランプが光る時間（秒）")]
+    [SerializeField] private float lampGreenDuration = 3.0f;
+
+    [Tooltip("時計獲得時にランプが光る色（HDRカラー）")]
+    [ColorUsage(true, true)]
+    [SerializeField] private Color lampFlashColor = Color.green * 3.0f;
+
+    [Tooltip("ジャックポット獲得時にランプが光る色（HDRカラー）")]
+    [ColorUsage(true, true)]
+    [SerializeField] private Color jackpotFlashColor = new Color(1.0f, 0.85f, 0.2f, 1.0f) * 3.0f;
+
+    [Tooltip("ブラックダイヤモンド獲得時にランプが光る色（HDRカラー）")]
+    [ColorUsage(true, true)]
+    [SerializeField] private Color blackDiamondFlashColor = new Color(0.8f, 0.0f, 1.0f, 1.0f) * 3.0f;
+
+    [Tooltip("ジャックポット獲得時のランプ点滅間隔（秒）")]
+    [SerializeField] private float jackpotBlinkInterval = 0.15f;
+
+    [Header("フィーバータイム設定")]
+    [Tooltip("フィーバータイム有効時間（秒）")]
+    [SerializeField] private float feverDuration = 10f;
+
+    [Tooltip("フィーバータイム用の金貨プレハブ")]
+    [SerializeField] private GameObject feverGoldPrefab;
+    [Tooltip("フィーバータイム用の銀貨プレハブ")]
+    [SerializeField] private GameObject feverSilverPrefab;
+    [Tooltip("フィーバータイム用の銅貨プレハブ")]
+    [SerializeField] private GameObject feverCopperPrefab;
+
+    [Tooltip("金貨の降る割合（比率）")]
+    [Range(0f, 100f)]
+    [SerializeField] private float feverGoldRatio = 20f;
+
+    [Tooltip("銀貨の降る割合（比率）")]
+    [Range(0f, 100f)]
+    [SerializeField] private float feverSilverRatio = 30f;
+
+    [Tooltip("銅貨の降る割合（比率）")]
+    [Range(0f, 100f)]
+    [SerializeField] private float feverCopperRatio = 50f;
+
+    [Tooltip("フィーバータイム中に降らせるコインの総枚数")]
+    [SerializeField] private int feverRainCoinCount = 100;
+
+    [Tooltip("フィーバータイム中に降らせる範囲のスケール")]
+    [SerializeField] private Vector2 feverRainAreaScale = new Vector2(0.5f, 0.5f);
+
+    [Tooltip("フィーバータイム中に降らせる範囲 of オフセット")]
+    [SerializeField] private Vector2 feverRainAreaOffset = Vector2.zero;
 
     [Header("ジャックポット設定")]
     [Tooltip("ジャックポット発生時に降らせるオブジェクトのプレハブリスト（空の場合はゴールドコインになります）")]
@@ -79,12 +139,23 @@ public class UFOItemGoal : MonoBehaviour
         }
     }
 
+    private Coroutine _lampCoroutine;
+    private System.Collections.Generic.Dictionary<Light, Color> _originalColors = new System.Collections.Generic.Dictionary<Light, Color>();
+    private System.Collections.Generic.Dictionary<Light, bool> _originalEnabled = new System.Collections.Generic.Dictionary<Light, bool>();
+    private System.Collections.Generic.Dictionary<Renderer, Color> _originalEmissionColors = new System.Collections.Generic.Dictionary<Renderer, Color>();
+
+    private void OnDisable()
+    {
+        ResetLampsToOriginal();
+    }
+
     private void OnDestroy()
     {
         if (UnwashedMoneyManager.Instance != null)
         {
             UnwashedMoneyManager.Instance.OnAmountChanged -= HandleUnwashedMoneyChanged;
         }
+        ResetLampsToOriginal();
     }
 
     private void HandleUnwashedMoneyChanged(float newAmount)
@@ -159,6 +230,9 @@ public class UFOItemGoal : MonoBehaviour
                     // コイン獲得音の再生
                     PlaySound(coinGetSound);
 
+                    // ランプを金（ゴールド）に点滅させる
+                    TriggerLampFlash(jackpotFlashColor, true);
+
                     // ジャックポット発生時にコイン雨を降らせる
                     if (ItemSpawner.Instance != null)
                     {
@@ -193,6 +267,9 @@ public class UFOItemGoal : MonoBehaviour
 
                     // 時計獲得音の再生（未設定ならコイン音で代用）
                     PlaySound(watchGetSound != null ? watchGetSound : coinGetSound);
+
+                    // ランプを時計用の色に光らせる（常灯）
+                    TriggerLampFlash(lampFlashColor, false);
                     break;
                 case UFOItemType.BlackDiamond:
                     if (MoneyManager.Instance != null)
@@ -203,6 +280,9 @@ public class UFOItemGoal : MonoBehaviour
                         Debug.Log($"[獲得] BlackDiamond！ 洗浄されたお金を {valToReduce}円減らしました。");
                     }
                     PlaySound(blackDiamondGetSound != null ? blackDiamondGetSound : coinGetSound);
+
+                    // ランプを紫に光らせる（常灯）
+                    TriggerLampFlash(blackDiamondFlashColor, false);
                     break;
             }
 
@@ -229,6 +309,250 @@ public class UFOItemGoal : MonoBehaviour
                 }
             }
             audioSource.PlayOneShot(clip, soundVolume);
+        }
+    }
+
+    private void TriggerLampFlash(Color color, bool isBlink)
+    {
+        IsFlashing = true; // 演出開始
+        if (_lampCoroutine != null)
+        {
+            StopCoroutine(_lampCoroutine);
+        }
+        _lampCoroutine = StartCoroutine(FlashLampsCoroutine(color, isBlink));
+    }
+
+    private System.Collections.IEnumerator FlashLampsCoroutine(Color color, bool isBlink)
+    {
+        GameObject[] lampObjects = GameObject.FindGameObjectsWithTag(lampTag);
+
+        // フォールバック: 大文字小文字の揺らぎ対策
+        if ((lampObjects == null || lampObjects.Length == 0) && (lampTag == "InsertableItem" || lampTag == "insertableItem"))
+        {
+            string alternativeTag = (lampTag == "InsertableItem") ? "insertableItem" : "InsertableItem";
+            try
+            {
+                lampObjects = GameObject.FindGameObjectsWithTag(alternativeTag);
+                if (lampObjects != null && lampObjects.Length > 0)
+                {
+                    Debug.LogWarning($"[ランプ連動] タグ '{lampTag}' ではオブジェクトが見つかりませんでしたが、代替タグ '{alternativeTag}' で {lampObjects.Length} 個検出しました。こちらを使用します。");
+                }
+            }
+            catch (System.Exception) { }
+        }
+
+        int totalObjects = lampObjects != null ? lampObjects.Length : 0;
+        System.Collections.Generic.List<Light> targetLights = new System.Collections.Generic.List<Light>();
+        System.Collections.Generic.List<Renderer> targetRenderers = new System.Collections.Generic.List<Renderer>();
+
+        if (lampObjects != null)
+        {
+            foreach (var obj in lampObjects)
+            {
+                if (obj != null)
+                {
+                    targetLights.AddRange(obj.GetComponentsInChildren<Light>(true));
+                    targetRenderers.AddRange(obj.GetComponentsInChildren<Renderer>(true));
+                }
+            }
+        }
+
+        Debug.Log($"[ランプ連動] 対象オブジェクトを {totalObjects} 個検出。制御対象: Light={targetLights.Count}個, Renderer={targetRenderers.Count}個");
+
+        // 元の状態をあらかじめ記録（Blink時の復元用にも使用）
+        foreach (var light in targetLights)
+        {
+            if (light != null && !_originalColors.ContainsKey(light))
+            {
+                _originalColors[light] = light.color;
+                _originalEnabled[light] = light.enabled;
+            }
+        }
+
+        foreach (var r in targetRenderers)
+        {
+            if (r != null && !_originalEmissionColors.ContainsKey(r))
+            {
+                Color origEmission = Color.black;
+                if (r.sharedMaterial != null && r.sharedMaterial.HasProperty("_EmissionColor"))
+                {
+                    origEmission = r.sharedMaterial.GetColor("_EmissionColor");
+                }
+                _originalEmissionColors[r] = origEmission;
+            }
+        }
+
+        if (isBlink)
+        {
+            // 点滅処理の実行（周期的にオン・オフ）
+            float elapsed = 0f;
+            bool isOn = true;
+
+            while (elapsed < lampGreenDuration)
+            {
+                if (isOn)
+                {
+                    // 点灯（設定された色へ）
+                    foreach (var light in targetLights)
+                    {
+                        if (light != null)
+                        {
+                            light.color = color;
+                            light.enabled = true;
+                        }
+                    }
+                    foreach (var r in targetRenderers)
+                    {
+                        if (r != null)
+                        {
+                            MaterialPropertyBlock mpb = new MaterialPropertyBlock();
+                            r.GetPropertyBlock(mpb);
+                            mpb.SetColor("_EmissionColor", color);
+                            r.SetPropertyBlock(mpb);
+                        }
+                    }
+                }
+                else
+                {
+                    // 消灯・復元（元の色・状態へ）
+                    foreach (var light in targetLights)
+                    {
+                        if (light != null)
+                        {
+                            light.color = _originalColors[light];
+                            light.enabled = _originalEnabled[light];
+                        }
+                    }
+                    foreach (var r in targetRenderers)
+                    {
+                        if (r != null)
+                        {
+                            MaterialPropertyBlock mpb = new MaterialPropertyBlock();
+                            r.GetPropertyBlock(mpb);
+                            mpb.SetColor("_EmissionColor", _originalEmissionColors[r]);
+                            r.SetPropertyBlock(mpb);
+                        }
+                    }
+                }
+
+                isOn = !isOn;
+                yield return new WaitForSeconds(jackpotBlinkInterval);
+                elapsed += jackpotBlinkInterval;
+            }
+        }
+        else
+        {
+            // 通常の常灯処理
+            foreach (var light in targetLights)
+            {
+                if (light != null)
+                {
+                    light.color = color;
+                    light.enabled = true;
+                }
+            }
+            foreach (var r in targetRenderers)
+            {
+                if (r != null)
+                {
+                    MaterialPropertyBlock mpb = new MaterialPropertyBlock();
+                    r.GetPropertyBlock(mpb);
+                    mpb.SetColor("_EmissionColor", color);
+                    r.SetPropertyBlock(mpb);
+                }
+            }
+
+            yield return new WaitForSeconds(lampGreenDuration);
+        }
+
+        // 最後に確実に元の状態に復元
+        ResetLampsToOriginal();
+    }
+
+    private void ResetLampsToOriginal()
+    {
+        if (_lampCoroutine != null)
+        {
+            StopCoroutine(_lampCoroutine);
+            _lampCoroutine = null;
+        }
+
+        // Light の復元
+        foreach (var kvp in _originalColors)
+        {
+            Light light = kvp.Key;
+            if (light != null)
+            {
+                light.color = kvp.Value;
+                if (_originalEnabled.TryGetValue(light, out bool wasEnabled))
+                {
+                    light.enabled = wasEnabled;
+                }
+            }
+        }
+        _originalColors.Clear();
+        _originalEnabled.Clear();
+
+        // Renderer の復元
+        foreach (var kvp in _originalEmissionColors)
+        {
+            Renderer r = kvp.Key;
+            if (r != null)
+            {
+                MaterialPropertyBlock mpb = new MaterialPropertyBlock();
+                r.GetPropertyBlock(mpb);
+                mpb.SetColor("_EmissionColor", kvp.Value);
+                r.SetPropertyBlock(mpb);
+            }
+        }
+        _originalEmissionColors.Clear();
+
+        IsFlashing = false; // 演出終了
+    }
+
+    /// <summary>
+    /// フィーバータイムを起動します。制限時間がストップし、設定された比率でコインが降ります。
+    /// </summary>
+    public void StartFeverTime()
+    {
+        // 1. 制限時間のストップ（UFOCameraControllerに通知）
+        if (UFOCameraController.Instance != null)
+        {
+            UFOCameraController.Instance.StartFeverTime(feverDuration);
+        }
+
+        // 2. コイン雨の発生
+        if (ItemSpawner.Instance != null)
+        {
+            System.Collections.Generic.List<GameObject> prefabsToSpawn = new System.Collections.Generic.List<GameObject>();
+            
+            float total = feverGoldRatio + feverSilverRatio + feverCopperRatio;
+            if (total <= 0f) total = 1f;
+
+            // 比率をプール内の個数として再現
+            int poolSize = 100;
+            int goldCount = Mathf.RoundToInt((feverGoldRatio / total) * poolSize);
+            int silverCount = Mathf.RoundToInt((feverSilverRatio / total) * poolSize);
+            int copperCount = poolSize - (goldCount + silverCount);
+
+            for (int i = 0; i < goldCount; i++) if (feverGoldPrefab != null) prefabsToSpawn.Add(feverGoldPrefab);
+            for (int i = 0; i < silverCount; i++) if (feverSilverPrefab != null) prefabsToSpawn.Add(feverSilverPrefab);
+            for (int i = 0; i < copperCount; i++) if (feverCopperPrefab != null) prefabsToSpawn.Add(feverCopperPrefab);
+
+            if (prefabsToSpawn.Count > 0)
+            {
+                ItemSpawner.Instance.StartJackpotRain(
+                    prefabsToSpawn, 
+                    feverRainCoinCount, 
+                    feverDuration, 
+                    feverRainAreaScale, 
+                    feverRainAreaOffset
+                );
+            }
+            else
+            {
+                Debug.LogWarning("[UFOItemGoal] フィーバータイム用のプレハブが設定されていません。");
+            }
         }
     }
 
