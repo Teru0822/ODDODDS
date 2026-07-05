@@ -6,10 +6,12 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "ItemData")]
 public class ItemData : ScriptableObject
 {
-    public int id; 
-    public string itemName;
-    public string description;
-    public Sprite iconImage;
-    public GameObject prefabData;
+    public int id; //アイテムのID
+    public string itemName;//名前
+    public string description;//説明
+    public Sprite iconImage;//アイテムの画像
+    public GameObject prefabData;//生成するオブジェクト
+    public ItemType itemType;
+    public ItemCategory itemCategory;
 }
 

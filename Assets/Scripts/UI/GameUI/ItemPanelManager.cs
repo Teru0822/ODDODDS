@@ -8,6 +8,33 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
+public enum ItemType
+{
+    /// <summary>
+    /// 消費アイテム
+    /// </summary>
+    Consume,
+    /// <summary>
+    /// 恒常アイテム
+    /// </summary>
+    Permanent,
+}
+
+public enum ItemCategory
+{
+    /// <summary>
+    /// 交換アイテム
+    /// </summary>
+    Exchange,
+    /// <summary>
+    /// 消費アイテム
+    /// </summary>
+    Consume,
+    /// <summary>
+    /// 大事なもの
+    /// </summary>
+    Important
+}
 /// <summary>
 /// アイテムパネルの表示およびアイテム所持状況の永続化を管理するクラス
 /// </summary>
@@ -15,31 +42,115 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
 {
     [Header("アイテム表示用オブジェクト")]
     [SerializeField] private ItemDataBase _itemDataBase;
+    [SerializeField] private Button _consumeButton;
+    [SerializeField] private Button _permanentButton;
     [SerializeField] private List<Button> _itemButtons = new List<Button>();
 
     [Header("説明用オブジェクト")]
+    [SerializeField] private TMP_Text _itemNameText;
+    [SerializeField] private TMP_Text _categoryText;
+    [SerializeField] private TMP_Text _countText;
     [SerializeField] private TMP_Text _detailDescriptionText;
-    [SerializeField] private Image _detailIconImage;
+    [SerializeField] private Image _itemIconImage;
+    [SerializeField] private Button _useButton;
 
-    ReactiveCollection<int> _ownedItemIds = new ReactiveCollection<int>();
+    ReactiveCollection<ItemInstance> _ownedItems = new ReactiveCollection<ItemInstance>();//恒常アイテムのIDを保持したもの
+    ReactiveCollection<ItemInstance> _ownedConsumeItems = new ReactiveCollection<ItemInstance>();//消費アイテムのIDを保持したもの
+
+
+    private ItemType _displayedType = ItemType.Permanent;//表示させるアイテムの種類を決定する変数
+    private ItemInstance _nowSelectedItem = null;
 
     private void Awake()
     {
-        _ownedItemIds
+        _ownedItems
             .ObserveAdd()
             .Subscribe(index =>
             {
-                Debug.LogWarning("ItemID[" + index + "]のアイテムをゲットしました。");
+                if (index.Value == null)
+                {
+                    Debug.LogError("追加されたItemDataがnull");
+                    return;
+                }
+
+                Debug.LogWarning(index.Value.ItemName + "をゲットしました。");
                 UpdateUI();
             }).AddTo(this);
 
-        _ownedItemIds
+        _ownedItems
             .ObserveRemove()
             .Subscribe(index =>
             {
-                Debug.LogWarning("ItemID[" + index + "]のアイテムが無くなりました。");
+                if (index.Value == null)
+                {
+                    Debug.LogError("追加されたItemDataがnull");
+                    return;
+                }
+
+                Debug.LogWarning(index.Value.ItemName + "を使用しました。");
                 UpdateUI();
             }).AddTo(this);
+
+        _ownedConsumeItems
+        .ObserveAdd()
+        .Subscribe(index =>
+        {
+            if (index.Value == null)
+                {
+                    Debug.LogError("追加されたItemDataがnull");
+                    return;
+                }
+            Debug.LogWarning(index.Value.ItemName + "をゲットしました。");
+            UpdateUI();
+        }).AddTo(this);
+
+        _ownedConsumeItems
+            .ObserveRemove()
+            .Subscribe(index =>
+            {
+                if (index.Value == null)
+                {
+                    Debug.LogError("追加されたItemDataがnull");
+                    return;
+                }
+                Debug.LogWarning(index.Value.ItemName + "を使用しました。");
+                UpdateUI();
+            }).AddTo(this);
+
+        _useButton.onClick.AddListener(() =>
+        {
+            UseItem();
+        });
+
+        _consumeButton.GetComponent<Image>().color = Color.gray;
+        _permanentButton.onClick.AddListener(() =>
+        {
+            _displayedType = ItemType.Permanent;
+            _permanentButton.GetComponent<Image>().color = Color.gray;
+            _consumeButton.GetComponent<Image>().color = Color.white;
+            UpdateUI();
+            ClearExplainPanel();
+        });
+        _consumeButton.onClick.AddListener(() => 
+        { 
+            _displayedType = ItemType.Consume; 
+            _permanentButton.GetComponent<Image>().color = Color.white;
+            _consumeButton.GetComponent<Image>().color = Color.gray;
+            UpdateUI();
+            ClearExplainPanel();
+        });
+
+        ClearExplainPanel();
+    }
+
+    private void ClearExplainPanel()
+    {
+        _detailDescriptionText.gameObject.SetActive(false);
+        _categoryText.gameObject.SetActive(false);
+        _countText.gameObject.SetActive(false);
+        _itemNameText.gameObject.SetActive(false);
+        _itemIconImage.gameObject.SetActive(false);
+        _useButton.gameObject.SetActive(false);
     }
 
     private void Update()
@@ -47,9 +158,9 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
 #if UNITY_EDITOR
         if (Keyboard.current.iKey.wasPressedThisFrame)
         {
-            foreach (var item in _ownedItemIds)
+            foreach (var item in _ownedItems)
             {
-                Debug.LogWarning(item);
+                Debug.LogWarning(item.ItemName);
             }
             UpdateUI();
             Debug.Log("試しにイベント機能を使います。");
@@ -59,14 +170,74 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
 
     public void WriteSaveData(RoguelikeSaveData saveData)
     {
-        saveData.ownedItems = _ownedItemIds.ToList();
+        //ItemInstanceからItemSaveDataを作成し、セーブさせる
+        List<ItemSaveData> permanentItemSaveData = new List<ItemSaveData>();
+        List<ItemSaveData> consumeItemSaveData = new List<ItemSaveData>();
+
+        foreach(var item in _ownedItems)
+        {
+            permanentItemSaveData.Add(item.CreateItemSaveData());
+        }
+        foreach(var item in _ownedConsumeItems)
+        {
+            consumeItemSaveData.Add(item.CreateItemSaveData());
+        }
+
+        saveData.ownedPermanentItems = permanentItemSaveData;
+        saveData.ownedConsumeItems = consumeItemSaveData;
     }
 
     public void ReadSaveData(RoguelikeSaveData saveData)
     {
-        foreach (var item in saveData.ownedItems)
+        _ownedItems.Clear();
+        _ownedConsumeItems.Clear();
+
+        if (saveData.ownedPermanentItems != null)
         {
-            _ownedItemIds.Add(item);
+            foreach (var itemSaveData in saveData.ownedPermanentItems)
+            {
+                ItemInstance instance = new ItemInstance();
+                instance.master = GetItemDataById(itemSaveData.id);
+                instance.Count = itemSaveData.count;
+                _ownedItems.Add(instance);
+            }
+        }
+
+        if (saveData.ownedConsumeItems != null)
+        {
+            foreach (var itemSaveData in saveData.ownedConsumeItems)
+            {
+                ItemInstance instance = new ItemInstance();
+                instance.master = GetItemDataById(itemSaveData.id);
+                instance.Count = itemSaveData.count;
+                _ownedConsumeItems.Add(instance);
+            }
+        }
+
+        Debug.LogWarning("[WriteSaveData] --- Owned Permanent Items Details ---");
+        foreach (var item in _ownedItems)
+        {
+            if (item != null)
+            {
+                Debug.LogWarning($"[PermanentItem] ID: {item.Id}, Name: {item.ItemName}, Description: {item.ItemDescription}, Count: {item.Count}, Type: {item.ItemType}, Category: {item.ItemCategory}, Icon: {(item.ItemIcon != null ? item.ItemIcon.name : "null")}, Prefab: {(item.PrefabData != null ? item.PrefabData.name : "null")}");
+            }
+            else
+            {
+                Debug.LogWarning("[PermanentItem] Item is null");
+            }
+        }
+
+        Debug.LogWarning("[WriteSaveData] --- Owned Consume Items Details ---");
+        foreach (var item in _ownedConsumeItems)
+        {
+            if (item != null)
+            {
+                Debug.LogWarning($"[CounsumeItem] ID: {item.Id}, Name: {item.ItemName}, Description: {item.ItemDescription}, Count: {item.Count}, Type: {item.ItemType}, Category: {item.ItemCategory}, Icon: {(item.ItemIcon != null ? item.ItemIcon.name : "null")}, Prefab: {(item.PrefabData != null ? item.PrefabData.name : "null")}");
+            }
+            else
+            {
+                Debug.LogWarning("[ConsumeItem] Item is null");
+            }
         }
     }
 
@@ -76,10 +247,11 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
     /// </summary>
     public void UpdateUI()
     {
-        List<ItemData> ownedItems = new List<ItemData>();
-        foreach (int id in _ownedItemIds)
+        List<ItemInstance> ownedItems = new List<ItemInstance>();
+        var targetCollection = (_displayedType == ItemType.Permanent) ? _ownedItems : _ownedConsumeItems;
+
+        foreach (var item in targetCollection)
         {
-            ItemData item = GetItemDataById(id);
             if (item != null)
             {
                 ownedItems.Add(item);
@@ -98,7 +270,7 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
             {
                 var item = ownedItems[i];
                 _itemButtons[i].gameObject.SetActive(true);
-                SetButtonText(_itemButtons[i].gameObject, item.itemName);
+                SetButtonUI(_itemButtons[i].gameObject, item.Count.ToString(),item.ItemIcon);
 
                 _itemButtons[i].onClick.RemoveAllListeners();
                 _itemButtons[i].onClick.AddListener(() => OnSelectItem(item));
@@ -108,23 +280,20 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
                 _itemButtons[i].gameObject.SetActive(false);
             }
         }
-
-        //説明用のオブジェクトは一旦非表示
-        _detailDescriptionText.gameObject.SetActive(false);
-        _detailIconImage.gameObject.SetActive(false);
     }
 
     /// <summary>
-    /// ボタンオブジェクト配下からTMP_Textを探してテキストを設定する
+    /// ボタンのUIをアイテムに応じて変更させる
     /// </summary>
-    private void SetButtonText(GameObject btnObj, string text)
+    private void SetButtonUI(GameObject btnObj, string text,Sprite icon)
     {
         TMP_Text tmpText = btnObj.GetComponentInChildren<TMP_Text>();
+        Image image = btnObj.transform.Find("ItemIcon").GetComponent<Image>();
         if (tmpText != null)
-        {
             tmpText.text = text;
-            return;
-        }
+
+        if(image != null)
+            image.sprite = icon;
     }
 
     /// <summary>
@@ -142,45 +311,109 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
     /// <summary>
     /// アイテムが選択された際の処理
     /// </summary>
-    private void OnSelectItem(ItemData item)
+    private void OnSelectItem(ItemInstance item)
     {
         if (item == null) return;
 
         if (_detailDescriptionText != null)
         {
-            _detailDescriptionText.text = item.description;
+            _detailDescriptionText.text = item.ItemDescription;
             _detailDescriptionText.gameObject.SetActive(true);
         }
 
-        if (_detailIconImage != null)
+        if (_categoryText != null)
         {
-            _detailIconImage.sprite = item.iconImage;
-            _detailIconImage.gameObject.SetActive(item.iconImage != null);
+            _categoryText.text = "Category: " + item.ItemCategory.ToString();
+            _categoryText.gameObject.SetActive(true);
         }
+
+        if (_countText != null)
+        {
+            _countText.text = "Count: " + item.Count.ToString();
+            _countText.gameObject.SetActive(true);
+        }
+
+        if (_itemNameText != null)
+        {
+            _itemNameText.text = item.ItemName;
+            _itemNameText.gameObject.SetActive(true);
+        }
+
+        if (_itemIconImage != null)
+        {
+            _itemIconImage.sprite = item.ItemIcon;
+            _itemIconImage.gameObject.SetActive(true);
+        }
+
+        if(_useButton != null && item.ItemCategory == ItemCategory.Consume && item.Count > 0)
+        {
+            _useButton.gameObject.SetActive(true);
+        }
+        else
+        {
+            _useButton.gameObject.SetActive(false);
+        }
+        _nowSelectedItem = item;
+    }
+
+    /// <summary>
+    /// アイテムを使用する際の処理
+    /// </summary>
+    private void UseItem()
+    {
+        
     }
 
     /// <summary>
     /// 指定されたIDのアイテムを所持リストに追加し、UI更新を行う
     /// </summary>
-    public void AddItem(int id)
+    public void AddItem(int id, ItemType type, int num = 1)
     {
-        if (!_ownedItemIds.Contains(id))
+        var targetCollection = (type == ItemType.Permanent) ? _ownedItems : _ownedConsumeItems;
+
+        bool exists = false;
+        foreach (var item in targetCollection)
         {
-            _ownedItemIds.Add(id);
-            
-            UpdateUI();
+            if (item.Id == id)
+            {
+                exists = true;
+                if(type == ItemType.Consume) item.Count+=num;//消費アイテムの場合、アイテムの所持数を増加
+                break;
+            }
+        }
+
+        if (!exists)
+        {
+            ItemData original = GetItemDataById(id);
+            if (original != null)
+            {
+                ItemInstance instance = new ItemInstance();
+                instance.master = original;
+                instance.Count = num;
+                targetCollection.Add(instance);
+            }
+            else
+            {
+                Debug.LogError("指定されたIDは存在しません");
+                return;
+            }
         }
     }
 
     /// <summary>
     /// 指定されたIDのアイテムを所持リストから削除し、UI更新を行う
     /// </summary>
-    public void RemoveItem(int id)
+    public void RemoveItem(int id, ItemType type, int num = 1)
     {
-        if (_ownedItemIds.Contains(id))
+        var targetCollection = (type == ItemType.Permanent) ? _ownedItems : _ownedConsumeItems;
+
+        foreach (var item in targetCollection)
         {
-            _ownedItemIds.Remove(id);
-            UpdateUI();
+            if (item != null && item.Id == id)
+            {
+                if(type == ItemType.Consume) item.Count = Mathf.Max(item.Count - num, 0);//消費アイテムの場合、アイテムの所持数を減少
+                break;
+            }
         }
     }
 }
