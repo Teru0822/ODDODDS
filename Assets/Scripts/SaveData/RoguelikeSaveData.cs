@@ -12,7 +12,11 @@ public class RoguelikeSaveData
     public bool isUnlockVisitor    = false; // 訪問者機能を解放
 
     //アイテム関連
-    public List<int> ownedItems;
+    public List<ItemSaveData> ownedPermanentItems;//恒常アイテムのリスト
+    public List<ItemSaveData> ownedConsumeItems;//消費アイテムのリスト
+
+    //エフェクト関連
+    public List<EffectSaveData> ownedEffects;//消費アイテムのリスト
 
     // 今後ここに追加のメタプログレッション要素（スキル解放状態など）を記載
 
