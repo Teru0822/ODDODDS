@@ -57,9 +57,14 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
         private set { if (Wallet != null) Wallet.VirtuePoints = value; }
     }
 
-    
-    private float _previousDecreaseAmount = 0;
-    public float PreviousDecreaseAmount => _previousDecreaseAmount;
+    //ノルマの金額
+    ReactiveProperty<float> _quotaAmount = new ReactiveProperty<float>(0);
+    public float PreviousDecreaseAmount => _quotaAmount.Value;
+    public IReadOnlyReactiveProperty<float> OnQuotaAmount { get { return _quotaAmount; } }
+
+    //借金の残りの金額
+    ReactiveProperty<float> _leftDebtAmount = new ReactiveProperty<float>(10000000000);
+    public IReadOnlyReactiveProperty<float> OnLeftDebtAmount { get { return _leftDebtAmount; } }
 
     private void Awake()
     {
@@ -71,7 +76,7 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
         Instance = this;
 
         // 初期化
-        _previousDecreaseAmount = _initialDecreaseAmount;
+        _quotaAmount.Value = _initialDecreaseAmount;
 
         // セーブデータのロード (PlayerWallet 経由で値を入れる必要があるので Start で実施)
     }
@@ -159,9 +164,14 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
     /// </summary>
     public void ApplyTurnDecrease()
     {
-        ReduceMoney(_previousDecreaseAmount);
+        //借金の返済処理
+        ReduceMoney(_quotaAmount.Value);
+        _leftDebtAmount.Value -= _quotaAmount.Value;
+
         // 次回の減少額を指数関数的に増加させて記憶
-        _previousDecreaseAmount *= _exponentialRate;
+        _quotaAmount.Value *= _exponentialRate;
+
+
     }
 
     /// <summary>

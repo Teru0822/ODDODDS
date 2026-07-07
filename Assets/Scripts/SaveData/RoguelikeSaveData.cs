@@ -15,6 +15,9 @@ public class RoguelikeSaveData
     public List<ItemSaveData> ownedPermanentItems;//恒常アイテムのリスト
     public List<ItemSaveData> ownedConsumeItems;//消費アイテムのリスト
 
+    //エフェクト関連
+    public List<EffectSaveData> ownedEffects;//消費アイテムのリスト
+
     // 今後ここに追加のメタプログレッション要素（スキル解放状態など）を記載
 
     //ーーー各遊技のローグライク要素をここに記述していくーーーー

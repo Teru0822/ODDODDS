@@ -57,8 +57,10 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
     ReactiveCollection<ItemInstance> _ownedItems = new ReactiveCollection<ItemInstance>();//恒常アイテムのIDを保持したもの
     ReactiveCollection<ItemInstance> _ownedConsumeItems = new ReactiveCollection<ItemInstance>();//消費アイテムのIDを保持したもの
 
+    /*--- アイテムの処理で使うコンポーネントを記述 ---*/
 
-    private ItemType _displayedType = ItemType.Permanent;//表示させるアイテムの種類を決定する変数
+
+    private ItemType _displayedType = ItemType.Consume;//表示させるアイテムの種類を決定する変数
     private ItemInstance _nowSelectedItem = null;
 
     private void Awake()
@@ -83,7 +85,7 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
             {
                 if (index.Value == null)
                 {
-                    Debug.LogError("追加されたItemDataがnull");
+                    Debug.LogError("削除されたItemDataがnull");
                     return;
                 }
 
@@ -110,7 +112,7 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
             {
                 if (index.Value == null)
                 {
-                    Debug.LogError("追加されたItemDataがnull");
+                    Debug.LogError("削除されたItemDataがnull");
                     return;
                 }
                 Debug.LogWarning(index.Value.ItemName + "を使用しました。");
@@ -280,6 +282,9 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
                 _itemButtons[i].gameObject.SetActive(false);
             }
         }
+
+        if(_countText.gameObject.activeSelf && _nowSelectedItem != null)
+            _countText.text = "Count: " + _nowSelectedItem.Count.ToString();
     }
 
     /// <summary>
@@ -361,7 +366,21 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
     /// </summary>
     private void UseItem()
     {
-        
+        int effectId = EffectManager.Instance.GetIdByItemName(_nowSelectedItem.ItemName);
+
+        //アイテムを使用できるか確認し、アイテム処理を行う
+        if(EffectManager.Instance.IsHasEffect(effectId))
+        {
+            //既に使用しているのでこのターンは使えません...と記載する
+            Debug.LogError("既に使用しているのでこのターンは使えません");
+        }
+        else
+        {
+            Debug.LogError(_nowSelectedItem.ItemName + "使用");
+            EffectManager.Instance.AddEffect(effectId);             
+        }
+
+        RemoveItem(_nowSelectedItem.Id,_nowSelectedItem.ItemType);
     }
 
     /// <summary>
@@ -398,6 +417,8 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
                 return;
             }
         }
+
+        UpdateUI();
     }
 
     /// <summary>
@@ -412,6 +433,7 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
             if (item != null && item.Id == id)
             {
                 if(type == ItemType.Consume) item.Count = Mathf.Max(item.Count - num, 0);//消費アイテムの場合、アイテムの所持数を減少
+                UpdateUI();
                 break;
             }
         }

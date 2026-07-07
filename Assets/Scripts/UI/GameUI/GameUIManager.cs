@@ -1,46 +1,46 @@
 using DG.Tweening;
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.UI;
 using UniRx;
 
 public class GameUIManager : MonoBehaviour
 {
-    [Header("ƒQ[ƒ€“à‚ÌƒIƒuƒWƒFƒNƒg")]
+    [Header("ã‚²ãƒ¼ãƒ å†…ã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ")]
     [SerializeField] private TMP_Text _turnText;
     [SerializeField] private TMP_Text _nextDebtTurnText;
     [SerializeField] private TMP_Text _moneyText;
     [SerializeField] private TMP_Text _unwashedMoneyText;
 
-    [Header("playerInfoPanel“à‚ÌƒIƒuƒWƒFƒNƒg")]
+    [Header("playerInfoPanelå†…ã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ")]
     [SerializeField] private GameObject _playerInfoPanel;
     [SerializeField] private TMP_Text _moneyText_info;
     [SerializeField] private TMP_Text _unwashedMoneyText_info;
     [SerializeField] private TMP_Text _virtuePointText;
+    [SerializeField] private TMP_Text _playerNameText;
+    [SerializeField] private TMP_Text _leftDebtMoneyText;
+    [SerializeField] private TMP_Text _nextQuotaText;
 
-    [Header("itemPanel“à‚ÌƒIƒuƒWƒFƒNƒg")]
+    [Header("itemPanelå†…ã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ")]
     [SerializeField] private GameObject _itemPanel;
 
-    [Header("roguelikePanel“à‚ÌƒIƒuƒWƒFƒNƒg")]
+    [Header("roguelikePanelå†…ã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ")]
     [SerializeField] private GameObject _roguelikePanel;
 
 
-    [Header("ƒƒjƒ…[—p‚ÌSettings")]
-    [SerializeField] private InputActionReference _openMenuReference;//TabƒL[‚ğ‰Ÿ‚µ‚½‚çƒƒjƒ…[•\¦
+    [Header("ãƒ¡ãƒ‹ãƒ¥ãƒ¼ç”¨ã®Settings")]
+    [SerializeField] private InputActionReference _openMenuReference;//Tabã‚­ãƒ¼ã‚’æŠ¼ã—ãŸã‚‰ãƒ¡ãƒ‹ãƒ¥ãƒ¼è¡¨ç¤º
     [SerializeField] private SerializeDictionary<int, GameObject> _menuTitle = new SerializeDictionary<int, GameObject>();
     private bool _isOpenMenu = false;
     private int _index = 0;
 
-    //‚»‚Ì‘¼ƒvƒ‰ƒCƒx[ƒg•Ï”
+    //ãã®ä»–ãƒ—ãƒ©ã‚¤ãƒ™ãƒ¼ãƒˆå¤‰æ•°
     private float _previousMoneyValue = 0;
     private float _previousUnwashedMoneyValue = 0;
     private int _previousVirtuePointValue = 0;
 
     /// <summary>
-    /// ‰Šú‰»‚ğs‚¤ˆ—
+    /// åˆæœŸåŒ–ã‚’è¡Œã†å‡¦ç†
     /// </summary>
     /// <param name="wallet"></param>
     private void Init(PlayerWallet wallet)
@@ -50,54 +50,56 @@ public class GameUIManager : MonoBehaviour
         _previousVirtuePointValue = wallet.VirtuePoints;
 
 
-        //ˆÈ‘O‚Ì”’l‚ğ‹L˜^‚·‚é•Ï”‚Ì‰Šú‰»
+        //ä»¥å‰ã®æ•°å€¤ã‚’è¨˜éŒ²ã™ã‚‹å¤‰æ•°ã®åˆæœŸåŒ–
         wallet.OnWashedMoneyAmountChange
             .Subscribe(x =>
             {
-                //‚¨‹à‚ÌXVˆ—
-                DOTween.To(() => _previousMoneyValue,//ƒ^[ƒQƒbƒg‚Æ‚È‚é•Ï”
-                         num => _previousMoneyValue = num,    //’l‚ÌXV‚ğs‚¤
-                         x,                                     //ÅI“I‚È’l
-                         1.0f                                   //ŠÔ
-                         ).OnUpdate(() =>
-                         {
-                             _moneyText.text = _previousMoneyValue.ToString("N0");
-                             _moneyText_info.text = _previousMoneyValue.ToString("N0");
-                         }); 
+                //ãŠé‡‘ã®æ›´æ–°å‡¦ç†
+                DOTween.To(() => _previousMoneyValue,//ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã¨ãªã‚‹å¤‰æ•°
+                        num => _previousMoneyValue = num,    //å€¤ã®æ›´æ–°ã‚’è¡Œã†
+                        x,                                     //æœ€çµ‚çš„ãªå€¤
+                        1.0f                                   //æ™‚é–“
+                        ).OnUpdate(() =>
+                        {
+                            _moneyText.text = _previousMoneyValue.ToString("N0");
+                            _moneyText_info.text = _previousMoneyValue.ToString("N0");
+                        }); 
             }).AddTo(this);
 
         wallet.OnUnwashedMoneyAmountChange
             .Subscribe(x =>
             {
-                //–¢ôò‚Ì‚¨‹à‚ÌXVˆ—
-                DOTween.To(() => _previousUnwashedMoneyValue,//ƒ^[ƒQƒbƒg‚Æ‚È‚é•Ï”
-                         num => _previousUnwashedMoneyValue = num,    //’l‚ÌXV‚ğs‚¤
-                         x,                                     //ÅI“I‚È’l
-                         1.0f                                   //ŠÔ
-                         ).OnUpdate(() =>
-                         {
-                             _unwashedMoneyText.text = _previousUnwashedMoneyValue.ToString("N0");
-                             _unwashedMoneyText_info.text = _previousUnwashedMoneyValue.ToString("N0");
-                         });
+                //æœªæ´—æµ„ã®ãŠé‡‘ã®æ›´æ–°å‡¦ç†
+                DOTween.To(() => _previousUnwashedMoneyValue,//ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã¨ãªã‚‹å¤‰æ•°
+                        num => _previousUnwashedMoneyValue = num,    //å€¤ã®æ›´æ–°ã‚’è¡Œã†
+                        x,                                     //æœ€çµ‚çš„ãªå€¤
+                        1.0f                                   //æ™‚é–“
+                        ).OnUpdate(() =>
+                        {
+                            _unwashedMoneyText.text = _previousUnwashedMoneyValue.ToString("N0");
+                            _unwashedMoneyText_info.text = _previousUnwashedMoneyValue.ToString("N0");
+                        });
             }).AddTo(this);
 
         wallet.OnvirtuePointAmountChange
             .Subscribe(x =>
             {
-                //Píƒ|ƒCƒ“ƒg‚ÌXVˆ—
-                DOTween.To(() => _previousVirtuePointValue,//ƒ^[ƒQƒbƒg‚Æ‚È‚é•Ï”
-                         num => _previousVirtuePointValue = num,    //’l‚ÌXV‚ğs‚¤
-                         x,                                     //ÅI“I‚È’l
-                         1.0f                                   //ŠÔ
-                         ).OnUpdate(() =>
-                         {
-                             _virtuePointText.text = _previousVirtuePointValue.ToString("N0");
-                         });
+                //æ’å¸¸ãƒã‚¤ãƒ³ãƒˆã®æ›´æ–°å‡¦ç†
+                DOTween.To(() => _previousVirtuePointValue,//ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã¨ãªã‚‹å¤‰æ•°
+                        num => _previousVirtuePointValue = num,    //å€¤ã®æ›´æ–°ã‚’è¡Œã†
+                        x,                                     //æœ€çµ‚çš„ãªå€¤
+                        1.0f                                   //æ™‚é–“
+                        ).OnUpdate(() =>
+                        {
+                            _virtuePointText.text = _previousVirtuePointValue.ToString("N0");
+                        });
             }).AddTo(this);
 
         MoneyManager.Instance.OnCurrentTurnChange.Subscribe(turnNum => _turnText.text = turnNum.ToString("000"));
         MoneyManager.Instance.OnNextDebtCollectionTurnChange.Subscribe(turnNum => _nextDebtTurnText.text = turnNum.ToString("00"));
-        Debug.Log(this.name + "‰Šú‰»Š®—¹");
+        MoneyManager.Instance.OnQuotaAmount.Subscribe(quotaNum => _nextQuotaText.text = quotaNum.ToString("00"));
+        MoneyManager.Instance.OnLeftDebtAmount.Subscribe(leftDebtNum => _leftDebtMoneyText.text = leftDebtNum.ToString("00"));
+        Debug.Log(this.name + "åˆæœŸåŒ–å®Œäº†");
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -105,7 +107,7 @@ public class GameUIManager : MonoBehaviour
     {
         _openMenuReference.action.Enable();
 
-        //‰Šú‰»ˆ—
+        //åˆæœŸåŒ–å‡¦ç†
         Observable.EveryUpdate()
             .Select(_ => PlayerWallet.Local)
             .Where(target => target != null)
@@ -120,7 +122,7 @@ public class GameUIManager : MonoBehaviour
 
     private void Update()
     {
-        //TabƒL[‚ğ‰Ÿ‚µ‚½‚Æ‚«‚Éƒƒjƒ…[Ø‚è‘Ö‚¦
+        //Tabã‚­ãƒ¼ã‚’æŠ¼ã—ãŸã¨ãã«ãƒ¡ãƒ‹ãƒ¥ãƒ¼åˆ‡ã‚Šæ›¿ãˆ
         if (_openMenuReference.action.WasPressedThisFrame())
         {
             _isOpenMenu = !_isOpenMenu;
@@ -141,9 +143,8 @@ public class GameUIManager : MonoBehaviour
         }
     }
 
-
     /// <summary>
-    /// ƒƒjƒ…[“à‚Ìƒy[ƒW‚ğØ‚è‘Ö‚¦‚éƒ{ƒ^ƒ“‚ğ‰Ÿ‚µ‚½‚Æ‚«‚Ìˆ—
+    /// ãƒ¡ãƒ‹ãƒ¥ãƒ¼å†…ã®ãƒšãƒ¼ã‚¸ã‚’åˆ‡ã‚Šæ›¿ãˆã‚‹ãƒœã‚¿ãƒ³ã‚’æŠ¼ã—ãŸã¨ãã®å‡¦ç†
     /// </summary>
     public void ChangePageButton(string type)
     {
@@ -154,23 +155,23 @@ public class GameUIManager : MonoBehaviour
 
         switch (_index)
         { 
-            case 0://ƒvƒŒƒCƒ„[î•ñƒy[ƒW
+            case 0://ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼æƒ…å ±ãƒšãƒ¼ã‚¸
                 _playerInfoPanel.SetActive(true);
                 _itemPanel.SetActive(false);
                 _roguelikePanel.SetActive(false);
                 break;
-            case 1://PíƒAƒCƒeƒ€‚Ìà–¾ƒy[ƒW
+            case 1://æ’å¸¸ã‚¢ã‚¤ãƒ†ãƒ ã®èª¬æ˜ãƒšãƒ¼ã‚¸
                 _playerInfoPanel.SetActive(false);
                 _itemPanel.SetActive(true);
                 _roguelikePanel.SetActive(false);
                 break;
-            case 2://‚±‚êˆÈ~‚ÍŠeƒ~ƒjƒQ[ƒ€‚Ìƒ[ƒOƒ‰ƒCƒN—v‘f‚ğ‹Lq
+            case 2://ã“ã‚Œä»¥é™ã¯å„ãƒŸãƒ‹ã‚²ãƒ¼ãƒ ã®ãƒ­ãƒ¼ã‚°ãƒ©ã‚¤ã‚¯è¦ç´ ã‚’è¨˜è¿°
                 _playerInfoPanel.SetActive(false);
                 _itemPanel.SetActive(false);
                 _roguelikePanel.SetActive(true);
                 break;
             default:
-                Debug.LogError("‘z’èŠO‚Ì”’l");
+                Debug.LogError("æƒ³å®šå¤–ã®æ•°å€¤");
                 break;
         }
     }

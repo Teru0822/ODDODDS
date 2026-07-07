@@ -82,7 +82,7 @@ public class RoguelikeManager : MonoBehaviour
                     tmpList.Add(skill.Value);
             }
         }
-        else　//特定のタイプのスキルを優先して獲得させたい場合
+        else //特定のタイプのスキルを優先して獲得させたい場合
         {
             foreach (var skill in _roguelikeDictionary)
             {
