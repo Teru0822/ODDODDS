@@ -12,7 +12,7 @@ public class UFOCameraController : MonoBehaviour
     public static UFOCameraController Instance { get; private set; }
     public static bool IsPlayingUfo { get; private set; } = false;
     public static bool IsPlaySessionActive { get; private set; } = false;
-    public static bool IsControlActive => IsPlaySessionActive && Instance != null && Instance._playTimer > 0f;
+    public static bool IsControlActive => IsPlaySessionActive && IsPlaySpotlightActive && Instance != null && Instance._playTimer > 0f;
 
     [Header("Camera Settings")]
     [Tooltip("Player's first-person camera")]
@@ -79,14 +79,148 @@ public class UFOCameraController : MonoBehaviour
     [Tooltip("移動の緩急（0→1）")]
     [SerializeField] private AnimationCurve transitionEase = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
+    [Header("Coin Play Animation Settings")]
+    [Tooltip("コイン投入演出で出現させるコインのPrefab")]
+    [SerializeField] private GameObject coinPrefab;
+
+    [Tooltip("コインの親とするDEVILCATCHERオブジェクト名")]
+    [SerializeField] private string devilCatcherName = "DEVILCATCHER";
+
+    [Tooltip("コイン出現時のローカル座標")]
+    [SerializeField] private Vector3 coinStartLocalPos = new Vector3(10.5422926f, 10.5422945f, 10.5422926f);
+
+    [Tooltip("コイン移動終了時のローカル座標（ここから放します）")]
+    [SerializeField] private Vector3 coinEndLocalPos = new Vector3(10.5422926f, 10.5422945f, 10.5422926f);
+
+    [Tooltip("生成するコインのスケール")]
+    [SerializeField] private Vector3 coinAnimationScale = new Vector3(10.5422926f, 10.5422945f, 10.5422926f);
+
+    [Tooltip("コインの移動時間（秒）")]
+    [SerializeField] private float coinAnimationDuration = 1.0f;
+
+    [Tooltip("生成するコインの初期ローカル角度（オイラー角）")]
+    [SerializeField] private Vector3 coinAnimationRotation = new Vector3(0f, -90f, 0f);
+
+    [Tooltip("TriggerSoundPlayer反応時のコイン投入演出リピート回数")]
+    [SerializeField] private int coinAnimationRepeatCount = 3;
+
+    [Tooltip("制御対象とするUFOキャッチャーのライトオブジェクト群（ヒエラルキーからアタッチします）")]
+    [SerializeField] private GameObject[] targetLights;
+
+    [Header("Light Audio Settings")]
+    [Tooltip("ライト点滅時のチカッという音")]
+    [SerializeField] private AudioClip lightFlickerSound;
+    [Tooltip("点滅（起動）音の音量")]
+    [SerializeField] [Range(0f, 10f)] private float lightFlickerVolume = 0.5f;
+    [Tooltip("ライト消灯時のカチッという音")]
+    [SerializeField] private AudioClip lightOffSound;
+    [Tooltip("消灯音の音量")]
+    [SerializeField] [Range(0f, 10f)] private float lightOffVolume = 0.5f;
+
+    /// <summary>
+    /// 指定された効果音を筐体メインのaudioSourceの位置から、末尾を指定秒数カットした状態で2D再生します。
+    /// </summary>
+    private void PlayLightSoundWithTailCut(AudioClip clip, float volume, float cutDuration)
+    {
+        if (clip == null) return;
+
+        // メインスピーカーのGameObjectを親にして、一時的な再生オブジェクトを作成（一箇所再生を維持）
+        GameObject tempAudioObj = new GameObject("TempLightAudioSource");
+        if (audioSource != null)
+        {
+            tempAudioObj.transform.SetParent(audioSource.transform, false);
+        }
+        else
+        {
+            tempAudioObj.transform.SetParent(transform, false);
+        }
+
+        AudioSource tempSource = tempAudioObj.AddComponent<AudioSource>();
+        tempSource.clip = clip;
+        tempSource.volume = volume;
+        tempSource.spatialBlend = 0.0f; // 2D再生
+        tempSource.playOnAwake = false;
+        tempSource.loop = false;
+
+        tempSource.Play();
+
+        // (効果音の長さ - カット秒数) 秒だけ再生して停止・破棄する
+        float playDuration = Mathf.Max(0f, clip.length - cutDuration);
+        StartCoroutine(StopAndDestroyAudioCoroutine(tempAudioObj, tempSource, playDuration));
+    }
+
+    private System.Collections.IEnumerator StopAndDestroyAudioCoroutine(GameObject audioObj, AudioSource source, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (source != null)
+        {
+            source.Stop();
+        }
+        if (audioObj != null)
+        {
+            Destroy(audioObj);
+        }
+    }
+
+    /// <summary>
+    /// 現在スポットライトおよび連動ライトが有効（点灯）になっているかどうか
+    /// </summary>
+    public static bool IsPlaySpotlightActive { get; private set; } = false;
+
     private App.Player.FirstPersonController _fpController;
     private UFOArmController _ufoController;
     private Camera _activeCamera;
     private bool _showPrompt = false;
     private Texture2D _bgTexture;
 
+    // 元のライト強度を保存する辞書
+    private System.Collections.Generic.Dictionary<Light, float> _originalLightIntensities = new System.Collections.Generic.Dictionary<Light, float>();
+    // 元のライト範囲を保存する辞書
+    private System.Collections.Generic.Dictionary<Light, float> _originalLightRanges = new System.Collections.Generic.Dictionary<Light, float>();
+
+    /// <summary>
+    /// 制御対象となるすべてのライトの元の強度と照射範囲をキャッシュします。
+    /// </summary>
+    private void CacheOriginalLightIntensities()
+    {
+        _originalLightIntensities.Clear();
+        _originalLightRanges.Clear();
+
+        if (playSpotlight != null)
+        {
+            foreach (var light in playSpotlight.GetComponentsInChildren<Light>(true))
+            {
+                if (light != null && !_originalLightIntensities.ContainsKey(light))
+                {
+                    _originalLightIntensities[light] = light.intensity;
+                    _originalLightRanges[light] = light.range;
+                }
+            }
+        }
+
+        if (targetLights != null)
+        {
+            foreach (var obj in targetLights)
+            {
+                if (obj != null)
+                {
+                    foreach (var light in obj.GetComponentsInChildren<Light>(true))
+                    {
+                        if (light != null && !_originalLightIntensities.ContainsKey(light))
+                        {
+                            _originalLightIntensities[light] = light.intensity;
+                            _originalLightRanges[light] = light.range;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private int _paymentCount = 0;
     private float _playTimer = 0f;
+    private int _triggeredCoinCount = 0;
+    private int _destroyedCoinCount = 0;
     private float _feverTimer = 0f; // フィーバータイム残り時間
 
     /// <summary>
@@ -181,6 +315,9 @@ public class UFOCameraController : MonoBehaviour
 
         // 開始時はUFOプレイモードではない状態にする
         SetUfoMode(false);
+
+        // 開始時はライトをオフにしておく
+        SetPlaySpotlight(false);
 
         if (machineHover != null)
         {
@@ -332,8 +469,8 @@ public class UFOCameraController : MonoBehaviour
                 }
             }
 
-            // Decrement timer if play session is active
-            if (IsPlaySessionActive)
+            // プレイセッションがアクティブ、かつライトが点灯している場合のみカウントダウンを起動
+            if (IsPlaySessionActive && IsPlaySpotlightActive)
             {
                 // フィーバータイム中でない時のみタイマーを減少させる
                 if (_feverTimer <= 0f)
@@ -357,11 +494,9 @@ public class UFOCameraController : MonoBehaviour
                     {
                         _playTimer = 0f;
                         IsPlaySessionActive = false;
-                        if (playSpotlight != null)
-                        {
-                            playSpotlight.SetActive(false);
-                        }
-                        Debug.Log("[UFOCameraController] UFO Catcher play session expired.");
+                        SetPlaySpotlight(false);
+                        _destroyedCoinCount = 0; // 反応数をリセット
+                        Debug.Log("[UFOCameraController] UFO Catcher play session expired. Light off & Coin count reset.");
                     }
                 }
             }
@@ -441,15 +576,246 @@ public class UFOCameraController : MonoBehaviour
         IsPlaySessionActive = true;
         _hasPlayedLowTimeWarning = false; // 新規セッション開始時に警告音再生フラグをリセット
 
-        if (playSpotlight != null)
-        {
-            playSpotlight.SetActive(true);
-        }
+        // 自動点灯を削除し、CoinDestroyerZoneに3回入るまで消灯状態を維持します。
+
+        // コイン投入演出の開始（カウンターをリセットして1枚目を投入）
+        _triggeredCoinCount = 0;
+        TriggerCoinInsertionAnimation();
 
         // コイン投入音の再生
         PlaySound(coinInsertSound);
 
         Debug.Log($"[UFOCameraController] Started UFO play session. Cost: ¥{cost}, Limit: {playDuration}s, Total plays: {_paymentCount}");
+    }
+
+    /// <summary>
+    /// コイン支払い時に、コインを出現させてDEVILCATCHERの中を指定座標間で移動し、物理落下させる演出コルーチン。
+    /// </summary>
+    private System.Collections.IEnumerator AnimateCoinInsertion()
+    {
+        GameObject activeCoinPrefab = coinPrefab;
+        if (activeCoinPrefab == null)
+        {
+            // 自動フォールバック: ItemSpawner からゴールドコインのPrefabを探す
+            if (ItemSpawner.Instance != null && ItemSpawner.Instance.goldCoinPrefab != null)
+            {
+                activeCoinPrefab = ItemSpawner.Instance.goldCoinPrefab;
+            }
+        }
+
+        if (activeCoinPrefab == null)
+        {
+            Debug.LogWarning("[UFOCameraController] コイン投入演出用の coinPrefab がアタッチされておらず、自動取得も失敗したため演出をスキップします。");
+            yield break;
+        }
+
+        // 親とする DEVILCATCHER オブジェクトをシーンから検索
+        GameObject devilCatcher = GameObject.Find(devilCatcherName);
+        if (devilCatcher == null)
+        {
+            // 表記揺れ対策
+            devilCatcher = GameObject.Find("new_ufocatcher 1");
+        }
+
+        Transform parentTransform = devilCatcher != null ? devilCatcher.transform : null;
+
+        // コインをインスタンス化
+        GameObject coin = Instantiate(activeCoinPrefab);
+        if (parentTransform != null)
+        {
+            // ローカル座標で動かすため親を設定
+            coin.transform.SetParent(parentTransform, false);
+        }
+
+        // 初期座標・スケール・角度を設定
+        coin.transform.localPosition = coinStartLocalPos;
+        coin.transform.localScale = coinAnimationScale;
+        coin.transform.localEulerAngles = coinAnimationRotation;
+
+        // Rigidbodyを取得して一時的に物理挙動を無効化（Lerp移動させるため）
+        Rigidbody rb = coin.GetComponent<Rigidbody>();
+        bool originalKinematic = true;
+        if (rb != null)
+        {
+            originalKinematic = rb.isKinematic;
+            rb.isKinematic = true;
+        }
+
+        // 1秒間かけて Lerp 移動
+        float elapsed = 0f;
+        while (elapsed < coinAnimationDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / coinAnimationDuration);
+            coin.transform.localPosition = Vector3.Lerp(coinStartLocalPos, coinEndLocalPos, t);
+            yield return null;
+        }
+
+        // 移動完了後、放す（isKinematicを元に戻して物理落下させる）
+        if (rb != null)
+        {
+            rb.isKinematic = originalKinematic;
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+    }
+
+    /// <summary>
+    /// 外部（TriggerSoundPlayerなど）からコイン投入演出を連動してトリガーする公開メソッド。
+    /// 設定された上限回数（coinAnimationRepeatCount）に達するまで、1回ずつコインを投入します。
+    /// </summary>
+    public void TriggerCoinInsertionAnimation()
+    {
+        if (_triggeredCoinCount < coinAnimationRepeatCount)
+        {
+            StartCoroutine(AnimateCoinInsertion());
+            _triggeredCoinCount++;
+            Debug.Log($"[UFOCameraController] 連動コイン投入を実行しました。回数: {_triggeredCoinCount} / {coinAnimationRepeatCount}");
+        }
+        else
+        {
+            Debug.Log($"[UFOCameraController] 連動コイン投入は上限回数（{coinAnimationRepeatCount}回）に達しているため実行しません。");
+        }
+    }
+
+    /// <summary>
+    /// CoinDestroyerZoneでコインが破棄された際に呼び出されます。
+    /// 3回反応するとライトを点灯します。
+    /// </summary>
+    public void NotifyCoinDestroyed()
+    {
+        _destroyedCoinCount++;
+        Debug.Log($"[UFOCameraController] CoinDestroyerZone反応数: {_destroyedCoinCount} / 3");
+        if (_destroyedCoinCount == 3)
+        {
+            SetPlaySpotlight(true);
+        }
+    }
+
+    /// <summary>
+    /// スポットライトおよびアタッチされたライト群、さらにUFOItemGoalのライト・マテリアルの有効/無効を一括設定します。
+    /// 点灯（ON）時は徐々に速くなる点滅演出を行ってから完全点灯します。
+    /// </summary>
+    public void SetPlaySpotlight(bool active)
+    {
+        if (active)
+        {
+            // すでに点灯中・点灯演出中の二重起動を防ぐ
+            if (IsPlaySpotlightActive) return;
+            CacheOriginalLightIntensities(); // 元の強度をキャッシュ
+
+            // ライト点滅開始の最初のタイミングで、起動音を末尾0.4秒カットして一度だけ流す
+            if (lightFlickerSound != null)
+            {
+                PlayLightSoundWithTailCut(lightFlickerSound, lightFlickerVolume, 0.4f);
+            }
+
+            StartCoroutine(PlayLightOnFlickerCoroutine());
+        }
+        else
+        {
+            IsPlaySpotlightActive = false;
+            ApplyRawLightsState(false);
+            
+            // 消灯音の再生（カットなしで最後まで流す）
+            if (lightOffSound != null)
+            {
+                PlayLightSoundWithTailCut(lightOffSound, lightOffVolume, 0f);
+            }
+            Debug.Log("[UFOCameraController] ライトを消灯しました。");
+        }
+    }
+
+    /// <summary>
+    /// ライトオブジェクト群およびUFOItemGoalマテリアル・ライトの状態を明るさ倍率を適用して適用します。
+    /// </summary>
+    private void ApplyRawLightsState(bool active, float brightnessMultiplier = 1.0f)
+    {
+        if (playSpotlight != null)
+        {
+            playSpotlight.SetActive(active);
+            if (active)
+            {
+                foreach (var light in playSpotlight.GetComponentsInChildren<Light>(true))
+                {
+                    if (light != null && _originalLightIntensities.TryGetValue(light, out float origInt))
+                    {
+                        light.intensity = origInt * brightnessMultiplier;
+                        if (_originalLightRanges.TryGetValue(light, out float origRange))
+                        {
+                            light.range = origRange * brightnessMultiplier;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (targetLights != null)
+        {
+            foreach (var lightObj in targetLights)
+            {
+                if (lightObj != null)
+                {
+                    lightObj.SetActive(active);
+                    if (active)
+                    {
+                        foreach (var light in lightObj.GetComponentsInChildren<Light>(true))
+                        {
+                            if (light != null && _originalLightIntensities.TryGetValue(light, out float origInt))
+                            {
+                                light.intensity = origInt * brightnessMultiplier;
+                                if (_originalLightRanges.TryGetValue(light, out float origRange))
+                                {
+                                    light.range = origRange * brightnessMultiplier;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        var ufoGoal = FindAnyObjectByType<UFOItemGoal>();
+        if (ufoGoal != null)
+        {
+            ufoGoal.SetInsertableItemsLights(active, brightnessMultiplier);
+        }
+    }
+
+    /// <summary>
+    /// 徐々に点滅が速くなりながら最終的に完全点灯するフリッカーコルーチン。
+    /// 完全点灯した瞬間にタイマーのカウントダウンを開始します。
+    /// </summary>
+    private System.Collections.IEnumerator PlayLightOnFlickerCoroutine()
+    {
+        float duration = 1.8f;      // 演出時間を1.8秒に延長（+0.5秒）
+        float elapsed = 0f;
+        bool state = false;
+        float minInterval = 0.03f;  // 後半の高速点滅の間隔
+        float maxInterval = 0.22f;  // 前半の点滅間隔を0.35秒から0.22秒に逆補正（スピードアップ）
+
+        while (elapsed < duration)
+        {
+            state = !state;
+
+            // 経過時間割合(0〜1)に応じて明るさ倍率(0.15〜1.0)を算出
+            float progress = elapsed / duration;
+            float multiplier = Mathf.Lerp(0.15f, 1.0f, progress);
+
+            // 点滅オン・オフに合わせて明るさ倍率を反映
+            ApplyRawLightsState(state, multiplier);
+
+            // 2乗のイージングをかけて、後半に向けて一気に加速させます
+            float currentInterval = Mathf.Lerp(maxInterval, minInterval, progress * progress);
+
+            yield return new WaitForSeconds(currentInterval);
+            elapsed += currentInterval;
+        }
+
+        // 最終的に完全点灯状態にし、タイマーを起動
+        ApplyRawLightsState(true, 1.0f);
+        IsPlaySpotlightActive = true;
+        Debug.Log("[UFOCameraController] ライト点滅演出が完了しました。常時点灯を開始しタイマーを起動します。");
     }
 
     private void OnMachineClicked()
