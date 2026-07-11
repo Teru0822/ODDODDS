@@ -351,7 +351,21 @@ public class UFOItemGoal : MonoBehaviour
             {
                 if (obj != null)
                 {
-                    targetLights.AddRange(obj.GetComponentsInChildren<Light>(true));
+                    // 子オブジェクトの中から名前が "spotlight" (大文字小文字・スペース無視) である Light を収集
+                    Light[] childLights = obj.GetComponentsInChildren<Light>(true);
+                    foreach (var light in childLights)
+                    {
+                        if (light != null)
+                        {
+                            string nameClean = light.gameObject.name.ToLower().Replace(" ", "");
+                            if (nameClean.Contains("spotlight"))
+                            {
+                                targetLights.Add(light);
+                            }
+                        }
+                    }
+
+                    // Rendererも収集する
                     targetRenderers.AddRange(obj.GetComponentsInChildren<Renderer>(true));
                 }
             }
@@ -369,16 +383,24 @@ public class UFOItemGoal : MonoBehaviour
             }
         }
 
+        // 元のエミッション色を保存する
         foreach (var r in targetRenderers)
         {
-            if (r != null && !_originalEmissionColors.ContainsKey(r))
+            if (r != null)
             {
+                // マテリアルが _EmissionColor プロパティを持っているか確認
                 Color origEmission = Color.black;
+                bool hasEmission = false;
                 if (r.sharedMaterial != null && r.sharedMaterial.HasProperty("_EmissionColor"))
                 {
                     origEmission = r.sharedMaterial.GetColor("_EmissionColor");
+                    hasEmission = true;
                 }
-                _originalEmissionColors[r] = origEmission;
+
+                if (hasEmission && !_originalEmissionColors.ContainsKey(r))
+                {
+                    _originalEmissionColors[r] = origEmission;
+                }
             }
         }
 
@@ -392,7 +414,7 @@ public class UFOItemGoal : MonoBehaviour
             {
                 if (isOn)
                 {
-                    // 点灯（設定された色へ）
+                    // 点灯（スポットライトとマテリアルを演出色へ）
                     foreach (var light in targetLights)
                     {
                         if (light != null)
@@ -403,7 +425,7 @@ public class UFOItemGoal : MonoBehaviour
                     }
                     foreach (var r in targetRenderers)
                     {
-                        if (r != null)
+                        if (r != null && _originalEmissionColors.ContainsKey(r))
                         {
                             MaterialPropertyBlock mpb = new MaterialPropertyBlock();
                             r.GetPropertyBlock(mpb);
@@ -414,7 +436,7 @@ public class UFOItemGoal : MonoBehaviour
                 }
                 else
                 {
-                    // 消灯・復元（元の色・状態へ）
+                    // 消灯（スポットライトを消灯、マテリアルも黒へ）
                     foreach (var light in targetLights)
                     {
                         if (light != null)
@@ -425,11 +447,11 @@ public class UFOItemGoal : MonoBehaviour
                     }
                     foreach (var r in targetRenderers)
                     {
-                        if (r != null)
+                        if (r != null && _originalEmissionColors.ContainsKey(r))
                         {
                             MaterialPropertyBlock mpb = new MaterialPropertyBlock();
                             r.GetPropertyBlock(mpb);
-                            mpb.SetColor("_EmissionColor", _originalEmissionColors[r]);
+                            mpb.SetColor("_EmissionColor", Color.black);
                             r.SetPropertyBlock(mpb);
                         }
                     }
@@ -442,7 +464,7 @@ public class UFOItemGoal : MonoBehaviour
         }
         else
         {
-            // 通常の常灯処理
+            // 通常の常灯処理（スポットライトとマテリアルを演出色へ）
             foreach (var light in targetLights)
             {
                 if (light != null)
@@ -453,7 +475,7 @@ public class UFOItemGoal : MonoBehaviour
             }
             foreach (var r in targetRenderers)
             {
-                if (r != null)
+                if (r != null && _originalEmissionColors.ContainsKey(r))
                 {
                     MaterialPropertyBlock mpb = new MaterialPropertyBlock();
                     r.GetPropertyBlock(mpb);
@@ -467,6 +489,12 @@ public class UFOItemGoal : MonoBehaviour
 
         // 最後に確実に元の状態に復元
         ResetLampsToOriginal();
+
+        // 演出終了後、現在のUFOCameraControllerのライトアクティブ状態に合わせて消灯/点灯を再反映する
+        if (UFOCameraController.Instance != null)
+        {
+            SetInsertableItemsLights(UFOCameraController.IsPlaySpotlightActive);
+        }
     }
 
     private void ResetLampsToOriginal()
@@ -493,7 +521,7 @@ public class UFOItemGoal : MonoBehaviour
         _originalColors.Clear();
         _originalEnabled.Clear();
 
-        // Renderer の復元
+        // Renderer の復元（元のエミッション色に戻す）
         foreach (var kvp in _originalEmissionColors)
         {
             Renderer r = kvp.Key;
@@ -508,6 +536,89 @@ public class UFOItemGoal : MonoBehaviour
         _originalEmissionColors.Clear();
 
         IsFlashing = false; // 演出終了
+    }
+
+    // ランプ用スポットライトの元強度保存用
+    private System.Collections.Generic.Dictionary<Light, float> _lampLightIntensities = new System.Collections.Generic.Dictionary<Light, float>();
+    // ランプ用スポットライトの元範囲保存用
+    private System.Collections.Generic.Dictionary<Light, float> _lampLightRanges = new System.Collections.Generic.Dictionary<Light, float>();
+
+    /// <summary>
+    /// UFOキャッチャー全体のライト点灯状態と連動して、InsertableItemのライトとマテリアルのエミッションを明るさ倍率を考慮してON/OFFします。
+    /// active = false で完全消灯、active = true で指定倍率の明るさに戻します。
+    /// </summary>
+    public void SetInsertableItemsLights(bool active, float brightnessMultiplier = 1.0f)
+    {
+        // 演出中（IsFlashing）であれば演出側の点灯制御を優先させるため、処理をスキップします
+        if (IsFlashing) return;
+
+        GameObject[] lampObjects = GameObject.FindGameObjectsWithTag(lampTag);
+
+        // フォールバック: 大文字小文字の揺らぎ対策
+        if ((lampObjects == null || lampObjects.Length == 0) && (lampTag == "InsertableItem" || lampTag == "insertableItem"))
+        {
+            string alternativeTag = (lampTag == "InsertableItem") ? "insertableItem" : "InsertableItem";
+            try
+            {
+                lampObjects = GameObject.FindGameObjectsWithTag(alternativeTag);
+            }
+            catch (System.Exception) { }
+        }
+
+        if (lampObjects == null) return;
+
+        foreach (var obj in lampObjects)
+        {
+            if (obj == null) continue;
+
+            // 子オブジェクトから spotlight Light を取得してON/OFF・輝度・範囲制御
+            Light[] childLights = obj.GetComponentsInChildren<Light>(true);
+            foreach (var light in childLights)
+            {
+                if (light != null)
+                {
+                    string nameClean = light.gameObject.name.ToLower().Replace(" ", "");
+                    if (nameClean.Contains("spotlight"))
+                    {
+                        light.enabled = active;
+                        if (active)
+                        {
+                            if (!_lampLightIntensities.ContainsKey(light))
+                            {
+                                _lampLightIntensities[light] = light.intensity;
+                                _lampLightRanges[light] = light.range;
+                            }
+                            light.intensity = _lampLightIntensities[light] * brightnessMultiplier;
+                            light.range = _lampLightRanges[light] * brightnessMultiplier;
+                        }
+                    }
+                }
+            }
+
+            // RendererのマテリアルエミッションをON/OFF・輝度制御
+            Renderer[] renderers = obj.GetComponentsInChildren<Renderer>(true);
+            foreach (var r in renderers)
+            {
+                if (r != null && r.sharedMaterial != null && r.sharedMaterial.HasProperty("_EmissionColor"))
+                {
+                    MaterialPropertyBlock mpb = new MaterialPropertyBlock();
+                    r.GetPropertyBlock(mpb);
+
+                    if (active)
+                    {
+                        // オンにする場合：通常設定されている元のエミッション色（sharedMaterialの色）に明るさ倍率を掛けて戻す
+                        Color targetColor = r.sharedMaterial.GetColor("_EmissionColor");
+                        mpb.SetColor("_EmissionColor", targetColor * brightnessMultiplier);
+                    }
+                    else
+                    {
+                        // オフにする場合：エミッションを黒にして発光を消す
+                        mpb.SetColor("_EmissionColor", Color.black);
+                    }
+                    r.SetPropertyBlock(mpb);
+                }
+            }
+        }
     }
 
     /// <summary>
