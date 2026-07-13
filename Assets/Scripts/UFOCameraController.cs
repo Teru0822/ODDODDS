@@ -828,6 +828,9 @@ public class UFOCameraController : MonoBehaviour
         bool canPlayUfo = RoundManager.Instance == null || RoundManager.Instance.CanPlayUfo();
         if (!canPlayUfo) return;
 
+        // クリックした瞬間にライトを点灯
+        SetPlaySpotlight(true);
+
         StartCoroutine(TransitionToUfoCamera());
     }
 
@@ -967,9 +970,6 @@ public class UFOCameraController : MonoBehaviour
         _paymentCount = 0;
         _playTimer = 0f;
         IsPlaySessionActive = false;
-        
-        // 遷移完了時にライトをオンにする
-        SetPlaySpotlight(true);
 
         SetUfoMode(true);
         Debug.Log($"[UFOCameraController] EnterUfoMode: frontCamera={( frontCamera != null ? frontCamera.name + " display=" + frontCamera.targetDisplay : "NULL")}");
