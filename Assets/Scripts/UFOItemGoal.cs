@@ -24,12 +24,7 @@ public class UFOItemGoal : MonoBehaviour
     /// </summary>
     public static bool IsFlashing { get; private set; } = false;
 
-    [Header("画面表示(UI)")]
-    [Tooltip("時計の数を表示するUIテキスト")]
-    public TextMeshProUGUI watchCountText;
 
-    [Tooltip("未洗浄メダルのお金を表示するUIテキスト")]
-    public TextMeshProUGUI unwashedMoneyText;
 
 
 
@@ -134,7 +129,6 @@ public class UFOItemGoal : MonoBehaviour
         if (UnwashedMoneyManager.Instance != null)
         {
             unwashedMoney = UnwashedMoneyManager.Instance.CurrentAmount;
-            UpdateUnwashedMoneyText();
             UnwashedMoneyManager.Instance.OnAmountChanged += HandleUnwashedMoneyChanged;
         }
     }
@@ -161,15 +155,6 @@ public class UFOItemGoal : MonoBehaviour
     private void HandleUnwashedMoneyChanged(float newAmount)
     {
         unwashedMoney = newAmount;
-        UpdateUnwashedMoneyText();
-    }
-
-    private void UpdateUnwashedMoneyText()
-    {
-        if (unwashedMoneyText != null)
-        {
-            unwashedMoneyText.text = $"Unwashed: ¥{Mathf.FloorToInt(unwashedMoney):N0}";
-        }
     }
 
     // 自分の直接のコライダーに入った場合
@@ -205,9 +190,8 @@ public class UFOItemGoal : MonoBehaviour
                     }
                     else
                     {
-                        // 旧 API 互換: ローカルの累計とゴール表示も維持
+                        // 旧 API 互換: ローカルの累計も維持
                         unwashedMoney += finalValue;
-                        UpdateUnwashedMoneyText();
                     }
                     Debug.Log($"[獲得] {item.itemType}！ (未洗浄メダル総額: {unwashedMoney}円)");
                     
@@ -223,7 +207,6 @@ public class UFOItemGoal : MonoBehaviour
                     else
                     {
                         unwashedMoney += finalValue;
-                        UpdateUnwashedMoneyText();
                     }
                     Debug.Log($"[獲得] Jackpot！ (未洗浄メダル総額: {unwashedMoney}円)");
                     
@@ -259,11 +242,7 @@ public class UFOItemGoal : MonoBehaviour
                         UFOCameraController.Instance.AddPlayTime(watchTimeExtension);
                     }
 
-                    // 画面のUIテキストが設定されていれば表示を更新する
-                    if (watchCountText != null)
-                    {
-                        watchCountText.text = $"Watch: {collectedWatches}";
-                    }
+
 
                     // 時計獲得音の再生（未設定ならコイン音で代用）
                     PlaySound(watchGetSound != null ? watchGetSound : coinGetSound);

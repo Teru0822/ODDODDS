@@ -118,6 +118,8 @@ public class GameUIManager : MonoBehaviour
             })
             .AddTo(this);
 
+        // UFOキャッチャーのモード切り替えイベントを購読
+        UFOCameraController.OnUfoModeChanged += HandleUfoModeChanged;
     }
 
     private void Update()
@@ -174,5 +176,15 @@ public class GameUIManager : MonoBehaviour
                 Debug.LogError("想定外の数値");
                 break;
         }
+    }
+
+    private void OnDestroy()
+    {
+        UFOCameraController.OnUfoModeChanged -= HandleUfoModeChanged;
+    }
+
+    private void HandleUfoModeChanged(bool isPlayingUfo)
+    {
+        gameObject.SetActive(!isPlayingUfo);
     }
 }

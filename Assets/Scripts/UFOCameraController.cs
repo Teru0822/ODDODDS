@@ -11,6 +11,7 @@ public class UFOCameraController : MonoBehaviour
 {
     public static UFOCameraController Instance { get; private set; }
     public static bool IsPlayingUfo { get; private set; } = false;
+    public static event System.Action<bool> OnUfoModeChanged;
     public static bool IsPlaySessionActive { get; private set; } = false;
     public static bool IsControlActive => IsPlaySessionActive && IsPlaySpotlightActive && Instance != null && Instance._playTimer > 0f;
 
@@ -33,6 +34,8 @@ public class UFOCameraController : MonoBehaviour
     [Header("UI Settings")]
     [Tooltip("UFO Catcher UI Canvas/Object to hide when not playing")]
     [SerializeField] private GameObject ufoUiCanvas;
+
+
 
     [Header("Cost / Timer / Spotlight Settings")]
     [Tooltip("Base play cost")]
@@ -172,6 +175,8 @@ public class UFOCameraController : MonoBehaviour
     private Camera _activeCamera;
     private bool _showPrompt = false;
     private Texture2D _bgTexture;
+
+
 
     // 元のライト強度を保存する辞書
     private System.Collections.Generic.Dictionary<Light, float> _originalLightIntensities = new System.Collections.Generic.Dictionary<Light, float>();
@@ -886,6 +891,7 @@ public class UFOCameraController : MonoBehaviour
         _isTransitioning = true;
 
         IsPlayingUfo = false;
+        OnUfoModeChanged?.Invoke(false); // UFO終了イベントを通知
         IsPlaySessionActive = false;
         if (playSpotlight != null)
         {
@@ -990,6 +996,9 @@ public class UFOCameraController : MonoBehaviour
     private void SetUfoMode(bool active)
     {
         IsPlayingUfo = active;
+
+        // イベントを通じて外部UIやシステムに状態変更を通知（Observerパターン）
+        OnUfoModeChanged?.Invoke(active);
 
         if (_fpController != null)
         {
