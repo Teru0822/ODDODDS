@@ -322,7 +322,7 @@ public class UFOCameraController : MonoBehaviour
         SetUfoMode(false);
 
         // 開始時はライトをオフにしておく
-        SetPlaySpotlight(false);
+        SetPlaySpotlight(false, false);
 
         if (machineHover != null)
         {
@@ -703,7 +703,7 @@ public class UFOCameraController : MonoBehaviour
     /// スポットライトおよびアタッチされたライト群、さらにUFOItemGoalのライト・マテリアルの有効/無効を一括設定します。
     /// 点灯（ON）時は徐々に速くなる点滅演出を行ってから完全点灯します。
     /// </summary>
-    public void SetPlaySpotlight(bool active)
+    public void SetPlaySpotlight(bool active, bool playSound = true)
     {
         if (active)
         {
@@ -712,7 +712,7 @@ public class UFOCameraController : MonoBehaviour
             CacheOriginalLightIntensities(); // 元の強度をキャッシュ
 
             // ライト点滅開始の最初のタイミングで、起動音を末尾0.4秒カットして一度だけ流す
-            if (lightFlickerSound != null)
+            if (playSound && lightFlickerSound != null)
             {
                 PlayLightSoundWithTailCut(lightFlickerSound, lightFlickerVolume, 0.4f);
             }
@@ -725,7 +725,7 @@ public class UFOCameraController : MonoBehaviour
             ApplyRawLightsState(false);
             
             // 消灯音の再生（カットなしで最後まで流す）
-            if (lightOffSound != null)
+            if (playSound && lightOffSound != null)
             {
                 PlayLightSoundWithTailCut(lightOffSound, lightOffVolume, 0f);
             }
