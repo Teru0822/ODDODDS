@@ -499,9 +499,9 @@ public class UFOCameraController : MonoBehaviour
                     {
                         _playTimer = 0f;
                         IsPlaySessionActive = false;
-                        SetPlaySpotlight(false);
+                        // 遷移中（UFOプレイモード中）はライトをつけたままにするため、ここでの自動消灯は行いません
                         _destroyedCoinCount = 0; // 反応数をリセット
-                        Debug.Log("[UFOCameraController] UFO Catcher play session expired. Light off & Coin count reset.");
+                        Debug.Log("[UFOCameraController] UFO Catcher play session expired. Coin count reset.");
                     }
                 }
             }
@@ -693,10 +693,6 @@ public class UFOCameraController : MonoBehaviour
     {
         _destroyedCoinCount++;
         Debug.Log($"[UFOCameraController] CoinDestroyerZone反応数: {_destroyedCoinCount} / 3");
-        if (_destroyedCoinCount == 3)
-        {
-            SetPlaySpotlight(true);
-        }
     }
 
     /// <summary>
@@ -893,10 +889,7 @@ public class UFOCameraController : MonoBehaviour
         IsPlayingUfo = false;
         OnUfoModeChanged?.Invoke(false); // UFO終了イベントを通知
         IsPlaySessionActive = false;
-        if (playSpotlight != null)
-        {
-            playSpotlight.SetActive(false);
-        }
+        SetPlaySpotlight(false);
 
         if (ufoUiCanvas != null)
         {
@@ -974,10 +967,9 @@ public class UFOCameraController : MonoBehaviour
         _paymentCount = 0;
         _playTimer = 0f;
         IsPlaySessionActive = false;
-        if (playSpotlight != null)
-        {
-            playSpotlight.SetActive(false);
-        }
+        
+        // 遷移完了時にライトをオンにする
+        SetPlaySpotlight(true);
 
         SetUfoMode(true);
         Debug.Log($"[UFOCameraController] EnterUfoMode: frontCamera={( frontCamera != null ? frontCamera.name + " display=" + frontCamera.targetDisplay : "NULL")}");
