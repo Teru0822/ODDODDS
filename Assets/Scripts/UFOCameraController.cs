@@ -110,6 +110,10 @@ public class UFOCameraController : MonoBehaviour
     [Tooltip("制御対象とするUFOキャッチャーのライトオブジェクト群（ヒエラルキーからアタッチします）")]
     [SerializeField] private GameObject[] targetLights;
 
+    [Header("Coin Insertion Light Settings")]
+    [Tooltip("コイン投入中のみ点灯する追加のライトオブジェクト群")]
+    [SerializeField] private GameObject[] coinInsertionLights;
+
     [Header("Light Audio Settings")]
     [Tooltip("ライト点滅時のチカッという音")]
     [SerializeField] private AudioClip lightFlickerSound;
@@ -245,8 +249,7 @@ public class UFOCameraController : MonoBehaviour
     private TextMeshProUGUI _paymentStatusText;
     private UnityEngine.UI.Button _payButton;
     private TextMeshProUGUI _payButtonText;
-    private GameObject _timerPanel;
-    private TextMeshProUGUI _timerText;
+
 
     private void Awake()
     {
@@ -323,6 +326,7 @@ public class UFOCameraController : MonoBehaviour
 
         // 開始時はライトをオフにしておく
         SetPlaySpotlight(false, false);
+        SetCoinInsertionLightsActive(false);
 
         if (machineHover != null)
         {
@@ -583,7 +587,8 @@ public class UFOCameraController : MonoBehaviour
         IsPlaySessionActive = true;
         _hasPlayedLowTimeWarning = false; // 新規セッション開始時に警告音再生フラグをリセット
 
-        // 自動点灯を削除し、CoinDestroyerZoneに3回入るまで消灯状態を維持します。
+        // コイン投入中のみ点灯する追加ライトをON
+        SetCoinInsertionLightsActive(true);
 
         // コイン投入演出の開始（カウンターをリセットして1枚目を投入）
         _triggeredCoinCount = 0;
@@ -693,6 +698,11 @@ public class UFOCameraController : MonoBehaviour
     {
         _destroyedCoinCount++;
         Debug.Log($"[UFOCameraController] CoinDestroyerZone反応数: {_destroyedCoinCount} / 3");
+
+        if (_destroyedCoinCount >= 3)
+        {
+            SetCoinInsertionLightsActive(false);
+        }
     }
 
     /// <summary>
@@ -893,12 +903,13 @@ public class UFOCameraController : MonoBehaviour
         OnUfoModeChanged?.Invoke(false); // UFO終了イベントを通知
         IsPlaySessionActive = false;
         SetPlaySpotlight(false);
+        SetCoinInsertionLightsActive(false);
 
         if (ufoUiCanvas != null)
         {
             ufoUiCanvas.SetActive(false);
         }
-        if (_timerPanel != null) _timerPanel.SetActive(false);
+
         if (_paymentPanel != null) _paymentPanel.SetActive(false);
 
         Cursor.lockState = CursorLockMode.Locked;
@@ -1238,37 +1249,9 @@ public class UFOCameraController : MonoBehaviour
         closeTextRt.anchoredPosition = new Vector2(0f, 25f);
         closeTextRt.sizeDelta = new Vector2(460f, 30f);
 
-        // 4. タイマーパネルの生成
-        _timerPanel = new GameObject("TimerPanel", typeof(RectTransform), typeof(Image));
-        _timerPanel.transform.SetParent(canvasGo.transform, false);
-
-        Image timerPanelImage = _timerPanel.GetComponent<Image>();
-        timerPanelImage.color = new Color(0.1f, 0.1f, 0.1f, 0.8f);
-
-        RectTransform timerPanelRt = _timerPanel.GetComponent<RectTransform>();
-        timerPanelRt.anchorMin = new Vector2(0.5f, 1f);
-        timerPanelRt.anchorMax = new Vector2(0.5f, 1f);
-        timerPanelRt.pivot = new Vector2(0.5f, 1f);
-        timerPanelRt.anchoredPosition = new Vector2(0f, -30f);
-        timerPanelRt.sizeDelta = new Vector2(320f, 75f);
-
-        // タイマーテキスト
-        GameObject timerTextGo = new GameObject("TimerText", typeof(RectTransform), typeof(TextMeshProUGUI));
-        timerTextGo.transform.SetParent(_timerPanel.transform, false);
-        _timerText = timerTextGo.GetComponent<TextMeshProUGUI>();
-        _timerText.fontSize = 20;
-        _timerText.alignment = TextAlignmentOptions.Center;
-        _timerText.color = Color.white;
-
-        RectTransform timerTextRt = timerTextGo.GetComponent<RectTransform>();
-        timerTextRt.anchorMin = Vector2.zero;
-        timerTextRt.anchorMax = Vector2.one;
-        timerTextRt.sizeDelta = Vector2.zero;
-
         // 初期非活性
         _promptText.gameObject.SetActive(false);
         _paymentPanel.SetActive(false);
-        _timerPanel.SetActive(false);
     }
 
     private void UpdateDynamicUI()
@@ -1279,7 +1262,6 @@ public class UFOCameraController : MonoBehaviour
         {
             _promptText.gameObject.SetActive(true);
             _paymentPanel.SetActive(false);
-            _timerPanel.SetActive(false);
         }
         else if (IsPlayingUfo)
         {
@@ -1287,18 +1269,10 @@ public class UFOCameraController : MonoBehaviour
 
             if (IsPlaySessionActive)
             {
-                _timerPanel.SetActive(true);
                 _paymentPanel.SetActive(false);
-
-                if (_timerText != null)
-                {
-                    float displayedTime = Mathf.Max(0f, _playTimer);
-                    _timerText.text = $"Time Left: {displayedTime:F1}s\nPlays: {_paymentCount} / {maxPlayCount}";
-                }
             }
             else
             {
-                _timerPanel.SetActive(false);
                 _paymentPanel.SetActive(true);
 
                 if (_paymentCount >= maxPlayCount)
@@ -1328,7 +1302,6 @@ public class UFOCameraController : MonoBehaviour
         {
             _promptText.gameObject.SetActive(false);
             _paymentPanel.SetActive(false);
-            _timerPanel.SetActive(false);
         }
     }
 
@@ -1470,5 +1443,19 @@ public class UFOCameraController : MonoBehaviour
         // 最寄りの点からufoCenterまでの距離を求め、コライダー半径を引くことでカプセル表面からの最短距離を算出
         float distanceToSurface = Vector3.Distance(closestPointOnSegment, ufoCenter) - cc.radius;
         return Mathf.Max(0f, distanceToSurface);
+    }
+
+    private void SetCoinInsertionLightsActive(bool active)
+    {
+        if (coinInsertionLights != null)
+        {
+            foreach (var lightObj in coinInsertionLights)
+            {
+                if (lightObj != null)
+                {
+                    lightObj.SetActive(active);
+                }
+            }
+        }
     }
 }
