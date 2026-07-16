@@ -147,6 +147,7 @@ public class RoguelikeManager : MonoBehaviour
             else if (data.id == 13) ApplySkill13Effects();
             else if (data.id == 14) ApplySkill14Effects();
             else if (data.id == 15) ApplySkill15Effects();
+            else if (data.id == 17 || data.id == 18 || data.id == 19) ApplyPolishDiamondEffects();
 
             //UIの更新を行っておく
             RoguelikePanelManager.Instance.UpdateUI();
@@ -243,6 +244,19 @@ public class RoguelikeManager : MonoBehaviour
         HideLockMainChild("pkn12", "ApplySkill15Effects");
         HideLockMainChild("pkn13", "ApplySkill15Effects");
         HideLockMainChild("pkn14", "ApplySkill15Effects");
+    }
+
+    /// <summary>スキルID17〜19取得時にダイヤモンドを磨く段階を進める</summary>
+    private void ApplyPolishDiamondEffects()
+    {
+        var polishers = FindObjectsByType<DiamondPolisher>(FindObjectsSortMode.None);
+        foreach (var polisher in polishers)
+        {
+            if (polisher != null)
+            {
+                polisher.PolishDiamond();
+            }
+        }
     }
 
 

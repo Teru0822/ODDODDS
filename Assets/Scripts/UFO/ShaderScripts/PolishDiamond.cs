@@ -18,6 +18,21 @@ public class DiamondPolisher : MonoBehaviour
 
     private void Start()
     {
+        // 獲得済みのスキル数（ID: 17〜19）に応じて初期段階を設定する
+        var manager = FindFirstObjectByType<RoguelikeManager>();
+        if (manager != null)
+        {
+            int unlockedPolishSkills = 0;
+            var skills = manager.GetUnlockSkillDictionary;
+            if (skills != null)
+            {
+                if (skills.ContainsKey(17)) unlockedPolishSkills++;
+                if (skills.ContainsKey(18)) unlockedPolishSkills++;
+                if (skills.ContainsKey(19)) unlockedPolishSkills++;
+            }
+            currentStage = Mathf.Clamp(unlockedPolishSkills, 0, polishLevels.Length - 1);
+        }
+
         // ゲーム開始時に、このダイヤ専用のマテリアルインスタンスを生成してキャッシュ
         // ※ .material を一度呼ぶことで、他のダイヤに影響を与えなくなります
         Renderer rend = GetComponent<Renderer>();
@@ -25,7 +40,7 @@ public class DiamondPolisher : MonoBehaviour
         {
             myMaterial = rend.material;
             
-            // 初期状態（段階0）をマテリアルに反映
+            // 初期状態をマテリアルに反映
             UpdateShader();
         }
     }
