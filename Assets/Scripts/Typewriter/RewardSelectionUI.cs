@@ -8,6 +8,7 @@ using UnityEngine.UI;
 /// 報酬選択 UI。Show(options, onSelected) で全画面オーバーレイを表示してカーソルを出す。
 /// ユーザーが選択肢をクリックすると Hide() してコールバックに選んだ文字列を渡す。
 /// uiRoot 未指定なら実行時に Screen Space Overlay Canvas を自動生成する。
+/// 自動生成時はスクロールビュー + 動的ボタンで任意件数に対応する。
 /// </summary>
 [DisallowMultipleComponent]
 public class RewardSelectionUI : MonoBehaviour
@@ -26,10 +27,10 @@ public class RewardSelectionUI : MonoBehaviour
     [Tooltip("Canvas の plane distance (ScreenSpaceCamera 時)")]
     public float planeDistance = 1f;
 
-    [Tooltip("選択肢ボタンの参照 (要素数 = 同時に出す選択肢数、通常 2)")]
+    [Tooltip("選択肢ボタンの参照 (要素数 = 同時に出す選択肢数、通常 2)。手動指定時に使用")]
     public Button[] optionButtons;
 
-    [Tooltip("各ボタン上に表示するテキスト")]
+    [Tooltip("各ボタン上に表示するテキスト。手動指定時に使用")]
     public Text[] optionTexts;
 
     [Tooltip("タイトル/見出しテキスト (任意)")]
@@ -45,6 +46,12 @@ public class RewardSelectionUI : MonoBehaviour
     private List<RoguelikeData> _currentOptions;
     private CursorLockMode _prevLockState;
     private bool _prevCursorVisible;
+
+    // 自動生成UI用
+    private bool _isAutoCreated;
+    private RectTransform _scrollContent;
+    private readonly List<Button> _dynButtons = new List<Button>();
+    private readonly List<Text> _dynTexts = new List<Text>();
 
     public List<RoguelikeData> CurrentOptions { get { return _currentOptions;} }
     public bool IsActive => uiRoot != null && uiRoot.activeSelf;
@@ -81,19 +88,35 @@ public class RewardSelectionUI : MonoBehaviour
             Debug.LogWarning("[RewardSelectionUI] Show: options が空");
             return;
         }
-        if (uiRoot == null || optionButtons == null || optionTexts == null)
+        if (uiRoot == null)
         {
             Debug.LogWarning("[RewardSelectionUI] Show: UI が未初期化");
             return;
         }
         _currentOptions = options;
         _onSelected = onSelected;
-        for (int i = 0; i < optionButtons.Length; i++)
+
+        if (_isAutoCreated)
         {
-            bool has = i < options.Count;
-            if (optionButtons[i] != null) optionButtons[i].gameObject.SetActive(has);
-            if (has && optionTexts[i] != null) optionTexts[i].text = options[i].skillName;
+            RebuildDynamicButtons(options.Count);
+            for (int i = 0; i < _dynTexts.Count; i++)
+                if (_dynTexts[i] != null) _dynTexts[i].text = options[i].skillName;
         }
+        else
+        {
+            if (optionButtons == null || optionTexts == null)
+            {
+                Debug.LogWarning("[RewardSelectionUI] Show: UI が未初期化");
+                return;
+            }
+            for (int i = 0; i < optionButtons.Length; i++)
+            {
+                bool has = i < options.Count;
+                if (optionButtons[i] != null) optionButtons[i].gameObject.SetActive(has);
+                if (has && optionTexts[i] != null) optionTexts[i].text = options[i].skillName;
+            }
+        }
+
         if (titleText != null) titleText.text = titleString;
         ApplyTargetDisplay();
         uiRoot.SetActive(true);
@@ -103,6 +126,62 @@ public class RewardSelectionUI : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
         Debug.Log($"[RewardSelectionUI] Show: options=[{string.Join(" | ", options)}]", this);
+    }
+
+    private void RebuildDynamicButtons(int count)
+    {
+        foreach (var btn in _dynButtons)
+            if (btn != null) Destroy(btn.gameObject);
+        _dynButtons.Clear();
+        _dynTexts.Clear();
+
+        var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        for (int i = 0; i < count; i++)
+        {
+            var btnGo = new GameObject($"DynOption{i}", typeof(Image), typeof(Button));
+            btnGo.transform.SetParent(_scrollContent, false);
+
+            var btnRect = (RectTransform)btnGo.transform;
+            btnRect.sizeDelta = new Vector2(0, 72);
+
+            // childControlHeight=true のとき VLG は LayoutElement.preferredHeight を参照する
+            var le = btnGo.AddComponent<LayoutElement>();
+            le.preferredHeight = 72f;
+            le.flexibleHeight = 0f;
+
+            var img = btnGo.GetComponent<Image>();
+            img.color = new Color(0.25f, 0.28f, 0.45f, 1f);
+            var btn = btnGo.GetComponent<Button>();
+            var colors = btn.colors;
+            colors.normalColor = Color.white;
+            colors.highlightedColor = new Color(0.6f, 0.8f, 1f, 1f);
+            colors.pressedColor = new Color(0.35f, 0.55f, 1f, 1f);
+            btn.colors = colors;
+            btn.targetGraphic = img;
+
+            var txtRect = new GameObject("Text", typeof(Text)).GetComponent<RectTransform>();
+            txtRect.SetParent(btnGo.transform, false);
+            txtRect.anchorMin = Vector2.zero; txtRect.anchorMax = Vector2.one;
+            txtRect.offsetMin = new Vector2(24, 8); txtRect.offsetMax = new Vector2(-24, -8);
+            var txt = txtRect.GetComponent<Text>();
+            txt.font = font;
+            txt.fontSize = 28;
+            txt.alignment = TextAnchor.MiddleCenter;
+            txt.color = Color.white;
+
+            int idx = i;
+            btn.onClick.AddListener(() => OnOptionClicked(idx));
+
+            var hover = btnGo.AddComponent<ButtonHover>();
+            hover.RewardSelectionUI = this;
+            hover.RewardIndex = i;
+
+            _dynButtons.Add(btn);
+            _dynTexts.Add(txt);
+        }
+
+        // ContentSizeFitter の計算を即時実行（次フレーム待ちだと高さ 0 のまま表示される）
+        LayoutRebuilder.ForceRebuildLayoutImmediate(_scrollContent);
     }
 
     private void ApplyTargetDisplay()
@@ -158,7 +237,7 @@ public class RewardSelectionUI : MonoBehaviour
             Debug.LogWarning($"[RewardSelectionUI] OnOptionClicked index={index} だがコンテキスト無効", this);
             return;
         }
-        explainText.text = "";
+        if (explainText != null) explainText.text = "";
         RoguelikeData picked = _currentOptions[index];
         Debug.Log($"[RewardSelectionUI] OnOptionClicked: index={index} text=\"{picked}\"", this);
         var cb = _onSelected;
@@ -174,7 +253,6 @@ public class RewardSelectionUI : MonoBehaviour
         var canvas = canvasGo.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 500;
-        // ApplyTargetDisplay() で Show 時に ScreenSpaceCamera に切り替える
         var scaler = canvasGo.GetComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920, 1080);
@@ -201,70 +279,87 @@ public class RewardSelectionUI : MonoBehaviour
         titleText.color = Color.white;
         titleText.text = titleString;
 
-        optionButtons = new Button[2];
-        optionTexts = new Text[2];
-        for (int i = 0; i < 2; i++)
-        {
-            var btnGo = new GameObject($"Option{i}", typeof(Image), typeof(Button));
-            btnGo.transform.SetParent(canvasGo.transform, false);
-            var btnRect = (RectTransform)btnGo.transform;
-            btnRect.anchorMin = new Vector2(0.5f, 0.5f);
-            btnRect.anchorMax = new Vector2(0.5f, 0.5f);
-            btnRect.sizeDelta = new Vector2(1200, 140);
-            btnRect.anchoredPosition = new Vector2(0f, 110f - i * 200f);
-            var img = btnGo.GetComponent<Image>();
-            img.color = new Color(0.10f, 0.10f, 0.15f, 0.95f);
-            var btn = btnGo.GetComponent<Button>();
-            var colors = btn.colors;
-            colors.normalColor = Color.white;
-            colors.highlightedColor = new Color(0.75f, 0.85f, 1f, 1f);
-            colors.pressedColor = new Color(0.5f, 0.7f, 1f, 1f);
-            btn.colors = colors;
-            btn.targetGraphic = img;
-            optionButtons[i] = btn;
+        // スクロールビュー背景パネル
+        var scrollBgGo = new GameObject("ScrollBg", typeof(Image));
+        scrollBgGo.transform.SetParent(canvasGo.transform, false);
+        var scrollBgRect = (RectTransform)scrollBgGo.transform;
+        scrollBgRect.anchorMin = new Vector2(0.2f, 0.22f);
+        scrollBgRect.anchorMax = new Vector2(0.8f, 0.75f);
+        scrollBgRect.offsetMin = Vector2.zero;
+        scrollBgRect.offsetMax = Vector2.zero;
+        scrollBgGo.GetComponent<Image>().color = new Color(0.05f, 0.05f, 0.1f, 0.95f);
 
-            var txtRect = new GameObject("Text", typeof(Text)).GetComponent<RectTransform>();
-            txtRect.SetParent(btnGo.transform, false);
-            txtRect.anchorMin = Vector2.zero; txtRect.anchorMax = Vector2.one;
-            txtRect.offsetMin = new Vector2(32, 16);
-            txtRect.offsetMax = new Vector2(-32, -16);
-            var txt = txtRect.GetComponent<Text>();
-            txt.font = font;
-            txt.fontSize = 32;
-            txt.alignment = TextAnchor.MiddleCenter;
-            txt.color = Color.white;
-            optionTexts[i] = txt;
-        }
+        // スクロールビュー（ボタン一覧エリア）
+        var scrollGo = new GameObject("ScrollView", typeof(ScrollRect));
+        scrollGo.transform.SetParent(canvasGo.transform, false);
+        var scrollRect = (RectTransform)scrollGo.transform;
+        scrollRect.anchorMin = new Vector2(0.2f, 0.22f);
+        scrollRect.anchorMax = new Vector2(0.8f, 0.75f);
+        scrollRect.offsetMin = Vector2.zero;
+        scrollRect.offsetMax = Vector2.zero;
 
-        // 説明欄の背景パネルを作成
+        // Viewport（RectMask2D — Image+Mask よりも確実にクリッピングされる）
+        var viewportGo = new GameObject("Viewport", typeof(RectMask2D));
+        viewportGo.transform.SetParent(scrollGo.transform, false);
+        var viewportRect = (RectTransform)viewportGo.transform;
+        viewportRect.anchorMin = Vector2.zero; viewportRect.anchorMax = Vector2.one;
+        viewportRect.offsetMin = Vector2.zero; viewportRect.offsetMax = Vector2.zero;
+
+        // Content（VerticalLayoutGroup で高さ自動拡張）
+        var contentGo = new GameObject("Content", typeof(RectTransform));
+        contentGo.transform.SetParent(viewportGo.transform, false);
+        _scrollContent = (RectTransform)contentGo.transform;
+        _scrollContent.anchorMin = new Vector2(0f, 1f);
+        _scrollContent.anchorMax = new Vector2(1f, 1f);
+        _scrollContent.pivot = new Vector2(0.5f, 1f);
+        _scrollContent.offsetMin = Vector2.zero;
+        _scrollContent.offsetMax = Vector2.zero;
+        _scrollContent.sizeDelta = new Vector2(0f, 0f);
+
+        var vlg = contentGo.AddComponent<VerticalLayoutGroup>();
+        vlg.spacing = 8f;
+        vlg.padding = new RectOffset(8, 8, 8, 8);
+        vlg.childForceExpandWidth = true;
+        vlg.childForceExpandHeight = false;
+        vlg.childControlWidth = true;
+        vlg.childControlHeight = true; // LayoutElement.preferredHeight を使用するために true
+
+        var csf = contentGo.AddComponent<ContentSizeFitter>();
+        csf.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+        csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+        var sr = scrollGo.GetComponent<ScrollRect>();
+        sr.content = _scrollContent;
+        sr.viewport = viewportRect;
+        sr.horizontal = false;
+        sr.vertical = true;
+        sr.scrollSensitivity = 30f;
+        sr.movementType = ScrollRect.MovementType.Clamped;
+
+        // 説明欄パネル
         var explainPanelGo = new GameObject("ExplainPanel", typeof(Image));
         explainPanelGo.transform.SetParent(canvasGo.transform, false);
         var panelRect = explainPanelGo.GetComponent<RectTransform>();
         panelRect.anchorMin = new Vector2(0.5f, 0.15f);
         panelRect.anchorMax = new Vector2(0.5f, 0.15f);
-        panelRect.sizeDelta = new Vector2(1200, 300);
+        panelRect.sizeDelta = new Vector2(1200, 120);
         panelRect.anchoredPosition = Vector2.zero;
-        
-        var panelImg = explainPanelGo.GetComponent<Image>();
-        panelImg.color = new Color(0.10f, 0.10f, 0.15f, 0.95f); // 薄い黒
+        explainPanelGo.GetComponent<Image>().color = new Color(0.10f, 0.10f, 0.15f, 0.95f);
 
-        // 説明テキストを作成
         var explainTextGo = new GameObject("ExplainText", typeof(Text));
         explainTextGo.transform.SetParent(explainPanelGo.transform, false);
         var textRect = explainTextGo.GetComponent<RectTransform>();
-        textRect.anchorMin = Vector2.zero;
-        textRect.anchorMax = Vector2.one;
-        textRect.offsetMin = new Vector2(32, 16);
-        textRect.offsetMax = new Vector2(-32, -16);
-
+        textRect.anchorMin = Vector2.zero; textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = new Vector2(32, 16); textRect.offsetMax = new Vector2(-32, -16);
         explainText = explainTextGo.GetComponent<Text>();
         explainText.font = font;
-        explainText.fontSize = 32;
+        explainText.fontSize = 28;
         explainText.alignment = TextAnchor.UpperCenter;
-        explainText.color = Color.white; // 白い文字
-        explainText.text = ""; // 初期テキストは空
+        explainText.color = Color.white;
+        explainText.text = "";
 
         uiRoot = canvasGo;
+        _isAutoCreated = true;
     }
 
     private void EnsureEventSystem()

@@ -19,6 +19,25 @@ public class RoguelikeManager : MonoBehaviour
     public Dictionary<int, RoguelikeData> GetUnlockSkillDictionary => _roguelikeDictionary.Where(data => data.Value.isGet == true)
         .ToDictionary(data => data.Key, data => data.Value);
 
+    /// <summary>デバッグ用：全スキルへの読み取り専用アクセス</summary>
+    public IReadOnlyDictionary<int, RoguelikeData> AllSkillsDebug => _roguelikeDictionary;
+
+    /// <summary>デバッグ用：全スキルをリスト形式で返す</summary>
+    public List<RoguelikeData> GetAllSkills() => new List<RoguelikeData>(_roguelikeDictionary.Values);
+
+    /// <summary>
+    /// デバッグ用：スキルをロック状態に戻す。
+    /// UnlockSkill で適用した副作用（アームレベル変更・オブジェクト非表示等）は巻き戻さない。
+    /// </summary>
+    public void LockSkill(RoguelikeData data)
+    {
+        if (!_roguelikeDictionary.ContainsKey(data.id)) return;
+        _roguelikeDictionary[data.id].isGet = false;
+        if (RoguelikePanelManager.Instance != null)
+            RoguelikePanelManager.Instance.UpdateUI();
+        Debug.Log($"[RoguelikeManager] LockSkill: [{data.id}] {data.skillName}");
+    }
+
 
     public RoguelikeManager MyRoguelikeManager { get; private set; }
 

@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -22,6 +23,10 @@ public class TypewriterInteractable : InteractableHighlight
     [Header("物理キーボード連動")]
     [Tooltip("このタイプライターに照準している間、物理キーボード入力で対応キーを打鍵させる")]
     public bool linkPhysicalKeyboard = true;
+
+    [Header("デバッグ")]
+    [Tooltip("ONにするとInspectorにローグライクスキルのオンオフパネルが表示される（Playモードのみ有効）")]
+    [SerializeField] private bool _debugMode = false;
 
     private bool _busy;
     private bool _lookedAt;
@@ -105,14 +110,29 @@ public class TypewriterInteractable : InteractableHighlight
             Debug.LogWarning("[TypewriterInteractable] RewardSelectionUI が未設定", this);
             return;
         }
-        //TODO;将来的にはマルチプレイに対応する必要あり
-        //var picks = RewardOptionsRepository.PickRandom(2);
-        var picks = FindFirstObjectByType<RoguelikeManager>().GetLockSkills(2);
-        if (picks == null || picks.Count < 2)
+
+        var mgr = FindFirstObjectByType<RoguelikeManager>();
+        List<RoguelikeData> picks;
+        if (_debugMode)
         {
-            Debug.LogWarning($"[TypewriterInteractable] 未選択の報酬が 2 個未満 (残り {(picks != null ? picks.Count : 0)})", this);
-            return;
+            picks = mgr != null ? mgr.GetAllSkills() : null;
+            if (picks == null || picks.Count == 0)
+            {
+                Debug.LogWarning("[TypewriterInteractable] デバッグ: スキルデータが取得できません", this);
+                return;
+            }
         }
+        else
+        {
+            //TODO;将来的にはマルチプレイに対応する必要あり
+            picks = mgr?.GetLockSkills(2);
+            if (picks == null || picks.Count < 2)
+            {
+                Debug.LogWarning($"[TypewriterInteractable] 未選択の報酬が 2 個未満 (残り {(picks != null ? picks.Count : 0)})", this);
+                return;
+            }
+        }
+
         _busy = true;
         // 選択肢が出た時点でレティクル照準のハイライトは不要 (この後 IsInteractable=false になるので
         // CupPickupController 側で再ハイライトされることもない)
