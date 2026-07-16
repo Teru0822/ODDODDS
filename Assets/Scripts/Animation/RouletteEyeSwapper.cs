@@ -28,6 +28,10 @@ public class RouletteEyeSwapper : MonoBehaviour
     [Tooltip("BlendShape の最大値（Unity の SkinnedMesh は 0〜100）")]
     [SerializeField] private float shapeKeyMaxValue = 100f;
 
+    [Header("ライト")]
+    [Tooltip("目の光として使うライト。瞬き中に明るさがフェードアウト/インする")]
+    [SerializeField] private Light eyeLight;
+
     [Header("スワップ対象")]
     [Tooltip("初期状態でアクティブになっている黒い球体")]
     [SerializeField] private GameObject blackSphere;
@@ -44,9 +48,10 @@ public class RouletteEyeSwapper : MonoBehaviour
 
     // -----------------------------------------------------------------------
 
-    private int  _resolvedIndex = -1;
-    private bool _lastIsPlayingUfo;
-    private bool _isSwapping;
+    private int   _resolvedIndex = -1;
+    private bool  _lastIsPlayingUfo;
+    private bool  _isSwapping;
+    private float _initialLightIntensity;
 
     // -----------------------------------------------------------------------
 
@@ -54,6 +59,9 @@ public class RouletteEyeSwapper : MonoBehaviour
     {
         if (eyeSkinnedMesh == null)
             eyeSkinnedMesh = GetComponentInChildren<SkinnedMeshRenderer>(true);
+
+        if (eyeLight != null)
+            _initialLightIntensity = eyeLight.intensity;
 
         ResolveShapeIndex();
     }
@@ -91,18 +99,38 @@ public class RouletteEyeSwapper : MonoBehaviour
     {
         _isSwapping = true;
 
-        // 目を閉じる
-        yield return AnimateWeight(GetCurrentWeight(), shapeKeyMaxValue, closeDuration);
+        // 目を閉じる + ライトフェードアウト（同一コルーチンで同期）
+        float currentLightIntensity = eyeLight != null ? eyeLight.intensity : _initialLightIntensity;
+        yield return AnimateWeightAndLight(GetCurrentWeight(), shapeKeyMaxValue, currentLightIntensity, 0f, closeDuration);
 
         // ピーク：オブジェクトをスワップ
         if (blackSphere  != null) blackSphere.SetActive(!blackSphere.activeSelf);
         if (rouletteReel != null) rouletteReel.SetActive(!rouletteReel.activeSelf);
 
-        // 目を開ける
-        yield return AnimateWeight(shapeKeyMaxValue, 0f, openDuration);
+        // ルーレット表示中はライトを消灯したまま、黒球表示中は点灯
+        bool isRouletteActive = rouletteReel != null && rouletteReel.activeSelf;
+        float lightTarget = isRouletteActive ? 0f : _initialLightIntensity;
+
+        // 目を開ける + ライト制御（同一コルーチンで同期）
+        yield return AnimateWeightAndLight(shapeKeyMaxValue, 0f, 0f, lightTarget, openDuration);
 
         SetWeight(0f);
+        if (eyeLight != null) eyeLight.intensity = lightTarget;
         _isSwapping = false;
+    }
+
+    private IEnumerator AnimateWeightAndLight(float weightFrom, float weightTo, float lightFrom, float lightTo, float duration)
+    {
+        float t = 0f;
+        while (t < 1f)
+        {
+            t += Time.deltaTime / Mathf.Max(0.0001f, duration);
+            float clamped = Mathf.Clamp01(t);
+            SetWeight(Mathf.Lerp(weightFrom, weightTo, clamped));
+            if (eyeLight != null)
+                eyeLight.intensity = Mathf.Lerp(lightFrom, lightTo, clamped);
+            yield return null;
+        }
     }
 
     private IEnumerator AnimateWeight(float from, float to, float duration)
