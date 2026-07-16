@@ -63,10 +63,10 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 56e57c7d97183c848a6a05742082ad0d, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 493f29d1c202e1c4a871ccff16fb1d5c, type: 2}
+      objectReference: {fileID: 2100000, guid: a84c07a86d178e9479e1827689844f3d, type: 2}
     - target: {fileID: 919132149155446097, guid: 56e57c7d97183c848a6a05742082ad0d, type: 3}
       propertyPath: m_Name
-      value: blackdiamond
+      value: PolishDiamond
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -84,9 +84,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 56e57c7d97183c848a6a05742082ad0d, type: 3}
       insertIndex: -1
       addedObject: {fileID: -6192713545308441055}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 56e57c7d97183c848a6a05742082ad0d, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 5191096911840990342}
   m_SourcePrefab: {fileID: 100100000, guid: 56e57c7d97183c848a6a05742082ad0d, type: 3}
 --- !u!1 &6934674859883359455 stripped
 GameObject:
@@ -174,20 +171,3 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &5191096911840990342
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6934674859883359455}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 98f8d21a1f570324db9e51de8a900771, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DiamondPolisher
-  polishLevels:
-  - 0
-  - 0.3
-  - 0.7
-  - 1
