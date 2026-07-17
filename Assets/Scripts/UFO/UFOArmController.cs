@@ -326,6 +326,139 @@ public class UFOArmController : MonoBehaviour
             SetJointLimits(_currentSwayLimit);
             Debug.Log($"[UFOArmController] Initialized swayJoint: {swayJoint.name} with angular range limit: {swayRangeAngle} degrees and auto-centering spring: {jointSpringForce}.");
         }
+
+        // 初期化時にスキルによる速度等のパラメータ適用を行う
+        UpdateArmSpeedBySkills();
+        UpdateSwayBySkills();
+    }
+
+    /// <summary>
+    /// ローグライクのアンロックされたスキル（ID: 22, 23）をチェックし、アームの速度・下降・待機パラメータを更新する
+    /// </summary>
+    public void UpdateArmSpeedBySkills()
+    {
+        var manager = FindFirstObjectByType<RoguelikeManager>();
+        if (manager == null)
+        {
+            moveSpeed = 1.2f;
+            grabWaitSeconds = 2.0f;
+            descentSpeedMultiplier = 0.65f;
+            return;
+        }
+
+        var skills = manager.GetUnlockSkillDictionary;
+        if (skills == null)
+        {
+            moveSpeed = 1.2f;
+            grabWaitSeconds = 2.0f;
+            descentSpeedMultiplier = 0.65f;
+            return;
+        }
+
+        bool hasSkill22 = skills.ContainsKey(22);
+        bool hasSkill23 = skills.ContainsKey(23);
+
+        if (hasSkill22 && hasSkill23)
+        {
+            moveSpeed = 3.0f;
+            grabWaitSeconds = 1.0f;
+            descentSpeedMultiplier = 1.5f;
+            Debug.Log("[UFOArmController] スキル2段階目のアーム速度を適用: MoveSpeed=3.0, GrabWait=1.0s, DescentMult=1.5");
+        }
+        else if (hasSkill22)
+        {
+            moveSpeed = 2.0f;
+            grabWaitSeconds = 1.5f;
+            descentSpeedMultiplier = 1.0f;
+            Debug.Log("[UFOArmController] スキル1段階目のアーム速度を適用: MoveSpeed=2.0, GrabWait=1.5s, DescentMult=1.0");
+        }
+        else
+        {
+            moveSpeed = 1.2f;
+            grabWaitSeconds = 2.0f;
+            descentSpeedMultiplier = 0.65f;
+            Debug.Log("[UFOArmController] アーム速度の初期値を適用: MoveSpeed=1.2, GrabWait=2.0s, DescentMult=0.65");
+        }
+    }
+
+    /// <summary>
+    /// ローグライクのアンロックされたスキル（ID: 20, 21, 25）をチェックし、アームの揺れパラメータを更新する
+    /// </summary>
+    public void UpdateSwayBySkills()
+    {
+        var manager = FindFirstObjectByType<RoguelikeManager>();
+        if (manager == null)
+        {
+            ApplySwayLevel(0);
+            return;
+        }
+
+        var skills = manager.GetUnlockSkillDictionary;
+        if (skills == null)
+        {
+            ApplySwayLevel(0);
+            return;
+        }
+
+        int unlockedSwaySkills = 0;
+        if (skills.ContainsKey(20)) unlockedSwaySkills++;
+        if (skills.ContainsKey(21)) unlockedSwaySkills++;
+        if (skills.ContainsKey(25)) unlockedSwaySkills++;
+
+        ApplySwayLevel(unlockedSwaySkills);
+    }
+
+    private void ApplySwayLevel(int level)
+    {
+        switch (level)
+        {
+            case 1:
+                swayRangeAngle = 10f;
+                jointStabilizeSpeed = 3f;
+                jointSpringForce = 12f;
+                jointSpringDamper = 0.6f;
+                Debug.Log("[UFOArmController] 揺れ抑制1段階目を適用: Angle=10, Stabilize=3, Force=12, Damper=0.6");
+                break;
+            case 2:
+                swayRangeAngle = 5f;
+                jointStabilizeSpeed = 2f;
+                jointSpringForce = 14f;
+                jointSpringDamper = 0.9f;
+                Debug.Log("[UFOArmController] 揺れ抑制2段階目を適用: Angle=5, Stabilize=2, Force=14, Damper=0.9");
+                break;
+            case 3:
+                swayRangeAngle = 1f;
+                jointStabilizeSpeed = 1f;
+                jointSpringForce = 16f;
+                jointSpringDamper = 1.2f;
+                Debug.Log("[UFOArmController] 揺れ抑制3段階目を適用: Angle=1, Stabilize=1, Force=16, Damper=1.2");
+                break;
+            default: // level 0 またはそれ以外
+                swayRangeAngle = 15f;
+                jointStabilizeSpeed = 4f;
+                jointSpringForce = 10f;
+                jointSpringDamper = 0.3f;
+                Debug.Log("[UFOArmController] 揺れ抑制の初期値を適用: Angle=15, Stabilize=4, Force=10, Damper=0.3");
+                break;
+        }
+
+        // ConfigurableJointのバネパラメータとリミットを即座に更新する
+        if (swayJoint != null)
+        {
+            JointDrive xDrive = swayJoint.angularXDrive;
+            xDrive.positionSpring = jointSpringForce;
+            xDrive.positionDamper = jointSpringDamper;
+            swayJoint.angularXDrive = xDrive;
+
+            JointDrive yzDrive = swayJoint.angularYZDrive;
+            yzDrive.positionSpring = jointSpringForce;
+            yzDrive.positionDamper = jointSpringDamper;
+            swayJoint.angularYZDrive = yzDrive;
+
+            // ジョイントのリミットも更新する
+            _currentSwayLimit = swayRangeAngle;
+            SetJointLimits(_currentSwayLimit);
+        }
     }
 
     // ─────────────────────────────────────

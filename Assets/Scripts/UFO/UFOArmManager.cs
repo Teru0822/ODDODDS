@@ -14,6 +14,16 @@ public class UFOArmManager : MonoBehaviour
     [Tooltip("レベル1（初期状態）〜最大レベルまでのアームの親オブジェクト（シーン上のもの）を順に登録します")]
     public GameObject[] armSetsByLevel;
 
+    [Header("シリンダー表示設定 (揺れ抑制スキル ID: 20, 21, 25 に連動)")]
+    [Tooltip("揺れ抑制初期のシリンダーオブジェクト")]
+    public GameObject cylinder;
+    [Tooltip("揺れ抑制1段階目（ID 20）のシリンダーオブジェクト")]
+    public GameObject cylinder1;
+    [Tooltip("揺れ抑制2段階目（ID 21）のシリンダーオブジェクト")]
+    public GameObject cylinder2;
+    [Tooltip("揺れ抑制3段階目（ID 25）のシリンダーオブジェクト")]
+    public GameObject cylinder3;
+
     private void Awake()
     {
         if (Instance == null)
@@ -23,6 +33,68 @@ public class UFOArmManager : MonoBehaviour
         else
         {
             Destroy(gameObject);
+        }
+    }
+
+    private void Start()
+    {
+        UpdateCylinderBySkills();
+    }
+
+    /// <summary>
+    /// スキル取得状況（ID: 20, 21, 25）をチェックして、シリンダーの表示状態を更新する
+    /// </summary>
+    public void UpdateCylinderBySkills()
+    {
+        var manager = FindFirstObjectByType<RoguelikeManager>();
+        if (manager == null)
+        {
+            ApplyCylinderLevel(0);
+            return;
+        }
+
+        var skills = manager.GetUnlockSkillDictionary;
+        if (skills == null)
+        {
+            ApplyCylinderLevel(0);
+            return;
+        }
+
+        int level = 0;
+        if (skills.ContainsKey(20)) level = 1;
+        if (skills.ContainsKey(21)) level = 2;
+        if (skills.ContainsKey(25)) level = 3;
+
+        ApplyCylinderLevel(level);
+    }
+
+    private void ApplyCylinderLevel(int level)
+    {
+        // まず全非表示
+        if (cylinder != null) cylinder.SetActive(false);
+        if (cylinder1 != null) cylinder1.SetActive(false);
+        if (cylinder2 != null) cylinder2.SetActive(false);
+        if (cylinder3 != null) cylinder3.SetActive(false);
+
+        // レベルに応じて必要なシリンダーを表示
+        switch (level)
+        {
+            case 1:
+                if (cylinder1 != null) cylinder1.SetActive(true);
+                Debug.Log("[UFOArmManager] Cylinder1 を表示しました (Sway Level 1)");
+                break;
+            case 2:
+                if (cylinder2 != null) cylinder2.SetActive(true);
+                Debug.Log("[UFOArmManager] Cylinder2 を表示しました (Sway Level 2)");
+                break;
+            case 3:
+                if (cylinder3 != null) cylinder3.SetActive(true);
+                Debug.Log("[UFOArmManager] Cylinder3 を表示しました (Sway Level 3)");
+                break;
+            default:
+                if (cylinder != null) cylinder.SetActive(true);
+                Debug.Log("[UFOArmManager] 初期 Cylinder を表示しました (Sway Level 0)");
+                break;
         }
     }
 
