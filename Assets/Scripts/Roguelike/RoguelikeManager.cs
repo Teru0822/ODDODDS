@@ -167,6 +167,8 @@ public class RoguelikeManager : MonoBehaviour
             else if (data.id == 14) ApplySkill14Effects();
             else if (data.id == 15) ApplySkill15Effects();
             else if (data.id == 17 || data.id == 18 || data.id == 19) ApplyPolishDiamondEffects();
+            else if (data.id == 22 || data.id == 23) ApplyArmSpeedEffects();
+            else if (data.id == 20 || data.id == 21 || data.id == 25) ApplySwayEffects();
 
             //UIの更新を行っておく
             RoguelikePanelManager.Instance.UpdateUI();
@@ -275,6 +277,44 @@ public class RoguelikeManager : MonoBehaviour
             {
                 polisher.PolishDiamond();
             }
+        }
+    }
+
+    /// <summary>スキルID22, 23取得時にアームの速度パラメータを変更する</summary>
+    private void ApplyArmSpeedEffects()
+    {
+        var controller = FindFirstObjectByType<UFOArmController>();
+        if (controller != null)
+        {
+            controller.UpdateArmSpeedBySkills();
+        }
+        else
+        {
+            Debug.LogWarning("[RoguelikeManager] ApplyArmSpeedEffects: UFOArmController が見つかりません。");
+        }
+    }
+
+    /// <summary>スキルID20, 21, 25取得時にアームの揺れパラメータおよびシリンダー表示を変更する</summary>
+    private void ApplySwayEffects()
+    {
+        var controller = FindFirstObjectByType<UFOArmController>();
+        if (controller != null)
+        {
+            controller.UpdateSwayBySkills();
+        }
+        else
+        {
+            Debug.LogWarning("[RoguelikeManager] ApplySwayEffects: UFOArmController が見つかりません。");
+        }
+
+        var armManager = FindFirstObjectByType<UFOArmManager>();
+        if (armManager != null)
+        {
+            armManager.UpdateCylinderBySkills();
+        }
+        else
+        {
+            Debug.LogWarning("[RoguelikeManager] ApplySwayEffects: UFOArmManager が見つかりません。");
         }
     }
 
