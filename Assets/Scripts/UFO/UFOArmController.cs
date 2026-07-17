@@ -567,7 +567,18 @@ public class UFOArmController : MonoBehaviour
 
         // アームの中心（指の親オブジェクト）の位置を取得
         Transform parentFolder = fingerParts[0].parent;
-        Vector3 centerPos = (parentFolder != null) ? parentFolder.position : transform.position;
+        
+        // 揺れを防ぐため、X・Z座標は揺れない armRoot (または transform) を使い、Y座標（高さ）は親フォルダを使用
+        Vector3 centerPos;
+        if (parentFolder != null)
+        {
+            Transform refTransform = (armRoot != null) ? armRoot : transform;
+            centerPos = new Vector3(refTransform.position.x, parentFolder.position.y, refTransform.position.z);
+        }
+        else
+        {
+            centerPos = transform.position;
+        }
 
         // アーム降下中・爪閉じ中（下降開始〜掴み完了まで）は、アーム直下のコインを徐々にスリープ解除
         // 上昇中（Ascending）は無駄な物理演算を防ぐため、この直下ボックス判定は行いません
@@ -1236,7 +1247,18 @@ public class UFOArmController : MonoBehaviour
                 if (fingerParts != null && fingerParts.Length > 0 && fingerParts[0] != null)
                 {
                     Transform parentFolder = fingerParts[0].parent;
-                    Vector3 centerPos = (parentFolder != null) ? parentFolder.position : transform.position;
+                    
+                    // 揺れを防ぐため、X・Z座標は揺れない armRoot (または transform) を使い、Y座標（高さ）は親フォルダを使用
+                    Vector3 centerPos;
+                    if (parentFolder != null)
+                    {
+                        Transform refTransform = (armRoot != null) ? armRoot : transform;
+                        centerPos = new Vector3(refTransform.position.x, parentFolder.position.y, refTransform.position.z);
+                    }
+                    else
+                    {
+                        centerPos = transform.position;
+                    }
 
                     Vector3 boxCenter = centerPos + wakeUpDownwardsOffset;
                     boxCenter.y -= wakeUpDownwardsLength * 0.5f;
@@ -1263,7 +1285,18 @@ public class UFOArmController : MonoBehaviour
                     if (fingerParts != null && fingerParts.Length > 0 && fingerParts[0] != null)
                     {
                         Transform parentFolder = fingerParts[0].parent;
-                        Vector3 centerPos = (parentFolder != null) ? parentFolder.position : transform.position;
+                        
+                        // 揺れを防ぐため、X・Z座標は揺れない armRoot (または transform) を使い、Y座標（高さ）は親フォルダを使用
+                        Vector3 centerPos;
+                        if (parentFolder != null)
+                        {
+                            Transform refTransform = (armRoot != null) ? armRoot : transform;
+                            centerPos = new Vector3(refTransform.position.x, parentFolder.position.y, refTransform.position.z);
+                        }
+                        else
+                        {
+                            centerPos = transform.position;
+                        }
 
                         Vector3 boxCenter = centerPos + wakeUpDownwardsOffset;
                         boxCenter.y -= wakeUpDownwardsLength * 0.5f;
