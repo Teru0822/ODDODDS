@@ -8,14 +8,51 @@ public enum SkillType
     FallBall = 2,
     UFOcatcher = 3,
 }
+public enum SkillId
+{
+    None = 0,
+    
+    // PinBall
+    PinBall_ExpandGoal = 0,
+    PinBall_DoubleOrNothingBonus = 1,
+    PinBall_AddPin = 2,
+    PinBall_SplitPinUpgrade = 3,
+    
+    // FallBall
+    FallBall_Strengthen = 4,
+    FallBall_ExpandHole = 5,
+    FallBall_ReduceEnemySpeed = 6,
+    FallBall_Exhausted = 7,
+    
+    // UFOcatcher
+    UFO_ArmLevel2 = 8,
+    UFO_ArmLevel3 = 9,
+    UFO_ArmLevelUltimate = 10,
+    UFO_RetryOnce = 11,
+    UFO_DoubleReward = 12,
+    UFO_ExpandDropHole1 = 13,
+    UFO_ExpandDropHole2 = 14,
+    UFO_ExpandDropHole3 = 15,
+    UFO_ItemDropCoin = 16,
+    UFO_PolishDiamond1 = 17,
+    UFO_PolishDiamond2 = 18,
+    UFO_PolishDiamond3 = 19,
+    UFO_ReduceSway1 = 20,
+    UFO_ReduceSway2 = 21,
+    UFO_ArmSpeedUp1 = 22,
+    UFO_ArmSpeedUp2 = 23,
+    UFO_FeverTime = 24,
+    UFO_ReduceSway3 = 25
+}
+
 public class RoguelikeData
 {
-    public int id;//儘乕僌儔僀僋偺ID
-    public string skillName;//僗僉儖偺柤慜
-    public SkillType skillType;//僗僉儖偺柤慜
-    public string skillDescription;//僗僉儖偺愢柧
-    public bool isActive = true;//僗僉儖傪桳岠壔偡傞偐斲偐
-    public bool isGet = false;//僗僉儖偑庢摼偝傟偰偄傞偐斲偐
+    public SkillId id;//[OCNID銉兗銈般儵銈ゃ偗銇甀D
+    public string skillName;//銈广偔銉伄鍚嶅墠
+    public SkillType skillType;//銈广偔銉伄鍚嶅墠
+    public string skillDescription;//銈广偔銉伄瑾槑
+    public bool isActive = true;//銈广偔銉倰鏈夊姽鍖栥仚銈嬨亱鍚︺亱
+    public bool isGet = false;//銈广偔銉亴鍙栧緱銇曘倢銇︺亜銈嬨亱鍚︺亱
 }
 
 [Serializable]

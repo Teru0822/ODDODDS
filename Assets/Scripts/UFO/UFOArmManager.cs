@@ -61,9 +61,9 @@ public class UFOArmManager : MonoBehaviour
         }
 
         int level = 0;
-        if (skills.ContainsKey(20)) level = 1;
-        if (skills.ContainsKey(21)) level = 2;
-        if (skills.ContainsKey(25)) level = 3;
+        if (skills.ContainsKey(SkillId.UFO_ReduceSway1)) level = 1;
+        if (skills.ContainsKey(SkillId.UFO_ReduceSway2)) level = 2;
+        if (skills.ContainsKey(SkillId.UFO_ReduceSway3)) level = 3;
 
         ApplyCylinderLevel(level);
     }

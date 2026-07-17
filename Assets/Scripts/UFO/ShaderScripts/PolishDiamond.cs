@@ -26,9 +26,9 @@ public class DiamondPolisher : MonoBehaviour
             var skills = manager.GetUnlockSkillDictionary;
             if (skills != null)
             {
-                if (skills.ContainsKey(17)) unlockedPolishSkills++;
-                if (skills.ContainsKey(18)) unlockedPolishSkills++;
-                if (skills.ContainsKey(19)) unlockedPolishSkills++;
+                if (skills.ContainsKey(SkillId.UFO_PolishDiamond1)) unlockedPolishSkills++;
+                if (skills.ContainsKey(SkillId.UFO_PolishDiamond2)) unlockedPolishSkills++;
+                if (skills.ContainsKey(SkillId.UFO_PolishDiamond3)) unlockedPolishSkills++;
             }
             currentStage = Mathf.Clamp(unlockedPolishSkills, 0, polishLevels.Length - 1);
         }

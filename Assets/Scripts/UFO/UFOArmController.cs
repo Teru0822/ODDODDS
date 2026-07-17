@@ -355,8 +355,8 @@ public class UFOArmController : MonoBehaviour
             return;
         }
 
-        bool hasSkill22 = skills.ContainsKey(22);
-        bool hasSkill23 = skills.ContainsKey(23);
+        bool hasSkill22 = skills.ContainsKey(SkillId.UFO_ArmSpeedUp1);
+        bool hasSkill23 = skills.ContainsKey(SkillId.UFO_ArmSpeedUp2);
 
         if (hasSkill22 && hasSkill23)
         {
@@ -401,9 +401,9 @@ public class UFOArmController : MonoBehaviour
         }
 
         int unlockedSwaySkills = 0;
-        if (skills.ContainsKey(20)) unlockedSwaySkills++;
-        if (skills.ContainsKey(21)) unlockedSwaySkills++;
-        if (skills.ContainsKey(25)) unlockedSwaySkills++;
+        if (skills.ContainsKey(SkillId.UFO_ReduceSway1)) unlockedSwaySkills++;
+        if (skills.ContainsKey(SkillId.UFO_ReduceSway2)) unlockedSwaySkills++;
+        if (skills.ContainsKey(SkillId.UFO_ReduceSway3)) unlockedSwaySkills++;
 
         ApplySwayLevel(unlockedSwaySkills);
     }

@@ -9,18 +9,18 @@ using UniRx;
 
 public class RoguelikeManager : MonoBehaviour
 {
-    private Dictionary<int,RoguelikeData> _roguelikeDictionary = new Dictionary<int, RoguelikeData>();//int: ID, RoguelikeData:ローグライク用のスキルに関するデータ
+    private Dictionary<SkillId, RoguelikeData> _roguelikeDictionary = new Dictionary<SkillId, RoguelikeData>();//SkillId: ID, RoguelikeData:ローグライク用のスキルに関するデータ
     [SerializeField] private string _jsonFilePath = "Assets/Resources/Roguelike/RoguelikeData.json";
 
 
     /// <summary>
     /// 現在アンロックされているスキルのみを集めたDictionaryを返す
     /// </summary>
-    public Dictionary<int, RoguelikeData> GetUnlockSkillDictionary => _roguelikeDictionary.Where(data => data.Value.isGet == true)
+    public Dictionary<SkillId, RoguelikeData> GetUnlockSkillDictionary => _roguelikeDictionary.Where(data => data.Value.isGet == true)
         .ToDictionary(data => data.Key, data => data.Value);
 
     /// <summary>デバッグ用：全スキルへの読み取り専用アクセス</summary>
-    public IReadOnlyDictionary<int, RoguelikeData> AllSkillsDebug => _roguelikeDictionary;
+    public IReadOnlyDictionary<SkillId, RoguelikeData> AllSkillsDebug => _roguelikeDictionary;
 
     /// <summary>デバッグ用：全スキルをリスト形式で返す</summary>
     public List<RoguelikeData> GetAllSkills() => new List<RoguelikeData>(_roguelikeDictionary.Values);
@@ -160,24 +160,47 @@ public class RoguelikeManager : MonoBehaviour
         {
             _roguelikeDictionary[data.id].isGet = true;
 
-            // スキルID専用の演出処理
-            if      (data.id ==  8) ApplySkill8Effects();
-            else if (data.id ==  9) ApplySkill9Effects();
-            else if (data.id == 13) ApplySkill13Effects();
-            else if (data.id == 14) ApplySkill14Effects();
-            else if (data.id == 15) ApplySkill15Effects();
-            else if (data.id == 17 || data.id == 18 || data.id == 19) ApplyPolishDiamondEffects();
-            else if (data.id == 22 || data.id == 23) ApplyArmSpeedEffects();
-            else if (data.id == 20 || data.id == 21 || data.id == 25) ApplySwayEffects();
+            // 【変更点】数字の if 文を enum の switch 文に置き換え
+            switch (data.id)
+            {
+                case SkillId.UFO_ArmLevel2:
+                    ApplySkill8Effects(); // ※後々 ApplyArmLevel2Effects() などにリネームするとさらに綺麗です
+                    break;
+                case SkillId.UFO_ArmLevel3:
+                    ApplySkill9Effects();
+                    break;
+                case SkillId.UFO_ExpandDropHole1:
+                    ApplySkill13Effects();
+                    break;
+                case SkillId.UFO_ExpandDropHole2:
+                    ApplySkill14Effects();
+                    break;
+                case SkillId.UFO_ExpandDropHole3:
+                    ApplySkill15Effects();
+                    break;
+                case SkillId.UFO_PolishDiamond1:
+                case SkillId.UFO_PolishDiamond2:
+                case SkillId.UFO_PolishDiamond3:
+                    ApplyPolishDiamondEffects();
+                    break;
+                case SkillId.UFO_ArmSpeedUp1:
+                case SkillId.UFO_ArmSpeedUp2:
+                    ApplyArmSpeedEffects();
+                    break;
+                case SkillId.UFO_ReduceSway1:
+                case SkillId.UFO_ReduceSway2:
+                case SkillId.UFO_ReduceSway3:
+                    ApplySwayEffects();
+                    break;
+            }
 
-            //UIの更新を行っておく
+            // UIの更新を行っておく
             RoguelikePanelManager.Instance.UpdateUI();
             _unlockSkillEvent.OnNext(data);
         }
         else
         {
-            Debug.LogError("指定されたキーのスキルは存在しません。");
-            return;
+            Debug.LogError($"指定されたキーのスキル({data.id})は存在しません。");
         }
     }
 
