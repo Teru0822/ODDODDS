@@ -428,35 +428,49 @@ public class ItemSpawner : MonoBehaviour
         }
 
         float totalRate = jpRate + hgRate + bdRate + activeItemsTotalRate;
-        if (totalRate <= 0f) return;
-
-        // 抽選
-        float rand = Random.Range(0f, totalRate);
         GameObject prefabToSpawn = null;
 
-        if (rand < jpRate)
+        if (totalRate <= 0f)
         {
-            prefabToSpawn = jackpotPrefab;
-        }
-        else if (rand < jpRate + hgRate)
-        {
-            prefabToSpawn = hourglassPrefab;
-        }
-        else if (rand < jpRate + hgRate + bdRate)
-        {
-            prefabToSpawn = blackDiamondPrefab;
+            // 安全装置: 確率の合計が0以下の場合は、アクティブアイテムの中から均等確率で強制的に選択
+            if (_activeItems.Count > 0)
+            {
+                prefabToSpawn = _activeItems[Random.Range(0, _activeItems.Count)].prefab;
+            }
+            else
+            {
+                prefabToSpawn = copperCoinPrefab;
+            }
         }
         else
         {
-            // アクティブアイテム5枠から抽選
-            float currentSum = jpRate + hgRate + bdRate;
-            for (int i = 0; i < _activeItems.Count; i++)
+            // 抽選
+            float rand = Random.Range(0f, totalRate);
+
+            if (rand < jpRate)
             {
-                currentSum += activeItemWeights[i];
-                if (rand < currentSum)
+                prefabToSpawn = jackpotPrefab;
+            }
+            else if (rand < jpRate + hgRate)
+            {
+                prefabToSpawn = hourglassPrefab;
+            }
+            else if (rand < jpRate + hgRate + bdRate)
+            {
+                prefabToSpawn = blackDiamondPrefab;
+            }
+            else
+            {
+                // アクティブアイテム5枠から抽選
+                float currentSum = jpRate + hgRate + bdRate;
+                for (int i = 0; i < _activeItems.Count; i++)
                 {
-                    prefabToSpawn = _activeItems[i].prefab;
-                    break;
+                    currentSum += activeItemWeights[i];
+                    if (rand < currentSum)
+                    {
+                        prefabToSpawn = _activeItems[i].prefab;
+                        break;
+                    }
                 }
             }
         }
