@@ -38,6 +38,19 @@ public class ItemSpawner : MonoBehaviour
     public GameObject blackDiamondPrefab;
     public float blackDiamondRate = 0f;
 
+    [Header("新規生成設定")]
+    [Tooltip("降らせる枚数のドロップダウン設定")]
+    public SpawnCountType spawnCount = SpawnCountType.Count500;
+
+    [Header("初期アクティブアイテム枠 (必ず5つ設定してください)")]
+    public System.Collections.Generic.List<ItemSpawnSettings> initialActiveItems = new System.Collections.Generic.List<ItemSpawnSettings>();
+
+    [Header("アイテム候補リスト (アンロック用など、5つ以上設定可能)")]
+    public System.Collections.Generic.List<ItemSpawnSettings> itemCandidates = new System.Collections.Generic.List<ItemSpawnSettings>();
+
+    [Header("セルごとのアクティブ5枠出現比率設定 (セル1〜8用)")]
+    public System.Collections.Generic.List<CellWeightConfig> cellWeights = new System.Collections.Generic.List<CellWeightConfig>();
+
     [Header("グリッド設定")]
     [Tooltip("グリッド分割数 (4面 または 9面)")]
     public GridType gridType = GridType.Grid4;
@@ -73,10 +86,47 @@ public class ItemSpawner : MonoBehaviour
     private GridType _currentWaveGridType;
     private int _activeAreaMask = 0;
     private SpawnRatePattern[] _activeRates; // 割り当てられたパターン (サイズは 4 または 9)
+    private System.Collections.Generic.List<ItemSpawnSettings> _activeItems = new System.Collections.Generic.List<ItemSpawnSettings>();
 
     void Awake()
     {
         Instance = this;
+
+        // 既存のプレハブ変数を元にした互換初期化（initialActiveItemsが空の場合）
+        if (initialActiveItems == null || initialActiveItems.Count == 0)
+        {
+            initialActiveItems = new System.Collections.Generic.List<ItemSpawnSettings>();
+            if (copperCoinPrefab != null) initialActiveItems.Add(new ItemSpawnSettings("Copper Coin", copperCoinPrefab, 0, copperRate));
+            if (silverCoinPrefab != null) initialActiveItems.Add(new ItemSpawnSettings("Silver Coin", silverCoinPrefab, 1, silverRate));
+            if (goldCoinPrefab != null) initialActiveItems.Add(new ItemSpawnSettings("Gold Coin", goldCoinPrefab, 2, goldRate));
+            
+            // 5枠に足りない場合は、すでに登録済みのプレハブをコピーして5枠を埋める
+            if (initialActiveItems.Count < 5)
+            {
+                int index = 0;
+                while (initialActiveItems.Count < 5 && initialActiveItems.Count > 0)
+                {
+                    var baseSettings = initialActiveItems[index % initialActiveItems.Count];
+                    initialActiveItems.Add(new ItemSpawnSettings(baseSettings.name + " (Sub)", baseSettings.prefab, baseSettings.priority, baseSettings.rate));
+                    index++;
+                }
+            }
+        }
+
+        // cellWeights の初期化 (セル1〜8用、合計8要素)
+        if (cellWeights == null || cellWeights.Count == 0)
+        {
+            cellWeights = new System.Collections.Generic.List<CellWeightConfig>();
+            for (int i = 1; i <= 8; i++)
+            {
+                var config = new CellWeightConfig();
+                config.cellName = "Cell " + i;
+                // デフォルトの重み (銅20%, 銅20%, 銅20%, 銀30%, 金10%)
+                config.itemWeights = new float[5] { 20f, 20f, 20f, 30f, 10f };
+                cellWeights.Add(config);
+            }
+        }
+
         // インスペクターで設定されていない場合、デフォルトの10パターンを生成
         if (ratePatterns == null || ratePatterns.Count == 0)
         {
@@ -98,6 +148,18 @@ public class ItemSpawner : MonoBehaviour
 
     void Start()
     {
+        // アクティブ枠を初期化
+        _activeItems.Clear();
+        foreach (var item in initialActiveItems)
+        {
+            if (item != null)
+            {
+                var clone = item.Clone();
+                clone.currentRate = item.rate; // 現在確率を初期確率にする
+                _activeItems.Add(clone);
+            }
+        }
+        
         StartCoroutine(SpawnRoutine());
     }
 
@@ -121,8 +183,8 @@ public class ItemSpawner : MonoBehaviour
     private IEnumerator SpawnRoutine()
     {
         IsInitialSpawning = true;
-        // 2000枚の時は10秒、0枚の時は0秒で一次関数的に時間を変更
-        totalItems = Mathf.Max(0, totalItems);
+        // 選択された枚数を適用
+        totalItems = (int)spawnCount;
         spawnDuration = (10f / 2000f) * totalItems;
         Debug.Log($"[ItemSpawner] スポーン開始: totalItems={totalItems}, spawnDuration={spawnDuration:F2}秒");
 
@@ -174,7 +236,16 @@ public class ItemSpawner : MonoBehaviour
         int cellCount = (_currentWaveGridType == GridType.Grid4) ? 4 : 9;
 
         // 2. エリアの組み合わせを決定 (1～2^cellCount - 1のランダム数値)
-        _activeAreaMask = Random.Range(1, 1 << cellCount);
+        if (_currentWaveGridType == GridType.Grid9)
+        {
+            // 通常ウェーブ時はセル 0 (左上、ジャックポット用) を除外し、セル 1〜8 (8箇所) のみを使用
+            // ビット 1〜8 の組み合わせ (2^8 - 1 = 255通り) からランダムに決定し、1ビットシフトしてセル0を空けます
+            _activeAreaMask = Random.Range(1, 1 << 8) << 1;
+        }
+        else
+        {
+            _activeAreaMask = Random.Range(1, 1 << cellCount);
+        }
 
         // 2b. 除外セルのビットをクリア
         if (excludedCellIndices != null)
@@ -312,53 +383,96 @@ public class ItemSpawner : MonoBehaviour
         }
         else
         {
-            // 万が一マスクが0の場合は全セルから選択
             chosenCell = Random.Range(0, cellCount);
         }
 
-        // 2. 選択されたセルに割り当てられた確率パターンを取得
-        if (_activeRates == null || chosenCell >= _activeRates.Length) return;
-        SpawnRatePattern ratePattern = _activeRates[chosenCell];
+        // 2. 固定枠の確率を取得
+        float jpRate = jackpotRate;
+        float hgRate = hourglassRate;
+        float bdRate = blackDiamondRate;
 
-        if (ratePattern == null) return;
+        // 3. アクティブアイテム5枠の確率（比率）を設定
+        // 基本的には、初期設定のアクティブアイテムの currentRate をベースにするが、
+        // セル個別比率 (cellWeights) が設定されている場合、そのセルの重み（ weights ）に置き換える
+        float[] activeItemWeights = new float[5];
+        for (int i = 0; i < 5; i++)
+        {
+            activeItemWeights[i] = (i < _activeItems.Count) ? _activeItems[i].currentRate : 0f;
+        }
 
-        float copper = ratePattern.copperRate;
-        float silver = ratePattern.silverRate;
-        float gold = ratePattern.goldRate;
-        float hourglass = ratePattern.hourglassRate;
-        float jackpot = ratePattern.jackpotRate;
-        float blackDiamond = ratePattern.blackDiamondRate;
-        float totalRate = copper + silver + gold + hourglass + jackpot + blackDiamond;
+        if (_currentWaveGridType == GridType.Grid9 && chosenCell >= 1 && chosenCell <= 8)
+        {
+            // セル1〜8の設定を取得 (cellWeights はインデックス 0〜7 にセル1〜8の設定が入っているはず)
+            int configIndex = chosenCell - 1;
+            if (cellWeights != null && configIndex < cellWeights.Count)
+            {
+                var config = cellWeights[configIndex];
+                if (config != null && config.itemWeights != null)
+                {
+                    for (int i = 0; i < 5; i++)
+                    {
+                        if (i < config.itemWeights.Length)
+                        {
+                            activeItemWeights[i] = config.itemWeights[i];
+                        }
+                    }
+                }
+            }
+        }
 
-        if (totalRate <= 0f) return;
+        // 全体の合計確率を算出
+        float activeItemsTotalRate = 0f;
+        for (int i = 0; i < 5; i++)
+        {
+            activeItemsTotalRate += activeItemWeights[i];
+        }
 
-        // 3. 確率計算
-        float rand = Random.Range(0f, totalRate);
+        float totalRate = jpRate + hgRate + bdRate + activeItemsTotalRate;
         GameObject prefabToSpawn = null;
 
-        if (rand < copper) 
+        if (totalRate <= 0f)
         {
-            prefabToSpawn = copperCoinPrefab;
-        }
-        else if (rand < copper + silver) 
-        {
-            prefabToSpawn = silverCoinPrefab;
-        }
-        else if (rand < copper + silver + gold) 
-        {
-            prefabToSpawn = goldCoinPrefab;
-        }
-        else if (rand < copper + silver + gold + hourglass) 
-        {
-            prefabToSpawn = hourglassPrefab;
-        }
-        else if (rand < copper + silver + gold + hourglass + jackpot) 
-        {
-            prefabToSpawn = jackpotPrefab;
+            // 安全装置: 確率の合計が0以下の場合は、アクティブアイテムの中から均等確率で強制的に選択
+            if (_activeItems.Count > 0)
+            {
+                prefabToSpawn = _activeItems[Random.Range(0, _activeItems.Count)].prefab;
+            }
+            else
+            {
+                prefabToSpawn = copperCoinPrefab;
+            }
         }
         else
         {
-            prefabToSpawn = blackDiamondPrefab;
+            // 抽選
+            float rand = Random.Range(0f, totalRate);
+
+            if (rand < jpRate)
+            {
+                prefabToSpawn = jackpotPrefab;
+            }
+            else if (rand < jpRate + hgRate)
+            {
+                prefabToSpawn = hourglassPrefab;
+            }
+            else if (rand < jpRate + hgRate + bdRate)
+            {
+                prefabToSpawn = blackDiamondPrefab;
+            }
+            else
+            {
+                // アクティブアイテム5枠から抽選
+                float currentSum = jpRate + hgRate + bdRate;
+                for (int i = 0; i < _activeItems.Count; i++)
+                {
+                    currentSum += activeItemWeights[i];
+                    if (rand < currentSum)
+                    {
+                        prefabToSpawn = _activeItems[i].prefab;
+                        break;
+                    }
+                }
+            }
         }
 
         if (prefabToSpawn == null) return;
@@ -388,6 +502,129 @@ public class ItemSpawner : MonoBehaviour
             spawnedRb.isKinematic = false;
             spawnedRb.useGravity = true;
         }
+    }
+
+    /// <summary>
+    /// 新しいアイテムをアクティブ枠（最大5つ）に挿入し、プライオリティに基づいて押し出し＆確率の等分調整を行います。
+    /// </summary>
+    public void TryAddActiveItem(ItemSpawnSettings newItem)
+    {
+        if (newItem == null || newItem.prefab == null) return;
+
+        if (_activeItems.Count < 5)
+        {
+            // 5枠未満ならそのまま追加。
+            _activeItems.Add(newItem.Clone());
+            Debug.Log($"[ItemSpawner] アクティブ枠が5未満のため、そのまま追加しました: {newItem.name}");
+            LogActiveItems();
+            return;
+        }
+
+        // 5枠埋まっている場合、枠内の最小プライオリティを特定
+        int minPriority = int.MaxValue;
+        foreach (var item in _activeItems)
+        {
+            if (item.priority < minPriority)
+            {
+                minPriority = item.priority;
+            }
+        }
+
+        // 新しいアイテムのプライオリティが、枠内の最小プライオリティ以下なら追加できない
+        if (newItem.priority <= minPriority)
+        {
+            Debug.LogWarning($"[ItemSpawner] 追加しようとしたアイテム {newItem.name} (Priority: {newItem.priority}) の優先度は、現在のアクティブ枠の最小優先度 ({minPriority}) 以下のため、追加できませんでした。");
+            return;
+        }
+
+        // 最小プライオリティを持つアイテムのリストを抽出
+        var minPriorityItems = new System.Collections.Generic.List<ItemSpawnSettings>();
+        foreach (var item in _activeItems)
+        {
+            if (item.priority == minPriority)
+            {
+                minPriorityItems.Add(item);
+            }
+        }
+
+        // 重複している場合はランダムに1つ選択して削除
+        ItemSpawnSettings itemToRemove = minPriorityItems[UnityEngine.Random.Range(0, minPriorityItems.Count)];
+        _activeItems.Remove(itemToRemove);
+
+        // 削除されたアイテムの確率
+        float removedRate = itemToRemove.currentRate;
+        float newRate = newItem.rate;
+
+        // 新しいアイテムをアクティブ枠に追加。適用確率はそのアイテムのデフォルト確率
+        var activeNewItem = newItem.Clone();
+        activeNewItem.currentRate = newRate;
+        _activeItems.Add(activeNewItem);
+
+        // 余り（または不足）の計算。
+        float surplusRate = removedRate - newRate;
+        
+        if (surplusRate != 0f && _activeItems.Count > 0)
+        {
+            // 残ったアクティブアイテムの中で、一番プライオリティが低いものを探す
+            int newMinPriority = int.MaxValue;
+            foreach (var item in _activeItems)
+            {
+                if (item.priority < newMinPriority)
+                {
+                    newMinPriority = item.priority;
+                }
+            }
+
+            var targetItems = new System.Collections.Generic.List<ItemSpawnSettings>();
+            foreach (var item in _activeItems)
+            {
+                if (item.priority == newMinPriority)
+                {
+                    targetItems.Add(item);
+                }
+            }
+
+            // 等分して加算 (0未満にならないようにクランプする)
+            float share = surplusRate / targetItems.Count;
+            foreach (var item in targetItems)
+            {
+                item.currentRate = Mathf.Max(0f, item.currentRate + share);
+            }
+            
+            Debug.Log($"[ItemSpawner] アイテムの入れ替え完了: 削除={itemToRemove.name}(率:{removedRate}%), 追加={newItem.name}(率:{newRate}%)。余剰 {surplusRate}% を優先度 {newMinPriority} のアイテム {targetItems.Count} 個に等分分配しました (各+{share}%)。");
+        }
+        else
+        {
+            Debug.Log($"[ItemSpawner] アイテムの入れ替え完了: 削除={itemToRemove.name}(率:{removedRate}%), 追加={newItem.name}(率:{newRate}%)。余剰なし。");
+        }
+
+        LogActiveItems();
+    }
+
+    /// <summary>
+    /// アクティブなアイテム枠の状態をログに出力します。
+    /// </summary>
+    private void LogActiveItems()
+    {
+        System.Text.StringBuilder sb = new System.Text.StringBuilder();
+        sb.Append("[ItemSpawner] 現在のアクティブアイテム枠:\n");
+        float totalActiveRate = 0f;
+        for (int i = 0; i < _activeItems.Count; i++)
+        {
+            var item = _activeItems[i];
+            sb.Append($"  枠[{i}]: {item.name} (Priority: {item.priority}, CurrentRate: {item.currentRate:F2}%)\n");
+            totalActiveRate += item.currentRate;
+        }
+        sb.Append($"  アクティブ枠合計確率: {totalActiveRate:F2}%");
+        Debug.Log(sb.ToString());
+    }
+
+    [ContextMenu("テスト: 新アイテム(Priority: 2, Rate: 3%) を追加")]
+    public void TestAddActiveItemPriority2()
+    {
+        var prefab = (copperCoinPrefab != null) ? copperCoinPrefab : this.gameObject;
+        var testItem = new ItemSpawnSettings("Test Priority 2 Item", prefab, 2, 3f);
+        TryAddActiveItem(testItem);
     }
 
     /// <summary>
@@ -655,4 +892,46 @@ public enum GridType
 {
     Grid4,
     Grid9
+}
+
+public enum SpawnCountType
+{
+    Count500 = 500,
+    Count1000 = 1000,
+    Count1500 = 1500
+}
+
+[System.Serializable]
+public class ItemSpawnSettings
+{
+    public string name;
+    public GameObject prefab;
+    public int priority;
+    public float rate;
+    
+    [System.NonSerialized]
+    public float currentRate;
+
+    public ItemSpawnSettings(string name, GameObject prefab, int priority, float rate)
+    {
+        this.name = name;
+        this.prefab = prefab;
+        this.priority = priority;
+        this.rate = rate;
+        this.currentRate = rate;
+    }
+
+    public ItemSpawnSettings Clone()
+    {
+        var clone = new ItemSpawnSettings(this.name, this.prefab, this.priority, this.rate);
+        clone.currentRate = this.currentRate;
+        return clone;
+    }
+}
+
+[System.Serializable]
+public class CellWeightConfig
+{
+    public string cellName;
+    public float[] itemWeights = new float[5] { 20f, 20f, 20f, 30f, 10f };
 }
