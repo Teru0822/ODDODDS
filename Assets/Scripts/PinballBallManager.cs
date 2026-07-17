@@ -180,7 +180,7 @@ public class PinballBallManager : MonoBehaviour
                 _roguelikeManager.OnUnlockSkillEvent
                 .Subscribe(data =>
                 {
-                    if (data.id == 3)//When a ball hits a split pin, it now splits into 3 instead of 2.
+                    if (data.id == SkillId.PinBall_SplitPinUpgrade)//When a ball hits a split pin, it now splits into 3 instead of 2.
                     {
                         if(data.isActive)
                             isActiveSkill3 = true;
