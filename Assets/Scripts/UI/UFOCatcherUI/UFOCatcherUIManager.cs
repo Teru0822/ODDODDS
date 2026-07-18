@@ -6,11 +6,9 @@ using TMPro;
 [System.Serializable]
 public struct PriceCoinSpawnData
 {
-    [Tooltip("price_coin UIを生成するかどうか")]
-    public bool isEnabled;
     [Tooltip("コインの画像 (未設定ならPrefabのデフォルトを使用)")]
     public Sprite coinSprite;
-    [Tooltip("コインのテキスト")]
+    [Tooltip("コインのテキスト (値段など)")]
     public string coinText;
 }
 
@@ -45,8 +43,8 @@ public class UFOCatcherUIManager : MonoBehaviour
     [SerializeField] private int _targetDisplay = 4;
 
     [Header("UI Spawn Datas")]
-    [Tooltip("price_coin UIの生成設定")]
-    [SerializeField] private PriceCoinSpawnData _priceCoinData = new PriceCoinSpawnData { isEnabled = true };
+    [Tooltip("price_coin UIの生成設定リスト。ここの数だけprice_coinが生成されます")]
+    [SerializeField] private List<PriceCoinSpawnData> _priceCoinDatas = new List<PriceCoinSpawnData>();
 
     [Tooltip("ListItem UIの生成設定リスト。ここの数だけListItemが生成されます")]
     [SerializeField] private List<ListItemSpawnData> _listItemDatas = new List<ListItemSpawnData>();
@@ -113,35 +111,38 @@ public class UFOCatcherUIManager : MonoBehaviour
         int spawnCount = 0;
 
         // 1. price_coin の生成と配置
-        if (_priceCoinData.isEnabled && _priceCoinPrefab != null)
+        if (_priceCoinPrefab != null && _priceCoinDatas != null)
         {
-            GameObject coinObj = Instantiate(_priceCoinPrefab, canvasTransform);
-            RectTransform coinRect = coinObj.GetComponent<RectTransform>();
-            if (coinRect != null)
+            foreach (var coinData in _priceCoinDatas)
             {
-                // 1つ生成するごとにPosYを-25ずつずらす
-                Vector3 localPos = coinRect.localPosition;
-                localPos.y -= 25f * spawnCount;
-                coinRect.localPosition = localPos;
-            }
-
-            // データの適用
-            PriceCoinUI coinUI = coinObj.GetComponent<PriceCoinUI>();
-            if (coinUI != null)
-            {
-                if (_priceCoinData.coinSprite != null)
+                GameObject coinObj = Instantiate(_priceCoinPrefab, canvasTransform);
+                RectTransform coinRect = coinObj.GetComponent<RectTransform>();
+                if (coinRect != null)
                 {
-                    coinUI.SetImage(_priceCoinData.coinSprite);
+                    // 1つ生成するごとにPosYを-25ずつずらす
+                    Vector3 localPos = coinRect.localPosition;
+                    localPos.y -= 25f * spawnCount;
+                    coinRect.localPosition = localPos;
                 }
-                coinUI.SetText(_priceCoinData.coinText);
-            }
-            else
-            {
-                Debug.LogWarning("[UFOCatcherUIManager] price_coin プレハブに PriceCoinUI コンポーネントがアタッチされていません。");
-            }
 
-            _generatedUIObjects.Add(coinObj);
-            spawnCount++;
+                // データの適用
+                PriceCoinUI coinUI = coinObj.GetComponent<PriceCoinUI>();
+                if (coinUI != null)
+                {
+                    if (coinData.coinSprite != null)
+                    {
+                        coinUI.SetImage(coinData.coinSprite);
+                    }
+                    coinUI.SetText(coinData.coinText);
+                }
+                else
+                {
+                    Debug.LogWarning("[UFOCatcherUIManager] price_coin プレハブに PriceCoinUI コンポーネントがアタッチされていません。");
+                }
+
+                _generatedUIObjects.Add(coinObj);
+                spawnCount++;
+            }
         }
 
         // 2. ListItem の生成と配置
