@@ -121,6 +121,9 @@ public class UFOItemGoal : MonoBehaviour
     [Tooltip("ルーレット発生時に降らせる範囲のオフセット（エリア0の中心からの位置のズレ）")]
     public Vector2 rouletteRainAreaOffset = Vector2.zero;
 
+    [Tooltip("スピンさせるルーレットのコントローラー")]
+    [SerializeField] private RouletteController rouletteController;
+
     private void Start()
     {
         // AudioSourceの自動取得
@@ -296,6 +299,16 @@ public class UFOItemGoal : MonoBehaviour
 
                     // ランプを金（ゴールド）に点滅させる
                     TriggerLampFlash(rouletteFlashColor, true);
+
+                    // ルーレットを回転させる
+                    if (rouletteController != null)
+                    {
+                        rouletteController.Spin();
+                    }
+                    else
+                    {
+                        Debug.LogWarning("[UFOItemGoal] rouletteController がアタッチされていません。");
+                    }
 
                     // ルーレット発生時にコイン雨を降らせる
                     if (ItemSpawner.Instance != null)
