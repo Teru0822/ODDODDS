@@ -172,6 +172,33 @@ public class UFOCatcherUIManager : MonoBehaviour
             scale = 1.0f;
         }
 
+        // オフセット計算用のスケール基準 (X/Yのスライド量の減少は以前の4個以下で1.8fからの下がり方を維持)
+        float offsetScale = 1.0f;
+        if (totalCount <= 4)
+        {
+            offsetScale = 1.8f;
+        }
+        else if (totalCount == 5)
+        {
+            offsetScale = 1.6f;
+        }
+        else if (totalCount == 6)
+        {
+            offsetScale = 1.4f;
+        }
+        else if (totalCount == 7)
+        {
+            offsetScale = 1.2f;
+        }
+        else if (totalCount == 8)
+        {
+            offsetScale = 1.1f;
+        }
+        else
+        {
+            offsetScale = 1.0f;
+        }
+
         // 1. price_coin の生成と配置
         if (_priceCoinPrefab != null && _priceCoinDatas != null)
         {
@@ -189,10 +216,10 @@ public class UFOCatcherUIManager : MonoBehaviour
                     // 1つ生成するごとにPosYを-25ずつずらす (スケールに応じて間隔も拡大)
                     Vector3 localPos = coinRect.localPosition;
                     localPos.y -= (25f * scale) * spawnCount;
-                    // スケールが大きくなった分だけ右（X正方向）にずらす
-                    localPos.x += _xOffsetPerScale * (scale - 1.0f);
-                    // スケールが大きくなった分だけ下（Y負方向）にずらす
-                    localPos.y -= _yOffsetPerScale * (scale - 1.0f);
+                    // オフセット計算用スケールが大きくなった分だけ右（X正方向）にずらす
+                    localPos.x += _xOffsetPerScale * (offsetScale - 1.0f);
+                    // オフセット計算用スケールが大きくなった分だけ下（Y負方向）にずらす
+                    localPos.y -= _yOffsetPerScale * (offsetScale - 1.0f);
                     coinRect.localPosition = localPos;
                 }
 
@@ -233,10 +260,10 @@ public class UFOCatcherUIManager : MonoBehaviour
                     // 1つ生成するごとにPosYを-25ずつずらす (スケールに応じて間隔も拡大)
                     Vector3 localPos = itemRect.localPosition;
                     localPos.y -= (25f * scale) * spawnCount;
-                    // スケールが大きくなった分だけ右（X正方向）にずらす
-                    localPos.x += _xOffsetPerScale * (scale - 1.0f);
-                    // スケールが大きくなった分だけ下（Y負方向）にずらす
-                    localPos.y -= _yOffsetPerScale * (scale - 1.0f);
+                    // オフセット計算用スケールが大きくなった分だけ右（X正方向）にずらす
+                    localPos.x += _xOffsetPerScale * (offsetScale - 1.0f);
+                    // オフセット計算用スケールが大きくなった分だけ下（Y負方向）にずらす
+                    localPos.y -= _yOffsetPerScale * (offsetScale - 1.0f);
                     itemRect.localPosition = localPos;
                 }
 
