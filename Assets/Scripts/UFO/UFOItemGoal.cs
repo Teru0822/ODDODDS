@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro; // 画面の文字（UI）を操作するために追加
+using UnityEngine.Serialization;
 
 /// <summary>
 /// UFOキャッチャーの落とし口（透明なTriggerBox）にアタッチするクラス
@@ -66,16 +67,18 @@ public class UFOItemGoal : MonoBehaviour
     [ColorUsage(true, true)]
     [SerializeField] private Color lampFlashColor = Color.green * 3.0f;
 
-    [Tooltip("ジャックポット獲得時にランプが光る色（HDRカラー）")]
+    [Tooltip("ルーレット獲得時にランプが光る色（HDRカラー）")]
     [ColorUsage(true, true)]
-    [SerializeField] private Color jackpotFlashColor = new Color(1.0f, 0.85f, 0.2f, 1.0f) * 3.0f;
+    [FormerlySerializedAs("jackpotFlashColor")]
+    [SerializeField] private Color rouletteFlashColor = new Color(1.0f, 0.85f, 0.2f, 1.0f) * 3.0f;
 
     [Tooltip("ブラックダイヤモンド獲得時にランプが光る色（HDRカラー）")]
     [ColorUsage(true, true)]
     [SerializeField] private Color blackDiamondFlashColor = new Color(0.8f, 0.0f, 1.0f, 1.0f) * 3.0f;
 
-    [Tooltip("ジャックポット獲得時のランプ点滅間隔（秒）")]
-    [SerializeField] private float jackpotBlinkInterval = 0.15f;
+    [Tooltip("ルーレット獲得時のランプ点滅間隔（秒）")]
+    [FormerlySerializedAs("jackpotBlinkInterval")]
+    [SerializeField] private float rouletteBlinkInterval = 0.15f;
 
     [Header("フィーバータイム設定")]
     [Tooltip("フィーバータイム有効時間（秒）")]
@@ -109,17 +112,22 @@ public class UFOItemGoal : MonoBehaviour
     [Tooltip("フィーバータイム中に降らせる範囲 of オフセット")]
     [SerializeField] private Vector2 feverRainAreaOffset = Vector2.zero;
 
-    [Header("ジャックポット設定")]
-    [Tooltip("ジャックポット発生時に降らせるオブジェクトのプレハブリスト（空の場合はゴールドコインになります）")]
-    public System.Collections.Generic.List<GameObject> jackpotRainPrefabs = new System.Collections.Generic.List<GameObject>();
-    [Tooltip("ジャックポット発生時に降らせるコインの枚数")]
-    public int jackpotRainCoinCount = 100;
-    [Tooltip("ジャックポット発生時に降らせる時間（秒）")]
-    public float jackpotRainDuration = 5.0f;
-    [Tooltip("ジャックポット発生時に降らせる範囲のスケール（1でエリア0の全域、小さいほど中心部に狭まります）")]
-    public Vector2 jackpotRainAreaScale = new Vector2(0.5f, 0.5f);
-    [Tooltip("ジャックポット発生時に降らせる範囲のオフセット（エリア0の中心からの位置のズレ）")]
-    public Vector2 jackpotRainAreaOffset = Vector2.zero;
+    [Header("ルーレット（旧ジャックポット）設定")]
+    [Tooltip("ルーレット発生時に降らせるオブジェクトのプレハブリスト（空の場合はゴールドコインになります）")]
+    [FormerlySerializedAs("jackpotRainPrefabs")]
+    public System.Collections.Generic.List<GameObject> rouletteRainPrefabs = new System.Collections.Generic.List<GameObject>();
+    [Tooltip("ルーレット発生時に降らせるコインの枚数")]
+    [FormerlySerializedAs("jackpotRainCoinCount")]
+    public int rouletteRainCoinCount = 100;
+    [Tooltip("ルーレット発生時に降らせる時間（秒）")]
+    [FormerlySerializedAs("jackpotRainDuration")]
+    public float rouletteRainDuration = 5.0f;
+    [Tooltip("ルーレット発生時に降らせる範囲のスケール（1でエリア0の全域、小さいほど中心部に狭まります）")]
+    [FormerlySerializedAs("jackpotRainAreaScale")]
+    public Vector2 rouletteRainAreaScale = new Vector2(0.5f, 0.5f);
+    [Tooltip("ルーレット発生時に降らせる範囲のオフセット（エリア0の中心からの位置のズレ）")]
+    [FormerlySerializedAs("jackpotRainAreaOffset")]
+    public Vector2 rouletteRainAreaOffset = Vector2.zero;
 
     private void Start()
     {
@@ -205,11 +213,11 @@ public class UFOItemGoal : MonoBehaviour
             // 獲得金額の計算（基本額 × 強化倍率）
             float finalValue = item.baseValue * scoreMultiplier;
             
-            // 銅・銀・金・ブラックダイヤモンド・ジャックポット以外のアイテムが投入された場合に、変換枚数をセッション用カウンターに加算する
+            // 銅・銀・金・ブラックダイヤモンド・ルーレットアイテム以外のアイテムが投入された場合に、変換枚数をセッション用カウンターに加算する
             if (item.itemType != UFOItemType.CopperCoin &&
                 item.itemType != UFOItemType.SilverCoin &&
                 item.itemType != UFOItemType.GoldCoin &&
-                item.itemType != UFOItemType.Jackpot &&
+                item.itemType != UFOItemType.RouletteItem &&
                 item.itemType != UFOItemType.BlackDiamond)
             {
                 int goldConvert = 0;
@@ -279,7 +287,7 @@ public class UFOItemGoal : MonoBehaviour
                     // コイン獲得音の再生
                     PlaySound(coinGetSound);
                     break;
-                case UFOItemType.Jackpot:
+                case UFOItemType.RouletteItem:
                     // メインのお金（MoneyManager）ではなく、未洗浄メダルとして別に貯める
                     if (UnwashedMoneyManager.Instance != null)
                     {
@@ -289,28 +297,28 @@ public class UFOItemGoal : MonoBehaviour
                     {
                         unwashedMoney += finalValue;
                     }
-                    Debug.Log($"[獲得] Jackpot！ (未洗浄メダル総額: {unwashedMoney}円)");
+                    Debug.Log($"[獲得] RouletteItem！ (未洗浄メダル総額: {unwashedMoney}円)");
                     
                     // コイン獲得音の再生
                     PlaySound(coinGetSound);
 
                     // ランプを金（ゴールド）に点滅させる
-                    TriggerLampFlash(jackpotFlashColor, true);
+                    TriggerLampFlash(rouletteFlashColor, true);
 
-                    // ジャックポット発生時にコイン雨を降らせる
+                    // ルーレット発生時にコイン雨を降らせる
                     if (ItemSpawner.Instance != null)
                     {
                         System.Collections.Generic.List<GameObject> prefabsToSpawn = new System.Collections.Generic.List<GameObject>();
-                        if (jackpotRainPrefabs != null && jackpotRainPrefabs.Count > 0)
+                        if (rouletteRainPrefabs != null && rouletteRainPrefabs.Count > 0)
                         {
-                            prefabsToSpawn.AddRange(jackpotRainPrefabs);
+                            prefabsToSpawn.AddRange(rouletteRainPrefabs);
                         }
                         else
                         {
                             // フォールバック
                             prefabsToSpawn.Add(ItemSpawner.Instance.goldCoinPrefab);
                         }
-                        ItemSpawner.Instance.StartJackpotRain(prefabsToSpawn, jackpotRainCoinCount, jackpotRainDuration, jackpotRainAreaScale, jackpotRainAreaOffset);
+                        ItemSpawner.Instance.StartRouletteRain(prefabsToSpawn, rouletteRainCoinCount, rouletteRainDuration, rouletteRainAreaScale, rouletteRainAreaOffset);
                     }
                     break;
                 case UFOItemType.Watch:
@@ -511,8 +519,8 @@ public class UFOItemGoal : MonoBehaviour
                 }
 
                 isOn = !isOn;
-                yield return new WaitForSeconds(jackpotBlinkInterval);
-                elapsed += jackpotBlinkInterval;
+                yield return new WaitForSeconds(rouletteBlinkInterval);
+                elapsed += rouletteBlinkInterval;
             }
         }
         else

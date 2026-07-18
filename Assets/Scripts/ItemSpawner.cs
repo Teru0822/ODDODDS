@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class ItemSpawner : MonoBehaviour
 {
@@ -32,8 +33,10 @@ public class ItemSpawner : MonoBehaviour
     public GameObject hourglassPrefab;
     public float hourglassRate = 5f;
 
-    public GameObject jackpotPrefab;
-    public float jackpotRate = 0f;
+    [FormerlySerializedAs("jackpotPrefab")]
+    public GameObject rouletteItemPrefab;
+    [FormerlySerializedAs("jackpotRate")]
+    public float rouletteItemRate = 0f;
 
     public GameObject blackDiamondPrefab;
     public float blackDiamondRate = 0f;
@@ -281,7 +284,7 @@ public class ItemSpawner : MonoBehaviour
         else
         {
             // フォールバック用のデフォルトレート
-            var fallback = new SpawnRatePattern("Fallback", copperRate, silverRate, goldRate, hourglassRate, jackpotRate, blackDiamondRate);
+            var fallback = new SpawnRatePattern("Fallback", copperRate, silverRate, goldRate, hourglassRate, rouletteItemRate, blackDiamondRate);
             _activeRates = new SpawnRatePattern[cellCount];
             for (int i = 0; i < cellCount; i++)
             {
@@ -387,7 +390,7 @@ public class ItemSpawner : MonoBehaviour
         }
 
         // 2. 固定枠の確率を取得
-        float jpRate = jackpotRate;
+        float jpRate = rouletteItemRate;
         float hgRate = hourglassRate;
         float bdRate = blackDiamondRate;
 
@@ -449,7 +452,7 @@ public class ItemSpawner : MonoBehaviour
 
             if (rand < jpRate)
             {
-                prefabToSpawn = jackpotPrefab;
+                prefabToSpawn = rouletteItemPrefab;
             }
             else if (rand < jpRate + hgRate)
             {
@@ -628,17 +631,17 @@ public class ItemSpawner : MonoBehaviour
     }
 
     /// <summary>
-    /// ジャックポット発生時に指定のプレハブリストからランダムに指定数だけエリア0（左上）に降らせる
+    /// ルーレット発生時（旧ジャックポット）に指定のプレハブリストからランダムに指定数だけエリア0（左上）に降らせる
     /// </summary>
-    public void StartJackpotRain(System.Collections.Generic.List<GameObject> prefabs, int count, float duration, Vector2 areaScale, Vector2 areaOffset)
+    public void StartRouletteRain(System.Collections.Generic.List<GameObject> prefabs, int count, float duration, Vector2 areaScale, Vector2 areaOffset)
     {
         if (prefabs == null || prefabs.Count == 0 || count <= 0) return;
-        StartCoroutine(JackpotRainRoutine(prefabs, count, duration, areaScale, areaOffset));
+        StartCoroutine(RouletteRainRoutine(prefabs, count, duration, areaScale, areaOffset));
     }
 
-    private IEnumerator JackpotRainRoutine(System.Collections.Generic.List<GameObject> prefabs, int count, float duration, Vector2 areaScale, Vector2 areaOffset)
+    private IEnumerator RouletteRainRoutine(System.Collections.Generic.List<GameObject> prefabs, int count, float duration, Vector2 areaScale, Vector2 areaOffset)
     {
-        Debug.Log($"[ItemSpawner] ジャックポット発生: {count}枚のオブジェクトをエリア0に降らせます（期間: {duration}秒、範囲スケール: {areaScale}、オフセット: {areaOffset}）");
+        Debug.Log($"[ItemSpawner] ルーレット（旧ジャックポット）発生: {count}枚のオブジェクトをエリア0に降らせます（期間: {duration}秒、範囲スケール: {areaScale}、オフセット: {areaOffset}）");
         
         bool wasSpawning = IsSpawning;
         IsSpawning = true;
@@ -659,7 +662,7 @@ public class ItemSpawner : MonoBehaviour
             {
                 // リストからランダムにプレハブを選択
                 GameObject coinPrefab = prefabs[Random.Range(0, prefabs.Count)];
-                SpawnJackpotSingleItem(coinPrefab, activeGrid, areaScale, areaOffset);
+                SpawnRouletteSingleItem(coinPrefab, activeGrid, areaScale, areaOffset);
                 spawnedCount++;
             }
 
@@ -676,7 +679,7 @@ public class ItemSpawner : MonoBehaviour
         }
     }
 
-    private void SpawnJackpotSingleItem(GameObject coinPrefab, GridType activeGrid, Vector2 areaScale, Vector2 areaOffset)
+    private void SpawnRouletteSingleItem(GameObject coinPrefab, GridType activeGrid, Vector2 areaScale, Vector2 areaOffset)
     {
         if (coinPrefab == null) return;
 
@@ -873,17 +876,18 @@ public class SpawnRatePattern
     public float silverRate = 25f;
     public float goldRate = 10f;
     public float hourglassRate = 5f;
-    public float jackpotRate = 0f;
+    [FormerlySerializedAs("jackpotRate")]
+    public float rouletteItemRate = 0f;
     public float blackDiamondRate = 0f;
 
-    public SpawnRatePattern(string name, float copper, float silver, float gold, float hourglass, float jackpot, float blackDiamond = 0f)
+    public SpawnRatePattern(string name, float copper, float silver, float gold, float hourglass, float roulette, float blackDiamond = 0f)
     {
         this.name = name;
         this.copperRate = copper;
         this.silverRate = silver;
         this.goldRate = gold;
         this.hourglassRate = hourglass;
-        this.jackpotRate = jackpot;
+        this.rouletteItemRate = roulette;
         this.blackDiamondRate = blackDiamond;
     }
 }
