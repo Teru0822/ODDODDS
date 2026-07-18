@@ -74,11 +74,11 @@ public class UnwashedMoneyManager : MonoBehaviour
         Wallet.AddUnwashed(amount);
     }
 
-    /// <summary>金・銀・銅貨をそれぞれ加算する</summary>
-    public void AddCoins(int bronze, int silver, int gold)
+    /// <summary>金・銀・銅貨およびブラックダイヤモンドをそれぞれ加算する</summary>
+    public void AddCoins(int bronze, int silver, int gold, int blackDiamonds = 0)
     {
         if (Wallet == null) return;
-        Wallet.AddCoins(bronze, silver, gold);
+        Wallet.AddCoins(bronze, silver, gold, blackDiamonds);
     }
 
     /// <summary>支払い可能ならその額を引いて true を返す。残高不足なら false。</summary>
