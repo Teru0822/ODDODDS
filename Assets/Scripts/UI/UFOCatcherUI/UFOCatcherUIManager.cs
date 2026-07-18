@@ -45,6 +45,9 @@ public class UFOCatcherUIManager : MonoBehaviour
     [Tooltip("Canvasを生成する親オブジェクト (price_tableなど)。未設定の場合は子オブジェクトから'price_table'を自動検索し、無ければ自身(new_ufocatcher)の直下に生成されます")]
     [SerializeField] private Transform _priceTable;
 
+    [Tooltip("スケールが大きくなった際に、右方向に寄せるためのオフセット倍率。1.0倍を超えた分に対してこの値が掛けられて右にずれます")]
+    [SerializeField] private float _xOffsetPerScale = 100f;
+
     [Header("UI Spawn Datas")]
     [Tooltip("price_coin UIの生成設定リスト。ここの数だけprice_coinが生成されます")]
     [SerializeField] private List<PriceCoinSpawnData> _priceCoinDatas = new List<PriceCoinSpawnData>();
@@ -187,6 +190,8 @@ public class UFOCatcherUIManager : MonoBehaviour
                     // 1つ生成するごとにPosYを-25ずつずらす (スケールに応じて間隔も拡大)
                     Vector3 localPos = coinRect.localPosition;
                     localPos.y -= (25f * scale) * spawnCount;
+                    // スケールが大きくなった分だけ右（X正方向）にずらす
+                    localPos.x += _xOffsetPerScale * (scale - 1.0f);
                     coinRect.localPosition = localPos;
                 }
 
@@ -227,6 +232,8 @@ public class UFOCatcherUIManager : MonoBehaviour
                     // 1つ生成するごとにPosYを-25ずつずらす (スケールに応じて間隔も拡大)
                     Vector3 localPos = itemRect.localPosition;
                     localPos.y -= (25f * scale) * spawnCount;
+                    // スケールが大きくなった分だけ右（X正方向）にずらす
+                    localPos.x += _xOffsetPerScale * (scale - 1.0f);
                     itemRect.localPosition = localPos;
                 }
 
