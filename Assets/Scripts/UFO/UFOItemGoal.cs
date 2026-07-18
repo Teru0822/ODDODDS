@@ -18,6 +18,11 @@ public class UFOItemGoal : MonoBehaviour
     [Tooltip("獲得した未洗浄メダルの総額")]
     public float unwashedMoney = 0f;
 
+    [Header("セッション獲得枚数 (UFO終了時に加算確定されます)")]
+    [SerializeField] private int _sessionBronzeCoins = 0;
+    [SerializeField] private int _sessionSilverCoins = 0;
+    [SerializeField] private int _sessionGoldCoins = 0;
+
     /// <summary>
     /// ランプの獲得演出が実行中かどうかを示します。
     /// UFOCameraController や PatoLampController から参照されます。
@@ -131,6 +136,9 @@ public class UFOItemGoal : MonoBehaviour
             unwashedMoney = UnwashedMoneyManager.Instance.CurrentAmount;
             UnwashedMoneyManager.Instance.OnAmountChanged += HandleUnwashedMoneyChanged;
         }
+
+        // UFOカメラのプレイ開始・終了イベントを購読
+        UFOCameraController.OnUfoModeChanged += HandleUfoModeChanged;
     }
 
     private Coroutine _lampCoroutine;
@@ -149,7 +157,26 @@ public class UFOItemGoal : MonoBehaviour
         {
             UnwashedMoneyManager.Instance.OnAmountChanged -= HandleUnwashedMoneyChanged;
         }
+        UFOCameraController.OnUfoModeChanged -= HandleUfoModeChanged;
         ResetLampsToOriginal();
+    }
+
+    private void HandleUfoModeChanged(bool isPlayingUfo)
+    {
+        if (!isPlayingUfo)
+        {
+            // セッション終了時、とった分だけ所持枚数（PlayerWallet）を増やす
+            if (UnwashedMoneyManager.Instance != null)
+            {
+                UnwashedMoneyManager.Instance.AddCoins(_sessionBronzeCoins, _sessionSilverCoins, _sessionGoldCoins);
+                Debug.Log($"[UFOキャッチャー終了] 獲得コインを所持金に加算しました: 銅{_sessionBronzeCoins}枚, 銀{_sessionSilverCoins}枚, 金{_sessionGoldCoins}枚");
+            }
+            
+            // セッション用カウンターをリセット
+            _sessionBronzeCoins = 0;
+            _sessionSilverCoins = 0;
+            _sessionGoldCoins = 0;
+        }
     }
 
     private void HandleUnwashedMoneyChanged(float newAmount)
@@ -176,25 +203,76 @@ public class UFOItemGoal : MonoBehaviour
             // 獲得金額の計算（基本額 × 強化倍率）
             float finalValue = item.baseValue * scoreMultiplier;
             
+            // 銅・銀・金以外のアイテムが投入された場合に、変換枚数をセッション用カウンターに加算する
+            if (item.itemType != UFOItemType.CopperCoin &&
+                item.itemType != UFOItemType.SilverCoin &&
+                item.itemType != UFOItemType.GoldCoin &&
+                item.itemType != UFOItemType.Jackpot)
+            {
+                int goldConvert = 0;
+                int silverConvert = 0;
+                int bronzeConvert = 0;
+                bool foundConversion = false;
+
+                if (ItemSpawner.Instance != null)
+                {
+                    // オブジェクトのプレハブ名をクローン表記などを除いて一致させる
+                    string itemName = other.gameObject.name.Replace("(Clone)", "").Trim();
+
+                    // initialActiveItems から検索
+                    var settings = ItemSpawner.Instance.initialActiveItems.Find(x => x.prefab != null && x.prefab.name == itemName);
+                    if (settings == null)
+                    {
+                        // itemCandidates から検索
+                        settings = ItemSpawner.Instance.itemCandidates.Find(x => x.prefab != null && x.prefab.name == itemName);
+                    }
+
+                    if (settings != null)
+                    {
+                        goldConvert = settings.goldConvertCount;
+                        silverConvert = settings.silverConvertCount;
+                        bronzeConvert = settings.bronzeConvertCount;
+                        foundConversion = true;
+                    }
+                }
+
+                if (foundConversion)
+                {
+                    _sessionGoldCoins += goldConvert;
+                    _sessionSilverCoins += silverConvert;
+                    _sessionBronzeCoins += bronzeConvert;
+                    Debug.Log($"[獲得変換] {item.itemType} (名前: {other.gameObject.name}) を獲得！ (金貨+{goldConvert}, 銀貨+{silverConvert}, 銅貨+{bronzeConvert})");
+                }
+                else
+                {
+                    // フォールバック: もしインスペクターで何も設定されていなかった場合のデフォルト
+                    if (item.itemType == UFOItemType.Watch)
+                    {
+                        // デフォルト設定
+                        _sessionBronzeCoins += 10;
+                        Debug.Log($"[獲得変換] {item.itemType} (名前: {other.gameObject.name}) を獲得！ (デフォルトフォールバック: 銅貨+10)");
+                    }
+                }
+            }
+
             // 種類ごとにカウントや特別な処理をする
             switch (item.itemType)
             {
                 case UFOItemType.CopperCoin:
+                    _sessionBronzeCoins++;
+                    Debug.Log($"[獲得] 銅貨！ (今回セッション累計: 銅{_sessionBronzeCoins})");
+                    // コイン獲得音の再生
+                    PlaySound(coinGetSound);
+                    break;
                 case UFOItemType.SilverCoin:
+                    _sessionSilverCoins++;
+                    Debug.Log($"[獲得] 銀貨！ (今回セッション累計: 銀{_sessionSilverCoins})");
+                    // コイン獲得音の再生
+                    PlaySound(coinGetSound);
+                    break;
                 case UFOItemType.GoldCoin:
-                    // メインのお金（MoneyManager）ではなく、未洗浄メダルとして別に貯める
-                    // 一元管理シングルトンがあればそちらに加算（ピンボールショップ等から参照される）
-                    if (UnwashedMoneyManager.Instance != null)
-                    {
-                        UnwashedMoneyManager.Instance.Add(finalValue);
-                    }
-                    else
-                    {
-                        // 旧 API 互換: ローカルの累計も維持
-                        unwashedMoney += finalValue;
-                    }
-                    Debug.Log($"[獲得] {item.itemType}！ (未洗浄メダル総額: {unwashedMoney}円)");
-                    
+                    _sessionGoldCoins++;
+                    Debug.Log($"[獲得] 金貨！ (今回セッション累計: 金{_sessionGoldCoins})");
                     // コイン獲得音の再生
                     PlaySound(coinGetSound);
                     break;
@@ -241,8 +319,6 @@ public class UFOItemGoal : MonoBehaviour
                     {
                         UFOCameraController.Instance.AddPlayTime(watchTimeExtension);
                     }
-
-
 
                     // 時計獲得音の再生（未設定ならコイン音で代用）
                     PlaySound(watchGetSound != null ? watchGetSound : coinGetSound);

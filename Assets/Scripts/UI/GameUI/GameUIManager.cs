@@ -27,6 +27,11 @@ public class GameUIManager : MonoBehaviour
     [Header("roguelikePanel内のオブジェクト")]
     [SerializeField] private GameObject _roguelikePanel;
 
+    [Header("UnwashCoinの個別UI")]
+    [SerializeField] private TMP_Text _bronzeCoinText;
+    [SerializeField] private TMP_Text _silverCoinText;
+    [SerializeField] private TMP_Text _goldCoinText;
+
 
     [Header("メニュー用のSettings")]
     [SerializeField] private InputActionReference _openMenuReference;//Tabキーを押したらメニュー表示
@@ -93,6 +98,33 @@ public class GameUIManager : MonoBehaviour
                         {
                             _virtuePointText.text = _previousVirtuePointValue.ToString("N0");
                         });
+            }).AddTo(this);
+
+        wallet.OnBronzeCoinsChange
+            .Subscribe(x =>
+            {
+                if (_bronzeCoinText != null)
+                {
+                    _bronzeCoinText.text = "x" + x.ToString("N0");
+                }
+            }).AddTo(this);
+
+        wallet.OnSilverCoinsChange
+            .Subscribe(x =>
+            {
+                if (_silverCoinText != null)
+                {
+                    _silverCoinText.text = "x" + x.ToString("N0");
+                }
+            }).AddTo(this);
+
+        wallet.OnGoldCoinsChange
+            .Subscribe(x =>
+            {
+                if (_goldCoinText != null)
+                {
+                    _goldCoinText.text = "x" + x.ToString("N0");
+                }
             }).AddTo(this);
 
         MoneyManager.Instance.OnCurrentTurnChange.Subscribe(turnNum => _turnText.text = turnNum.ToString("000"));

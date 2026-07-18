@@ -24,11 +24,17 @@ public class PlayerWallet : MonoBehaviour
     private ReactiveProperty<float> _washedMoneyAmount = new ReactiveProperty<float>();
     private ReactiveProperty<float> _unwashedMoneyAmount = new ReactiveProperty<float>();
     private ReactiveProperty<int> _virtuePointAmount = new ReactiveProperty<int>();
+    private ReactiveProperty<int> _bronzeCoins = new ReactiveProperty<int>(0);
+    private ReactiveProperty<int> _silverCoins = new ReactiveProperty<int>(0);
+    private ReactiveProperty<int> _goldCoins = new ReactiveProperty<int>(0);
 
     //外部でSubscribeするための変数
     public IReadOnlyReactiveProperty<float> OnWashedMoneyAmountChange { get { return _washedMoneyAmount; } }
     public IReadOnlyReactiveProperty<float> OnUnwashedMoneyAmountChange { get { return _unwashedMoneyAmount; } }
     public IReadOnlyReactiveProperty<int> OnvirtuePointAmountChange { get { return _virtuePointAmount; } }
+    public IReadOnlyReactiveProperty<int> OnBronzeCoinsChange => _bronzeCoins;
+    public IReadOnlyReactiveProperty<int> OnSilverCoinsChange => _silverCoins;
+    public IReadOnlyReactiveProperty<int> OnGoldCoinsChange => _goldCoins;
 
 
     //外部で数値参照できるための関数
@@ -42,6 +48,42 @@ public class PlayerWallet : MonoBehaviour
             float clamped = Mathf.Max(0f, value);
             if (Mathf.Approximately(_unwashedMoneyAmount.Value, clamped)) return;
             _unwashedMoneyAmount.Value = clamped;
+        }
+    }
+
+    /// <summary>未洗浄銅貨の枚数</summary>
+    public int BronzeCoins
+    {
+        get => _bronzeCoins.Value;
+        set
+        {
+            int clamped = Mathf.Max(0, value);
+            if (_bronzeCoins.Value == clamped) return;
+            _bronzeCoins.Value = clamped;
+        }
+    }
+
+    /// <summary>未洗浄銀貨の枚数</summary>
+    public int SilverCoins
+    {
+        get => _silverCoins.Value;
+        set
+        {
+            int clamped = Mathf.Max(0, value);
+            if (_silverCoins.Value == clamped) return;
+            _silverCoins.Value = clamped;
+        }
+    }
+
+    /// <summary>未洗浄金貨の枚数</summary>
+    public int GoldCoins
+    {
+        get => _goldCoins.Value;
+        set
+        {
+            int clamped = Mathf.Max(0, value);
+            if (_goldCoins.Value == clamped) return;
+            _goldCoins.Value = clamped;
         }
     }
 
@@ -77,6 +119,14 @@ public class PlayerWallet : MonoBehaviour
     {
         if (amount <= 0f) return;
         UnwashedAmount = _unwashedMoneyAmount.Value + amount;
+    }
+
+    /// <summary>金・銀・銅貨をそれぞれ加算する</summary>
+    public void AddCoins(int bronze, int silver, int gold)
+    {
+        if (bronze > 0) BronzeCoins += bronze;
+        if (silver > 0) SilverCoins += silver;
+        if (gold > 0) GoldCoins += gold;
     }
 
     public bool TrySpendUnwashed(float cost)
@@ -129,6 +179,9 @@ public class PlayerWallet : MonoBehaviour
         _washedMoneyAmount.Value = _washedAmount;
         _unwashedMoneyAmount.Value = _unwashedAmount;
         _virtuePointAmount.Value = _virtuePoints;
+        _bronzeCoins.Value = 0;
+        _silverCoins.Value = 0;
+        _goldCoins.Value = 0;
     }
     private void OnDestroy()
     {

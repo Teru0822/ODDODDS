@@ -909,21 +909,32 @@ public class ItemSpawnSettings
     public int priority;
     public float rate;
     
+    [Header("獲得時の変換設定")]
+    [Tooltip("落とし口に入ったときに獲得できる金貨の枚数")]
+    public int goldConvertCount = 0;
+    [Tooltip("落とし口に入ったときに獲得できる銀貨の枚数")]
+    public int silverConvertCount = 0;
+    [Tooltip("落とし口に入ったときに獲得できる銅貨の枚数")]
+    public int bronzeConvertCount = 0;
+    
     [System.NonSerialized]
     public float currentRate;
 
-    public ItemSpawnSettings(string name, GameObject prefab, int priority, float rate)
+    public ItemSpawnSettings(string name, GameObject prefab, int priority, float rate, int goldConvert = 0, int silverConvert = 0, int bronzeConvert = 0)
     {
         this.name = name;
         this.prefab = prefab;
         this.priority = priority;
         this.rate = rate;
         this.currentRate = rate;
+        this.goldConvertCount = goldConvert;
+        this.silverConvertCount = silverConvert;
+        this.bronzeConvertCount = bronzeConvert;
     }
 
     public ItemSpawnSettings Clone()
     {
-        var clone = new ItemSpawnSettings(this.name, this.prefab, this.priority, this.rate);
+        var clone = new ItemSpawnSettings(this.name, this.prefab, this.priority, this.rate, this.goldConvertCount, this.silverConvertCount, this.bronzeConvertCount);
         clone.currentRate = this.currentRate;
         return clone;
     }
