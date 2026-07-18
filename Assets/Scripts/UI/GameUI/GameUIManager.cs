@@ -31,6 +31,7 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] private TMP_Text _bronzeCoinText;
     [SerializeField] private TMP_Text _silverCoinText;
     [SerializeField] private TMP_Text _goldCoinText;
+    [SerializeField] private TMP_Text _blackDiamondText;
 
 
     [Header("メニュー用のSettings")]
@@ -124,6 +125,15 @@ public class GameUIManager : MonoBehaviour
                 if (_goldCoinText != null)
                 {
                     _goldCoinText.text = "x" + x.ToString("N0");
+                }
+            }).AddTo(this);
+
+        wallet.OnBlackDiamondsChange
+            .Subscribe(x =>
+            {
+                if (_blackDiamondText != null)
+                {
+                    _blackDiamondText.text = "x" + x.ToString("N0");
                 }
             }).AddTo(this);
 

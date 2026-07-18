@@ -27,6 +27,7 @@ public class PlayerWallet : MonoBehaviour
     private ReactiveProperty<int> _bronzeCoins = new ReactiveProperty<int>(0);
     private ReactiveProperty<int> _silverCoins = new ReactiveProperty<int>(0);
     private ReactiveProperty<int> _goldCoins = new ReactiveProperty<int>(0);
+    private ReactiveProperty<int> _blackDiamonds = new ReactiveProperty<int>(0);
 
     //外部でSubscribeするための変数
     public IReadOnlyReactiveProperty<float> OnWashedMoneyAmountChange { get { return _washedMoneyAmount; } }
@@ -35,6 +36,7 @@ public class PlayerWallet : MonoBehaviour
     public IReadOnlyReactiveProperty<int> OnBronzeCoinsChange => _bronzeCoins;
     public IReadOnlyReactiveProperty<int> OnSilverCoinsChange => _silverCoins;
     public IReadOnlyReactiveProperty<int> OnGoldCoinsChange => _goldCoins;
+    public IReadOnlyReactiveProperty<int> OnBlackDiamondsChange => _blackDiamonds;
 
 
     //外部で数値参照できるための関数
@@ -87,6 +89,18 @@ public class PlayerWallet : MonoBehaviour
         }
     }
 
+    /// <summary>ブラックダイヤモンドの所持個数</summary>
+    public int BlackDiamonds
+    {
+        get => _blackDiamonds.Value;
+        set
+        {
+            int clamped = Mathf.Max(0, value);
+            if (_blackDiamonds.Value == clamped) return;
+            _blackDiamonds.Value = clamped;
+        }
+    }
+
     /// <summary>洗浄金 (通常お金) 残高</summary>
     public float WashedAmount
     {
@@ -121,12 +135,13 @@ public class PlayerWallet : MonoBehaviour
         UnwashedAmount = _unwashedMoneyAmount.Value + amount;
     }
 
-    /// <summary>金・銀・銅貨をそれぞれ加算する</summary>
-    public void AddCoins(int bronze, int silver, int gold)
+    /// <summary>金・銀・銅貨およびブラックダイヤモンドをそれぞれ加算する</summary>
+    public void AddCoins(int bronze, int silver, int gold, int blackDiamonds = 0)
     {
         if (bronze > 0) BronzeCoins += bronze;
         if (silver > 0) SilverCoins += silver;
         if (gold > 0) GoldCoins += gold;
+        if (blackDiamonds > 0) BlackDiamonds += blackDiamonds;
     }
 
     public bool TrySpendUnwashed(float cost)
@@ -182,6 +197,7 @@ public class PlayerWallet : MonoBehaviour
         _bronzeCoins.Value = 0;
         _silverCoins.Value = 0;
         _goldCoins.Value = 0;
+        _blackDiamonds.Value = 0;
     }
     private void OnDestroy()
     {

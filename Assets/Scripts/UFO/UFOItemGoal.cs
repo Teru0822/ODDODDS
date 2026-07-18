@@ -22,6 +22,7 @@ public class UFOItemGoal : MonoBehaviour
     [SerializeField] private int _sessionBronzeCoins = 0;
     [SerializeField] private int _sessionSilverCoins = 0;
     [SerializeField] private int _sessionGoldCoins = 0;
+    [SerializeField] private int _sessionBlackDiamonds = 0;
 
     /// <summary>
     /// ランプの獲得演出が実行中かどうかを示します。
@@ -168,14 +169,15 @@ public class UFOItemGoal : MonoBehaviour
             // セッション終了時、とった分だけ所持枚数（PlayerWallet）を増やす
             if (UnwashedMoneyManager.Instance != null)
             {
-                UnwashedMoneyManager.Instance.AddCoins(_sessionBronzeCoins, _sessionSilverCoins, _sessionGoldCoins);
-                Debug.Log($"[UFOキャッチャー終了] 獲得コインを所持金に加算しました: 銅{_sessionBronzeCoins}枚, 銀{_sessionSilverCoins}枚, 金{_sessionGoldCoins}枚");
+                UnwashedMoneyManager.Instance.AddCoins(_sessionBronzeCoins, _sessionSilverCoins, _sessionGoldCoins, _sessionBlackDiamonds);
+                Debug.Log($"[UFOキャッチャー終了] 獲得コイン・ダイヤを所持金に加算しました: 銅{_sessionBronzeCoins}枚, 銀{_sessionSilverCoins}枚, 金{_sessionGoldCoins}枚, 黒ダイヤ{_sessionBlackDiamonds}個");
             }
             
             // セッション用カウンターをリセット
             _sessionBronzeCoins = 0;
             _sessionSilverCoins = 0;
             _sessionGoldCoins = 0;
+            _sessionBlackDiamonds = 0;
         }
     }
 
@@ -203,11 +205,12 @@ public class UFOItemGoal : MonoBehaviour
             // 獲得金額の計算（基本額 × 強化倍率）
             float finalValue = item.baseValue * scoreMultiplier;
             
-            // 銅・銀・金以外のアイテムが投入された場合に、変換枚数をセッション用カウンターに加算する
+            // 銅・銀・金・ブラックダイヤモンド・ジャックポット以外のアイテムが投入された場合に、変換枚数をセッション用カウンターに加算する
             if (item.itemType != UFOItemType.CopperCoin &&
                 item.itemType != UFOItemType.SilverCoin &&
                 item.itemType != UFOItemType.GoldCoin &&
-                item.itemType != UFOItemType.Jackpot)
+                item.itemType != UFOItemType.Jackpot &&
+                item.itemType != UFOItemType.BlackDiamond)
             {
                 int goldConvert = 0;
                 int silverConvert = 0;
@@ -327,13 +330,8 @@ public class UFOItemGoal : MonoBehaviour
                     TriggerLampFlash(lampFlashColor, false);
                     break;
                 case UFOItemType.BlackDiamond:
-                    if (MoneyManager.Instance != null)
-                    {
-                        // baseValueが負の値（または正の値であっても絶対値）を減算として扱う設計
-                        float valToReduce = Mathf.Abs(finalValue);
-                        MoneyManager.Instance.ReduceMoney(valToReduce);
-                        Debug.Log($"[獲得] BlackDiamond！ 洗浄されたお金を {valToReduce}円減らしました。");
-                    }
+                    _sessionBlackDiamonds++;
+                    Debug.Log($"[獲得] BlackDiamond！ (今回セッション累計: 黒{_sessionBlackDiamonds})");
                     PlaySound(blackDiamondGetSound != null ? blackDiamondGetSound : coinGetSound);
 
                     // ランプを紫に光らせる（常灯）
