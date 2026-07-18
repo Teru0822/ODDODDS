@@ -1,6 +1,5 @@
 using UnityEngine;
 using TMPro; // 画面の文字（UI）を操作するために追加
-using UnityEngine.Serialization;
 
 /// <summary>
 /// UFOキャッチャーの落とし口（透明なTriggerBox）にアタッチするクラス
@@ -69,7 +68,6 @@ public class UFOItemGoal : MonoBehaviour
 
     [Tooltip("ルーレット獲得時にランプが光る色（HDRカラー）")]
     [ColorUsage(true, true)]
-    [FormerlySerializedAs("jackpotFlashColor")]
     [SerializeField] private Color rouletteFlashColor = new Color(1.0f, 0.85f, 0.2f, 1.0f) * 3.0f;
 
     [Tooltip("ブラックダイヤモンド獲得時にランプが光る色（HDRカラー）")]
@@ -77,7 +75,6 @@ public class UFOItemGoal : MonoBehaviour
     [SerializeField] private Color blackDiamondFlashColor = new Color(0.8f, 0.0f, 1.0f, 1.0f) * 3.0f;
 
     [Tooltip("ルーレット獲得時のランプ点滅間隔（秒）")]
-    [FormerlySerializedAs("jackpotBlinkInterval")]
     [SerializeField] private float rouletteBlinkInterval = 0.15f;
 
     [Header("フィーバータイム設定")]
@@ -112,21 +109,16 @@ public class UFOItemGoal : MonoBehaviour
     [Tooltip("フィーバータイム中に降らせる範囲 of オフセット")]
     [SerializeField] private Vector2 feverRainAreaOffset = Vector2.zero;
 
-    [Header("ルーレット（旧ジャックポット）設定")]
+    [Header("ルーレット設定")]
     [Tooltip("ルーレット発生時に降らせるオブジェクトのプレハブリスト（空の場合はゴールドコインになります）")]
-    [FormerlySerializedAs("jackpotRainPrefabs")]
     public System.Collections.Generic.List<GameObject> rouletteRainPrefabs = new System.Collections.Generic.List<GameObject>();
     [Tooltip("ルーレット発生時に降らせるコインの枚数")]
-    [FormerlySerializedAs("jackpotRainCoinCount")]
     public int rouletteRainCoinCount = 100;
     [Tooltip("ルーレット発生時に降らせる時間（秒）")]
-    [FormerlySerializedAs("jackpotRainDuration")]
     public float rouletteRainDuration = 5.0f;
     [Tooltip("ルーレット発生時に降らせる範囲のスケール（1でエリア0の全域、小さいほど中心部に狭まります）")]
-    [FormerlySerializedAs("jackpotRainAreaScale")]
     public Vector2 rouletteRainAreaScale = new Vector2(0.5f, 0.5f);
     [Tooltip("ルーレット発生時に降らせる範囲のオフセット（エリア0の中心からの位置のズレ）")]
-    [FormerlySerializedAs("jackpotRainAreaOffset")]
     public Vector2 rouletteRainAreaOffset = Vector2.zero;
 
     private void Start()

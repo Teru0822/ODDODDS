@@ -1,6 +1,5 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 public class ItemSpawner : MonoBehaviour
 {
@@ -33,9 +32,7 @@ public class ItemSpawner : MonoBehaviour
     public GameObject hourglassPrefab;
     public float hourglassRate = 5f;
 
-    [FormerlySerializedAs("jackpotPrefab")]
     public GameObject rouletteItemPrefab;
-    [FormerlySerializedAs("jackpotRate")]
     public float rouletteItemRate = 0f;
 
     public GameObject blackDiamondPrefab;
@@ -876,7 +873,6 @@ public class SpawnRatePattern
     public float silverRate = 25f;
     public float goldRate = 10f;
     public float hourglassRate = 5f;
-    [FormerlySerializedAs("jackpotRate")]
     public float rouletteItemRate = 0f;
     public float blackDiamondRate = 0f;
 
