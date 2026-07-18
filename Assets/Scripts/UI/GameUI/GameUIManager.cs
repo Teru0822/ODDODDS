@@ -44,6 +44,10 @@ public class GameUIManager : MonoBehaviour
     private float _previousMoneyValue = 0;
     private float _previousUnwashedMoneyValue = 0;
     private int _previousVirtuePointValue = 0;
+    private int _previousBronzeCoinValue = 0;
+    private int _previousSilverCoinValue = 0;
+    private int _previousGoldCoinValue = 0;
+    private int _previousBlackDiamondValue = 0;
 
     /// <summary>
     /// 初期化を行う処理
@@ -54,6 +58,10 @@ public class GameUIManager : MonoBehaviour
         _previousMoneyValue = wallet.WashedAmount;
         _previousUnwashedMoneyValue = wallet.UnwashedAmount;
         _previousVirtuePointValue = wallet.VirtuePoints;
+        _previousBronzeCoinValue = wallet.BronzeCoins;
+        _previousSilverCoinValue = wallet.SilverCoins;
+        _previousGoldCoinValue = wallet.GoldCoins;
+        _previousBlackDiamondValue = wallet.BlackDiamonds;
 
 
         //以前の数値を記録する変数の初期化
@@ -101,39 +109,103 @@ public class GameUIManager : MonoBehaviour
                         });
             }).AddTo(this);
 
+        bool isBronzeInitialized = false;
         wallet.OnBronzeCoinsChange
             .Subscribe(x =>
             {
+                if (!isBronzeInitialized)
+                {
+                    _previousBronzeCoinValue = x;
+                    isBronzeInitialized = true;
+                    if (_bronzeCoinText != null) _bronzeCoinText.text = "x" + x.ToString("N0");
+                    return;
+                }
+
                 if (_bronzeCoinText != null)
                 {
-                    _bronzeCoinText.text = "x" + x.ToString("N0");
+                    DOTween.To(() => _previousBronzeCoinValue,
+                        num => _previousBronzeCoinValue = num,
+                        x,
+                        1.0f
+                    ).OnUpdate(() =>
+                    {
+                        _bronzeCoinText.text = "x" + _previousBronzeCoinValue.ToString("N0");
+                    });
                 }
             }).AddTo(this);
 
+        bool isSilverInitialized = false;
         wallet.OnSilverCoinsChange
             .Subscribe(x =>
             {
+                if (!isSilverInitialized)
+                {
+                    _previousSilverCoinValue = x;
+                    isSilverInitialized = true;
+                    if (_silverCoinText != null) _silverCoinText.text = "x" + x.ToString("N0");
+                    return;
+                }
+
                 if (_silverCoinText != null)
                 {
-                    _silverCoinText.text = "x" + x.ToString("N0");
+                    DOTween.To(() => _previousSilverCoinValue,
+                        num => _previousSilverCoinValue = num,
+                        x,
+                        1.0f
+                    ).OnUpdate(() =>
+                    {
+                        _silverCoinText.text = "x" + _previousSilverCoinValue.ToString("N0");
+                    });
                 }
             }).AddTo(this);
 
+        bool isGoldInitialized = false;
         wallet.OnGoldCoinsChange
             .Subscribe(x =>
             {
+                if (!isGoldInitialized)
+                {
+                    _previousGoldCoinValue = x;
+                    isGoldInitialized = true;
+                    if (_goldCoinText != null) _goldCoinText.text = "x" + x.ToString("N0");
+                    return;
+                }
+
                 if (_goldCoinText != null)
                 {
-                    _goldCoinText.text = "x" + x.ToString("N0");
+                    DOTween.To(() => _previousGoldCoinValue,
+                        num => _previousGoldCoinValue = num,
+                        x,
+                        1.0f
+                    ).OnUpdate(() =>
+                    {
+                        _goldCoinText.text = "x" + _previousGoldCoinValue.ToString("N0");
+                    });
                 }
             }).AddTo(this);
 
+        bool isBlackDiamondInitialized = false;
         wallet.OnBlackDiamondsChange
             .Subscribe(x =>
             {
+                if (!isBlackDiamondInitialized)
+                {
+                    _previousBlackDiamondValue = x;
+                    isBlackDiamondInitialized = true;
+                    if (_blackDiamondText != null) _blackDiamondText.text = "x" + x.ToString("N0");
+                    return;
+                }
+
                 if (_blackDiamondText != null)
                 {
-                    _blackDiamondText.text = "x" + x.ToString("N0");
+                    DOTween.To(() => _previousBlackDiamondValue,
+                        num => _previousBlackDiamondValue = num,
+                        x,
+                        1.0f
+                    ).OnUpdate(() =>
+                    {
+                        _blackDiamondText.text = "x" + _previousBlackDiamondValue.ToString("N0");
+                    });
                 }
             }).AddTo(this);
 
