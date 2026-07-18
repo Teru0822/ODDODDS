@@ -132,7 +132,11 @@ public class UFOItemGoal : MonoBehaviour
             audioSource = GetComponent<AudioSource>();
         }
 
-
+        // ルーレットのイベント購読
+        if (rouletteController != null)
+        {
+            rouletteController.OnSpinComplete.AddListener(HandleRouletteSpinComplete);
+        }
 
         // UnwashedMoneyManagerの初期値との同期、および変更イベントの購読
         if (UnwashedMoneyManager.Instance != null)
@@ -161,6 +165,10 @@ public class UFOItemGoal : MonoBehaviour
         {
             UnwashedMoneyManager.Instance.OnAmountChanged -= HandleUnwashedMoneyChanged;
         }
+        if (rouletteController != null)
+        {
+            rouletteController.OnSpinComplete.RemoveListener(HandleRouletteSpinComplete);
+        }
         UFOCameraController.OnUfoModeChanged -= HandleUfoModeChanged;
         ResetLampsToOriginal();
     }
@@ -181,6 +189,55 @@ public class UFOItemGoal : MonoBehaviour
             _sessionSilverCoins = 0;
             _sessionGoldCoins = 0;
             _sessionBlackDiamonds = 0;
+        }
+    }
+
+    private void HandleRouletteSpinComplete(int winningIndex)
+    {
+        // 1. 時間の一時停止を解除する
+        if (UFOCameraController.Instance != null)
+        {
+            UFOCameraController.Instance.IsRouletteTimePaused = false;
+            Debug.Log("[UFOItemGoal] ルーレット完了につき時間の一時停止を解除しました。");
+        }
+
+        // 2. 当選インデックスに応じたアイテムを降らせる
+        if (ItemSpawner.Instance != null)
+        {
+            GameObject rewardPrefab = null;
+            switch (winningIndex)
+            {
+                case 0:
+                case 1:
+                    rewardPrefab = ItemSpawner.Instance.copperCoinPrefab;
+                    break;
+                case 2:
+                    rewardPrefab = ItemSpawner.Instance.silverCoinPrefab;
+                    break;
+                case 3:
+                    rewardPrefab = ItemSpawner.Instance.goldCoinPrefab;
+                    break;
+                case 4:
+                    rewardPrefab = ItemSpawner.Instance.blackDiamondPrefab;
+                    break;
+            }
+
+            if (rewardPrefab != null)
+            {
+                System.Collections.Generic.List<GameObject> prefabsToSpawn = new System.Collections.Generic.List<GameObject> { rewardPrefab };
+                ItemSpawner.Instance.StartRouletteRain(
+                    prefabsToSpawn, 
+                    rouletteRainCoinCount, 
+                    rouletteRainDuration, 
+                    rouletteRainAreaScale, 
+                    rouletteRainAreaOffset
+                );
+                Debug.Log($"[UFOItemGoal] ルーレット当選結果 [{winningIndex}]: {rewardPrefab.name} の降雨を開始しました！");
+            }
+            else
+            {
+                Debug.LogWarning($"[UFOItemGoal] 当選インデックス {winningIndex} に対応するプレハブがありません。");
+            }
         }
     }
 
@@ -300,30 +357,29 @@ public class UFOItemGoal : MonoBehaviour
                     // ランプを金（ゴールド）に点滅させる
                     TriggerLampFlash(rouletteFlashColor, true);
 
+                    // 時間の一時停止を開始する
+                    if (UFOCameraController.Instance != null)
+                    {
+                        UFOCameraController.Instance.IsRouletteTimePaused = true;
+                        Debug.Log("[UFOItemGoal] ルーレットアイテム投入につき、UFO残り時間の減少を一時停止しました。");
+                    }
+
                     // ルーレットを回転させる
                     if (rouletteController != null)
                     {
+                        // リスナーの多重登録を防ぎつつ、イベントを購読
+                        rouletteController.OnSpinComplete.RemoveListener(HandleRouletteSpinComplete);
+                        rouletteController.OnSpinComplete.AddListener(HandleRouletteSpinComplete);
+                        
                         rouletteController.Spin();
                     }
                     else
                     {
-                        Debug.LogWarning("[UFOItemGoal] rouletteController がアタッチされていません。");
-                    }
-
-                    // ルーレット発生時にコイン雨を降らせる
-                    if (ItemSpawner.Instance != null)
-                    {
-                        System.Collections.Generic.List<GameObject> prefabsToSpawn = new System.Collections.Generic.List<GameObject>();
-                        if (rouletteRainPrefabs != null && rouletteRainPrefabs.Count > 0)
+                        Debug.LogWarning("[UFOItemGoal] rouletteController がアタッチされていません。時間停止を解除します。");
+                        if (UFOCameraController.Instance != null)
                         {
-                            prefabsToSpawn.AddRange(rouletteRainPrefabs);
+                            UFOCameraController.Instance.IsRouletteTimePaused = false;
                         }
-                        else
-                        {
-                            // フォールバック
-                            prefabsToSpawn.Add(ItemSpawner.Instance.goldCoinPrefab);
-                        }
-                        ItemSpawner.Instance.StartRouletteRain(prefabsToSpawn, rouletteRainCoinCount, rouletteRainDuration, rouletteRainAreaScale, rouletteRainAreaOffset);
                     }
                     break;
                 case UFOItemType.Watch:

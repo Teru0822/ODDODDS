@@ -481,8 +481,8 @@ public class UFOCameraController : MonoBehaviour
             // プレイセッションがアクティブ、かつライトが点灯している場合のみカウントダウンを起動
             if (IsPlaySessionActive && IsPlaySpotlightActive)
             {
-                // フィーバータイム中でない時のみタイマーを減少させる
-                if (_feverTimer <= 0f)
+                // フィーバータイム中およびルーレットスピン中でない時のみタイマーを減少させる
+                if (_feverTimer <= 0f && !IsRouletteTimePaused)
                 {
                     _playTimer -= Time.deltaTime;
                 }
@@ -537,6 +537,7 @@ public class UFOCameraController : MonoBehaviour
     public float RemainingTime => _playTimer;
     public int   MaxPlayCount  => maxPlayCount;
     public float PlayDuration  => playDuration;
+    public bool  IsRouletteTimePaused { get; set; } = false;
 
     public void ResetPaymentCount()
     {
