@@ -738,10 +738,10 @@ public class UFOItemGoal : MonoBehaviour
         float cellCenterZ = (bounds.minZ + bounds.maxZ) * 0.5f;
 
         // オフセットとスケールを適用
-        float rainCenterX = cellCenterX + jackpotRainAreaOffset.x;
-        float rainCenterZ = cellCenterZ + jackpotRainAreaOffset.y;
-        float halfW = (bounds.maxX - bounds.minX) * 0.5f * jackpotRainAreaScale.x;
-        float halfH = (bounds.maxZ - bounds.minZ) * 0.5f * jackpotRainAreaScale.y;
+        float rainCenterX = cellCenterX + rouletteRainAreaOffset.x;
+        float rainCenterZ = cellCenterZ + rouletteRainAreaOffset.y;
+        float halfW = (bounds.maxX - bounds.minX) * 0.5f * rouletteRainAreaScale.x;
+        float halfH = (bounds.maxZ - bounds.minZ) * 0.5f * rouletteRainAreaScale.y;
 
         Vector3 rainCenter = spawnerCenter + new Vector3(rainCenterX, 0f, rainCenterZ);
         Vector3 rainSize = new Vector3(halfW * 2f, 0.1f, halfH * 2f);
@@ -754,7 +754,7 @@ public class UFOItemGoal : MonoBehaviour
 
         // ラベルの描画
         UnityEditor.Handles.color = new Color(0f, 0.8f, 1f, 0.95f);
-        UnityEditor.Handles.Label(rainCenter + Vector3.up * 0.1f, "Jackpot Rain Area (Cell 0)");
+        UnityEditor.Handles.Label(rainCenter + Vector3.up * 0.1f, "Roulette Rain Area (Cell 0)");
     }
 #endif
 }
