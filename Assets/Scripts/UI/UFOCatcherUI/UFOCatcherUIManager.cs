@@ -144,7 +144,7 @@ public class UFOCatcherUIManager : MonoBehaviour
         {
             foreach (var coinData in _priceCoinDatas)
             {
-                GameObject coinObj = Instantiate(_priceCoinPrefab, canvasTransform);
+                GameObject coinObj = Instantiate(_priceCoinPrefab, canvasTransform, false);
                 RectTransform coinRect = coinObj.GetComponent<RectTransform>();
                 if (coinRect != null)
                 {
@@ -179,7 +179,7 @@ public class UFOCatcherUIManager : MonoBehaviour
         {
             foreach (var itemData in _listItemDatas)
             {
-                GameObject itemObj = Instantiate(_listItemPrefab, canvasTransform);
+                GameObject itemObj = Instantiate(_listItemPrefab, canvasTransform, false);
                 RectTransform itemRect = itemObj.GetComponent<RectTransform>();
                 if (itemRect != null)
                 {
