@@ -42,6 +42,9 @@ public class UFOCatcherUIManager : MonoBehaviour
     [Tooltip("自動生成するCanvasのターゲットDisplay (Display 4なら4を指定)")]
     [SerializeField] private int _targetDisplay = 4;
 
+    [Tooltip("Canvasを生成する親オブジェクト (price_tableなど)。未設定の場合は子オブジェクトから'price_table'を自動検索し、無ければ自身(new_ufocatcher)の直下に生成されます")]
+    [SerializeField] private Transform _priceTable;
+
     [Header("UI Spawn Datas")]
     [Tooltip("price_coin UIの生成設定リスト。ここの数だけprice_coinが生成されます")]
     [SerializeField] private List<PriceCoinSpawnData> _priceCoinDatas = new List<PriceCoinSpawnData>();
@@ -84,13 +87,39 @@ public class UFOCatcherUIManager : MonoBehaviour
         // 既存の生成物を安全にクリア
         ClearGeneratedUI();
 
-        // 自身（または子オブジェクト）にCanvasが存在するか確認
-        _canvas = GetComponentInChildren<Canvas>(true);
+        // 親とするTransformの決定
+        Transform parentTransform = _priceTable;
+        if (parentTransform == null)
+        {
+            // 子オブジェクトから "price_table" という名前のオブジェクトを検索
+            parentTransform = transform.Find("price_table");
+            if (parentTransform == null)
+            {
+                // 非アクティブなものも含めて再帰的に検索
+                foreach (Transform child in GetComponentsInChildren<Transform>(true))
+                {
+                    if (child.name == "price_table")
+                    {
+                        parentTransform = child;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // それでも見つからなければ自身を親にする
+        if (parentTransform == null)
+        {
+            parentTransform = transform;
+        }
+
+        // 指定した親（またはその子）にCanvasが存在するか確認
+        _canvas = parentTransform.GetComponentInChildren<Canvas>(true);
         if (_canvas == null)
         {
             // なければCanvasを自動生成
             GameObject canvasObj = new GameObject("UFOCatcherCanvas");
-            canvasObj.transform.SetParent(transform, false);
+            canvasObj.transform.SetParent(parentTransform, false);
 
             _canvas = canvasObj.AddComponent<Canvas>();
             _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -101,7 +130,7 @@ public class UFOCatcherUIManager : MonoBehaviour
             canvasObj.AddComponent<CanvasScaler>();
             canvasObj.AddComponent<GraphicRaycaster>();
             
-            Debug.Log($"[UFOCatcherUIManager] Canvas created automatically. Target Display: Display {_targetDisplay}");
+            Debug.Log($"[UFOCatcherUIManager] Canvas created automatically under '{parentTransform.name}'. Target Display: Display {_targetDisplay}");
         }
 
         // Canvasをアクティブにする
