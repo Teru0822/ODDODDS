@@ -814,11 +814,11 @@ MonoBehaviour:
   _xOffsetPerScale: 30
   _yOffsetPerScale: 10
   _priceCoinDatas:
-  - coinSprite: {fileID: 21300000, guid: ff2a0e075ca71364b97541227f28dc07, type: 3}
+  - coinSprite: {fileID: 21300000, guid: 642c5499eb5f63247a3c3daf9eb34f9a, type: 3}
     coinText: x100$
-  - coinSprite: {fileID: 21300000, guid: 9a6e828d2c54baa40999244a56dc9622, type: 3}
+  - coinSprite: {fileID: 21300000, guid: 87ab41d4a8dba0e44a6ea9b705f33cbe, type: 3}
     coinText: x50$
-  - coinSprite: {fileID: 21300000, guid: bbb51ae58c09e9248adc7151e3aef026, type: 3}
+  - coinSprite: {fileID: 21300000, guid: f3915cfeca8884c44a989bfa6d57333c, type: 3}
     coinText: x10$
   - coinSprite: {fileID: 21300000, guid: ef53ff64f08d76844979c4c186c55b0a, type: 3}
     coinText: x-100$
@@ -1271,6 +1271,10 @@ PrefabInstance:
       value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: initialActiveItems.Array.data[4].goldConvertCount
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: 'cellWeights.Array.data[0].itemWeights.Array.data[0]'
       value: 20
       objectReference: {fileID: 0}
@@ -1437,6 +1441,22 @@ PrefabInstance:
     - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: 'cellWeights.Array.data[9].itemWeights.Array.data[5]'
       value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: initialActiveItems.Array.data[0].bronzeConvertCount
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: initialActiveItems.Array.data[1].bronzeConvertCount
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: initialActiveItems.Array.data[2].silverConvertCount
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: initialActiveItems.Array.data[3].silverConvertCount
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 73831984127711850, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: 'cellWeights.Array.data[10].itemWeights.Array.data[4]'
