@@ -213,9 +213,9 @@ public class UFOCatcherUIManager : MonoBehaviour
                 RectTransform coinRect = coinObj.GetComponent<RectTransform>();
                 if (coinRect != null)
                 {
-                    // 1つ生成するごとにPosYを-25ずつずらす (オフセットスケールに応じて間隔も拡大)
+                    // 1つ生成するごとにPosYを-25ずつずらす (スケールに応じて間隔も拡大)
                     Vector3 localPos = coinRect.localPosition;
-                    localPos.y -= (25f * offsetScale) * spawnCount;
+                    localPos.y -= (25f * scale) * spawnCount;
                     // オフセット計算用スケールが大きくなった分だけ右（X正方向）にずらす
                     localPos.x += _xOffsetPerScale * (offsetScale - 1.0f);
                     // オフセット計算用スケールが大きくなった分だけ下（Y負方向）にずらす
@@ -257,9 +257,9 @@ public class UFOCatcherUIManager : MonoBehaviour
                 RectTransform itemRect = itemObj.GetComponent<RectTransform>();
                 if (itemRect != null)
                 {
-                    // 1つ生成するごとにPosYを-25ずつずらす (オフセットスケールに応じて間隔も拡大)
+                    // 1つ生成するごとにPosYを-25ずつずらす (スケールに応じて間隔も拡大)
                     Vector3 localPos = itemRect.localPosition;
-                    localPos.y -= (25f * offsetScale) * spawnCount;
+                    localPos.y -= (25f * scale) * spawnCount;
                     // オフセット計算用スケールが大きくなった分だけ右（X正方向）にずらす
                     localPos.x += _xOffsetPerScale * (offsetScale - 1.0f);
                     // オフセット計算用スケールが大きくなった分だけ下（Y負方向）にずらす
