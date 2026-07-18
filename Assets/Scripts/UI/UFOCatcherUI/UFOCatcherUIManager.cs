@@ -139,18 +139,54 @@ public class UFOCatcherUIManager : MonoBehaviour
 
         int spawnCount = 0;
 
+        int totalCount = 0;
+        if (_priceCoinDatas != null) totalCount += _priceCoinDatas.Count;
+        if (_listItemDatas != null) totalCount += _listItemDatas.Count;
+
+        // 生成総数に応じてスケールを決定する (8個以上で最小の1.0f、3個以下で最大の1.6f)
+        float scale = 1.0f;
+        if (totalCount <= 3)
+        {
+            scale = 1.6f;
+        }
+        else if (totalCount == 4)
+        {
+            scale = 1.45f;
+        }
+        else if (totalCount == 5)
+        {
+            scale = 1.3f;
+        }
+        else if (totalCount == 6)
+        {
+            scale = 1.2f;
+        }
+        else if (totalCount == 7)
+        {
+            scale = 1.1f;
+        }
+        else
+        {
+            scale = 1.0f;
+        }
+
         // 1. price_coin の生成と配置
         if (_priceCoinPrefab != null && _priceCoinDatas != null)
         {
             foreach (var coinData in _priceCoinDatas)
             {
                 GameObject coinObj = Instantiate(_priceCoinPrefab, canvasTransform);
+                
+                // スケールを生成数に合わせて調整
+                Vector3 origScale = coinObj.transform.localScale;
+                coinObj.transform.localScale = origScale * scale;
+
                 RectTransform coinRect = coinObj.GetComponent<RectTransform>();
                 if (coinRect != null)
                 {
-                    // 1つ生成するごとにPosYを-25ずつずらす
+                    // 1つ生成するごとにPosYを-25ずつずらす (スケールに応じて間隔も拡大)
                     Vector3 localPos = coinRect.localPosition;
-                    localPos.y -= 25f * spawnCount;
+                    localPos.y -= (25f * scale) * spawnCount;
                     coinRect.localPosition = localPos;
                 }
 
@@ -180,12 +216,17 @@ public class UFOCatcherUIManager : MonoBehaviour
             foreach (var itemData in _listItemDatas)
             {
                 GameObject itemObj = Instantiate(_listItemPrefab, canvasTransform);
+
+                // スケールを生成数に合わせて調整
+                Vector3 origScale = itemObj.transform.localScale;
+                itemObj.transform.localScale = origScale * scale;
+
                 RectTransform itemRect = itemObj.GetComponent<RectTransform>();
                 if (itemRect != null)
                 {
-                    // 1つ生成するごとにPosYを-25ずつずらす
+                    // 1つ生成するごとにPosYを-25ずつずらす (スケールに応じて間隔も拡大)
                     Vector3 localPos = itemRect.localPosition;
-                    localPos.y -= 25f * spawnCount;
+                    localPos.y -= (25f * scale) * spawnCount;
                     itemRect.localPosition = localPos;
                 }
 
