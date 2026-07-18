@@ -149,25 +149,21 @@ public class UFOCatcherUIManager : MonoBehaviour
         if (_priceCoinDatas != null) totalCount += _priceCoinDatas.Count;
         if (_listItemDatas != null) totalCount += _listItemDatas.Count;
 
-        // 生成総数に応じてスケールを決定する (9個以上で最小 of 1.0f、4個以下で最大の1.8f)
+        // 生成総数に応じてスケールを決定する (10個以上で最小 of 1.0f、6個以下で最大の1.8f)
         float scale = 1.0f;
-        if (totalCount <= 4)
+        if (totalCount <= 6)
         {
             scale = 1.8f;
         }
-        else if (totalCount == 5)
-        {
-            scale = 1.6f;
-        }
-        else if (totalCount == 6)
-        {
-            scale = 1.4f;
-        }
         else if (totalCount == 7)
+        {
+            scale = 1.5f;
+        }
+        else if (totalCount == 8)
         {
             scale = 1.2f;
         }
-        else if (totalCount == 8)
+        else if (totalCount == 9)
         {
             scale = 1.1f;
         }
