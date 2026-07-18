@@ -705,7 +705,7 @@ public class UFOItemGoal : MonoBehaviour
 
             if (prefabsToSpawn.Count > 0)
             {
-                ItemSpawner.Instance.StartJackpotRain(
+                ItemSpawner.Instance.StartRouletteRain(
                     prefabsToSpawn, 
                     feverRainCoinCount, 
                     feverDuration, 
