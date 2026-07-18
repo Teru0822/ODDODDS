@@ -48,6 +48,9 @@ public class UFOCatcherUIManager : MonoBehaviour
     [Tooltip("スケールが大きくなった際に、右方向に寄せるためのオフセット倍率。1.0倍を超えた分に対してこの値が掛けられて右にずれます")]
     [SerializeField] private float _xOffsetPerScale = 30f;
 
+    [Tooltip("スケールが大きくなった際に、下方向に下げるためのオフセット倍率。1.0倍を超えた分に対してこの値が掛けられて下にずれます")]
+    [SerializeField] private float _yOffsetPerScale = 50f;
+
     [Header("UI Spawn Datas")]
     [Tooltip("price_coin UIの生成設定リスト。ここの数だけprice_coinが生成されます")]
     [SerializeField] private List<PriceCoinSpawnData> _priceCoinDatas = new List<PriceCoinSpawnData>();
@@ -192,6 +195,8 @@ public class UFOCatcherUIManager : MonoBehaviour
                     localPos.y -= (25f * scale) * spawnCount;
                     // スケールが大きくなった分だけ右（X正方向）にずらす
                     localPos.x += _xOffsetPerScale * (scale - 1.0f);
+                    // スケールが大きくなった分だけ下（Y負方向）にずらす
+                    localPos.y -= _yOffsetPerScale * (scale - 1.0f);
                     coinRect.localPosition = localPos;
                 }
 
@@ -234,6 +239,8 @@ public class UFOCatcherUIManager : MonoBehaviour
                     localPos.y -= (25f * scale) * spawnCount;
                     // スケールが大きくなった分だけ右（X正方向）にずらす
                     localPos.x += _xOffsetPerScale * (scale - 1.0f);
+                    // スケールが大きくなった分だけ下（Y負方向）にずらす
+                    localPos.y -= _yOffsetPerScale * (scale - 1.0f);
                     itemRect.localPosition = localPos;
                 }
 
