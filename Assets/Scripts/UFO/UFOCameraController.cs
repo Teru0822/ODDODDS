@@ -569,10 +569,6 @@ public class UFOCameraController : MonoBehaviour
             return;
         }
         _playTimer += seconds;
-        if (_playTimer > 10f)
-        {
-            _hasPlayedLowTimeWarning = false; // 時間延長で10秒を超えた場合は警告音再生フラグをリセット
-        }
         Debug.Log($"[UFOCameraController] 残り時間を {seconds}秒延長しました。現在の残り時間: {_playTimer:F1}秒");
     }
 
@@ -1339,7 +1335,9 @@ public class UFOCameraController : MonoBehaviour
         }
         else
         {
-            if (_hasPlayedLowTimeWarning)
+            // フラグがONであるか、または実際に警告音が再生中の場合は確実に停止処理を実行
+            bool isActuallyPlayingWarning = audioSource != null && audioSource.isPlaying && audioSource.clip == lowTimeWarningSound;
+            if (_hasPlayedLowTimeWarning || isActuallyPlayingWarning)
             {
                 _hasPlayedLowTimeWarning = false;
                 if (audioSource != null && audioSource.clip == lowTimeWarningSound)
