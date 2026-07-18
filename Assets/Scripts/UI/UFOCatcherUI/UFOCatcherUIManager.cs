@@ -46,7 +46,7 @@ public class UFOCatcherUIManager : MonoBehaviour
     [SerializeField] private Transform _priceTable;
 
     [Tooltip("スケールが大きくなった際に、右方向に寄せるためのオフセット倍率。1.0倍を超えた分に対してこの値が掛けられて右にずれます")]
-    [SerializeField] private float _xOffsetPerScale = 100f;
+    [SerializeField] private float _xOffsetPerScale = 30f;
 
     [Header("UI Spawn Datas")]
     [Tooltip("price_coin UIの生成設定リスト。ここの数だけprice_coinが生成されます")]
