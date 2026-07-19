@@ -202,10 +202,26 @@ public class UFOItemGoal : MonoBehaviour
         string kw = nameKeyword.ToLower();
 
         // 1. 直属のメンバ変数
-        if (kw.Contains("copper") && ItemSpawner.Instance.copperCoinPrefab != null) return ItemSpawner.Instance.copperCoinPrefab;
-        if (kw.Contains("silver") && ItemSpawner.Instance.silverCoinPrefab != null) return ItemSpawner.Instance.silverCoinPrefab;
-        if (kw.Contains("gold") && ItemSpawner.Instance.goldCoinPrefab != null) return ItemSpawner.Instance.goldCoinPrefab;
-        if (kw.Contains("black") && ItemSpawner.Instance.blackDiamondPrefab != null) return ItemSpawner.Instance.blackDiamondPrefab;
+        if (kw.Contains("copper") && ItemSpawner.Instance.copperCoinPrefab != null)
+        {
+            Debug.Log($"[UFOItemGoal] ItemSpawner メンバ変数から銅貨プレハブを取得しました: {ItemSpawner.Instance.copperCoinPrefab.name}");
+            return ItemSpawner.Instance.copperCoinPrefab;
+        }
+        if (kw.Contains("silver") && ItemSpawner.Instance.silverCoinPrefab != null)
+        {
+            Debug.Log($"[UFOItemGoal] ItemSpawner メンバ変数から銀貨プレハブを取得しました: {ItemSpawner.Instance.silverCoinPrefab.name}");
+            return ItemSpawner.Instance.silverCoinPrefab;
+        }
+        if (kw.Contains("gold") && ItemSpawner.Instance.goldCoinPrefab != null)
+        {
+            Debug.Log($"[UFOItemGoal] ItemSpawner メンバ変数から金貨プレハブを取得しました: {ItemSpawner.Instance.goldCoinPrefab.name}");
+            return ItemSpawner.Instance.goldCoinPrefab;
+        }
+        if (kw.Contains("black") && ItemSpawner.Instance.blackDiamondPrefab != null)
+        {
+            Debug.Log($"[UFOItemGoal] ItemSpawner メンバ変数から黒ダイヤプレハブを取得しました: {ItemSpawner.Instance.blackDiamondPrefab.name}");
+            return ItemSpawner.Instance.blackDiamondPrefab;
+        }
 
         // 2. initialActiveItems (初期アクティブリスト) から検索
         if (ItemSpawner.Instance.initialActiveItems != null)
@@ -214,7 +230,7 @@ public class UFOItemGoal : MonoBehaviour
             {
                 if (item != null && item.prefab != null && item.prefab.name.ToLower().Contains(kw))
                 {
-                    Debug.Log($"[UFOItemGoal] initialActiveItems からプレハブ自動検出: {item.prefab.name}");
+                    Debug.Log($"[UFOItemGoal] initialActiveItems からプレハブを自動検出しました: {item.prefab.name}");
                     return item.prefab;
                 }
             }
@@ -227,7 +243,7 @@ public class UFOItemGoal : MonoBehaviour
             {
                 if (item != null && item.prefab != null && item.prefab.name.ToLower().Contains(kw))
                 {
-                    Debug.Log($"[UFOItemGoal] itemCandidates からプレハブ自動検出: {item.prefab.name}");
+                    Debug.Log($"[UFOItemGoal] itemCandidates からプレハブを自動検出しました: {item.prefab.name}");
                     return item.prefab;
                 }
             }
