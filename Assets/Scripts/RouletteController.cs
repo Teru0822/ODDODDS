@@ -154,6 +154,22 @@ public class RouletteController : MonoBehaviour
             (minSpins, maxSpins) = (maxSpins, minSpins);
         }
 
+        if (slots != null)
+        {
+            for (int i = 0; i < slots.Length; i++)
+            {
+                if (slots[i] != null && slots[i].slotTransform != null)
+                {
+                    float angle = ((slots[i].slotTransform.localEulerAngles.z % 360f) + 360f) % 360f;
+                    Debug.Log($"[RouletteController] Slot {i} ({slots[i].label}): Transform = {slots[i].slotTransform.name}, Local Z Angle = {angle:F1}°");
+                }
+                else
+                {
+                    Debug.LogWarning($"[RouletteController] Slot {i} の Transform が未設定です。");
+                }
+            }
+        }
+
         SyncCurrentAngle();
     }
 
@@ -210,6 +226,10 @@ public class RouletteController : MonoBehaviour
     {
         // 当選スロットが正面（centerAngle）に来るときのリール角度（絶対、0-360）
         float slotBaseAngle = winningIndex * anglePerSlot;
+        if (slots != null && winningIndex < slots.Length && slots[winningIndex].slotTransform != null)
+        {
+            slotBaseAngle = ((slots[winningIndex].slotTransform.localEulerAngles.z % 360f) + 360f) % 360f;
+        }
         float targetEffective = ((centerAngle - slotBaseAngle) % 360f + 360f) % 360f;
 
         // 現在位置から目標まで正方向に回る最小角度
@@ -242,6 +262,7 @@ public class RouletteController : MonoBehaviour
     private IEnumerator SpinCoroutine(float targetAngle, int winningIndex)
     {
         float startAngle = _currentReelAngle;
+        Debug.Log($"[RouletteController] スピン開始: 開始Z角度={startAngle:F1}°, 目標Z角度={targetAngle:F1}°, 当選={winningIndex}");
         float safeDuration = Mathf.Max(0.01f, spinDuration);
         float t = 0f;
 
