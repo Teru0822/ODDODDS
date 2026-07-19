@@ -225,14 +225,21 @@ public class UFOItemGoal : MonoBehaviour
             if (rewardPrefab != null)
             {
                 System.Collections.Generic.List<GameObject> prefabsToSpawn = new System.Collections.Generic.List<GameObject> { rewardPrefab };
+                
+                // インスペクターの設定値が0以下の場合はデフォルト値でフォールバックする
+                int rainCount = rouletteRainCoinCount > 0 ? rouletteRainCoinCount : 100;
+                float rainDuration = rouletteRainDuration > 0f ? rouletteRainDuration : 5.0f;
+                Vector2 rainScale = rouletteRainAreaScale.sqrMagnitude > 0.001f ? rouletteRainAreaScale : new Vector2(0.5f, 0.5f);
+
+                Debug.Log($"[UFOItemGoal] ルーレット当選結果 [{winningIndex}]: {rewardPrefab.name} (枚数: {rainCount}, 時間: {rainDuration}秒, 範囲スケール: {rainScale}) の降雨を開始しました！");
+
                 ItemSpawner.Instance.StartRouletteRain(
                     prefabsToSpawn, 
-                    rouletteRainCoinCount, 
-                    rouletteRainDuration, 
-                    rouletteRainAreaScale, 
+                    rainCount, 
+                    rainDuration, 
+                    rainScale, 
                     rouletteRainAreaOffset
                 );
-                Debug.Log($"[UFOItemGoal] ルーレット当選結果 [{winningIndex}]: {rewardPrefab.name} の降雨を開始しました！");
             }
             else
             {

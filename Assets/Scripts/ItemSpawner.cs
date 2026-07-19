@@ -632,7 +632,16 @@ public class ItemSpawner : MonoBehaviour
     /// </summary>
     public void StartRouletteRain(System.Collections.Generic.List<GameObject> prefabs, int count, float duration, Vector2 areaScale, Vector2 areaOffset)
     {
-        if (prefabs == null || prefabs.Count == 0 || count <= 0) return;
+        if (prefabs == null || prefabs.Count == 0)
+        {
+            Debug.LogWarning("[ItemSpawner] StartRouletteRain: prefabs が null または空です。降雨をスキップします。");
+            return;
+        }
+        if (count <= 0)
+        {
+            Debug.LogWarning($"[ItemSpawner] StartRouletteRain: count が {count} で 0 以下のため、降雨をスキップします。");
+            return;
+        }
         StartCoroutine(RouletteRainRoutine(prefabs, count, duration, areaScale, areaOffset));
     }
 
