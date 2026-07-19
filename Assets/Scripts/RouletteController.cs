@@ -52,6 +52,15 @@ public class RouletteController : MonoBehaviour
     [Tooltip("スロット間の角度間隔。5分割なら 360/5 = 72")]
     [SerializeField] private float anglePerSlot = 72f;
 
+    [Header("演出ライト設定")]
+    [Tooltip("ルーレット停止時に3秒間光らせるライト")]
+    [SerializeField] private Light winLight;
+
+    [Tooltip("ライトを点灯させる時間（秒）")]
+    [SerializeField] private float lightDuration = 3f;
+
+    private Coroutine _lightCoroutine;
+
     [Header("イベント")]
     [Tooltip("スピン完了時に発火。引数は当選スロットのインデックス（0〜slots.Length-1）")]
     public UnityEvent<int> OnSpinComplete;
@@ -170,6 +179,11 @@ public class RouletteController : MonoBehaviour
             }
         }
 
+        if (winLight != null)
+        {
+            winLight.enabled = false;
+        }
+
         SyncCurrentAngle();
     }
 
@@ -283,6 +297,8 @@ public class RouletteController : MonoBehaviour
             : winningIndex.ToString();
         Debug.Log($"[RouletteController] スピン完了 → 当選スロット [{winningIndex}] {label}");
 
+        StartLightShow();
+
         OnSpinComplete.Invoke(winningIndex);
     }
 
@@ -314,6 +330,24 @@ public class RouletteController : MonoBehaviour
             return slots[index];
         }
         return null;
+    }
+
+    private void StartLightShow()
+    {
+        if (winLight == null) return;
+        if (_lightCoroutine != null)
+        {
+            StopCoroutine(_lightCoroutine);
+        }
+        _lightCoroutine = StartCoroutine(LightShowRoutine());
+    }
+
+    private IEnumerator LightShowRoutine()
+    {
+        winLight.enabled = true;
+        yield return new WaitForSeconds(lightDuration);
+        winLight.enabled = false;
+        _lightCoroutine = null;
     }
 }
 
