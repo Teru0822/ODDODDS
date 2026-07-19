@@ -192,8 +192,54 @@ public class UFOItemGoal : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Spawner内のメンバ変数またはアクティブ・候補枠のリストから、キーワード部分一致でプレハブを自動検出するフォールバックメソッド
+    /// </summary>
+    private GameObject FindPrefabFromSpawner(string nameKeyword)
+    {
+        if (ItemSpawner.Instance == null) return null;
+
+        string kw = nameKeyword.ToLower();
+
+        // 1. 直属のメンバ変数
+        if (kw.Contains("copper") && ItemSpawner.Instance.copperCoinPrefab != null) return ItemSpawner.Instance.copperCoinPrefab;
+        if (kw.Contains("silver") && ItemSpawner.Instance.silverCoinPrefab != null) return ItemSpawner.Instance.silverCoinPrefab;
+        if (kw.Contains("gold") && ItemSpawner.Instance.goldCoinPrefab != null) return ItemSpawner.Instance.goldCoinPrefab;
+        if (kw.Contains("black") && ItemSpawner.Instance.blackDiamondPrefab != null) return ItemSpawner.Instance.blackDiamondPrefab;
+
+        // 2. initialActiveItems (初期アクティブリスト) から検索
+        if (ItemSpawner.Instance.initialActiveItems != null)
+        {
+            foreach (var item in ItemSpawner.Instance.initialActiveItems)
+            {
+                if (item != null && item.prefab != null && item.prefab.name.ToLower().Contains(kw))
+                {
+                    Debug.Log($"[UFOItemGoal] initialActiveItems からプレハブ自動検出: {item.prefab.name}");
+                    return item.prefab;
+                }
+            }
+        }
+
+        // 3. itemCandidates (候補リスト) から検索
+        if (ItemSpawner.Instance.itemCandidates != null)
+        {
+            foreach (var item in ItemSpawner.Instance.itemCandidates)
+            {
+                if (item != null && item.prefab != null && item.prefab.name.ToLower().Contains(kw))
+                {
+                    Debug.Log($"[UFOItemGoal] itemCandidates からプレハブ自動検出: {item.prefab.name}");
+                    return item.prefab;
+                }
+            }
+        }
+
+        return null;
+    }
+
     private void HandleRouletteSpinComplete(int winningIndex)
     {
+        Debug.Log($"[UFOItemGoal] HandleRouletteSpinComplete: 当選結果インデックス = {winningIndex}");
+
         // 1. 時間の一時停止を解除する
         if (UFOCameraController.Instance != null)
         {
@@ -209,16 +255,16 @@ public class UFOItemGoal : MonoBehaviour
             {
                 case 0:
                 case 1:
-                    rewardPrefab = ItemSpawner.Instance.copperCoinPrefab;
+                    rewardPrefab = FindPrefabFromSpawner("copper");
                     break;
                 case 2:
-                    rewardPrefab = ItemSpawner.Instance.silverCoinPrefab;
+                    rewardPrefab = FindPrefabFromSpawner("silver");
                     break;
                 case 3:
-                    rewardPrefab = ItemSpawner.Instance.goldCoinPrefab;
+                    rewardPrefab = FindPrefabFromSpawner("gold");
                     break;
                 case 4:
-                    rewardPrefab = ItemSpawner.Instance.blackDiamondPrefab;
+                    rewardPrefab = FindPrefabFromSpawner("black");
                     break;
             }
 
@@ -243,8 +289,12 @@ public class UFOItemGoal : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning($"[UFOItemGoal] 当選インデックス {winningIndex} に対応するプレハブがありません。");
+                Debug.LogError($"[UFOItemGoal] 当選インデックス {winningIndex} に対応するプレハブが Spawner 内から見つかりません！");
             }
+        }
+        else
+        {
+            Debug.LogError("[UFOItemGoal] ItemSpawner.Instance が null のため、ドロップを生成できません！");
         }
     }
 
@@ -382,7 +432,7 @@ public class UFOItemGoal : MonoBehaviour
                     }
                     else
                     {
-                        Debug.LogWarning("[UFOItemGoal] rouletteController がアタッチされていません。時間停止を解除します。");
+                        Debug.LogError("[UFOItemGoal] rouletteController がアタッチされていません！インスペクターで RouletteController を必ずアタッチしてください。時間停止を解除します。");
                         if (UFOCameraController.Instance != null)
                         {
                             UFOCameraController.Instance.IsRouletteTimePaused = false;
