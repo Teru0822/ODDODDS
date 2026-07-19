@@ -225,11 +225,8 @@ public class RouletteController : MonoBehaviour
     private float ComputeTargetAngle(int winningIndex)
     {
         // 当選スロットが正面（centerAngle）に来るときのリール角度（絶対、0-360）
-        float slotBaseAngle = winningIndex * anglePerSlot;
-        if (slots != null && winningIndex < slots.Length && slots[winningIndex].slotTransform != null)
-        {
-            slotBaseAngle = ((slots[winningIndex].slotTransform.localEulerAngles.z % 360f) + 360f) % 360f;
-        }
+        // 逆回転方向のズレを解消するため、-winningIndex を基準にして計算します
+        float slotBaseAngle = -winningIndex * anglePerSlot;
         float targetEffective = ((centerAngle - slotBaseAngle) % 360f + 360f) % 360f;
 
         // 現在位置から目標まで正方向に回る最小角度
