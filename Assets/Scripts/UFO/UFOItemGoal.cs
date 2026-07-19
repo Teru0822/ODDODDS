@@ -267,21 +267,38 @@ public class UFOItemGoal : MonoBehaviour
         if (ItemSpawner.Instance != null)
         {
             GameObject rewardPrefab = null;
-            switch (winningIndex)
+
+            // 1. まずはアタッチされている RouletteController のスロット設定から直接プレハブを取得する
+            if (rouletteController != null)
             {
-                case 0:
-                case 1:
-                    rewardPrefab = FindPrefabFromSpawner("copper");
-                    break;
-                case 2:
-                    rewardPrefab = FindPrefabFromSpawner("silver");
-                    break;
-                case 3:
-                    rewardPrefab = FindPrefabFromSpawner("gold");
-                    break;
-                case 4:
-                    rewardPrefab = FindPrefabFromSpawner("black");
-                    break;
+                var slot = rouletteController.GetSlotEntry(winningIndex);
+                if (slot != null && slot.rewardPrefab != null)
+                {
+                    rewardPrefab = slot.rewardPrefab;
+                    Debug.Log($"[UFOItemGoal] slots[{winningIndex}] のアタッチ設定からプレハブを読み込みました: {rewardPrefab.name}");
+                }
+            }
+
+            // 2. もしアタッチされていない場合の自動検索フォールバック
+            if (rewardPrefab == null)
+            {
+                Debug.LogWarning($"[UFOItemGoal] 当選スロット [{winningIndex}] に rewardPrefab が設定されていません。自動検索フォールバックを開始します。");
+                switch (winningIndex)
+                {
+                    case 0:
+                    case 1:
+                        rewardPrefab = FindPrefabFromSpawner("copper");
+                        break;
+                    case 2:
+                        rewardPrefab = FindPrefabFromSpawner("silver");
+                        break;
+                    case 3:
+                        rewardPrefab = FindPrefabFromSpawner("gold");
+                        break;
+                    case 4:
+                        rewardPrefab = FindPrefabFromSpawner("black");
+                        break;
+                }
             }
 
             if (rewardPrefab != null)

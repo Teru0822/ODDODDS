@@ -306,6 +306,18 @@ public class RouletteController : MonoBehaviour
 
         return true;
     }
+
+    /// <summary>
+    /// 指定インデックスのスロットエントリーを取得する。範囲外の場合は null を返す。
+    /// </summary>
+    public SlotEntry GetSlotEntry(int index)
+    {
+        if (slots != null && index >= 0 && index < slots.Length)
+        {
+            return slots[index];
+        }
+        return null;
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -325,4 +337,7 @@ public class SlotEntry
 
     [Tooltip("デバッグログ・Inspector 識別用のラベル（空欄でも動作する）")]
     public string label = "";
+
+    [Tooltip("このスロットが当選した際に排出するオブジェクトのプレハブ")]
+    public GameObject rewardPrefab;
 }
