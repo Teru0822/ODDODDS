@@ -53,11 +53,14 @@ public class RouletteController : MonoBehaviour
     [SerializeField] private float anglePerSlot = 72f;
 
     [Header("演出ライト設定")]
-    [Tooltip("ルーレット停止時に3秒間光らせるライト")]
-    [SerializeField] private Light winLight;
+    [Tooltip("ルーレット停止時に点滅させる演出用ライトオブジェクト（空のGameObjectなど）")]
+    [SerializeField] private GameObject winLightObject;
 
-    [Tooltip("ライトを点灯させる時間（秒）")]
+    [Tooltip("ライトを点滅させる全体の時間（秒）")]
     [SerializeField] private float lightDuration = 3f;
+
+    [Tooltip("点滅の間隔（秒）。0.5秒に設定すると、0.5秒点灯・0.5秒消灯の1秒周期になります")]
+    [SerializeField] private float blinkInterval = 0.5f;
 
     private Coroutine _lightCoroutine;
 
@@ -179,9 +182,9 @@ public class RouletteController : MonoBehaviour
             }
         }
 
-        if (winLight != null)
+        if (winLightObject != null)
         {
-            winLight.enabled = false;
+            winLightObject.SetActive(false);
         }
 
         SyncCurrentAngle();
@@ -334,7 +337,7 @@ public class RouletteController : MonoBehaviour
 
     private void StartLightShow()
     {
-        if (winLight == null) return;
+        if (winLightObject == null) return;
         if (_lightCoroutine != null)
         {
             StopCoroutine(_lightCoroutine);
@@ -344,9 +347,22 @@ public class RouletteController : MonoBehaviour
 
     private IEnumerator LightShowRoutine()
     {
-        winLight.enabled = true;
-        yield return new WaitForSeconds(lightDuration);
-        winLight.enabled = false;
+        float elapsed = 0f;
+        bool isActive = false;
+        float interval = Mathf.Max(0.01f, blinkInterval);
+
+        // lightDuration の時間中、blinkInterval 間隔でオンオフを繰り返す
+        while (elapsed < lightDuration)
+        {
+            isActive = !isActive;
+            winLightObject.SetActive(isActive);
+
+            yield return new WaitForSeconds(interval);
+            elapsed += interval;
+        }
+
+        // 最後に必ず非アクティブ（消灯）にする
+        winLightObject.SetActive(false);
         _lightCoroutine = null;
     }
 }
