@@ -125,10 +125,18 @@ public class TypewriterInteractable : InteractableHighlight
         else
         {
             //TODO;将来的にはマルチプレイに対応する必要あり
-            picks = mgr?.GetLockSkills(2);
-            if (picks == null || picks.Count < 2)
+            int choiceCount = 2;
+            if (mgr != null)
             {
-                Debug.LogWarning($"[TypewriterInteractable] 未選択の報酬が 2 個未満 (残り {(picks != null ? picks.Count : 0)})", this);
+                var unlocked = mgr.GetUnlockSkillDictionary;
+                if (unlocked.ContainsKey(SkillId.Typewriter_ExpandChoice2))      choiceCount = 4;
+                else if (unlocked.ContainsKey(SkillId.Typewriter_ExpandChoice1)) choiceCount = 3;
+            }
+
+            picks = mgr?.GetLockSkills(choiceCount);
+            if (picks == null || picks.Count < 1)
+            {
+                Debug.LogWarning($"[TypewriterInteractable] 未選択の報酬が残っていません", this);
                 return;
             }
         }

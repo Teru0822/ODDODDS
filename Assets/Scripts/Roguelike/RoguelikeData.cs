@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 
 public enum SkillType
-{ 
+{
     None = 0,
     PinBall = 1,
     FallBall = 2,
     UFOcatcher = 3,
+    Typewriter = 4,
 }
 public enum SkillId
 {
@@ -42,7 +43,14 @@ public enum SkillId
     UFO_ArmSpeedUp1 = 22,
     UFO_ArmSpeedUp2 = 23,
     UFO_FeverTime = 24,
-    UFO_ReduceSway3 = 25
+    UFO_ReduceSway3 = 25,
+    UFO_ExpandItems1 = 26,
+    UFO_ExpandItems2 = 27,
+    UFO_LeverPrecision = 28,
+
+    // Typewriter
+    Typewriter_ExpandChoice1 = 29,  // 2択 → 3択
+    Typewriter_ExpandChoice2 = 30,  // 3択 → 4択
 }
 
 public class RoguelikeData
