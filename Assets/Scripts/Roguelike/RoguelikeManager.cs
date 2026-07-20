@@ -22,8 +22,9 @@ public class RoguelikeManager : MonoBehaviour
     /// <summary>デバッグ用：全スキルへの読み取り専用アクセス</summary>
     public IReadOnlyDictionary<SkillId, RoguelikeData> AllSkillsDebug => _roguelikeDictionary;
 
-    /// <summary>デバッグ用：全スキルをリスト形式で返す</summary>
-    public List<RoguelikeData> GetAllSkills() => new List<RoguelikeData>(_roguelikeDictionary.Values);
+    /// <summary>デバッグ用：未取得スキルを全件リスト形式で返す（取得済みは除外）</summary>
+    public List<RoguelikeData> GetAllSkills() =>
+        _roguelikeDictionary.Values.Where(s => !s.isGet).ToList();
 
     /// <summary>
     /// デバッグ用：スキルをロック状態に戻す。
