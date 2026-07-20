@@ -51,6 +51,7 @@ public class RouletteEyeSwapper : MonoBehaviour
     private int   _resolvedIndex = -1;
     private bool  _lastIsPlayingUfo;
     private bool  _isSwapping;
+    private bool  _pendingSwap;   // アニメーション中に発生した状態変化をキュー
     private float _initialLightIntensity;
 
     // -----------------------------------------------------------------------
@@ -75,9 +76,13 @@ public class RouletteEyeSwapper : MonoBehaviour
     {
         bool isPlayingUfo = UFOCameraController.IsPlayingUfo;
 
-        // UFO 開始・終了どちらのエッジでもスワップを発動
-        if (_lastIsPlayingUfo != isPlayingUfo && !_isSwapping)
-            StartCoroutine(BlinkAndSwap());
+        if (_lastIsPlayingUfo != isPlayingUfo)
+        {
+            if (!_isSwapping)
+                StartCoroutine(BlinkAndSwap());
+            else
+                _pendingSwap = !_pendingSwap; // アニメーション中の変化をキュー（偶数回は相殺）
+        }
 
         _lastIsPlayingUfo = isPlayingUfo;
     }
@@ -117,6 +122,13 @@ public class RouletteEyeSwapper : MonoBehaviour
         SetWeight(0f);
         if (eyeLight != null) eyeLight.intensity = lightTarget;
         _isSwapping = false;
+
+        // アニメーション中にキューされた変化があれば続けてスワップ
+        if (_pendingSwap)
+        {
+            _pendingSwap = false;
+            StartCoroutine(BlinkAndSwap());
+        }
     }
 
     private IEnumerator AnimateWeightAndLight(float weightFrom, float weightTo, float lightFrom, float lightTo, float duration)
