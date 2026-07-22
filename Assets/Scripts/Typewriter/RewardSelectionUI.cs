@@ -89,8 +89,13 @@ public class RewardSelectionUI : MonoBehaviour
     [SerializeField] private int _skillButtonFontSize = 28;
 
     [Header("サウンド")]
-    [Tooltip("タブ切り替え・スキルボタンホバー時に鳴らすタイプライターのコントローラ")]
-    [SerializeField] private TypewriterController _typewriterController;
+    [Tooltip("タブ切り替え・スキルボタンホバー時の効果音 AudioSource（未設定時は自動生成）")]
+    [SerializeField] private AudioSource _uiAudioSource;
+    [Tooltip("UI 操作音のクリップ群。複数設定するとランダムに選ばれる")]
+    [SerializeField] private AudioClip[] _uiKeySoundClips;
+    [Tooltip("UI 操作音の音量")]
+    [Range(0f, 2f)]
+    [SerializeField] private float _uiKeySoundVolume = 1f;
 
     /// <summary>タイプライター UI の表示状態が変わったときに発火する静的イベント (true=表示, false=非表示)</summary>
     public static event Action<bool> OnTypewriterUIChanged;
@@ -128,8 +133,16 @@ public class RewardSelectionUI : MonoBehaviour
 
     private void Awake()
     {
-        if (_typewriterController == null)
-            _typewriterController = FindFirstObjectByType<TypewriterController>();
+        if (_uiAudioSource == null)
+        {
+            _uiAudioSource = GetComponent<AudioSource>();
+            if (_uiAudioSource == null)
+            {
+                _uiAudioSource = gameObject.AddComponent<AudioSource>();
+                _uiAudioSource.playOnAwake = false;
+                _uiAudioSource.spatialBlend = 0f;
+            }
+        }
 
         if (uiRoot == null) AutoCreateUI();
         if (uiRoot != null) uiRoot.SetActive(false);
@@ -300,7 +313,10 @@ public class RewardSelectionUI : MonoBehaviour
 
     private void PlayKeySound()
     {
-        if (_typewriterController != null) _typewriterController.PlayKeySound();
+        if (_uiAudioSource == null || _uiKeySoundClips == null || _uiKeySoundClips.Length == 0) return;
+        var clip = _uiKeySoundClips[UnityEngine.Random.Range(0, _uiKeySoundClips.Length)];
+        if (clip == null) return;
+        _uiAudioSource.PlayOneShot(clip, _uiKeySoundVolume);
     }
 
     /// <summary>ホバー中スキルのプレビューを表示する（ButtonHover から呼ばれる）。null で停止。</summary>
