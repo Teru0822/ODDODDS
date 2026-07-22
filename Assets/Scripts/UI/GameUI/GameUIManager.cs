@@ -234,6 +234,8 @@ public class GameUIManager : MonoBehaviour
 
         // UFOキャッチャーのモード切り替えイベントを購読
         UFOCameraController.OnUfoModeChanged += HandleUfoModeChanged;
+        // タイプライター報酬選択UIの表示切り替えイベントを購読
+        RewardSelectionUI.OnTypewriterUIChanged += HandleTypewriterUIChanged;
     }
 
     private void Update()
@@ -295,10 +297,16 @@ public class GameUIManager : MonoBehaviour
     private void OnDestroy()
     {
         UFOCameraController.OnUfoModeChanged -= HandleUfoModeChanged;
+        RewardSelectionUI.OnTypewriterUIChanged -= HandleTypewriterUIChanged;
     }
 
     private void HandleUfoModeChanged(bool isPlayingUfo)
     {
         gameObject.SetActive(!isPlayingUfo);
+    }
+
+    private void HandleTypewriterUIChanged(bool isShowing)
+    {
+        gameObject.SetActive(!isShowing);
     }
 }

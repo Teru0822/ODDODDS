@@ -25,6 +25,8 @@ public class ButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        // 他のスキルをホバーするまでアクティブ状態を維持するため何もしない
+        // 画像状態は維持（他スキルをホバーするまでアクティブのまま）
+        // 音状態のみリセット（カーソルが戻った時に再度音が鳴るように）
+        _rewardSelectionUI?.OnSkillButtonExit(_rewardIndex);
     }
 }

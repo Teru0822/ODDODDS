@@ -88,6 +88,13 @@ public class RewardSelectionUI : MonoBehaviour
     [Tooltip("ボタンラベルのフォントサイズ")]
     [SerializeField] private int _skillButtonFontSize = 28;
 
+    [Header("サウンド")]
+    [Tooltip("タブ切り替え・スキルボタンホバー時に鳴らすタイプライターのコントローラ")]
+    [SerializeField] private TypewriterController _typewriterController;
+
+    /// <summary>タイプライター UI の表示状態が変わったときに発火する静的イベント (true=表示, false=非表示)</summary>
+    public static event Action<bool> OnTypewriterUIChanged;
+
     private Action<RoguelikeData> _onSelected;
     private List<RoguelikeData> _currentOptions;
     private CursorLockMode _prevLockState;
@@ -99,8 +106,9 @@ public class RewardSelectionUI : MonoBehaviour
     private readonly List<Button> _dynButtons = new List<Button>();
     private readonly List<Text> _dynTexts = new List<Text>();
 
-    // ホバー状態管理
+    // ホバー状態管理（画像用・音用で別々に管理）
     private int _lastHoveredIndex = -1;
+    private int _lastSoundedIndex = -1;
 
     // プレビュー用
     private VideoPlayer _videoPlayer;
@@ -127,9 +135,9 @@ public class RewardSelectionUI : MonoBehaviour
         EnsureEventSystem();
 
         if (_roguelikeTabButton != null)
-            _roguelikeTabButton.onClick.AddListener(() => OnTabSelected(0));
+            _roguelikeTabButton.onClick.AddListener(() => { OnTabSelected(0); PlayKeySound(); });
         if (_itemTabButton != null)
-            _itemTabButton.onClick.AddListener(() => OnTabSelected(1));
+            _itemTabButton.onClick.AddListener(() => { OnTabSelected(1); PlayKeySound(); });
     }
 
     private void OnDestroy()
@@ -197,12 +205,15 @@ public class RewardSelectionUI : MonoBehaviour
         }
 
         _lastHoveredIndex = -1;
+        _lastSoundedIndex = -1;
         OnTabSelected(0);
         StopPreview();
         SetExplainText("");
         if (titleText != null) titleText.text = titleString;
+        if (worldCamera != null) worldCamera.enabled = true;
         ApplyTargetDisplay();
         uiRoot.SetActive(true);
+        OnTypewriterUIChanged?.Invoke(true);
 
         _prevLockState = Cursor.lockState;
         _prevCursorVisible = Cursor.visible;
@@ -244,6 +255,13 @@ public class RewardSelectionUI : MonoBehaviour
     /// </summary>
     public void OnSkillButtonHover(int index)
     {
+        // 音：前回と異なるボタン or カーソルが一度離れた後の再ホバー
+        if (_lastSoundedIndex != index)
+        {
+            PlayKeySound();
+            _lastSoundedIndex = index;
+        }
+
         // 前のボタンをノーマルに戻す（別ボタンに移動した時のみ）
         if (_lastHoveredIndex >= 0 && _lastHoveredIndex != index
             && _lastHoveredIndex < _dynButtons.Count
@@ -269,6 +287,17 @@ public class RewardSelectionUI : MonoBehaviour
                 if (img != null) img.sprite = _skillButtonHoverSprite;
             }
         }
+    }
+
+    /// <summary>カーソルがボタン領域を外れた時に ButtonHover から呼ばれる。音状態をリセットして再ホバー時に音が鳴るようにする。</summary>
+    public void OnSkillButtonExit(int index)
+    {
+        if (_lastSoundedIndex == index) _lastSoundedIndex = -1;
+    }
+
+    private void PlayKeySound()
+    {
+        if (_typewriterController != null) _typewriterController.PlayKeySound();
     }
 
     /// <summary>ホバー中スキルのプレビューを表示する（ButtonHover から呼ばれる）。null で停止。</summary>
@@ -427,15 +456,17 @@ public class RewardSelectionUI : MonoBehaviour
         if (canvas == null) canvas = uiRoot.GetComponentInChildren<Canvas>(true);
         if (canvas == null) return;
 
-        if (worldCamera == null) worldCamera = FindCameraForDisplay(targetDisplay);
-        if (worldCamera == null) worldCamera = Camera.main;
+        // worldCamera が明示指定されており有効な場合のみ使用する。無効なら自動検索→Camera.main と順にフォールバック。
+        Camera cam = (worldCamera != null && worldCamera.isActiveAndEnabled) ? worldCamera : null;
+        if (cam == null) cam = FindCameraForDisplay(targetDisplay);
+        if (cam == null) cam = Camera.main;
 
-        if (worldCamera != null)
+        if (cam != null)
         {
             canvas.renderMode = RenderMode.ScreenSpaceCamera;
-            canvas.worldCamera = worldCamera;
+            canvas.worldCamera = cam;
             canvas.planeDistance = planeDistance;
-            Debug.Log($"[RewardSelectionUI] ScreenSpaceCamera mode, camera={worldCamera.name}", this);
+            Debug.Log($"[RewardSelectionUI] ScreenSpaceCamera mode, camera={cam.name}", this);
         }
         else
         {
@@ -458,11 +489,15 @@ public class RewardSelectionUI : MonoBehaviour
     public void Hide()
     {
         if (uiRoot != null) uiRoot.SetActive(false);
+        if (worldCamera != null && worldCamera != Camera.main) worldCamera.enabled = false;
         Cursor.lockState = _prevLockState;
         Cursor.visible = _prevCursorVisible;
         _onSelected = null;
         _currentOptions = null;
+        _lastHoveredIndex = -1;
+        _lastSoundedIndex = -1;
         StopPreview();
+        OnTypewriterUIChanged?.Invoke(false);
     }
 
     private void OnOptionClicked(int index)
