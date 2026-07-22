@@ -100,6 +100,9 @@ public class RewardSelectionUI : MonoBehaviour
     /// <summary>タイプライター UI の表示状態が変わったときに発火する静的イベント (true=表示, false=非表示)</summary>
     public static event Action<bool> OnTypewriterUIChanged;
 
+    /// <summary>タイプライター報酬選択UI が現在表示中かどうか</summary>
+    public static bool IsTypewriterUIShowing { get; private set; }
+
     private Action<RoguelikeData> _onSelected;
     private List<RoguelikeData> _currentOptions;
     private CursorLockMode _prevLockState;
@@ -229,6 +232,7 @@ public class RewardSelectionUI : MonoBehaviour
         if (worldCamera != null) worldCamera.enabled = true;
         ApplyTargetDisplay();
         uiRoot.SetActive(true);
+        IsTypewriterUIShowing = true;
         OnTypewriterUIChanged?.Invoke(true);
 
         _prevLockState = Cursor.lockState;
@@ -516,6 +520,7 @@ public class RewardSelectionUI : MonoBehaviour
         _lastHoveredIndex = -1;
         _lastSoundedIndex = -1;
         StopPreview();
+        IsTypewriterUIShowing = false;
         OnTypewriterUIChanged?.Invoke(false);
     }
 
