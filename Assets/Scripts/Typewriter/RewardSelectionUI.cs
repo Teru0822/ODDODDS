@@ -128,6 +128,9 @@ public class RewardSelectionUI : MonoBehaviour
 
     private void Awake()
     {
+        if (_typewriterController == null)
+            _typewriterController = FindFirstObjectByType<TypewriterController>();
+
         if (uiRoot == null) AutoCreateUI();
         if (uiRoot != null) uiRoot.SetActive(false);
         WireButtons();
