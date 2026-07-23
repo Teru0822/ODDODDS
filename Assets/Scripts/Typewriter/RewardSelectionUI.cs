@@ -70,11 +70,23 @@ public class RewardSelectionUI : MonoBehaviour
     [Tooltip("未選択タブに使うスプライト")]
     [SerializeField] private Sprite _tabInactiveSprite;
 
+    [Header("タブボタン テキストカラー")]
+    [Tooltip("選択中タブのテキスト色")]
+    [SerializeField] private Color _tabActiveTextColor = new Color(0.1f, 0.07f, 0.02f, 1f);
+    [Tooltip("未選択タブのテキスト色")]
+    [SerializeField] private Color _tabInactiveTextColor = Color.white;
+
     [Header("スキル選択ボタン画像")]
     [Tooltip("ホバーしていない通常状態のスプライト")]
     [SerializeField] private Sprite _skillButtonNormalSprite;
     [Tooltip("ホバー中のスプライト")]
     [SerializeField] private Sprite _skillButtonHoverSprite;
+
+    [Header("スキルボタン テキストカラー")]
+    [Tooltip("通常時のテキスト色")]
+    [SerializeField] private Color _skillButtonNormalTextColor = Color.white;
+    [Tooltip("ホバー中のテキスト色")]
+    [SerializeField] private Color _skillButtonHoverTextColor = new Color(0.1f, 0.07f, 0.02f, 1f);
 
     [Header("スキルボタン サイズ・レイアウト")]
     [Tooltip("ボタン1個の高さ（px）")]
@@ -87,6 +99,8 @@ public class RewardSelectionUI : MonoBehaviour
     [SerializeField] private int _skillButtonPaddingHorizontal = 8;
     [Tooltip("ボタンラベルのフォントサイズ")]
     [SerializeField] private int _skillButtonFontSize = 28;
+    [Tooltip("スキルボタンのラベルに使うフォント（null = デフォルト）")]
+    [SerializeField] private Font _skillButtonFont;
 
     [Header("サウンド")]
     [Tooltip("タブ切り替え・スキルボタンホバー時の効果音 AudioSource（未設定時は自動生成）")]
@@ -265,9 +279,15 @@ public class RewardSelectionUI : MonoBehaviour
     {
         if (tab == null) return;
         var sprite = isActive ? _tabActiveSprite : _tabInactiveSprite;
-        if (sprite == null) return;
-        var img = tab.GetComponent<Image>();
-        if (img != null) img.sprite = sprite;
+        if (sprite != null)
+        {
+            var img = tab.GetComponent<Image>();
+            if (img != null) img.sprite = sprite;
+        }
+        var textColor = isActive ? _tabActiveTextColor : _tabInactiveTextColor;
+        var tmp = tab.GetComponentInChildren<TMP_Text>();
+        if (tmp != null) tmp.color = textColor;
+        else { var leg = tab.GetComponentInChildren<Text>(); if (leg != null) leg.color = textColor; }
     }
 
     /// <summary>
@@ -285,29 +305,44 @@ public class RewardSelectionUI : MonoBehaviour
 
         // 前のボタンをノーマルに戻す（別ボタンに移動した時のみ）
         if (_lastHoveredIndex >= 0 && _lastHoveredIndex != index
-            && _lastHoveredIndex < _dynButtons.Count
-            && _skillButtonNormalSprite != null)
+            && _lastHoveredIndex < _dynButtons.Count)
         {
             var prevBtn = _dynButtons[_lastHoveredIndex];
             if (prevBtn != null)
             {
-                var prevImg = prevBtn.GetComponent<Image>();
-                if (prevImg != null) prevImg.sprite = _skillButtonNormalSprite;
+                if (_skillButtonNormalSprite != null)
+                {
+                    var prevImg = prevBtn.GetComponent<Image>();
+                    if (prevImg != null) prevImg.sprite = _skillButtonNormalSprite;
+                }
+                SetButtonTextColor(prevBtn, _skillButtonNormalTextColor);
             }
         }
 
         _lastHoveredIndex = index;
 
         // 新しいボタンをホバー画像に
-        if (index >= 0 && index < _dynButtons.Count && _skillButtonHoverSprite != null)
+        if (index >= 0 && index < _dynButtons.Count)
         {
             var btn = _dynButtons[index];
             if (btn != null)
             {
-                var img = btn.GetComponent<Image>();
-                if (img != null) img.sprite = _skillButtonHoverSprite;
+                if (_skillButtonHoverSprite != null)
+                {
+                    var img = btn.GetComponent<Image>();
+                    if (img != null) img.sprite = _skillButtonHoverSprite;
+                }
+                SetButtonTextColor(btn, _skillButtonHoverTextColor);
             }
         }
+    }
+
+    private void SetButtonTextColor(Button btn, Color color)
+    {
+        var tmp = btn.GetComponentInChildren<TMP_Text>();
+        if (tmp != null) { tmp.color = color; return; }
+        var leg = btn.GetComponentInChildren<Text>();
+        if (leg != null) leg.color = color;
     }
 
     /// <summary>カーソルがボタン領域を外れた時に ButtonHover から呼ばれる。音状態をリセットして再ホバー時に音が鳴るようにする。</summary>
@@ -335,8 +370,12 @@ public class RewardSelectionUI : MonoBehaviour
         {
             InitVideoPlayer();
 
-            // 準備完了まで非表示にして白フラッシュを防ぐ
-            if (_previewRawImage != null) _previewRawImage.gameObject.SetActive(false);
+            // 準備完了まで透明にして白フラッシュを防ぐ（SetActive(false)にするとVideoPlayerも止まるため透明度で制御）
+            if (_previewRawImage != null)
+            {
+                _previewRawImage.gameObject.SetActive(true);
+                _previewRawImage.color = new Color(1f, 1f, 1f, 0f);
+            }
             if (_previewFallbackImage != null) _previewFallbackImage.gameObject.SetActive(false);
 
             // 前回の未完了ハンドラを除去
@@ -354,7 +393,7 @@ public class RewardSelectionUI : MonoBehaviour
                 _videoPlayer.prepareCompleted -= _onVideoPrepared;
                 _onVideoPrepared = null;
                 vp.Play();
-                if (_previewRawImage != null) _previewRawImage.gameObject.SetActive(true);
+                if (_previewRawImage != null) _previewRawImage.color = Color.white;
             };
             _videoPlayer.prepareCompleted += _onVideoPrepared;
             _videoPlayer.Prepare();
@@ -377,8 +416,17 @@ public class RewardSelectionUI : MonoBehaviour
 
     private void StopPreview()
     {
+        if (_onVideoPrepared != null && _videoPlayer != null)
+        {
+            _videoPlayer.prepareCompleted -= _onVideoPrepared;
+            _onVideoPrepared = null;
+        }
         if (_videoPlayer != null) _videoPlayer.Stop();
-        if (_previewRawImage != null) _previewRawImage.gameObject.SetActive(false);
+        if (_previewRawImage != null)
+        {
+            _previewRawImage.color = Color.white;
+            _previewRawImage.gameObject.SetActive(false);
+        }
         if (_previewFallbackImage != null) _previewFallbackImage.gameObject.SetActive(false);
     }
 
@@ -440,7 +488,7 @@ public class RewardSelectionUI : MonoBehaviour
         _dynButtons.Clear();
         _dynTexts.Clear();
 
-        var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        var font = _skillButtonFont != null ? _skillButtonFont : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         for (int i = 0; i < count; i++)
         {
             var btnGo = new GameObject($"DynOption{i}", typeof(Image), typeof(Button));
@@ -483,7 +531,7 @@ public class RewardSelectionUI : MonoBehaviour
             txt.font = font;
             txt.fontSize = _skillButtonFontSize;
             txt.alignment = TextAnchor.MiddleCenter;
-            txt.color = Color.white;
+            txt.color = _skillButtonNormalTextColor;
 
             int idx = i;
             btn.onClick.AddListener(() => OnOptionClicked(idx));
