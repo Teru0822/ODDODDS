@@ -54,8 +54,10 @@ public class RoguelikeManager : MonoBehaviour
     {
         //TODO:マルチプレイになった際には、自分のRoguelikeManagerが取得できるようにする
         MyRoguelikeManager = this;
-        RoguelikePanelManager.Instance.OnInitEvent.OnNext(MyRoguelikeManager);
-        PinballBallManager.Instance.OnInitEvent.OnNext(MyRoguelikeManager);
+        if (RoguelikePanelManager.Instance != null)
+            RoguelikePanelManager.Instance.OnInitEvent.OnNext(MyRoguelikeManager);
+        if (PinballBallManager.Instance != null)
+            PinballBallManager.Instance.OnInitEvent.OnNext(MyRoguelikeManager);
     }
 
     private void Update()
@@ -196,7 +198,8 @@ public class RoguelikeManager : MonoBehaviour
             }
 
             // UIの更新を行っておく
-            RoguelikePanelManager.Instance.UpdateUI();
+            if (RoguelikePanelManager.Instance != null)
+                RoguelikePanelManager.Instance.UpdateUI();
             _unlockSkillEvent.OnNext(data);
         }
         else

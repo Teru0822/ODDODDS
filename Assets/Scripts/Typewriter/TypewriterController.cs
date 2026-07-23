@@ -372,7 +372,7 @@ public class TypewriterController : MonoBehaviour
         keyAudioSource.volume = 1f; // PlayOneShot 側で volumeScale を渡すので Source 側は 1 固定
     }
 
-    private void PlayKeySound()
+    public void PlayKeySound()
     {
         if (keyAudioSource == null || keyAudioClips == null || keyAudioClips.Length == 0) return;
         var clip = keyAudioClips[UnityEngine.Random.Range(0, keyAudioClips.Length)];
