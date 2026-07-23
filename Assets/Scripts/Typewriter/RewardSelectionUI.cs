@@ -102,6 +102,14 @@ public class RewardSelectionUI : MonoBehaviour
     [Tooltip("スキルボタンのラベルに使うフォント（null = デフォルト）")]
     [SerializeField] private Font _skillButtonFont;
 
+    [Header("スキルボタン TMPマテリアル")]
+    [Tooltip("TMPフォントアセット（設定すると縁・テクスチャ等が使用可能になる）")]
+    [SerializeField] private TMP_FontAsset _skillButtonTMPFont;
+    [Tooltip("通常状態のTMPマテリアル（縁・テクスチャ等を設定したもの。null = フォントのデフォルト）")]
+    [SerializeField] private Material _skillButtonNormalMaterial;
+    [Tooltip("ホバー状態のTMPマテリアル（縁・テクスチャ等を設定したもの。null = 通常と同じ）")]
+    [SerializeField] private Material _skillButtonHoverMaterial;
+
     [Header("サウンド")]
     [Tooltip("タブ切り替え・スキルボタンホバー時の効果音 AudioSource（未設定時は自動生成）")]
     [SerializeField] private AudioSource _uiAudioSource;
@@ -126,7 +134,7 @@ public class RewardSelectionUI : MonoBehaviour
     private bool _isAutoCreated;
     private RectTransform _scrollContent;
     private readonly List<Button> _dynButtons = new List<Button>();
-    private readonly List<Text> _dynTexts = new List<Text>();
+    private readonly List<TMP_Text> _dynTexts = new List<TMP_Text>();
 
     // ホバー状態管理（画像用・音用で別々に管理）
     private int _lastHoveredIndex = -1;
@@ -311,11 +319,9 @@ public class RewardSelectionUI : MonoBehaviour
             if (prevBtn != null)
             {
                 if (_skillButtonNormalSprite != null)
-                {
-                    var prevImg = prevBtn.GetComponent<Image>();
-                    if (prevImg != null) prevImg.sprite = _skillButtonNormalSprite;
-                }
+                { var prevImg = prevBtn.GetComponent<Image>(); if (prevImg != null) prevImg.sprite = _skillButtonNormalSprite; }
                 SetButtonTextColor(prevBtn, _skillButtonNormalTextColor);
+                SetButtonMaterial(prevBtn, _skillButtonNormalMaterial);
             }
         }
 
@@ -328,13 +334,18 @@ public class RewardSelectionUI : MonoBehaviour
             if (btn != null)
             {
                 if (_skillButtonHoverSprite != null)
-                {
-                    var img = btn.GetComponent<Image>();
-                    if (img != null) img.sprite = _skillButtonHoverSprite;
-                }
+                { var img = btn.GetComponent<Image>(); if (img != null) img.sprite = _skillButtonHoverSprite; }
                 SetButtonTextColor(btn, _skillButtonHoverTextColor);
+                SetButtonMaterial(btn, _skillButtonHoverMaterial != null ? _skillButtonHoverMaterial : _skillButtonNormalMaterial);
             }
         }
+    }
+
+    private void SetButtonMaterial(Button btn, Material mat)
+    {
+        if (mat == null) return;
+        var tmp = btn.GetComponentInChildren<TMP_Text>();
+        if (tmp != null) tmp.fontMaterial = mat;
     }
 
     private void SetButtonTextColor(Button btn, Color color)
@@ -488,7 +499,6 @@ public class RewardSelectionUI : MonoBehaviour
         _dynButtons.Clear();
         _dynTexts.Clear();
 
-        var font = _skillButtonFont != null ? _skillButtonFont : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         for (int i = 0; i < count; i++)
         {
             var btnGo = new GameObject($"DynOption{i}", typeof(Image), typeof(Button));
@@ -523,15 +533,19 @@ public class RewardSelectionUI : MonoBehaviour
                 btn.colors = colors;
             }
 
-            var txtRect = new GameObject("Text", typeof(Text)).GetComponent<RectTransform>();
-            txtRect.SetParent(btnGo.transform, false);
+            var txtGo = new GameObject("Text");
+            txtGo.transform.SetParent(btnGo.transform, false);
+            var txtRect = txtGo.GetComponent<RectTransform>() ?? txtGo.AddComponent<RectTransform>();
             txtRect.anchorMin = Vector2.zero; txtRect.anchorMax = Vector2.one;
             txtRect.offsetMin = new Vector2(24, 8); txtRect.offsetMax = new Vector2(-24, -8);
-            var txt = txtRect.GetComponent<Text>();
-            txt.font = font;
+            var txt = txtGo.AddComponent<TextMeshProUGUI>();
+            if (_skillButtonTMPFont != null) txt.font = _skillButtonTMPFont;
+            if (_skillButtonNormalMaterial != null) txt.fontMaterial = _skillButtonNormalMaterial;
             txt.fontSize = _skillButtonFontSize;
-            txt.alignment = TextAnchor.MiddleCenter;
+            txt.alignment = TextAlignmentOptions.Center;
             txt.color = _skillButtonNormalTextColor;
+            txt.enableWordWrapping = false;
+            txt.overflowMode = TextOverflowModes.Ellipsis;
 
             int idx = i;
             btn.onClick.AddListener(() => OnOptionClicked(idx));
@@ -541,7 +555,7 @@ public class RewardSelectionUI : MonoBehaviour
             hover.RewardIndex = i;
 
             _dynButtons.Add(btn);
-            _dynTexts.Add(txt);
+            _dynTexts.Add(txt as TMP_Text);
         }
 
         LayoutRebuilder.ForceRebuildLayoutImmediate(target);
