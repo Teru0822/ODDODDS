@@ -121,6 +121,7 @@ public class RewardSelectionUI : MonoBehaviour
     // プレビュー用
     private VideoPlayer _videoPlayer;
     private RenderTexture _renderTexture;
+    private VideoPlayer.EventHandler _onVideoPrepared;
 
     public List<RoguelikeData> CurrentOptions => _currentOptions;
     public bool IsActive => uiRoot != null && uiRoot.activeSelf;
@@ -333,9 +334,29 @@ public class RewardSelectionUI : MonoBehaviour
         if (entry != null && entry.previewClip != null)
         {
             InitVideoPlayer();
-            if (_previewRawImage != null) _previewRawImage.gameObject.SetActive(true);
+
+            // 準備完了まで非表示にして白フラッシュを防ぐ
+            if (_previewRawImage != null) _previewRawImage.gameObject.SetActive(false);
             if (_previewFallbackImage != null) _previewFallbackImage.gameObject.SetActive(false);
+
+            // 前回の未完了ハンドラを除去
+            if (_onVideoPrepared != null)
+            {
+                _videoPlayer.prepareCompleted -= _onVideoPrepared;
+                _onVideoPrepared = null;
+            }
+
+            _videoPlayer.Stop();
             _videoPlayer.clip = entry.previewClip;
+
+            _onVideoPrepared = (vp) =>
+            {
+                _videoPlayer.prepareCompleted -= _onVideoPrepared;
+                _onVideoPrepared = null;
+                vp.Play();
+                if (_previewRawImage != null) _previewRawImage.gameObject.SetActive(true);
+            };
+            _videoPlayer.prepareCompleted += _onVideoPrepared;
             _videoPlayer.Prepare();
         }
         else if (entry != null && entry.fallbackSprite != null)
@@ -366,6 +387,12 @@ public class RewardSelectionUI : MonoBehaviour
         if (_videoPlayer != null) return;
         if (_previewRawImage == null) return;
         _renderTexture = new RenderTexture(640, 360, 0);
+        // 黒で初期化して未描画フレームの白を防ぐ
+        var prevRT = RenderTexture.active;
+        RenderTexture.active = _renderTexture;
+        GL.Clear(true, true, Color.black);
+        RenderTexture.active = prevRT;
+
         _videoPlayer = _previewRawImage.gameObject.AddComponent<VideoPlayer>();
         _videoPlayer.renderMode = VideoRenderMode.RenderTexture;
         _videoPlayer.targetTexture = _renderTexture;
@@ -373,7 +400,7 @@ public class RewardSelectionUI : MonoBehaviour
         _videoPlayer.playOnAwake = false;
         _videoPlayer.audioOutputMode = VideoAudioOutputMode.None;
         _previewRawImage.texture = _renderTexture;
-        _videoPlayer.prepareCompleted += vp => vp.Play();
+        // prepareCompleted は ShowPreview() 側で都度登録する
     }
 
     private void RebuildDynamicButtons(int count)
