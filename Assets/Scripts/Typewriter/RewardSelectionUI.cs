@@ -533,9 +533,9 @@ public class RewardSelectionUI : MonoBehaviour
                 btn.colors = colors;
             }
 
-            var txtGo = new GameObject("Text");
+            var txtGo = new GameObject("Text", typeof(RectTransform));
             txtGo.transform.SetParent(btnGo.transform, false);
-            var txtRect = txtGo.GetComponent<RectTransform>() ?? txtGo.AddComponent<RectTransform>();
+            var txtRect = (RectTransform)txtGo.transform;
             txtRect.anchorMin = Vector2.zero; txtRect.anchorMax = Vector2.one;
             txtRect.offsetMin = new Vector2(24, 8); txtRect.offsetMax = new Vector2(-24, -8);
             var txt = txtGo.AddComponent<TextMeshProUGUI>();
