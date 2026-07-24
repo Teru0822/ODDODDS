@@ -143,7 +143,17 @@ public class TypewriterInteractable : InteractableHighlight
 
         _busy = true;
         ApplyHighlight(false);
-        selectionUI.Show(picks, OnRewardSelected);
+        try
+        {
+            selectionUI.Show(picks, OnRewardSelected);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[TypewriterInteractable] RewardSelectionUI.Show() で例外が発生しました: {e}", this);
+            _busy = false;
+            ApplyHighlight(true);
+            return;
+        }
 
         // Show() が UI を開けなかった場合（Prefab 未設定など）は即座に解放
         if (!selectionUI.IsActive)
