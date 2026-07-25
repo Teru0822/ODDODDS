@@ -3,7 +3,7 @@ using UnityEngine;
 
 /// <summary>
 /// TelevisionAnimator 用のカスタム Inspector エディタ。
-/// 3つの座標 (1.出現, 2.スタート, 3.ゴール) のワンクリック保存・プレビュー移動・テスト再生ボタンを配置します。
+/// 3つの座標 (1.出現(ワープ先), 2.スタート, 3.ゴール) のワンクリック保存・プレビュー移動・テスト再生ボタンを配置します。
 /// </summary>
 [CustomEditor(typeof(TelevisionAnimator))]
 [CanEditMultipleObjects]
@@ -28,7 +28,7 @@ public class TelevisionAnimatorEditor : Editor
 
         EditorGUILayout.BeginHorizontal();
 
-        if (GUILayout.Button("1. 『出現(初期)座標』に保存", GUILayout.Height(28)))
+        if (GUILayout.Button("1. 『出現(ワープ先)座標』に保存", GUILayout.Height(28)))
         {
             Undo.RecordObject(animator, "Save Television Spawn Transform");
             animator.SaveCurrentTransformAsSpawn();
@@ -81,12 +81,12 @@ public class TelevisionAnimatorEditor : Editor
 
         EditorGUILayout.BeginHorizontal();
 
-        if (GUILayout.Button("テスト: 1. アクセス遷移時 (出現 → スタート)", GUILayout.Height(30)))
+        if (GUILayout.Button("テスト: 1. アクセス時 (出現へワープ → スタートへ移動)", GUILayout.Height(30)))
         {
             animator.PlayEnterAnimation();
         }
 
-        if (GUILayout.Button("テスト: 2. コイン投入時 (スタート → ゴール)", GUILayout.Height(30)))
+        if (GUILayout.Button("テスト: 2. 全コイン完了時 (スタート → ゴールへ移動)", GUILayout.Height(30)))
         {
             animator.PlayCoinAnimation();
         }
