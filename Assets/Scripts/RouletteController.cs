@@ -359,7 +359,7 @@ public class RouletteController : MonoBehaviour
             Quaternion startLocalRot = transform.localRotation;
 
             // ワープ先のローカル位置および回転
-            Vector3 targetWarpPos = new Vector3(-2.06100011f, 4.21000004f, 4.01000023f);
+            Vector3 targetWarpPos = new Vector3(-2.06100011f, 5.0f, 4.01000023f);
             Quaternion targetWarpRot = new Quaternion(0.0478489846f, -0.858475208f, 0.0284163076f, -0.50982672f);
 
             // イントロ1秒間の各ステップの所要時間（上昇 0.33秒 -> ワープ 0.34秒 -> 下降 0.33秒）
@@ -370,9 +370,9 @@ public class RouletteController : MonoBehaviour
             // -------------------------------------------------------------------
             // Phase 1: イントロ演出（合計1.0秒）
             // -------------------------------------------------------------------
-            // 1a. Y 座標を 4.708 まで上昇
+            // 1a. Y 座標を 5.0 まで上昇
             Vector3 pos1aStart = startLocalBasePos;
-            Vector3 pos1aEnd = new Vector3(startLocalBasePos.x, 4.708f, startLocalBasePos.z);
+            Vector3 pos1aEnd = new Vector3(startLocalBasePos.x, 5.0f, startLocalBasePos.z);
             float t = 0f;
             while (t < durA)
             {
@@ -384,7 +384,7 @@ public class RouletteController : MonoBehaviour
                 yield return null;
             }
 
-            // 1b. ワープ位置 Vector3(-2.06100011, 4.21000004, 4.01000023) および Rotation 設定
+            // 1b. ワープ位置 Vector3(-2.06100011, 5.0, 4.01000023) および Rotation 設定
             Vector3 pos1bStart = pos1aEnd;
             Vector3 pos1bEnd = targetWarpPos;
             t = 0f;
@@ -435,9 +435,9 @@ public class RouletteController : MonoBehaviour
             // -------------------------------------------------------------------
             // Phase 4: アウトロ演出（合計1.0秒）
             // -------------------------------------------------------------------
-            // 4a. Y 座標を 4.21000004 まで上昇
+            // 4a. Y 座標を 5.0 まで上昇
             Vector3 currentBase = floater != null ? floater.BaseLocalPosition : transform.localPosition;
-            Vector3 pos4aEnd = new Vector3(currentBase.x, 4.21000004f, currentBase.z);
+            Vector3 pos4aEnd = new Vector3(currentBase.x, 5.0f, currentBase.z);
             t = 0f;
             while (t < durA)
             {
@@ -449,9 +449,9 @@ public class RouletteController : MonoBehaviour
                 yield return null;
             }
 
-            // 4b. 最初にいた場所（Y=4.708）へワープ・回転復帰
+            // 4b. 最初にいた場所（Y=5.0）へワープ・回転復帰
             Vector3 pos4bStart = pos4aEnd;
-            Vector3 pos4bEnd = new Vector3(startLocalBasePos.x, 4.708f, startLocalBasePos.z);
+            Vector3 pos4bEnd = new Vector3(startLocalBasePos.x, 5.0f, startLocalBasePos.z);
             t = 0f;
             while (t < durB)
             {
@@ -465,6 +465,7 @@ public class RouletteController : MonoBehaviour
                 yield return null;
             }
             transform.localRotation = startLocalRot;
+
 
             // 4c. もともといた初期 Y 座標まで下降
             Vector3 pos4cStart = pos4bEnd;
