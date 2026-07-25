@@ -119,6 +119,29 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &28037579 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 9221442258153368129, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &28037581
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 28037579}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 12
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
 --- !u!1 &28906957
 GameObject:
   m_ObjectHideFlags: 0
@@ -393,6 +416,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 29941284}
   m_CullTransparentMesh: 1
+--- !u!1 &44986871 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7086877145987393302, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &58126737
 GameObject:
   m_ObjectHideFlags: 0
@@ -850,6 +878,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 111973832}
   m_CullTransparentMesh: 1
+--- !u!1 &138341055 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3897058050093555584, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &145533674 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8025547571602057015, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
@@ -1825,6 +1858,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 352640368}
   m_CullTransparentMesh: 1
+--- !u!1 &358306981 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3214383821159047244, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &372463200
 GameObject:
   m_ObjectHideFlags: 0
@@ -2149,6 +2187,52 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 380124247}
   m_CullTransparentMesh: 1
+--- !u!1 &396954008 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5318304110457258031, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &396954010
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 396954008}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 12
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
+--- !u!1 &423001946 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 914031962854709085, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &423001948
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 423001946}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 12
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
 --- !u!1 &438577641
 GameObject:
   m_ObjectHideFlags: 0
@@ -2270,6 +2354,11 @@ RectTransform:
   m_AnchoredPosition: {x: -200, y: 100}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &453889394 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7556913711360479913, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &467085733
 GameObject:
   m_ObjectHideFlags: 0
@@ -2579,6 +2668,29 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 513081991}
   m_CullTransparentMesh: 1
+--- !u!1 &516746507 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5949081571003056769, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &516746509
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 516746507}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 12
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
 --- !u!1 &532689846
 GameObject:
   m_ObjectHideFlags: 0
@@ -2990,6 +3102,52 @@ RectTransform:
   m_AnchoredPosition: {x: 100, y: 100}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &614681824 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7335937185632588202, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &614681826
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 614681824}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 12
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
+--- !u!1 &628624039 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5626650879804567468, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &628624041
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 628624039}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 12
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
 --- !u!1 &631468674
 GameObject:
   m_ObjectHideFlags: 0
@@ -3549,6 +3707,34 @@ RectTransform:
   m_AnchoredPosition: {x: 100, y: 100}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &717662158 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7391436731856679661, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &717662160
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 717662158}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 12
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
+--- !u!1 &840715771 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7453638014600812312, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &841457903
 GameObject:
   m_ObjectHideFlags: 0
@@ -3900,6 +4086,29 @@ RectTransform:
   m_AnchoredPosition: {x: 15, y: 100}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1020319214 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5835327492507061372, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1020319216
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1020319214}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 12
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
 --- !u!1 &1039705538
 GameObject:
   m_ObjectHideFlags: 0
@@ -3975,6 +4184,29 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1062295890 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3577754989397323183, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1062295892
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1062295890}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 12
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
 --- !u!1 &1108734586
 GameObject:
   m_ObjectHideFlags: 0
@@ -4096,6 +4328,29 @@ RectTransform:
   m_AnchoredPosition: {x: 100, y: 100}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1118751092 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 977255485153186132, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1118751094
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1118751092}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 12
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
 --- !u!114 &1165385307 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8052727492503287772, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
@@ -4156,6 +4411,151 @@ MonoBehaviour:
       m_Calls: []
   audioSpatialBlend: 0
   logEvents: 1
+--- !u!114 &1177008530
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1177008526}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a07af381807aea2419ef0efae1ac1841, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMController
+  playerCamera: {fileID: 0}
+  cameraTargetTransform: {fileID: 2140214695}
+  transitionDuration: 1
+  transitionEase:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  atmScreenText: {fileID: 1557098676}
+  hoverOutline: {fileID: 1177008528}
+  atmLights:
+  - {fileID: 44986871}
+  - {fileID: 1385012680}
+  - {fileID: 138341055}
+  - {fileID: 1200578711}
+  - {fileID: 840715771}
+  - {fileID: 1842800623}
+  - {fileID: 358306981}
+  - {fileID: 453889394}
+  - {fileID: 1434534540}
+  - {fileID: 2131819701}
+  audioSource: {fileID: 0}
+  startupSound: {fileID: 0}
+  shutdownSound: {fileID: 0}
+  keyClickSound: {fileID: 0}
+  washSuccessSound: {fileID: 0}
+  keyButtons:
+  - {fileID: 1020319216}
+  - {fileID: 1202288403}
+  - {fileID: 628624041}
+  - {fileID: 1118751094}
+  - {fileID: 1648572452}
+  - {fileID: 1210405589}
+  - {fileID: 1935837806}
+  - {fileID: 1179439168}
+  - {fileID: 423001948}
+  - {fileID: 1062295892}
+  - {fileID: 516746509}
+  - {fileID: 396954010}
+  launderingFeeRate: 0.1
+--- !u!1 &1179439166 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 923092139969586929, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1179439168
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1179439166}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 12
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
+--- !u!1 &1200578711 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 663601474649683708, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &1202288401 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 665250435320574136, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1202288403
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1202288401}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 12
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
+--- !u!1 &1210405587 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 424511936637520321, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1210405589
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1210405587}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 12
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
 --- !u!224 &1211889312 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 2997281279177916129, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
@@ -5247,6 +5647,16 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1354440593}
   m_CullTransparentMesh: 1
+--- !u!1 &1385012680 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7657301022914243002, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &1434534540 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5063629333999137238, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1444825854
 GameObject:
   m_ObjectHideFlags: 0
@@ -5910,6 +6320,17 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1554500402}
   m_CullTransparentMesh: 1
+--- !u!114 &1557098676 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 600064740956642035, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9541d86e2fd84c1d9990edf0852d74ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshPro
 --- !u!1 &1588461935
 GameObject:
   m_ObjectHideFlags: 0
@@ -6122,6 +6543,29 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1595151646}
   m_CullTransparentMesh: 1
+--- !u!1 &1617654505 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7959352778028649220, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1617654507
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1617654505}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 12
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
 --- !u!1 &1623792958
 GameObject:
   m_ObjectHideFlags: 0
@@ -6348,6 +6792,29 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1633650226}
   m_CullTransparentMesh: 1
+--- !u!1 &1648572450 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1299021652990284208, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1648572452
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1648572450}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 12
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
 --- !u!1 &1676031563 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8443109184755021179, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
@@ -6862,6 +7329,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1814764661}
   m_CullTransparentMesh: 1
+--- !u!1 &1842800623 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5136579900588402589, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1923848635
 GameObject:
   m_ObjectHideFlags: 0
@@ -6999,6 +7471,29 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1923848635}
   m_CullTransparentMesh: 1
+--- !u!1 &1935837804 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4872138389365767770, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1935837806
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1935837804}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 12
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
 --- !u!1 &1954492203
 GameObject:
   m_ObjectHideFlags: 0
@@ -7341,6 +7836,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2011442889}
   m_CullTransparentMesh: 1
+--- !u!1 &2131819701 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7971796733245743201, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2137171533
 GameObject:
   m_ObjectHideFlags: 0
@@ -7478,6 +7978,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2137171533}
   m_CullTransparentMesh: 1
+--- !u!4 &2140214695 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 9112404271761465081, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
 --- !u!224 &187857269035985684
 RectTransform:
   m_ObjectHideFlags: 0
@@ -7655,6 +8160,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 600064740956642035, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      propertyPath: m_fontSize
+      value: 9.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 600064740956642035, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      propertyPath: m_fontSizeBase
+      value: 9.5
+      objectReference: {fileID: 0}
     - target: {fileID: 6942256637255133749, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
       propertyPath: m_Name
       value: ATM
@@ -7706,9 +8219,63 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6942256637255133749, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1177008528}
+    - targetCorrespondingSourceObject: {fileID: 6942256637255133749, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1177008530}
+    - targetCorrespondingSourceObject: {fileID: 5835327492507061372, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1020319216}
+    - targetCorrespondingSourceObject: {fileID: 665250435320574136, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1202288403}
+    - targetCorrespondingSourceObject: {fileID: 5626650879804567468, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 628624041}
+    - targetCorrespondingSourceObject: {fileID: 977255485153186132, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1118751094}
+    - targetCorrespondingSourceObject: {fileID: 1299021652990284208, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1648572452}
+    - targetCorrespondingSourceObject: {fileID: 424511936637520321, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1210405589}
+    - targetCorrespondingSourceObject: {fileID: 4872138389365767770, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1935837806}
+    - targetCorrespondingSourceObject: {fileID: 923092139969586929, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1179439168}
+    - targetCorrespondingSourceObject: {fileID: 914031962854709085, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 423001948}
+    - targetCorrespondingSourceObject: {fileID: 7959352778028649220, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1617654507}
+    - targetCorrespondingSourceObject: {fileID: 3577754989397323183, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1062295892}
+    - targetCorrespondingSourceObject: {fileID: 9221442258153368129, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 28037581}
+    - targetCorrespondingSourceObject: {fileID: 5949081571003056769, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 516746509}
+    - targetCorrespondingSourceObject: {fileID: 5318304110457258031, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 396954010}
+    - targetCorrespondingSourceObject: {fileID: 7335937185632588202, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 614681826}
+    - targetCorrespondingSourceObject: {fileID: 7391436731856679661, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 717662160}
     - targetCorrespondingSourceObject: {fileID: 6061382097804974434, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1475763484}
+    - targetCorrespondingSourceObject: {fileID: 3237065386178046108, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 0}
   m_SourcePrefab: {fileID: 100100000, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
 --- !u!1001 &2821728039331258562
 PrefabInstance:
