@@ -202,6 +202,14 @@ public class TelevisionAnimator : MonoBehaviour
     }
 
     /// <summary>
+    /// 後方互換用エイリアス：コイン投入時アニメーションを再生します。
+    /// </summary>
+    public void PlayAnimation()
+    {
+        PlayCoinAnimation();
+    }
+
+    /// <summary>
     /// コイン投入時（スタート座標 -> ゴール座標）のアニメーションを再生します。
     /// </summary>
     [ContextMenu("5. テスト再生: コイン時 (スタート -> ゴール)")]

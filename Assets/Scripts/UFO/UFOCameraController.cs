@@ -658,7 +658,7 @@ public class UFOCameraController : MonoBehaviour
         var anim = televisionObject.GetComponent<TelevisionAnimator>();
         if (anim != null)
         {
-            anim.PlayAnimation();
+            anim.PlayCoinAnimation();
             return;
         }
 
