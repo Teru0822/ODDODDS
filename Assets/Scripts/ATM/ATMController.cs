@@ -325,6 +325,10 @@ namespace App.ATM
 
             _currentState = ATMState.Off;
             IsInteracting = false;
+
+            // 脱出完了時のカーソルロックと非表示を念押し
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
         }
 
         private void SetATMState(bool active)
