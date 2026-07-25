@@ -208,8 +208,21 @@ public class RouletteController : MonoBehaviour
     {
         if (!enableDebugKey) return;
         var keyboard = Keyboard.current;
-        if (keyboard != null && keyboard[debugSpinKey].wasPressedThisFrame)
-            Spin();
+        if (keyboard == null) return;
+
+        bool isKeyPressed = keyboard.kKey.wasPressedThisFrame || (debugSpinKey != Key.None && keyboard[debugSpinKey].wasPressedThisFrame);
+        if (isKeyPressed)
+        {
+            var goal = UFOItemGoal.Instance != null ? UFOItemGoal.Instance : FindAnyObjectByType<UFOItemGoal>();
+            if (goal != null)
+            {
+                goal.TriggerRouletteItemGoalEffect();
+            }
+            else
+            {
+                Spin();
+            }
+        }
     }
 
     // -----------------------------------------------------------------------
