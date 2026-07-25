@@ -1,5 +1,8 @@
 using System.Collections;
 using UnityEngine;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 /// <summary>
 /// Scene_UFOCatcher 内のテレビ（television）オブジェクトにアタッチして使用する演出用スクリプト。
@@ -101,8 +104,26 @@ public class TelevisionAnimator : MonoBehaviour
 
     private void Update()
     {
+        bool isDigit3Pressed = false;
+
+#if ENABLE_INPUT_SYSTEM
+        var keyboard = Keyboard.current;
+        if (keyboard != null)
+        {
+            if (keyboard.digit3Key.wasPressedThisFrame || keyboard.numpad3Key.wasPressedThisFrame)
+            {
+                isDigit3Pressed = true;
+            }
+        }
+#else
+        if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3))
+        {
+            isDigit3Pressed = true;
+        }
+#endif
+
         // ゴール座標に位置しており、かつ「3」キー（テンキーの3含む）が押された場合に収納アニメーションを実行
-        if (_isAtGoal && (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3)))
+        if (_isAtGoal && isDigit3Pressed)
         {
             if (UFOCameraController.IsPlayingUfo)
             {
