@@ -1521,6 +1521,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 270478607}
   m_CullTransparentMesh: 1
+--- !u!1 &275495325 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 549408614309992999, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
+  m_PrefabInstance: {fileID: 2838122684108357249}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &286448199
 GameObject:
   m_ObjectHideFlags: 0
@@ -4356,12 +4361,25 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8052727492503287772, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
   m_PrefabInstance: {fileID: 2838122684108357249}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 275495325}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+--- !u!114 &1165385309
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 275495325}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24e3e4b4ba77446499b7bf8d9736cf4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TMPMaterialOverride
+  _material: {fileID: 2100000, guid: 893729ed80bd245b19ff126204ec66d9, type: 2}
 --- !u!1 &1177008526 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6942256637255133749, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
@@ -5783,6 +5801,8 @@ MonoBehaviour:
   _tabInactiveSprite: {fileID: 21300000, guid: 6bde3986479ab44ca86075422eac2266, type: 3}
   _tabActiveTextColor: {r: 0.101960786, g: 0.0627451, b: 0.03137255, a: 1}
   _tabInactiveTextColor: {r: 0.78431374, g: 0.65882355, b: 0.29411766, a: 1}
+  _tabActiveMaterial: {fileID: 2100000, guid: 57de86419699c4f018d5e5512283d6cf, type: 2}
+  _tabInactiveMaterial: {fileID: 2100000, guid: 19c27c1a233434cad916d7bef604c0a0, type: 2}
   _skillButtonNormalSprite: {fileID: 21300000, guid: 4b4821c46969d46008eff535fc81df27, type: 3}
   _skillButtonHoverSprite: {fileID: 21300000, guid: e6dbf8b11ffba4c70aaf7c3157c11f7e, type: 3}
   _skillButtonNormalTextColor: {r: 0.78431374, g: 0.65882355, b: 0.29411766, a: 1}
@@ -9623,11 +9643,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3389423902627311060, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 1382.7671
+      value: 1382.767
       objectReference: {fileID: 0}
     - target: {fileID: 3389423902627311060, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 152.4099
+      value: 136.81
       objectReference: {fileID: 0}
     - target: {fileID: 3389423902627311060, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
       propertyPath: m_AnchoredPosition.x
@@ -9635,7 +9655,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3389423902627311060, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -6.2
+      value: 1.6
       objectReference: {fileID: 0}
     - target: {fileID: 3455493865176969786, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
       propertyPath: m_Color.a
@@ -9812,7 +9832,7 @@ PrefabInstance:
     - target: {fileID: 8052727492503287772, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
       propertyPath: m_fontAsset
       value: 
-      objectReference: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+      objectReference: {fileID: 11400000, guid: 93f8be6c10b2743ada3a3f7f1addfd46, type: 2}
     - target: {fileID: 8052727492503287772, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
       propertyPath: m_fontStyle
       value: 1
@@ -9832,7 +9852,7 @@ PrefabInstance:
     - target: {fileID: 8052727492503287772, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
       propertyPath: m_sharedMaterial
       value: 
-      objectReference: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+      objectReference: {fileID: 2100000, guid: 893729ed80bd245b19ff126204ec66d9, type: 2}
     - target: {fileID: 8052727492503287772, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
       propertyPath: m_fontColor32.rgba
       value: 4294967295
@@ -10007,7 +10027,10 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2997281279177916129, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1588461936}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 549408614309992999, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1165385309}
   m_SourcePrefab: {fileID: 100100000, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
 --- !u!224 &2931416442522275236
 RectTransform:
