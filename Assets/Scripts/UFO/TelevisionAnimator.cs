@@ -128,6 +128,8 @@ public class TelevisionAnimator : MonoBehaviour
     [ContextMenu("5. アニメーションをテスト再生")]
     public void PlayAnimation()
     {
+        if (this == null || gameObject == null) return;
+
         if (!gameObject.activeSelf)
         {
             gameObject.SetActive(true);
@@ -142,6 +144,8 @@ public class TelevisionAnimator : MonoBehaviour
 
     private IEnumerator AnimateRoutine()
     {
+        if (this == null || gameObject == null || transform == null) yield break;
+
         Quaternion startRot = StartRotation;
         Quaternion endRot = EndRotation;
 
@@ -161,6 +165,8 @@ public class TelevisionAnimator : MonoBehaviour
 
         while (elapsed < duration)
         {
+            if (this == null || gameObject == null || transform == null) yield break;
+
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / duration);
             float ease = easeCurve != null ? easeCurve.Evaluate(t) : t;
@@ -178,6 +184,8 @@ public class TelevisionAnimator : MonoBehaviour
 
             yield return null;
         }
+
+        if (this == null || gameObject == null || transform == null) yield break;
 
         if (useWorldSpace)
         {

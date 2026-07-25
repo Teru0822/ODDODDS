@@ -348,8 +348,6 @@ public class UFOCameraController : MonoBehaviour
         Debug.Log($"[UFOCameraController] Start: fpController={(_fpController != null ? _fpController.name : "NULL")}");
         Debug.Log($"[UFOCameraController] Start: playerCamera={( playerCamera != null ? playerCamera.name : "NULL")}");
         Debug.Log($"[UFOCameraController] Start: ufoCenterTransform={ufoCenterTransform.name}");
-
-        EnsureTelevisionAnimatorAttached();
         Debug.Log($"[UFOCameraController] Start: interactionDistance={interactionDistance}");
         // =======================
 
@@ -643,26 +641,11 @@ public class UFOCameraController : MonoBehaviour
         Debug.Log($"[UFOCameraController] Started UFO play session. Cost: ¥{cost}, Limit: {playDuration}s, Total plays: {_paymentCount}");
     }
 
-    private void EnsureTelevisionAnimatorAttached()
-    {
-        if (televisionObject == null)
-        {
-            televisionObject = GameObject.Find("television");
-        }
-
-        if (televisionObject != null && televisionObject.GetComponent<TelevisionAnimator>() == null)
-        {
-            televisionObject.AddComponent<TelevisionAnimator>();
-            Debug.Log("[UFOCameraController] television オブジェクトに TelevisionAnimator を自動アタッチしました。");
-        }
-    }
-
     /// <summary>
-    /// コイン投入時に television オブジェクトを初期位置・回転に出現させ、目標位置・回転へ補間アニメーションする。
+    /// コイン投入時に television オブジェクトのアニメーションを再生する。
     /// </summary>
     public void TriggerTelevisionAnimation()
     {
-        EnsureTelevisionAnimatorAttached();
         if (!enableTelevisionAnimation) return;
 
         if (televisionObject == null)
@@ -670,9 +653,12 @@ public class UFOCameraController : MonoBehaviour
             televisionObject = GameObject.Find("television");
         }
 
-        if (televisionObject == null)
+        if (televisionObject == null) return;
+
+        var anim = televisionObject.GetComponent<TelevisionAnimator>();
+        if (anim != null)
         {
-            Debug.LogWarning("[UFOCameraController] television オブジェクトが見つかりません。");
+            anim.PlayAnimation();
             return;
         }
 
