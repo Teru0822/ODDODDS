@@ -103,6 +103,16 @@ public class RouletteFloater : MonoBehaviour
     // -----------------------------------------------------------------------
 
     private Vector3 _basePosition;
+
+    /// <summary>
+    /// 浮遊・回避計算の基準位置。
+    /// アニメーション演出時に外部から更新しても、浮遊揺れや回避力は基準位置に対して継続して適用されます。
+    /// </summary>
+    public Vector3 BasePosition
+    {
+        get => _basePosition;
+        set => _basePosition = value;
+    }
     private Vector3 _centerPosition;
     private Vector3 _velocity;
     private float   _timeOffset;
