@@ -12,6 +12,7 @@ public class UFOCameraController : MonoBehaviour
     public static UFOCameraController Instance { get; private set; }
     public static bool IsPlayingUfo { get; private set; } = false;
     public static event System.Action<bool> OnUfoModeChanged;
+    public static event System.Action OnCoinInserted;
     public static bool IsPlaySessionActive { get; private set; } = false;
     public static bool IsControlActive => IsPlaySessionActive && IsPlaySpotlightActive && Instance != null && Instance._playTimer > 0f;
 
@@ -635,6 +636,7 @@ public class UFOCameraController : MonoBehaviour
 
         // Television アニメーションの再生
         TriggerTelevisionAnimation();
+        OnCoinInserted?.Invoke();
 
         Debug.Log($"[UFOCameraController] Started UFO play session. Cost: ¥{cost}, Limit: {playDuration}s, Total plays: {_paymentCount}");
     }
