@@ -13,6 +13,7 @@ public class UFOCameraController : MonoBehaviour
     public static bool IsPlayingUfo { get; private set; } = false;
     public static event System.Action<bool> OnUfoModeChanged;
     public static event System.Action OnCoinInserted;
+    public static event System.Action OnAllCoinsInserted;
     public static bool IsPlaySessionActive { get; private set; } = false;
     public static bool IsControlActive => IsPlaySessionActive && IsPlaySpotlightActive && Instance != null && Instance._playTimer > 0f;
 
@@ -238,6 +239,7 @@ public class UFOCameraController : MonoBehaviour
     private int _paymentCount = 0;
     private float _playTimer = 0f;
     private int _triggeredCoinCount = 0;
+    private int _completedCoinAnimationCount = 0;
     private int _destroyedCoinCount = 0;
     private float _feverTimer = 0f; // フィーバータイム残り時間
 
@@ -602,13 +604,11 @@ public class UFOCameraController : MonoBehaviour
 
         // コイン投入演出の開始（カウンターをリセットして1枚目を投入）
         _triggeredCoinCount = 0;
+        _completedCoinAnimationCount = 0;
         TriggerCoinInsertionAnimation();
 
         // コイン投入音の再生
         PlaySound(coinInsertSound);
-
-        // Television アニメーション用のコイン投入イベントを発火
-        OnCoinInserted?.Invoke();
 
         Debug.Log($"[UFOCameraController] Started UFO play session. Cost: ¥{cost}, Limit: {playDuration}s, Total plays: {_paymentCount}");
     }
@@ -682,6 +682,15 @@ public class UFOCameraController : MonoBehaviour
             rb.isKinematic = originalKinematic;
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
+        }
+
+        // コイン投入演出の完了カウント
+        _completedCoinAnimationCount++;
+        if (_completedCoinAnimationCount >= coinAnimationRepeatCount)
+        {
+            Debug.Log($"[UFOCameraController] すべてのコイン({coinAnimationRepeatCount}枚)の投入アニメーションが完了しました。OnAllCoinsInserted を発火します。");
+            OnAllCoinsInserted?.Invoke();
+            OnCoinInserted?.Invoke();
         }
     }
 

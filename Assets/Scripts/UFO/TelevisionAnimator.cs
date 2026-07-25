@@ -72,13 +72,13 @@ public class TelevisionAnimator : MonoBehaviour
     private void OnEnable()
     {
         UFOCameraController.OnUfoModeChanged += HandleUfoModeChanged;
-        UFOCameraController.OnCoinInserted += PlayCoinAnimation;
+        UFOCameraController.OnAllCoinsInserted += PlayCoinAnimation;
     }
 
     private void OnDisable()
     {
         UFOCameraController.OnUfoModeChanged -= HandleUfoModeChanged;
-        UFOCameraController.OnCoinInserted -= PlayCoinAnimation;
+        UFOCameraController.OnAllCoinsInserted -= PlayCoinAnimation;
     }
 
     private void HandleUfoModeChanged(bool isUfoMode)
