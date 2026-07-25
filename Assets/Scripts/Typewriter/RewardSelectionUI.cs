@@ -76,6 +76,12 @@ public class RewardSelectionUI : MonoBehaviour
     [Tooltip("未選択タブのテキスト色")]
     [SerializeField] private Color _tabInactiveTextColor = Color.white;
 
+    [Header("タブボタン TMPマテリアル")]
+    [Tooltip("選択中タブのテキストマテリアル（枠線・テクスチャなど）。null なら色のみ切り替え")]
+    [SerializeField] private Material _tabActiveMaterial;
+    [Tooltip("未選択タブのテキストマテリアル（枠線・テクスチャなど）。null なら色のみ切り替え")]
+    [SerializeField] private Material _tabInactiveMaterial;
+
     [Header("スキル選択ボタン画像")]
     [Tooltip("ホバーしていない通常状態のスプライト")]
     [SerializeField] private Sprite _skillButtonNormalSprite;
@@ -292,10 +298,18 @@ public class RewardSelectionUI : MonoBehaviour
             var img = tab.GetComponent<Image>();
             if (img != null) img.sprite = sprite;
         }
-        var textColor = isActive ? _tabActiveTextColor : _tabInactiveTextColor;
         var tmp = tab.GetComponentInChildren<TMP_Text>();
-        if (tmp != null) tmp.color = textColor;
-        else { var leg = tab.GetComponentInChildren<Text>(); if (leg != null) leg.color = textColor; }
+        if (tmp != null)
+        {
+            tmp.color = isActive ? _tabActiveTextColor : _tabInactiveTextColor;
+            var mat = isActive ? _tabActiveMaterial : _tabInactiveMaterial;
+            if (mat != null) tmp.fontMaterial = mat;
+        }
+        else
+        {
+            var leg = tab.GetComponentInChildren<Text>();
+            if (leg != null) leg.color = isActive ? _tabActiveTextColor : _tabInactiveTextColor;
+        }
     }
 
     /// <summary>
