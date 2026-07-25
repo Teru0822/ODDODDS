@@ -436,6 +436,7 @@ public class UFOItemGoal : MonoBehaviour
                     // コイン獲得音の再生
                     PlaySound(coinGetSound);
                     break;
+                case UFOItemType.RouletteItem:
                     TriggerRouletteItemGoalEffect(finalValue);
                     break;
                 case UFOItemType.Watch:
