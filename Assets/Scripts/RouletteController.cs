@@ -62,6 +62,13 @@ public class RouletteController : MonoBehaviour
     [Tooltip("点滅の間隔（秒）。0.5秒に設定すると、0.5秒点灯・0.5秒消灯の1秒周期になります")]
     [SerializeField] private float blinkInterval = 0.5f;
 
+    [Header("Devil Eye 演出アニメーション設定")]
+    [Tooltip("スピン実行時に Devil Eye の移動・ワープ・3秒保持アニメーションを再生するか")]
+    [SerializeField] private bool useSequenceAnimation = true;
+
+    [Tooltip("イントロ/アウトロ移動の各区間のイージング")]
+    [SerializeField] private AnimationCurve sequenceEaseCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+
     private Coroutine _lightCoroutine;
 
     [Header("イベント")]
@@ -108,11 +115,18 @@ public class RouletteController : MonoBehaviour
 
         if (!ValidateReferences()) return;
 
-        _isSpinning = true;
-        SyncCurrentAngle();
-        int winningIndex = SelectWinningSlot();
-        float targetAngle = ComputeTargetAngle(winningIndex);
-        StartCoroutine(SpinCoroutine(targetAngle, winningIndex));
+        if (useSequenceAnimation)
+        {
+            StartCoroutine(ExecuteEyeSequenceAndSpinRoutine());
+        }
+        else
+        {
+            _isSpinning = true;
+            SyncCurrentAngle();
+            int winningIndex = SelectWinningSlot();
+            float targetAngle = ComputeTargetAngle(winningIndex);
+            StartCoroutine(SpinCoroutine(targetAngle, winningIndex));
+        }
     }
 
     /// <summary>
@@ -194,8 +208,21 @@ public class RouletteController : MonoBehaviour
     {
         if (!enableDebugKey) return;
         var keyboard = Keyboard.current;
-        if (keyboard != null && keyboard[debugSpinKey].wasPressedThisFrame)
-            Spin();
+        if (keyboard == null) return;
+
+        bool isKeyPressed = keyboard.kKey.wasPressedThisFrame || (debugSpinKey != Key.None && keyboard[debugSpinKey].wasPressedThisFrame);
+        if (isKeyPressed)
+        {
+            var goal = UFOItemGoal.Instance != null ? UFOItemGoal.Instance : FindAnyObjectByType<UFOItemGoal>();
+            if (goal != null)
+            {
+                goal.TriggerRouletteItemGoalEffect();
+            }
+            else
+            {
+                Spin();
+            }
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -303,6 +330,167 @@ public class RouletteController : MonoBehaviour
         StartLightShow();
 
         OnSpinComplete.Invoke(winningIndex);
+    }
+
+    /// <summary>
+    /// Devil_Eye の移動・ワープ・3秒保持付きルーレット演出コルーチン。
+    /// 1. イントロ (計1秒): Y=4.708上昇 → Vector3(-2.06100011, 4.21000004, 4.01000023) ワープ → Y=3.37400007 下降
+    /// 2. スピン実行
+    /// 3. スピン終了後 3.0 秒間保持
+    /// 4. アウトロ (計1秒): Y=4.21000004上昇 → 初期X,Z(Y=4.708)ワープ → 初期Y下降
+    /// </summary>
+    private IEnumerator ExecuteEyeSequenceAndSpinRoutine()
+    {
+        _isSpinning = true;
+
+        RouletteFloater floater = GetComponent<RouletteFloater>();
+        if (floater == null) floater = GetComponentInParent<RouletteFloater>();
+        if (floater == null) floater = GetComponentInChildren<RouletteFloater>();
+
+        if (floater != null)
+        {
+            floater.IsSequenceActive = true;
+        }
+
+        try
+        {
+            // 初期位置（ローカル）・回転の保持
+            Vector3 startLocalBasePos = floater != null ? floater.BaseLocalPosition : transform.localPosition;
+            Quaternion startLocalRot = transform.localRotation;
+
+            // ワープ先のローカル位置および回転
+            Vector3 targetWarpPos = new Vector3(-2.06100011f, 5.0f, 4.01000023f);
+            Quaternion targetWarpRot = new Quaternion(0.0478489846f, -0.858475208f, 0.0284163076f, -0.50982672f);
+
+            // イントロ1秒間の各ステップの所要時間（上昇 0.33秒 -> ワープ 0.34秒 -> 下降 0.33秒）
+            float durA = 0.33f;
+            float durB = 0.34f;
+            float durC = 0.33f;
+
+            // -------------------------------------------------------------------
+            // Phase 1: イントロ演出（合計1.0秒）
+            // -------------------------------------------------------------------
+            // 1a. Y 座標を 5.0 まで上昇
+            Vector3 pos1aStart = startLocalBasePos;
+            Vector3 pos1aEnd = new Vector3(startLocalBasePos.x, 5.0f, startLocalBasePos.z);
+            float t = 0f;
+            while (t < durA)
+            {
+                t += Time.deltaTime;
+                float e = sequenceEaseCurve != null ? sequenceEaseCurve.Evaluate(Mathf.Clamp01(t / durA)) : Mathf.Clamp01(t / durA);
+                Vector3 curPos = Vector3.Lerp(pos1aStart, pos1aEnd, e);
+                if (floater != null) floater.BaseLocalPosition = curPos;
+                else transform.localPosition = curPos;
+                yield return null;
+            }
+
+            // 1b. ワープ位置 Vector3(-2.06100011, 5.0, 4.01000023) および Rotation 設定
+            Vector3 pos1bStart = pos1aEnd;
+            Vector3 pos1bEnd = targetWarpPos;
+            t = 0f;
+            while (t < durB)
+            {
+                t += Time.deltaTime;
+                float e = sequenceEaseCurve != null ? sequenceEaseCurve.Evaluate(Mathf.Clamp01(t / durB)) : Mathf.Clamp01(t / durB);
+                Vector3 curPos = Vector3.Lerp(pos1bStart, pos1bEnd, e);
+                Quaternion curRot = Quaternion.Slerp(startLocalRot, targetWarpRot, e);
+                if (floater != null) floater.BaseLocalPosition = curPos;
+                else transform.localPosition = curPos;
+                transform.localRotation = curRot;
+                yield return null;
+            }
+            transform.localRotation = targetWarpRot;
+
+            // 1c. Y 座標を 3.37400007 まで下降
+            Vector3 pos1cStart = targetWarpPos;
+            Vector3 pos1cEnd = new Vector3(targetWarpPos.x, 3.37400007f, targetWarpPos.z);
+            t = 0f;
+            while (t < durC)
+            {
+                t += Time.deltaTime;
+                float e = sequenceEaseCurve != null ? sequenceEaseCurve.Evaluate(Mathf.Clamp01(t / durC)) : Mathf.Clamp01(t / durC);
+                Vector3 curPos = Vector3.Lerp(pos1cStart, pos1cEnd, e);
+                if (floater != null) floater.BaseLocalPosition = curPos;
+                else transform.localPosition = curPos;
+                yield return null;
+            }
+            if (floater != null) floater.BaseLocalPosition = pos1cEnd;
+            else transform.localPosition = pos1cEnd;
+
+            // -------------------------------------------------------------------
+            // Phase 2: ルーレット回転
+            // -------------------------------------------------------------------
+            SyncCurrentAngle();
+            int winningIndex = SelectWinningSlot();
+            float targetAngle = ComputeTargetAngle(winningIndex);
+
+            // SpinCoroutine を実行し完了を待機
+            yield return StartCoroutine(SpinCoroutine(targetAngle, winningIndex));
+
+            // -------------------------------------------------------------------
+            // Phase 3: 回転終了後 3.0 秒間滞留
+            // -------------------------------------------------------------------
+            yield return new WaitForSeconds(3.0f);
+
+            // -------------------------------------------------------------------
+            // Phase 4: アウトロ演出（合計1.0秒）
+            // -------------------------------------------------------------------
+            // 4a. Y 座標を 5.0 まで上昇
+            Vector3 currentBase = floater != null ? floater.BaseLocalPosition : transform.localPosition;
+            Vector3 pos4aEnd = new Vector3(currentBase.x, 5.0f, currentBase.z);
+            t = 0f;
+            while (t < durA)
+            {
+                t += Time.deltaTime;
+                float e = sequenceEaseCurve != null ? sequenceEaseCurve.Evaluate(Mathf.Clamp01(t / durA)) : Mathf.Clamp01(t / durA);
+                Vector3 curPos = Vector3.Lerp(currentBase, pos4aEnd, e);
+                if (floater != null) floater.BaseLocalPosition = curPos;
+                else transform.localPosition = curPos;
+                yield return null;
+            }
+
+            // 4b. 最初にいた場所（Y=5.0）へワープ・回転復帰
+            Vector3 pos4bStart = pos4aEnd;
+            Vector3 pos4bEnd = new Vector3(startLocalBasePos.x, 5.0f, startLocalBasePos.z);
+            t = 0f;
+            while (t < durB)
+            {
+                t += Time.deltaTime;
+                float e = sequenceEaseCurve != null ? sequenceEaseCurve.Evaluate(Mathf.Clamp01(t / durB)) : Mathf.Clamp01(t / durB);
+                Vector3 curPos = Vector3.Lerp(pos4bStart, pos4bEnd, e);
+                Quaternion curRot = Quaternion.Slerp(targetWarpRot, startLocalRot, e);
+                if (floater != null) floater.BaseLocalPosition = curPos;
+                else transform.localPosition = curPos;
+                transform.localRotation = curRot;
+                yield return null;
+            }
+            transform.localRotation = startLocalRot;
+
+
+            // 4c. もともといた初期 Y 座標まで下降
+            Vector3 pos4cStart = pos4bEnd;
+            Vector3 pos4cEnd = startLocalBasePos;
+            t = 0f;
+            while (t < durC)
+            {
+                t += Time.deltaTime;
+                float e = sequenceEaseCurve != null ? sequenceEaseCurve.Evaluate(Mathf.Clamp01(t / durC)) : Mathf.Clamp01(t / durC);
+                Vector3 curPos = Vector3.Lerp(pos4cStart, pos4cEnd, e);
+                if (floater != null) floater.BaseLocalPosition = curPos;
+                else transform.localPosition = curPos;
+                yield return null;
+            }
+            if (floater != null) floater.BaseLocalPosition = startLocalBasePos;
+            else transform.localPosition = startLocalBasePos;
+        }
+        finally
+        {
+            if (floater != null)
+            {
+                floater.IsSequenceActive = false;
+            }
+            _isSpinning = false;
+        }
     }
 
     /// <summary>必須参照を検証し、問題があれば警告して false を返す。</summary>

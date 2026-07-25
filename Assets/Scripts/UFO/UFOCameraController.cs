@@ -283,6 +283,11 @@ public class UFOCameraController : MonoBehaviour
         return playerCamera != null ? playerCamera : Camera.main;
     }
 
+    /// <summary>
+    /// 正面カメラ (frontCamera) を返します。
+    /// </summary>
+    public Camera FrontCamera => frontCamera != null ? frontCamera : (playerCamera != null ? playerCamera : Camera.main);
+
     private void Start()
     {
         // プレイヤーとUFOキャッチャーのアームコントローラーを自動検出

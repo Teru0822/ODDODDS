@@ -124,6 +124,13 @@ public class UFOItemGoal : MonoBehaviour
     [Tooltip("スピンさせるルーレットのコントローラー")]
     [SerializeField] private RouletteController rouletteController;
 
+    public static UFOItemGoal Instance { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+    }
+
     private void Start()
     {
         // AudioSourceの自動取得
@@ -429,48 +436,7 @@ public class UFOItemGoal : MonoBehaviour
                     // コイン獲得音の再生
                     PlaySound(coinGetSound);
                     break;
-                case UFOItemType.RouletteItem:
-                    // メインのお金（MoneyManager）ではなく、未洗浄メダルとして別に貯める
-                    if (UnwashedMoneyManager.Instance != null)
-                    {
-                        UnwashedMoneyManager.Instance.Add(finalValue);
-                    }
-                    else
-                    {
-                        unwashedMoney += finalValue;
-                    }
-                    Debug.Log($"[獲得] RouletteItem！ (未洗浄メダル総額: {unwashedMoney}円)");
-                    
-                    // コイン獲得音の再生
-                    PlaySound(coinGetSound);
-
-                    // ランプを金（ゴールド）に点滅させる
-                    TriggerLampFlash(rouletteFlashColor, true);
-
-                    // 時間の一時停止を開始する
-                    if (UFOCameraController.Instance != null)
-                    {
-                        UFOCameraController.Instance.IsRouletteTimePaused = true;
-                        Debug.Log("[UFOItemGoal] ルーレットアイテム投入につき、UFO残り時間の減少を一時停止しました。");
-                    }
-
-                    // ルーレットを回転させる
-                    if (rouletteController != null)
-                    {
-                        // リスナーの多重登録を防ぎつつ、イベントを購読
-                        rouletteController.OnSpinComplete.RemoveListener(HandleRouletteSpinComplete);
-                        rouletteController.OnSpinComplete.AddListener(HandleRouletteSpinComplete);
-                        
-                        rouletteController.Spin();
-                    }
-                    else
-                    {
-                        Debug.LogError("[UFOItemGoal] rouletteController がアタッチされていません！インスペクターで RouletteController を必ずアタッチしてください。時間停止を解除します。");
-                        if (UFOCameraController.Instance != null)
-                        {
-                            UFOCameraController.Instance.IsRouletteTimePaused = false;
-                        }
-                    }
+                    TriggerRouletteItemGoalEffect(finalValue);
                     break;
                 case UFOItemType.Watch:
                     collectedWatches++;
@@ -532,6 +498,55 @@ public class UFOItemGoal : MonoBehaviour
             StopCoroutine(_lampCoroutine);
         }
         _lampCoroutine = StartCoroutine(FlashLampsCoroutine(color, isBlink));
+    }
+
+    /// <summary>
+    /// プレゼントボックス / ルーレットアイテム投入時と同等のルーレット獲得処理を実行する。
+    /// デバッグキー (Kキー等) や外部トリガーからの実行用。
+    /// </summary>
+    public void TriggerRouletteItemGoalEffect(float finalValue = 1000f)
+    {
+        // メインのお金（MoneyManager）ではなく、未洗浄メダルとして別に貯める
+        if (UnwashedMoneyManager.Instance != null)
+        {
+            UnwashedMoneyManager.Instance.Add(finalValue);
+        }
+        else
+        {
+            unwashedMoney += finalValue;
+        }
+        Debug.Log($"[獲得] RouletteItem (トリガー実行)！ (未洗浄メダル総額: {unwashedMoney}円)");
+        
+        // コイン獲得音の再生
+        PlaySound(coinGetSound);
+
+        // ランプを金（ゴールド）に点滅させる
+        TriggerLampFlash(rouletteFlashColor, true);
+
+        // 時間の一時停止を開始する
+        if (UFOCameraController.Instance != null)
+        {
+            UFOCameraController.Instance.IsRouletteTimePaused = true;
+            Debug.Log("[UFOItemGoal] ルーレットアイテム投入につき、UFO残り時間の減少を一時停止しました。");
+        }
+
+        // ルーレットを回転させる
+        if (rouletteController != null)
+        {
+            // リスナーの多重登録を防ぎつつ、イベントを購読
+            rouletteController.OnSpinComplete.RemoveListener(HandleRouletteSpinComplete);
+            rouletteController.OnSpinComplete.AddListener(HandleRouletteSpinComplete);
+            
+            rouletteController.Spin();
+        }
+        else
+        {
+            Debug.LogError("[UFOItemGoal] rouletteController がアタッチされていません！インスペクターで RouletteController を必ずアタッチしてください。時間停止を解除します。");
+            if (UFOCameraController.Instance != null)
+            {
+                UFOCameraController.Instance.IsRouletteTimePaused = false;
+            }
+        }
     }
 
     private System.Collections.IEnumerator FlashLampsCoroutine(Color color, bool isBlink)

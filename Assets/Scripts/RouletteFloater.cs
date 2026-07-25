@@ -86,11 +86,14 @@ public class RouletteFloater : MonoBehaviour
     [SerializeField, Min(0f)] private float damping = 3f;
 
     [Header("カメラ追従（Y軸ビルボード）")]
-    [Tooltip("常に向き続けるカメラの Transform。null なら Camera.main を自動取得")]
+    [Tooltip("常に向き続けるカメラの Transform。null の場合は Front カメラ優先で自動指定されます")]
     [SerializeField] private Transform targetCamera;
 
     [Tooltip("カメラ追従を有効にする")]
     [SerializeField] private bool enableCameraFacing = true;
+
+    [Tooltip("正面カメラ (FrontCamera) のみを固定追従対象にする。サブカメラ視点切替（Left/Right/Back）に追従して回らない")]
+    [SerializeField] private bool faceFrontCameraOnly = true;
 
     [Tooltip("カメラ方向への回転追従速度（度/秒的なイメージ）。0 で即座にスナップ")]
     [SerializeField, Min(0f)] private float cameraFacingSpeed = 5f;
@@ -103,6 +106,28 @@ public class RouletteFloater : MonoBehaviour
     // -----------------------------------------------------------------------
 
     private Vector3 _basePosition;
+
+    /// <summary>演出シーケンスがアクティブかどうか。アクティブ時は活動範囲境界への引き戻し・強制作制をスキップします</summary>
+    public bool IsSequenceActive { get; set; } = false;
+
+    /// <summary>
+    /// 浮遊・回避計算の基準位置（ワールド空間）。
+    /// アニメーション演出時に外部から更新しても、浮遊揺れや回避力は基準位置に対して継続して適用されます。
+    /// </summary>
+    public Vector3 BasePosition
+    {
+        get => _basePosition;
+        set => _basePosition = value;
+    }
+
+    /// <summary>
+    /// 親に対するローカル空間での基準位置（演出アニメーション制御用）。
+    /// </summary>
+    public Vector3 BaseLocalPosition
+    {
+        get => transform.parent != null ? transform.parent.InverseTransformPoint(_basePosition) : _basePosition;
+        set => _basePosition = transform.parent != null ? transform.parent.TransformPoint(value) : value;
+    }
     private Vector3 _centerPosition;
     private Vector3 _velocity;
     private float   _timeOffset;
@@ -164,7 +189,25 @@ public class RouletteFloater : MonoBehaviour
 
     private void ApplyCameraFacing()
     {
-        Transform cam = targetCamera != null ? targetCamera : Camera.main?.transform;
+        Transform cam = null;
+
+        if (targetCamera != null)
+        {
+            cam = targetCamera;
+        }
+        else if (faceFrontCameraOnly && UFOCameraController.Instance != null && UFOCameraController.Instance.FrontCamera != null)
+        {
+            cam = UFOCameraController.Instance.FrontCamera.transform;
+        }
+        else if (UFOCameraController.Instance != null && UFOCameraController.Instance.GetActiveCamera() != null)
+        {
+            cam = UFOCameraController.Instance.GetActiveCamera().transform;
+        }
+        else
+        {
+            cam = Camera.main?.transform;
+        }
+
         if (cam == null) return;
 
         // カメラへの方向を水平面（XZ）に投影して Y 軸のみ回転
@@ -271,6 +314,8 @@ public class RouletteFloater : MonoBehaviour
 
     private Vector3 CalcBoundaryForce()
     {
+        if (IsSequenceActive) return Vector3.zero;
+
         return rangeShape == RangeShape.Sphere
             ? CalcSphereBoundaryForce()
             : CalcBoxBoundaryForce();
@@ -306,6 +351,8 @@ public class RouletteFloater : MonoBehaviour
 
     private void HardClampBoundary()
     {
+        if (IsSequenceActive) return;
+
         if (rangeShape == RangeShape.Sphere)
         {
             Vector3 dir = _basePosition - _centerPosition;
