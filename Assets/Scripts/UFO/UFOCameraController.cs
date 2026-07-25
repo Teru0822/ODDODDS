@@ -133,33 +133,6 @@ public class UFOCameraController : MonoBehaviour
     [Tooltip("消灯音の音量")]
     [SerializeField] [Range(0f, 10f)] private float lightOffVolume = 0.5f;
 
-    [Header("Television Animation Settings")]
-    [Tooltip("コイン投入時にアニメーションさせる television オブジェクト（未設定時は GameObject.Find(\"television\") を自動取得）")]
-    [SerializeField] private GameObject televisionObject;
-
-    [Tooltip("コイン投入時の television アニメーションを有効にするか")]
-    [SerializeField] private bool enableTelevisionAnimation = true;
-
-    [Tooltip("television 出現時のローカル位置")]
-    [SerializeField] private Vector3 tvStartPos = new Vector3(6.14467525f, 6.30035591f, -15.8870001f);
-
-    [Tooltip("television 出現時のローカル回転 (Quaternion(x, y, z, w))")]
-    [SerializeField] private Quaternion tvStartRot = new Quaternion(-0.911107421f, 0.0964306742f, 0.0631602257f, 0.395721138f);
-
-    [Tooltip("television アニメーション完了（現在）のローカル位置")]
-    [SerializeField] private Vector3 tvEndPos = new Vector3(5.75500011f, 6.30035591f, -14.1708603f);
-
-    [Tooltip("television アニメーション完了（現在）のローカル回転 (Quaternion(x, y, z, w))")]
-    [SerializeField] private Quaternion tvEndRot = new Quaternion(-0.676164687f, -0.218893334f, -0.613928378f, 0.343480766f);
-
-    [Tooltip("television アニメーションの所要時間（秒）")]
-    [SerializeField, Min(0.01f)] private float tvAnimationDuration = 1.0f;
-
-    [Tooltip("television アニメーションのイージング")]
-    [SerializeField] private AnimationCurve tvAnimationEase = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
-
-    private Coroutine _tvAnimationCoroutine;
-
     /// <summary>
     /// 指定された効果音を筐体メインのaudioSourceの位置から、末尾を指定秒数カットした状態で2D再生します。
     /// </summary>
@@ -634,73 +607,10 @@ public class UFOCameraController : MonoBehaviour
         // コイン投入音の再生
         PlaySound(coinInsertSound);
 
-        // Television アニメーションの再生
-        TriggerTelevisionAnimation();
+        // Television アニメーション用のコイン投入イベントを発火
         OnCoinInserted?.Invoke();
 
         Debug.Log($"[UFOCameraController] Started UFO play session. Cost: ¥{cost}, Limit: {playDuration}s, Total plays: {_paymentCount}");
-    }
-
-    /// <summary>
-    /// コイン投入時に television オブジェクトのアニメーションを再生する。
-    /// </summary>
-    public void TriggerTelevisionAnimation()
-    {
-        if (!enableTelevisionAnimation) return;
-
-        if (televisionObject == null)
-        {
-            televisionObject = GameObject.Find("television");
-        }
-
-        if (televisionObject == null) return;
-
-        var anim = televisionObject.GetComponent<TelevisionAnimator>();
-        if (anim != null)
-        {
-            anim.PlayCoinAnimation();
-            return;
-        }
-
-        if (_tvAnimationCoroutine != null)
-        {
-            StopCoroutine(_tvAnimationCoroutine);
-        }
-
-        _tvAnimationCoroutine = StartCoroutine(AnimateTelevisionRoutine());
-    }
-
-    private System.Collections.IEnumerator AnimateTelevisionRoutine()
-    {
-        if (televisionObject == null) yield break;
-
-        if (!televisionObject.activeSelf)
-        {
-            televisionObject.SetActive(true);
-        }
-
-        Transform tvTransform = televisionObject.transform;
-        tvTransform.localPosition = tvStartPos;
-        tvTransform.localRotation = tvStartRot;
-
-        float elapsed = 0f;
-        float duration = Mathf.Max(0.01f, tvAnimationDuration);
-
-        while (elapsed < duration)
-        {
-            elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / duration);
-            float ease = tvAnimationEase != null ? tvAnimationEase.Evaluate(t) : t;
-
-            tvTransform.localPosition = Vector3.Lerp(tvStartPos, tvEndPos, ease);
-            tvTransform.localRotation = Quaternion.Slerp(tvStartRot, tvEndRot, ease);
-
-            yield return null;
-        }
-
-        tvTransform.localPosition = tvEndPos;
-        tvTransform.localRotation = tvEndRot;
-        _tvAnimationCoroutine = null;
     }
 
     /// <summary>

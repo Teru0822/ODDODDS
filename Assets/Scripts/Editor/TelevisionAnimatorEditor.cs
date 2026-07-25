@@ -3,7 +3,7 @@ using UnityEngine;
 
 /// <summary>
 /// TelevisionAnimator 用のカスタム Inspector エディタ。
-/// 3つの座標 (1.出現, 2.スタート, 3.ゴール) のワンクリック保存・プレビュー移動・テスト再生ボタンを配置します。
+/// Scene_UFOCatcher にある television オブジェクトの位置保存・プレビュー・テスト再生ボタンを配置します。
 /// </summary>
 [CustomEditor(typeof(TelevisionAnimator))]
 [CanEditMultipleObjects]
@@ -28,21 +28,14 @@ public class TelevisionAnimatorEditor : Editor
 
         EditorGUILayout.BeginHorizontal();
 
-        if (GUILayout.Button("1. 『出現(初期)座標』に保存", GUILayout.Height(28)))
-        {
-            Undo.RecordObject(animator, "Save Television Spawn Transform");
-            animator.SaveCurrentTransformAsSpawn();
-            EditorUtility.SetDirty(animator);
-        }
-
-        if (GUILayout.Button("2. 『スタート座標』に保存", GUILayout.Height(28)))
+        if (GUILayout.Button("現在地を『スタート(出現)座標』に保存", GUILayout.Height(30)))
         {
             Undo.RecordObject(animator, "Save Television Start Transform");
             animator.SaveCurrentTransformAsStart();
             EditorUtility.SetDirty(animator);
         }
 
-        if (GUILayout.Button("3. 『ゴール座標』に保存", GUILayout.Height(28)))
+        if (GUILayout.Button("現在地を『ゴール(目標)座標』に保存", GUILayout.Height(30)))
         {
             Undo.RecordObject(animator, "Save Television End Transform");
             animator.SaveCurrentTransformAsEnd();
@@ -56,19 +49,13 @@ public class TelevisionAnimatorEditor : Editor
 
         EditorGUILayout.BeginHorizontal();
 
-        if (GUILayout.Button("出現位置に移動", GUILayout.Height(24)))
-        {
-            Undo.RecordObject(animator.transform, "Set Television to Spawn Transform");
-            animator.SetToSpawnTransform();
-        }
-
-        if (GUILayout.Button("スタート位置に移動", GUILayout.Height(24)))
+        if (GUILayout.Button("スタート位置に移動", GUILayout.Height(25)))
         {
             Undo.RecordObject(animator.transform, "Set Television to Start Transform");
             animator.SetToStartTransform();
         }
 
-        if (GUILayout.Button("ゴール位置に移動", GUILayout.Height(24)))
+        if (GUILayout.Button("ゴール位置に移動", GUILayout.Height(25)))
         {
             Undo.RecordObject(animator.transform, "Set Television to End Transform");
             animator.SetToEndTransform();
@@ -79,19 +66,10 @@ public class TelevisionAnimatorEditor : Editor
         EditorGUILayout.Space(5);
         EditorGUILayout.LabelField("テスト再生", EditorStyles.boldLabel);
 
-        EditorGUILayout.BeginHorizontal();
-
-        if (GUILayout.Button("テスト: 進入時 (出現 → スタート)", GUILayout.Height(30)))
-        {
-            animator.PlayEnterAnimation();
-        }
-
-        if (GUILayout.Button("テスト: コイン時 (スタート → ゴール)", GUILayout.Height(30)))
+        if (GUILayout.Button("テスト再生: コイン投入時アニメーション", GUILayout.Height(35)))
         {
             animator.PlayCoinAnimation();
         }
-
-        EditorGUILayout.EndHorizontal();
 
         serializedObject.ApplyModifiedProperties();
     }
