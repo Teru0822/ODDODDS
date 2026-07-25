@@ -129,6 +129,7 @@ namespace App.ATM
 
         // 高速カウントアップ表示用のキャッシュ金額
         private float _visualWashedAmount = 0f;
+        private float successAmountTextValue = 0f;
 
         private void Awake()
         {
