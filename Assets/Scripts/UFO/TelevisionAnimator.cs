@@ -5,6 +5,7 @@ using UnityEngine;
 /// Scene_UFOCatcher 内のテレビ（television）オブジェクトにアタッチして使用する演出用スクリプト。
 /// 1. UFOキャッチャークリック時: 出現座標(spawn)へ即座にワープし、そこからスタート座標(start)へアニメーション移動
 /// 2. 全コイン投入完了時: スタート座標(start)からゴール座標(end)へアニメーション移動
+/// 3. ゴール座標待機中にキーボードの「3」を押下時: ゴール座標(end)から収納座標(stow)へアニメーション移動
 /// </summary>
 public class TelevisionAnimator : MonoBehaviour
 {
@@ -38,12 +39,25 @@ public class TelevisionAnimator : MonoBehaviour
     [Tooltip("全コイン投入完了アニメーション後の最終回転 (度数表示 X, Y, Z)")]
     [SerializeField] private Vector3 endEulerAngles = new Vector3(-92.99f, -78.70f, -39.90f);
 
-    [Header("4. アニメーション設定")]
+    [Header("4. 収納（しまい）座標設定（3キー押下時）")]
+    [Tooltip("ゴール座標から「3」キーを押してモニターを仕舞う位置")]
+    [SerializeField] private Vector3 stowPosition = new Vector3(8.29f, -0.729f, -14.937f);
+
+    [Tooltip("ゴール座標から「3」キーを押してモニターを仕舞う回転 (Quaternion)")]
+    [SerializeField] private Quaternion stowRotation = new Quaternion(-0.34421536f, -0.49718878f, -0.76262087f, 0.22962688f);
+
+    [Tooltip("ゴール座標から「3」キーを押してモニターを仕舞う回転 (度数表示 X, Y, Z)")]
+    [SerializeField] private Vector3 stowEulerAngles = new Vector3(-113.592f, -132.161f, 1.139f);
+
+    [Header("5. アニメーション設定")]
     [Tooltip("UFOキャッチャーアクセス時（出現 -> スタート）の所要時間（秒）")]
     [SerializeField, Min(0.01f)] private float enterAnimationDuration = 1.0f;
 
     [Tooltip("全コイン投入完了時（スタート -> ゴール）の所要時間（秒）")]
     [SerializeField, Min(0.01f)] private float coinAnimationDuration = 1.0f;
+
+    [Tooltip("収納時（ゴール -> 収納）の所要時間（秒）")]
+    [SerializeField, Min(0.01f)] private float stowAnimationDuration = 1.0f;
 
     [Tooltip("アニメーションのイージングカーブ")]
     [SerializeField] private AnimationCurve easeCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
@@ -54,6 +68,7 @@ public class TelevisionAnimator : MonoBehaviour
     public Quaternion SpawnRotation => (spawnRotation != Quaternion.identity && spawnRotation.w != 0) ? spawnRotation : Quaternion.Euler(spawnEulerAngles);
     public Quaternion StartRotation => (startRotation != Quaternion.identity && startRotation.w != 0) ? startRotation : Quaternion.Euler(startEulerAngles);
     public Quaternion EndRotation => (endRotation != Quaternion.identity && endRotation.w != 0) ? endRotation : Quaternion.Euler(endEulerAngles);
+    public Quaternion StowRotation => (stowRotation != Quaternion.identity && stowRotation.w != 0) ? stowRotation : Quaternion.Euler(stowEulerAngles);
 
 #if UNITY_EDITOR
     private void OnValidate()
@@ -64,10 +79,13 @@ public class TelevisionAnimator : MonoBehaviour
             startEulerAngles = startRotation.eulerAngles;
         if (endRotation != Quaternion.identity && endRotation.w != 0 && endEulerAngles == Vector3.zero)
             endEulerAngles = endRotation.eulerAngles;
+        if (stowRotation != Quaternion.identity && stowRotation.w != 0 && stowEulerAngles == Vector3.zero)
+            stowEulerAngles = stowRotation.eulerAngles;
     }
 #endif
 
     private Coroutine _animCoroutine;
+    private bool _isAtGoal = false;
 
     private void OnEnable()
     {
@@ -81,6 +99,19 @@ public class TelevisionAnimator : MonoBehaviour
         UFOCameraController.OnAllCoinsInserted -= PlayCoinAnimation;
     }
 
+    private void Update()
+    {
+        // ゴール座標に位置しており、かつ「3」キー（テンキーの3含む）が押された場合に収納アニメーションを実行
+        if (_isAtGoal && (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3)))
+        {
+            if (UFOCameraController.IsPlayingUfo)
+            {
+                Debug.Log("[TelevisionAnimator] ゴール座標にてキー「3」が押されました。収納アニメーションを開始します。");
+                PlayStowAnimation();
+            }
+        }
+    }
+
     private void HandleUfoModeChanged(bool isUfoMode)
     {
         if (isUfoMode)
@@ -89,6 +120,7 @@ public class TelevisionAnimator : MonoBehaviour
         }
         else
         {
+            _isAtGoal = false;
             ResetToSpawnTransform();
         }
     }
@@ -156,6 +188,27 @@ public class TelevisionAnimator : MonoBehaviour
         Debug.Log($"[TelevisionAnimator] ゴール座標を保存しました → 位置: {endPosition}, 回転: {endEulerAngles}");
     }
 
+    /// <summary>
+    /// 現在の Transform 位置・回転を『4. 収納(しまい)座標』に保存します。
+    /// </summary>
+    [ContextMenu("4. 現在の Transform を『収納(しまい)座標』として保存")]
+    public void SaveCurrentTransformAsStow()
+    {
+        if (useWorldSpace)
+        {
+            stowPosition = transform.position;
+            stowRotation = transform.rotation;
+            stowEulerAngles = transform.eulerAngles;
+        }
+        else
+        {
+            stowPosition = transform.localPosition;
+            stowRotation = transform.localRotation;
+            stowEulerAngles = transform.localEulerAngles;
+        }
+        Debug.Log($"[TelevisionAnimator] 収納(しまい)座標を保存しました → 位置: {stowPosition}, 回転: {stowEulerAngles}");
+    }
+
     public void SetToSpawnTransform()
     {
         if (useWorldSpace)
@@ -198,15 +251,31 @@ public class TelevisionAnimator : MonoBehaviour
         }
     }
 
+    public void SetToStowTransform()
+    {
+        if (useWorldSpace)
+        {
+            transform.position = stowPosition;
+            transform.rotation = StowRotation;
+        }
+        else
+        {
+            transform.localPosition = stowPosition;
+            transform.localRotation = StowRotation;
+        }
+    }
+
     /// <summary>
     /// 1段階目：UFOキャッチャーアクセス時
     /// ① 出現座標へ即座にワープ (0秒)
     /// ② 出現座標からスタート座標へアニメーション移動 (1秒)
     /// </summary>
-    [ContextMenu("4. テスト再生: アクセス時 (出現へワープ -> スタートへ移動)")]
+    [ContextMenu("5. テスト再生: アクセス時 (出現へワープ -> スタートへ移動)")]
     public void PlayEnterAnimation()
     {
         if (this == null || gameObject == null) return;
+
+        _isAtGoal = false;
 
         if (!gameObject.activeSelf)
         {
@@ -221,16 +290,19 @@ public class TelevisionAnimator : MonoBehaviour
         {
             StopCoroutine(_animCoroutine);
         }
-        _animCoroutine = StartCoroutine(AnimateRoutine(spawnPosition, SpawnRotation, startPosition, StartRotation, enterAnimationDuration));
+        _animCoroutine = StartCoroutine(AnimateRoutine(spawnPosition, SpawnRotation, startPosition, StartRotation, enterAnimationDuration, () => _isAtGoal = false));
     }
 
     /// <summary>
     /// 2段階目：全コイン投入完了時（スタート座標 -> ゴール座標）のアニメーションを再生します。
+    /// 移動完了後にゴールフラグ（_isAtGoal）を true に更新します。
     /// </summary>
-    [ContextMenu("5. テスト再生: 全コイン投入後 (スタート -> ゴール)")]
+    [ContextMenu("6. テスト再生: 全コイン投入後 (スタート -> ゴール)")]
     public void PlayCoinAnimation()
     {
         if (this == null || gameObject == null) return;
+
+        _isAtGoal = false;
 
         if (!gameObject.activeSelf)
         {
@@ -241,7 +313,37 @@ public class TelevisionAnimator : MonoBehaviour
         {
             StopCoroutine(_animCoroutine);
         }
-        _animCoroutine = StartCoroutine(AnimateRoutine(startPosition, StartRotation, endPosition, EndRotation, coinAnimationDuration));
+        _animCoroutine = StartCoroutine(AnimateRoutine(startPosition, StartRotation, endPosition, EndRotation, coinAnimationDuration, () =>
+        {
+            _isAtGoal = true;
+            Debug.Log("[TelevisionAnimator] ゴール座標への移動が完了しました。キー「3」で収納が可能です。");
+        }));
+    }
+
+    /// <summary>
+    /// 3段階目：ゴール座標から「3」キー押下時（ゴール座標 -> 収納座標）のアニメーションを再生します。
+    /// </summary>
+    [ContextMenu("7. テスト再生: キー3押下時 (ゴール -> 収納)")]
+    public void PlayStowAnimation()
+    {
+        if (this == null || gameObject == null) return;
+
+        _isAtGoal = false;
+
+        if (!gameObject.activeSelf)
+        {
+            gameObject.SetActive(true);
+        }
+
+        if (_animCoroutine != null)
+        {
+            StopCoroutine(_animCoroutine);
+        }
+        _animCoroutine = StartCoroutine(AnimateRoutine(endPosition, EndRotation, stowPosition, StowRotation, stowAnimationDuration, () =>
+        {
+            _isAtGoal = false;
+            Debug.Log("[TelevisionAnimator] モニターの収納移動が完了しました。");
+        }));
     }
 
     public void PlayAnimation()
@@ -257,10 +359,11 @@ public class TelevisionAnimator : MonoBehaviour
             StopCoroutine(_animCoroutine);
             _animCoroutine = null;
         }
+        _isAtGoal = false;
         SetToSpawnTransform();
     }
 
-    private IEnumerator AnimateRoutine(Vector3 fromPos, Quaternion fromRot, Vector3 toPos, Quaternion toRot, float duration)
+    private IEnumerator AnimateRoutine(Vector3 fromPos, Quaternion fromRot, Vector3 toPos, Quaternion toRot, float duration, System.Action onComplete = null)
     {
         if (this == null || gameObject == null || transform == null) yield break;
 
@@ -314,5 +417,6 @@ public class TelevisionAnimator : MonoBehaviour
         }
 
         _animCoroutine = null;
+        onComplete?.Invoke();
     }
 }
