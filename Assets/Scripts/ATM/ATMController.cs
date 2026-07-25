@@ -17,7 +17,8 @@ namespace App.ATM
 
     /// <summary>
     /// ATMの全体的な挙動を制御するコントローラー。
-    /// インスペクターで設定された各参照（アウトライン、カメラターゲット、物理ボタン、UI Canvas、ライトなど）を用いて動作します。
+    /// プレハブ内完結アセット（Canvas、ライト、cameraPos、物理ボタンなど）はインスペクターで設定し、
+    /// 別シーンにあるアセット（Player、MainCameraなど）はランタイムで動的に検索・バインドします。
     /// </summary>
     [DisallowMultipleComponent]
     public class ATMController : MonoBehaviour
@@ -25,10 +26,11 @@ namespace App.ATM
         public static ATMController Instance { get; private set; }
         public static bool IsInteracting { get; private set; } = false;
 
-        [Header("カメラ・遷移設定")]
-        [Tooltip("プレイヤーのメインカメラ。未指定なら Camera.main")]
+        [Header("カメラ・遷移設定 (別シーンアセット)")]
+        [Tooltip("プレイヤーのメインカメラ。別シーンからランタイムで自動取得するためアサイン不要です（手動指定も可）")]
         [SerializeField] private Camera playerCamera;
 
+        [Header("カメラ・遷移設定 (プレハブ内アセット)")]
         [Tooltip("ATM正面のカメラ配置位置（空のTransform等）。インスペクターでの指定が必須です")]
         [SerializeField] private Transform cameraTargetTransform;
 
@@ -38,11 +40,11 @@ namespace App.ATM
         [Tooltip("遷移のイージング曲線")]
         [SerializeField] private AnimationCurve transitionEase = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
-        [Header("インタラクション検出")]
+        [Header("インタラクション検出 (プレハブ内アセット)")]
         [Tooltip("ATMにアタッチした MouseHoverOutline。インスペクターでの指定が必須です")]
         [SerializeField] private MouseHoverOutline hoverOutline;
 
-        [Header("演出用オブジェクト")]
+        [Header("演出用オブジェクト (プレハブ内アセット)")]
         [Tooltip("起動時に有効化するライトオブジェクト群")]
         [SerializeField] private GameObject[] atmLights;
 
@@ -65,7 +67,7 @@ namespace App.ATM
         [Tooltip("資金洗浄に成功した時の音 (SE/debtPay など)")]
         [SerializeField] private AudioClip washSuccessSound;
 
-        [Header("物理ボタン (テンキー) 設定")]
+        [Header("物理ボタン (テンキー) 設定 (プレハブ内アセット)")]
         [Tooltip("3Dモデル内の各ボタンオブジェクト。インスペクターでの指定が必須です")]
         [SerializeField] private List<ATMPhysicalButton> keyButtons = new List<ATMPhysicalButton>();
 
@@ -108,7 +110,7 @@ namespace App.ATM
                 return;
             }
 
-            // AudioSource 自動補正（最低限の動作維持のため）
+            // AudioSource 自動補正
             if (audioSource == null) audioSource = GetComponent<AudioSource>();
             if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
 
@@ -118,22 +120,12 @@ namespace App.ATM
                 washSuccessSound = Resources.Load<AudioClip>("Sound/SE/debtPay");
             }
 
-            // 必須アサインの確認と警告
+            // 必須アサインの確認と警告 (プレハブ内完結しているアセットのみが対象)
             ValidateReferences();
         }
 
         private void Start()
         {
-            _fpController = FindAnyObjectByType<App.Player.FirstPersonController>();
-            if (_fpController != null && playerCamera == null)
-            {
-                playerCamera = _fpController.GetComponentInChildren<Camera>(true);
-            }
-            if (playerCamera == null)
-            {
-                playerCamera = Camera.main;
-            }
-
             // 初期状態はOFFにする
             SetATMState(false);
 
@@ -167,6 +159,10 @@ namespace App.ATM
             HandlePhysicalKeyboardInput();
         }
 
+        /// <summary>
+        /// プレハブ内で完結しているアセットの参照をバリデーションします。
+        /// 別シーンアセットはここには含めません。
+        /// </summary>
         private void ValidateReferences()
         {
             if (cameraTargetTransform == null)
@@ -185,12 +181,33 @@ namespace App.ATM
                 Debug.LogWarning("[ATMController] 物理ボタン (keyButtons) が登録されていません。キーの沈み込みアニメーションは動作しません。", this);
         }
 
+        /// <summary>
+        /// 別シーンから読み込まれるアセット（カメラ、プレイヤー）をランタイムで動的解決します。
+        /// </summary>
+        private void ResolveCrossSceneReferences()
+        {
+            if (playerCamera == null)
+            {
+                playerCamera = Camera.main;
+            }
+
+            if (_fpController == null)
+            {
+                _fpController = FindAnyObjectByType<App.Player.FirstPersonController>();
+                if (_fpController != null && playerCamera == null)
+                {
+                    playerCamera = _fpController.GetComponentInChildren<Camera>(true);
+                }
+            }
+        }
+
         private void OnATMClicked()
         {
             if (_currentState != ATMState.Off) return;
 
-            // 重複した距離制限チェックを廃止し、MouseHoverOutlineの検知距離に一本化しました。
-            // これにより、ホバーしてクリックできている限り確実に遷移します。
+            // クリックされたタイミングで別シーンの参照を最新の状態で解決する
+            ResolveCrossSceneReferences();
+
             StartCoroutine(TransitionToATM());
         }
 
@@ -201,7 +218,7 @@ namespace App.ATM
 
             if (hoverOutline != null) hoverOutline.enabled = false;
 
-            // プレイヤーの移動と視点移動を無効化
+            // プレイヤーの移動と視点移動を無効化 (動的に取得したコントローラーに命令)
             if (_fpController != null)
             {
                 _fpController.enabled = false;
@@ -209,6 +226,7 @@ namespace App.ATM
                 if (animator != null) animator.SetFloat("Speed", 0f);
             }
 
+            // 動的に他シーンから取得して無効化
             var pickupController = FindAnyObjectByType<CupPickupController>();
             if (pickupController != null) pickupController.enabled = false;
 
