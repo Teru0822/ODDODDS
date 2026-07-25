@@ -17,8 +17,8 @@ namespace App.ATM
 
     /// <summary>
     /// ATMの全体的な挙動を制御するコントローラー。
-    /// プレハブ内完結アセットはインスペクターで設定し、別シーンアセット（Player, Camera）はランタイムで動的解決します。
-    /// また、UI Canvas (atmUiCanvas) がインスペクターで未設定の場合は、起動時に美しいレトロサイバーUIを自動生成してフォールバックします。
+    /// モニター部分（WorldSpace Canvas）に情報を映し出し、3D空間上の物理ボタンへのマウスレイキャストクリック、
+    /// およびキーボード入力によってATM操作（残高照会・資金洗浄等）を処理します。
     /// </summary>
     [DisallowMultipleComponent]
     public class ATMController : MonoBehaviour
@@ -27,7 +27,7 @@ namespace App.ATM
         public static bool IsInteracting { get; private set; } = false;
 
         [Header("カメラ・遷移設定 (別シーンアセット)")]
-        [Tooltip("プレイヤーのメインカメラ。別シーンからランタイムで自動取得するためアサイン不要です（手動指定も可）")]
+        [Tooltip("プレイヤーのメインカメラ。ランタイムで自動取得するためアサイン不要です")]
         [SerializeField] private Camera playerCamera;
 
         [Header("カメラ・遷移設定 (プレハブ内アセット)")]
@@ -40,6 +40,10 @@ namespace App.ATM
         [Tooltip("遷移のイージング曲線")]
         [SerializeField] private AnimationCurve transitionEase = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
+        [Header("モニター投影設定 (WorldSpace Canvas用)")]
+        [Tooltip("ATMの画面モニター位置のメッシュまたはTransform。アサインされるとWorldSpace Canvasが自動フィット配置されます")]
+        [SerializeField] private Transform screenTargetTransform;
+
         [Header("インタラクション検出 (プレハブ内アセット)")]
         [Tooltip("ATMにアタッチした MouseHoverOutline。インスペクターでの指定が必須です")]
         [SerializeField] private MouseHoverOutline hoverOutline;
@@ -48,7 +52,7 @@ namespace App.ATM
         [Tooltip("起動時に有効化するライトオブジェクト群")]
         [SerializeField] private GameObject[] atmLights;
 
-        [Tooltip("ATMの操作用 Canvas。未設定（null）の場合は、起動時に自動生成されます")]
+        [Tooltip("ATMの操作用 Canvas。未指定（null）の場合は、起動時にWorldSpaceとして自動生成されます")]
         [SerializeField] private GameObject atmUiCanvas;
 
         [Header("効果音")]
@@ -123,10 +127,10 @@ namespace App.ATM
                 washSuccessSound = Resources.Load<AudioClip>("Sound/SE/debtPay");
             }
 
-            // UI Canvas が未設定の場合、動的にサイバーグリーンUIを構築
+            // UI Canvas が未設定の場合、動的にWorldSpace UIを構築
             if (atmUiCanvas == null)
             {
-                Debug.Log("[ATMController] atmUiCanvas が未設定のため、動的フォールバックUI (Canvas) を生成します。", this);
+                Debug.Log("[ATMController] atmUiCanvas が未設定のため、動的フォールバックUI (WorldSpace Canvas) を生成します。", this);
                 CreateDynamicUICanvas();
             }
 
@@ -158,12 +162,15 @@ namespace App.ATM
         {
             if (_currentState != ATMState.Active) return;
 
-            // Escキー押下で元の視点へ戻る
+            // Escキー押下で元の視点へ戻る (または取引終了キー)
             if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             {
                 TriggerExit();
                 return;
             }
+
+            // 3D物理ボタンの直接マウスレイキャストクリック検知
+            Handle3DButtonClicks();
 
             // 物理テンキーやキー入力連動でボタンを沈ませる
             HandlePhysicalKeyboardInput();
@@ -184,7 +191,7 @@ namespace App.ATM
                 Debug.LogError("[ATMController] atmUiCanvas が存在しません。", this);
 
             if (keyButtons.Count == 0)
-                Debug.LogWarning("[ATMController] 物理ボタン (keyButtons) が登録されていません。キーの沈み込みアニメーションは動作しません。", this);
+                Debug.LogWarning("[ATMController] 物理ボタン (keyButtons) が登録されていません。物理クリックインタラクションは動作しません。", this);
         }
 
         /// <summary>
@@ -278,7 +285,7 @@ namespace App.ATM
             // UIをWelcome画面で開く
             ShowPanel(welcomePanel);
 
-            // カーソルの表示とアンロック
+            // 3Dボタン直接クリックを行うため、マウスクロックを解除してカーソルを表示
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
         }
@@ -362,57 +369,80 @@ namespace App.ATM
             if (launderPanel != null) launderPanel.SetActive(launderPanel == targetPanel);
             if (processingPanel != null) processingPanel.SetActive(processingPanel == targetPanel);
             if (successPanel != null) successPanel.SetActive(successPanel == targetPanel);
-
-            // 音と物理ボタンの連動フィードバック
-            PlayKeyFeedback();
         }
 
-        public void OnTouchWelcome()
+        private void OnATMKeyPressed(KeyRole role)
         {
-            ShowPanel(mainMenuPanel);
-        }
+            if (_currentState != ATMState.Active) return;
 
-        public void OnClickInquiry()
-        {
-            UpdateInquiryUI();
-            ShowPanel(inquiryPanel);
-        }
-
-        public void OnClickLaunderMenu()
-        {
-            var wallet = PlayerWallet.Local;
-            float unwashed = wallet != null ? wallet.UnwashedAmount : 0f;
-
-            if (launderConfirmText != null)
+            // 画面ごとの入力処理とUI遷移ロジック
+            if (welcomePanel != null && welcomePanel.activeSelf)
             {
-                launderConfirmText.text = $"未洗浄資金:\n¥{unwashed:N0}\n\n手数料 ({(launderingFeeRate * 100f):F0}%):\n-¥{(unwashed * launderingFeeRate):N0}\n\n口座送金額:\n¥{(unwashed * (1f - launderingFeeRate)):N0}";
+                // 初期画面ではどれかキーを押せばメインメニューへ
+                ShowPanel(mainMenuPanel);
             }
-            ShowPanel(launderPanel);
-        }
-
-        public void OnClickExitATM()
-        {
-            TriggerExit();
-        }
-
-        public void OnClickBackToMenu()
-        {
-            ShowPanel(mainMenuPanel);
-        }
-
-        public void OnClickExecuteLaunder()
-        {
-            var wallet = PlayerWallet.Local;
-            float unwashed = wallet != null ? wallet.UnwashedAmount : 0f;
-
-            if (unwashed <= 0f)
+            else if (mainMenuPanel != null && mainMenuPanel.activeSelf)
             {
-                Debug.Log("[ATMController] 洗浄する資金がありません。");
-                PlayKeyFeedback();
-                return;
-            }
+                // メインメニュー
+                if (role == KeyRole.Num1)
+                {
+                    UpdateInquiryUI();
+                    ShowPanel(inquiryPanel);
+                }
+                else if (role == KeyRole.Num2)
+                {
+                    var wallet = PlayerWallet.Local;
+                    float unwashed = wallet != null ? wallet.UnwashedAmount : 0f;
 
-            StartCoroutine(ProcessLaundering(unwashed));
+                    if (launderConfirmText != null)
+                    {
+                        launderConfirmText.text = $"未洗浄資金:\n¥{unwashed:N0}\n\n手数料 ({(launderingFeeRate * 100f):F0}%):\n-¥{(unwashed * launderingFeeRate):N0}\n\n口座送金額:\n¥{(unwashed * (1f - launderingFeeRate)):N0}";
+                    }
+                    ShowPanel(launderPanel);
+                }
+                else if (role == KeyRole.Num3 || role == KeyRole.Cancel)
+                {
+                    TriggerExit();
+                }
+            }
+            else if (inquiryPanel != null && inquiryPanel.activeSelf)
+            {
+                // 残高照会画面 (0またはキャンセルでメニューへ戻る)
+                if (role == KeyRole.Num0 || role == KeyRole.Cancel)
+                {
+                    ShowPanel(mainMenuPanel);
+                }
+            }
+            else if (launderPanel != null && launderPanel.activeSelf)
+            {
+                // 資金洗浄確認画面
+                if (role == KeyRole.Confirm)
+                {
+                    var wallet = PlayerWallet.Local;
+                    float unwashed = wallet != null ? wallet.UnwashedAmount : 0f;
+
+                    if (unwashed <= 0f)
+                    {
+                        Debug.Log("[ATMController] 洗浄する資金がありません。");
+                        // 警告フィードバック音
+                        if (keyClickSound != null && audioSource != null) audioSource.PlayOneShot(keyClickSound);
+                        return;
+                    }
+                    StartCoroutine(ProcessLaundering(unwashed));
+                }
+                else if (role == KeyRole.Cancel)
+                {
+                    ShowPanel(mainMenuPanel);
+                }
+            }
+            else if (successPanel != null && successPanel.activeSelf)
+            {
+                // 洗浄成功画面 (EnterまたはCancelで戻る)
+                if (role == KeyRole.Confirm || role == KeyRole.Cancel)
+                {
+                    ShowPanel(mainMenuPanel);
+                }
+            }
         }
 
         private IEnumerator ProcessLaundering(float amountToWash)
@@ -500,82 +530,127 @@ namespace App.ATM
             }
         }
 
-        public void AnimateButtonAtIndex(int index)
+        /// <summary>
+        /// 指定された役割のボタンのアニメーションを再生します。
+        /// </summary>
+        public void AnimateButtonByRole(KeyRole role)
         {
-            if (keyButtons.Count == 0) return;
-            int targetIndex = Mathf.Clamp(index, 0, keyButtons.Count - 1);
-            if (keyButtons[targetIndex] != null)
+            foreach (var btn in keyButtons)
             {
-                keyButtons[targetIndex].Press(audioSource);
+                if (btn != null && btn.Role == role)
+                {
+                    btn.Press(audioSource);
+                    return;
+                }
+            }
+
+            // 見つからなければランダムに沈ませる
+            AnimateRandomButton();
+        }
+
+        /// <summary>
+        /// 3D空間上の物理ボタンに対するマウスクリックを検知します。
+        /// </summary>
+        private void Handle3DButtonClicks()
+        {
+            if (Mouse.current == null || !Mouse.current.leftButton.wasPressedThisFrame) return;
+
+            Vector2 mousePos = Mouse.current.position.ReadValue();
+            if (playerCamera == null) return;
+
+            Ray ray = playerCamera.ScreenPointToRay(mousePos);
+            if (Physics.Raycast(ray, out RaycastHit hit, 5f))
+            {
+                ATMPhysicalButton btn = hit.collider.GetComponent<ATMPhysicalButton>();
+                if (btn == null) btn = hit.collider.GetComponentInParent<ATMPhysicalButton>();
+
+                if (btn != null)
+                {
+                    // 3Dボタンの沈み込みアニメーションを実行し、入力を送信
+                    btn.Press(audioSource);
+                    OnATMKeyPressed(btn.Role);
+                }
             }
         }
 
+        /// <summary>
+        /// 物理キーボードからの入力を、3Dボタンの役割に紐づけて統合処理します。
+        /// </summary>
         private void HandlePhysicalKeyboardInput()
         {
             if (Keyboard.current == null) return;
 
             bool keyPressed = false;
-            int buttonIndex = -1;
+            KeyRole inputRole = KeyRole.Other;
 
-            if (Keyboard.current.digit0Key.wasPressedThisFrame || Keyboard.current.numpad0Key.wasPressedThisFrame) { buttonIndex = 0; keyPressed = true; }
-            else if (Keyboard.current.digit1Key.wasPressedThisFrame || Keyboard.current.numpad1Key.wasPressedThisFrame) { buttonIndex = 1; keyPressed = true; }
-            else if (Keyboard.current.digit2Key.wasPressedThisFrame || Keyboard.current.numpad2Key.wasPressedThisFrame) { buttonIndex = 2; keyPressed = true; }
-            else if (Keyboard.current.digit3Key.wasPressedThisFrame || Keyboard.current.numpad3Key.wasPressedThisFrame) { buttonIndex = 3; keyPressed = true; }
-            else if (Keyboard.current.digit4Key.wasPressedThisFrame || Keyboard.current.numpad4Key.wasPressedThisFrame) { buttonIndex = 4; keyPressed = true; }
-            else if (Keyboard.current.digit5Key.wasPressedThisFrame || Keyboard.current.numpad5Key.wasPressedThisFrame) { buttonIndex = 5; keyPressed = true; }
-            else if (Keyboard.current.digit6Key.wasPressedThisFrame || Keyboard.current.numpad6Key.wasPressedThisFrame) { buttonIndex = 6; keyPressed = true; }
-            else if (Keyboard.current.digit7Key.wasPressedThisFrame || Keyboard.current.numpad7Key.wasPressedThisFrame) { buttonIndex = 7; keyPressed = true; }
-            else if (Keyboard.current.digit8Key.wasPressedThisFrame || Keyboard.current.numpad8Key.wasPressedThisFrame) { buttonIndex = 8; keyPressed = true; }
-            else if (Keyboard.current.digit9Key.wasPressedThisFrame || Keyboard.current.numpad9Key.wasPressedThisFrame) { buttonIndex = 9; keyPressed = true; }
-            else if (Keyboard.current.enterKey.wasPressedThisFrame || Keyboard.current.numpadEnterKey.wasPressedThisFrame) { buttonIndex = 10; keyPressed = true; }
-            else if (Keyboard.current.backspaceKey.wasPressedThisFrame) { buttonIndex = 11; keyPressed = true; }
+            if (Keyboard.current.digit0Key.wasPressedThisFrame || Keyboard.current.numpad0Key.wasPressedThisFrame) { inputRole = KeyRole.Num0; keyPressed = true; }
+            else if (Keyboard.current.digit1Key.wasPressedThisFrame || Keyboard.current.numpad1Key.wasPressedThisFrame) { inputRole = KeyRole.Num1; keyPressed = true; }
+            else if (Keyboard.current.digit2Key.wasPressedThisFrame || Keyboard.current.numpad2Key.wasPressedThisFrame) { inputRole = KeyRole.Num2; keyPressed = true; }
+            else if (Keyboard.current.digit3Key.wasPressedThisFrame || Keyboard.current.numpad3Key.wasPressedThisFrame) { inputRole = KeyRole.Num3; keyPressed = true; }
+            else if (Keyboard.current.digit4Key.wasPressedThisFrame || Keyboard.current.numpad4Key.wasPressedThisFrame) { inputRole = KeyRole.Num4; keyPressed = true; }
+            else if (Keyboard.current.digit5Key.wasPressedThisFrame || Keyboard.current.numpad5Key.wasPressedThisFrame) { inputRole = KeyRole.Num5; keyPressed = true; }
+            else if (Keyboard.current.digit6Key.wasPressedThisFrame || Keyboard.current.numpad6Key.wasPressedThisFrame) { inputRole = KeyRole.Num6; keyPressed = true; }
+            else if (Keyboard.current.digit7Key.wasPressedThisFrame || Keyboard.current.numpad7Key.wasPressedThisFrame) { inputRole = KeyRole.Num7; keyPressed = true; }
+            else if (Keyboard.current.digit8Key.wasPressedThisFrame || Keyboard.current.numpad8Key.wasPressedThisFrame) { inputRole = KeyRole.Num8; keyPressed = true; }
+            else if (Keyboard.current.digit9Key.wasPressedThisFrame || Keyboard.current.numpad9Key.wasPressedThisFrame) { inputRole = KeyRole.Num9; keyPressed = true; }
+            else if (Keyboard.current.enterKey.wasPressedThisFrame || Keyboard.current.numpadEnterKey.wasPressedThisFrame) { inputRole = KeyRole.Confirm; keyPressed = true; }
+            else if (Keyboard.current.backspaceKey.wasPressedThisFrame) { inputRole = KeyRole.Cancel; keyPressed = true; }
 
             if (keyPressed)
             {
-                if (keyButtons.Count > 0)
-                {
-                    int actualIndex = buttonIndex < keyButtons.Count ? buttonIndex : Random.Range(0, keyButtons.Count);
-                    AnimateButtonAtIndex(actualIndex);
-                }
-                else
-                {
-                    if (keyClickSound != null && audioSource != null)
-                    {
-                        audioSource.PlayOneShot(keyClickSound);
-                    }
-                }
+                // 対応する3Dボタンをアニメーションさせて処理
+                AnimateButtonByRole(inputRole);
+                OnATMKeyPressed(inputRole);
             }
         }
 
-        // --- 動的 Canvas/UI 自動生成 (フォールバック) ---
+        // --- WorldSpace Canvas/UI 自動生成 (フォールバック) ---
 
         private void CreateDynamicUICanvas()
         {
-            _dynamicCanvasGo = new GameObject("ATMDynamicCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-            _dynamicCanvasGo.transform.SetParent(transform, false);
+            _dynamicCanvasGo = new GameObject("ATMDynamicCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
+            
+            // WorldSpace UI として設定し、マウスレイキャストが画面を突き抜けて3Dボタンに当たるようにするため、
+            // GraphicRaycaster コンポーネントはあえてアタッチしません（画面のマウスクリックを完全に透過させます）。
+            
+            // screenTargetTransform があればその位置にアタッチし、なければATMの前に配置
+            if (screenTargetTransform != null)
+            {
+                _dynamicCanvasGo.transform.SetParent(screenTargetTransform, false);
+            }
+            else
+            {
+                _dynamicCanvasGo.transform.SetParent(transform, false);
+                // モニターメッシュ位置のフォールバック (ATM前面の上部付近)
+                _dynamicCanvasGo.transform.localPosition = new Vector3(0f, 1.48f, 0.17f);
+                _dynamicCanvasGo.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+            }
 
             Canvas canvas = _dynamicCanvasGo.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.renderMode = RenderMode.WorldSpace;
             canvas.sortingOrder = 30000;
 
             CanvasScaler scaler = _dynamicCanvasGo.GetComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920, 1080);
-            scaler.matchWidthOrHeight = 0.5f;
+            scaler.dynamicPixelsPerUnit = 10f; // テキストのにじみ防止
+
+            RectTransform canvasRt = _dynamicCanvasGo.GetComponent<RectTransform>();
+            canvasRt.anchoredPosition3D = Vector3.zero;
+            // 800x600 解像度でスケーリング
+            canvasRt.sizeDelta = new Vector2(800f, 600f);
+            // WorldSpace 上で適切な実寸になるようにスケーリング (約 30cm × 22.5cm)
+            canvasRt.localScale = new Vector3(0.00045f, 0.00045f, 0.00045f);
 
             // 全体の背景コンテナ (CRT風モニター)
             GameObject monitorGo = new GameObject("MonitorFrame", typeof(RectTransform), typeof(Image));
             monitorGo.transform.SetParent(_dynamicCanvasGo.transform, false);
             
             Image monitorImg = monitorGo.GetComponent<Image>();
-            monitorImg.color = new Color(0.04f, 0.08f, 0.05f, 0.97f); 
+            monitorImg.color = new Color(0.04f, 0.08f, 0.05f, 0.99f); 
 
             RectTransform monitorRt = monitorGo.GetComponent<RectTransform>();
-            monitorRt.anchorMin = new Vector2(0.5f, 0.5f);
-            monitorRt.anchorMax = new Vector2(0.5f, 0.5f);
-            monitorRt.pivot = new Vector2(0.5f, 0.5f);
-            monitorRt.anchoredPosition = Vector2.zero;
-            monitorRt.sizeDelta = new Vector2(850f, 650f);
+            monitorRt.anchorMin = Vector2.zero;
+            monitorRt.anchorMax = Vector2.one;
+            monitorRt.sizeDelta = Vector2.zero;
 
             // 枠線
             GameObject borderGo = new GameObject("Border", typeof(RectTransform), typeof(Image));
@@ -593,52 +668,45 @@ namespace App.ATM
 
             // 1. Welcome Panel
             welcomePanel = CreatePanel(monitorGo.transform, "WelcomePanel");
-            CreateText(welcomePanel.transform, "TitleText", "FEVER CAPITAL ATM", 50, new Vector2(0f, 150f), new Color(0.2f, 1.0f, 0.4f));
-            CreateText(welcomePanel.transform, "SubtitleText", "SECURITY LEVEL: EXTREME", 22, new Vector2(0f, 90f), new Color(0.5f, 0.8f, 0.5f));
+            CreateText(welcomePanel.transform, "TitleText", "FEVER CAPITAL ATM", 45, new Vector2(0f, 120f), new Color(0.2f, 1.0f, 0.4f));
+            CreateText(welcomePanel.transform, "SubtitleText", "SECURITY LEVEL: EXTREME", 20, new Vector2(0f, 60f), new Color(0.5f, 0.8f, 0.5f));
             
-            GameObject insertCardBtn = CreateButton(welcomePanel.transform, "TouchScreenButton", "画面をタッチしてください", new Vector2(0f, -80f), new Vector2(400f, 80f));
-            insertCardBtn.GetComponent<Button>().onClick.AddListener(OnTouchWelcome);
+            // 物理ボタン操作を促すテキスト
+            CreateText(welcomePanel.transform, "TouchScreenButton", "取引を開始するには\nいずれかのキーをクリックしてください", 24, new Vector2(0f, -80f), Color.white);
 
             // 2. Main Menu Panel
             mainMenuPanel = CreatePanel(monitorGo.transform, "MainMenuPanel");
-            CreateText(mainMenuPanel.transform, "MenuTitleText", "MAIN MENU - 資金洗浄・口座取引", 34, new Vector2(0f, 200f), new Color(0.2f, 1.0f, 0.4f));
+            CreateText(mainMenuPanel.transform, "MenuTitleText", "MAIN MENU - 資金洗浄・口座取引", 32, new Vector2(0f, 180f), new Color(0.2f, 1.0f, 0.4f));
 
-            GameObject inquiryBtn = CreateButton(mainMenuPanel.transform, "InquiryButton", "残高照会 (BALANCE)", new Vector2(0f, 70f), new Vector2(450f, 70f));
-            inquiryBtn.GetComponent<Button>().onClick.AddListener(OnClickInquiry);
-
-            GameObject launderBtn = CreateButton(mainMenuPanel.transform, "LaunderButton", "資金洗浄 (LAUNDER CASH)", new Vector2(0f, -20f), new Vector2(450f, 70f));
-            launderBtn.GetComponent<Button>().onClick.AddListener(OnClickLaunderMenu);
-
-            GameObject exitBtn = CreateButton(mainMenuPanel.transform, "ExitButton", "カード返却・終了 (EXIT)", new Vector2(0f, -110f), new Vector2(450f, 70f), new Color(0.9f, 0.3f, 0.2f));
-            exitBtn.GetComponent<Button>().onClick.AddListener(OnClickExitATM);
+            // ボタン表示自体はクリック可能にする必要がないため、テキストとして表示
+            CreateText(mainMenuPanel.transform, "InquiryText", "[1] 残高照会 (BALANCE)", 24, new Vector2(0f, 60f), Color.white);
+            CreateText(mainMenuPanel.transform, "LaunderText", "[2] 資金洗浄 (LAUNDER CASH)", 24, new Vector2(0f, -10f), Color.white);
+            CreateText(mainMenuPanel.transform, "ExitText", "[3] 取引終了 (EXIT)", 24, new Vector2(0f, -80f), new Color(0.9f, 0.3f, 0.2f));
+            CreateText(mainMenuPanel.transform, "Instruction", "物理テンキーをクリックして選択してください", 18, new Vector2(0f, -160f), new Color(0.5f, 0.8f, 0.5f));
 
             // 3. Inquiry Panel
             inquiryPanel = CreatePanel(monitorGo.transform, "InquiryPanel");
-            CreateText(inquiryPanel.transform, "InqTitleText", "残高照会 - BALANCE INQUIRY", 34, new Vector2(0f, 200f), new Color(0.2f, 1.0f, 0.4f));
+            CreateText(inquiryPanel.transform, "InqTitleText", "残高照会 - BALANCE INQUIRY", 32, new Vector2(0f, 180f), new Color(0.2f, 1.0f, 0.4f));
             
-            cleanCashText = CreateText(inquiryPanel.transform, "CleanCash", "Clean: ¥0", 28, new Vector2(0f, 100f), Color.white);
-            dirtyCashText = CreateText(inquiryPanel.transform, "DirtyCash", "Dirty: ¥0", 28, new Vector2(0f, 40f), new Color(0.9f, 0.4f, 0.3f));
-            coinsText = CreateText(inquiryPanel.transform, "Coins", "金貨: 0  銀貨: 0  銅貨: 0", 20, new Vector2(0f, -30f), new Color(0.8f, 0.8f, 0.8f));
+            cleanCashText = CreateText(inquiryPanel.transform, "CleanCash", "Clean: ¥0", 26, new Vector2(0f, 90f), Color.white);
+            dirtyCashText = CreateText(inquiryPanel.transform, "DirtyCash", "Dirty: ¥0", 26, new Vector2(0f, 30f), new Color(0.9f, 0.4f, 0.3f));
+            coinsText = CreateText(inquiryPanel.transform, "Coins", "金貨: 0  銀貨: 0  銅貨: 0", 18, new Vector2(0f, -35f), new Color(0.8f, 0.8f, 0.8f));
 
-            GameObject inqBackBtn = CreateButton(inquiryPanel.transform, "InqBackButton", "戻る (BACK)", new Vector2(0f, -150f), new Vector2(300f, 60f));
-            inqBackBtn.GetComponent<Button>().onClick.AddListener(OnClickBackToMenu);
+            CreateText(inquiryPanel.transform, "InqBackButton", "[0] メニューに戻る", 24, new Vector2(0f, -130f), Color.white);
 
             // 4. Launder Panel 
             launderPanel = CreatePanel(monitorGo.transform, "LaunderPanel");
-            CreateText(launderPanel.transform, "LaunderTitle", "裏金資金洗浄処理 (LAUNDERING)", 34, new Vector2(0f, 200f), new Color(0.2f, 1.0f, 0.4f));
+            CreateText(launderPanel.transform, "LaunderTitle", "裏金資金洗浄処理 (LAUNDERING)", 32, new Vector2(0f, 180f), new Color(0.2f, 1.0f, 0.4f));
             
-            launderConfirmText = CreateText(launderPanel.transform, "LaunderConfirmText", "洗浄手数料: 10%\n口座への送金額: ¥0", 24, new Vector2(0f, 40f), Color.white);
+            launderConfirmText = CreateText(launderPanel.transform, "LaunderConfirmText", "洗浄手数料: 10%\n口座への送金額: ¥0", 22, new Vector2(0f, 30f), Color.white);
 
-            GameObject executeLaunderBtn = CreateButton(launderPanel.transform, "ExecLaunderBtn", "洗浄を実行する (CONFIRM)", new Vector2(-160f, -140f), new Vector2(300f, 70f), new Color(0.2f, 0.9f, 0.4f));
-            executeLaunderBtn.GetComponent<Button>().onClick.AddListener(OnClickExecuteLaunder);
-
-            GameObject cancelLaunderBtn = CreateButton(launderPanel.transform, "CancelLaunderBtn", "キャンセル (CANCEL)", new Vector2(160f, -140f), new Vector2(300f, 70f), new Color(0.6f, 0.6f, 0.6f));
-            cancelLaunderBtn.GetComponent<Button>().onClick.AddListener(OnClickBackToMenu);
+            CreateText(launderPanel.transform, "ExecLaunderBtn", "[Enter] 洗浄を実行する (CONFIRM)", 24, new Vector2(0f, -80f), new Color(0.2f, 0.9f, 0.4f));
+            CreateText(launderPanel.transform, "CancelLaunderBtn", "[Clear] キャンセル (CANCEL)", 24, new Vector2(0f, -130f), new Color(0.6f, 0.6f, 0.6f));
 
             // 5. Processing Panel
             processingPanel = CreatePanel(monitorGo.transform, "ProcessingPanel");
-            CreateText(processingPanel.transform, "ProcTitle", "資金洗浄中...", 36, new Vector2(0f, 120f), new Color(0.2f, 1.0f, 0.4f));
-            CreateText(processingPanel.transform, "ProcSub", "DON'T TURN OFF THE POWER", 18, new Vector2(0f, 70f), new Color(0.9f, 0.4f, 0.3f));
+            CreateText(processingPanel.transform, "ProcTitle", "資金洗浄中...", 36, new Vector2(0f, 100f), new Color(0.2f, 1.0f, 0.4f));
+            CreateText(processingPanel.transform, "ProcSub", "DON'T TURN OFF THE POWER", 18, new Vector2(0f, 50f), new Color(0.9f, 0.4f, 0.3f));
 
             GameObject sliderGo = new GameObject("Slider", typeof(RectTransform), typeof(Slider));
             sliderGo.transform.SetParent(processingPanel.transform, false);
@@ -677,13 +745,12 @@ namespace App.ATM
 
             // 6. Success Panel
             successPanel = CreatePanel(monitorGo.transform, "SuccessPanel");
-            CreateText(successPanel.transform, "SuccTitle", "資金洗浄完了", 36, new Vector2(0f, 150f), new Color(0.2f, 1.0f, 0.4f));
-            CreateText(successPanel.transform, "SuccSub", "口座に以下の金額を送金しました:", 20, new Vector2(0f, 80f), Color.white);
+            CreateText(successPanel.transform, "SuccTitle", "資金洗浄完了", 36, new Vector2(0f, 140f), new Color(0.2f, 1.0f, 0.4f));
+            CreateText(successPanel.transform, "SuccSub", "口座に以下の金額を送金しました:", 20, new Vector2(0f, 70f), Color.white);
             
-            successAmountText = CreateText(successPanel.transform, "SuccessAmount", "¥0", 42, new Vector2(0f, 0f), new Color(0.2f, 1.0f, 0.5f));
+            successAmountText = CreateText(successPanel.transform, "SuccessAmount", "¥0", 42, new Vector2(0f, -10f), new Color(0.2f, 1.0f, 0.5f));
 
-            GameObject succOkBtn = CreateButton(successPanel.transform, "SuccOkBtn", "確認 (OK)", new Vector2(0f, -120f), new Vector2(300f, 65f));
-            succOkBtn.GetComponent<Button>().onClick.AddListener(OnClickBackToMenu);
+            CreateText(successPanel.transform, "SuccOkBtn", "[Enter] メインメニューに戻る", 24, new Vector2(0f, -120f), Color.white);
 
             atmUiCanvas = _dynamicCanvasGo;
         }
@@ -713,48 +780,9 @@ namespace App.ATM
             
             RectTransform rt = go.GetComponent<RectTransform>();
             rt.anchoredPosition = anchoredPos;
-            rt.sizeDelta = new Vector2(700f, fontSize + 20f);
+            rt.sizeDelta = new Vector2(700f, fontSize + 30f);
 
             return tmp;
-        }
-
-        private GameObject CreateButton(Transform parent, string name, string text, Vector2 anchoredPos, Vector2 size, Color? normalColor = null)
-        {
-            GameObject btnGo = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
-            btnGo.transform.SetParent(parent, false);
-
-            Color color = normalColor ?? new Color(0.1f, 0.3f, 0.15f, 0.9f);
-            btnGo.GetComponent<Image>().color = color;
-
-            Button btn = btnGo.GetComponent<Button>();
-            
-            ColorBlock cb = btn.colors;
-            cb.normalColor = color;
-            cb.highlightedColor = color * 1.3f;
-            cb.pressedColor = color * 0.7f;
-            cb.selectedColor = color;
-            btn.colors = cb;
-
-            RectTransform rt = btnGo.GetComponent<RectTransform>();
-            rt.anchoredPosition = anchoredPos;
-            rt.sizeDelta = size;
-
-            GameObject txtGo = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
-            txtGo.transform.SetParent(btnGo.transform, false);
-            TextMeshProUGUI tmp = txtGo.GetComponent<TextMeshProUGUI>();
-            tmp.text = text;
-            tmp.fontSize = 20;
-            tmp.color = Color.white;
-            tmp.alignment = TextAlignmentOptions.Center;
-
-            RectTransform txtRt = txtGo.GetComponent<RectTransform>();
-            txtRt.anchorMin = Vector2.zero;
-            txtRt.anchorMax = Vector2.one;
-            txtRt.sizeDelta = Vector2.zero;
-
-            btn.onClick.AddListener(PlayKeyFeedback);
-
-            return btnGo;
         }
     }
 }

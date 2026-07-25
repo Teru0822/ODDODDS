@@ -4,11 +4,35 @@ using UnityEngine;
 namespace App.ATM
 {
     /// <summary>
+    /// ATMのボタンとしての役割（数字、決定、取消など）の定義。
+    /// </summary>
+    public enum KeyRole
+    {
+        Num0 = 0,
+        Num1 = 1,
+        Num2 = 2,
+        Num3 = 3,
+        Num4 = 4,
+        Num5 = 5,
+        Num6 = 6,
+        Num7 = 7,
+        Num8 = 8,
+        Num9 = 9,
+        Confirm = 10, // 確認 / 実行
+        Cancel = 11,  // 取消 / 戻る
+        Other = 12
+    }
+
+    /// <summary>
     /// ATMの物理キーパッドボタンにアタッチし、クリック時やキー入力時の沈み込み挙動を制御する。
     /// </summary>
     [DisallowMultipleComponent]
     public class ATMPhysicalButton : MonoBehaviour
     {
+        [Header("ボタン役割")]
+        [Tooltip("このボタンのATM操作上の役割")]
+        [SerializeField] private KeyRole role = KeyRole.Other;
+
         [Header("沈み込み設定")]
         [Tooltip("沈み込むローカル方向")]
         [SerializeField] private Vector3 pressDirection = Vector3.back;
@@ -29,11 +53,18 @@ namespace App.ATM
         private Vector3 _originalLocalPosition;
         private Coroutine _pressCoroutine;
 
+        public KeyRole Role => role;
         public AudioClip ClickSound => clickSound;
 
         private void Awake()
         {
             _originalLocalPosition = transform.localPosition;
+
+            // マウスでの3D直接クリックレイキャストを可能にするため、コライダーを自動補正
+            if (GetComponent<Collider>() == null)
+            {
+                gameObject.AddComponent<BoxCollider>();
+            }
         }
 
         /// <summary>
