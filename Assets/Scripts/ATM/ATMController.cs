@@ -29,7 +29,8 @@ namespace App.ATM
 
     /// <summary>
     /// ATMの全体的な挙動を制御するコントローラー。
-    /// エディタ上でATMのモニター画面位置に手動配置された 3D TextMeshPro の文字列を書き換えることでATM表示を制御します。
+    /// モニター上に配置された 3D TextMeshPro の文字列を書き換えることでATM表示を制御します。
+    /// 表示テキストは、文字化けを防止し世界観を高めるため、すべて等幅フォントに対応した英語表記となっています。
     /// </summary>
     [DisallowMultipleComponent]
     public class ATMController : MonoBehaviour
@@ -359,19 +360,19 @@ namespace App.ATM
                     displayText = 
                         "<color=#33FF66>=== FEVER CAPITAL ATM ===</color>\n" +
                         "SECURITY LEVEL: EXTREME\n\n" +
-                        "取引を開始するには\n" +
-                        "キーパッドのいずれかのキーを\n" +
-                        "クリックしてください。";
+                        "INSERT DEBIT CARD OR\n" +
+                        "CLICK ANY KEYPAD BUTTON\n" +
+                        "TO START TRANSACTION";
                     break;
 
                 case ATMSubState.MainMenu:
                     displayText =
                         "<color=#33FF66>=== MAIN MENU ===</color>\n" +
-                        "機能を選択してください：\n\n" +
-                        "[1] 残高照会 (BALANCE)\n" +
-                        "[2] 資金洗浄 (LAUNDER CASH)\n" +
-                        "[3] 取引終了 (EXIT)\n\n" +
-                        "<color=#558855>テンキーをクリックして選択してください。</color>";
+                        "SELECT TRANSACTION TYPE:\n\n" +
+                        "[1] INQUIRE BALANCE (BAL)\n" +
+                        "[2] LAUNDER CASH (LAUND)\n" +
+                        "[3] EXIT TERMINAL (EXIT)\n\n" +
+                        "<color=#558855>CLICK 3D KEYPAD TO ENTER CHOICE</color>";
                     break;
 
                 case ATMSubState.Inquiry:
@@ -385,12 +386,12 @@ namespace App.ATM
 
                     displayText =
                         "<color=#33FF66>=== BALANCE INQUIRY ===</color>\n" +
-                        $"口座残高: ¥{clean:N0}\n" +
-                        $"<color=#FF5533>未洗浄額: ¥{dirty:N0}</color>\n\n" +
-                        $"所持貨幣:\n" +
-                        $"金貨:{gold}枚  銀貨:{silver}枚  銅貨:{bronze}枚\n" +
-                        $"ブラックダイヤ:{diamond}個\n\n" +
-                        "[0] メインメニューに戻る";
+                        $"CLEAN BALANCE:  ¥{clean:N0}\n" +
+                        $"<color=#FF5533>UNWASHED DEBT:  ¥{dirty:N0}</color>\n\n" +
+                        $"COINS RETRIEVED:\n" +
+                        $"GOLD:{gold}  SILVER:{silver}  BRONZE:{bronze}\n" +
+                        $"BLACK DIAMOND:{diamond}\n\n" +
+                        "[0] BACK TO MAIN MENU";
                     break;
 
                 case ATMSubState.LaunderConfirm:
@@ -400,30 +401,29 @@ namespace App.ATM
                     float washed = unwashed - fee;
 
                     displayText =
-                        "<color=#33FF66>=== LAUNDER CASH ===</color>\n" +
-                        $"未洗浄資金: ¥{unwashed:N0}\n" +
-                        $"洗浄手数料 ({(launderingFeeRate * 100f):F0}%): -¥{fee:N0}\n" +
-                        $"<color=#33FF99>口座送金額: ¥{washed:N0}</color>\n\n" +
-                        "洗浄を実行しますか？\n" +
-                        "[Enter] 洗浄実行 (CONFIRM)\n" +
-                        "[Clear/Cancel] 戻る (CANCEL)";
+                        "<color=#33FF66>=== LAUNDER DEBT ===</color>\n" +
+                        $"DIRTY CASH: ¥{unwashed:N0}\n" +
+                        $"LAUNDERING FEE ({(launderingFeeRate * 100f):F0}%): -¥{fee:N0}\n" +
+                        $"<color=#33FF99>CREDITED NET AMOUNT: ¥{washed:N0}</color>\n\n" +
+                        "EXECUTE LAUNDERING?\n" +
+                        "[ENTER] CONFIRM TRANSACTION\n" +
+                        "[CANCEL] EXIT TO MENU";
                     break;
 
                 case ATMSubState.Processing:
-                    // コルーチン側でアニメーション付き表示するためここでは基本処理
                     displayText =
                         "<color=#FFCC33>=== PROCESSING ===</color>\n" +
-                        "資金洗浄を実行中...\n\n" +
+                        "LAUNDERING TRANSACTION IN PROGRESS...\n\n" +
                         "[□□□□□□□□□□] 0%\n\n" +
-                        "<color=#FF3333>警告: 電源を切らないでください。</color>";
+                        "<color=#FF3333>WARNING: DO NOT POWER OFF TERMINAL</color>";
                     break;
 
                 case ATMSubState.Success:
                     displayText =
                         "<color=#33FF66>=== TRANSACTION SUCCESS ===</color>\n" +
-                        "資金の洗浄に成功しました。\n\n" +
-                        $"口座送金完了: ¥{successAmountTextValue:N0}\n\n" +
-                        "[Enter] メインメニューに戻る";
+                        "LAUNDERING COMPLETED SUCCESSFULLY.\n\n" +
+                        $"CREDITED AMOUNT: ¥{successAmountTextValue:N0}\n\n" +
+                        "[ENTER] RETURN TO MENU";
                     break;
             }
 
@@ -528,9 +528,9 @@ namespace App.ATM
                 {
                     atmScreenText.text =
                         "<color=#FFCC33>=== PROCESSING ===</color>\n" +
-                        "資金洗浄を実行中...\n\n" +
+                        "LAUNDERING TRANSACTION IN PROGRESS...\n\n" +
                         $"[{barText}] {Mathf.FloorToInt(progress * 100f)}%\n\n" +
-                        "<color=#FF3333>警告: 電源を切らないでください。</color>";
+                        "<color=#FF3333>WARNING: DO NOT POWER OFF TERMINAL</color>";
                 }
 
                 // 物理ボタンを定期的にカタカタと沈ませる (処理中の機械演出)
