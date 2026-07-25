@@ -8,20 +8,21 @@ using UnityEngine;
 /// </summary>
 public class TelevisionAnimator : MonoBehaviour
 {
-    [Header("アニメーション座標設定")]
+    [Header("1. 出現時（スタート）の座標・回転設定")]
     [Tooltip("出現時（スタート時）の位置")]
     [SerializeField] private Vector3 startPosition = new Vector3(6.14467525f, 6.30035591f, -15.8870001f);
 
-    [Tooltip("出現時（スタート時）の回転 (Quaternion(x, y, z, w))")]
-    [SerializeField] private Quaternion startRotation = new Quaternion(-0.911107421f, 0.0964306742f, 0.0631602257f, 0.395721138f);
+    [Tooltip("出現時（スタート時）の回転角度（Inspector の Transform Rotation と同じ度数 X, Y, Z）")]
+    [SerializeField] private Vector3 startEulerAngles = new Vector3(-133.76f, 11.04f, -7.36f);
 
+    [Header("2. アニメーション完了（ゴール）の座標・回転設定")]
     [Tooltip("アニメーション完了時（目標/現在）の位置")]
     [SerializeField] private Vector3 endPosition = new Vector3(5.75500011f, 6.30035591f, -14.1708603f);
 
-    [Tooltip("アニメーション完了時（目標/現在）の回転 (Quaternion(x, y, z, w))")]
-    [SerializeField] private Quaternion endRotation = new Quaternion(-0.676164687f, -0.218893334f, -0.613928378f, 0.343480766f);
+    [Tooltip("アニメーション完了時（目標/現在）の回転角度（Inspector の Transform Rotation と同じ度数 X, Y, Z）")]
+    [SerializeField] private Vector3 endEulerAngles = new Vector3(-92.99f, -78.70f, -39.90f);
 
-    [Header("アニメーションパラメータ")]
+    [Header("3. アニメーション設定")]
     [Tooltip("アニメーション所要時間（秒）")]
     [SerializeField, Min(0.01f)] private float animationDuration = 1.0f;
 
@@ -30,6 +31,10 @@ public class TelevisionAnimator : MonoBehaviour
 
     [Tooltip("ワールド座標を使用するか（false の場合は親基準のローカル座標）")]
     [SerializeField] private bool useWorldSpace = false;
+
+    // クォータニオン互換プロパティ
+    public Quaternion StartRotation => Quaternion.Euler(startEulerAngles);
+    public Quaternion EndRotation => Quaternion.Euler(endEulerAngles);
 
     private Coroutine _animCoroutine;
 
@@ -44,9 +49,83 @@ public class TelevisionAnimator : MonoBehaviour
     }
 
     /// <summary>
-    /// アニメーションを再生します。外部や Inspector Context Menu からも実行可能。
+    /// 現在の Transform 位置・回転を『スタート座標』に一括保存します（Inspector 右クリックから実行）。
     /// </summary>
-    [ContextMenu("Test Television Animation")]
+    [ContextMenu("1. 現在の Transform を『スタート座標』として保存")]
+    public void SaveCurrentTransformAsStart()
+    {
+        if (useWorldSpace)
+        {
+            startPosition = transform.position;
+            startEulerAngles = transform.eulerAngles;
+        }
+        else
+        {
+            startPosition = transform.localPosition;
+            startEulerAngles = transform.localEulerAngles;
+        }
+        Debug.Log($"[TelevisionAnimator] スタート座標を保存しました → 位置: {startPosition}, 回転(Euler): {startEulerAngles}");
+    }
+
+    /// <summary>
+    /// 現在の Transform 位置・回転を『ゴール座標』に一括保存します（Inspector 右クリックから実行）。
+    /// </summary>
+    [ContextMenu("2. 現在の Transform を『ゴール座標』として保存")]
+    public void SaveCurrentTransformAsEnd()
+    {
+        if (useWorldSpace)
+        {
+            endPosition = transform.position;
+            endEulerAngles = transform.eulerAngles;
+        }
+        else
+        {
+            endPosition = transform.localPosition;
+            endEulerAngles = transform.localEulerAngles;
+        }
+        Debug.Log($"[TelevisionAnimator] ゴール座標を保存しました → 位置: {endPosition}, 回転(Euler): {endEulerAngles}");
+    }
+
+    /// <summary>
+    /// スタート位置に手動でプレビュー配置します（Inspector 右クリックから実行）。
+    /// </summary>
+    [ContextMenu("3. スタート位置にプレビュー配置")]
+    public void SetToStartTransform()
+    {
+        if (useWorldSpace)
+        {
+            transform.position = startPosition;
+            transform.rotation = StartRotation;
+        }
+        else
+        {
+            transform.localPosition = startPosition;
+            transform.localRotation = StartRotation;
+        }
+    }
+
+    /// <summary>
+    /// ゴール位置に手動でプレビュー配置します（Inspector 右クリックから実行）。
+    /// </summary>
+    [ContextMenu("4. ゴール位置にプレビュー配置")]
+    public void SetToEndTransform()
+    {
+        if (useWorldSpace)
+        {
+            transform.position = endPosition;
+            transform.rotation = EndRotation;
+        }
+        else
+        {
+            transform.localPosition = endPosition;
+            transform.localRotation = EndRotation;
+        }
+    }
+
+    /// <summary>
+    /// アニメーションを再生します。外部や Inspector 右クリックメニューから実行可能。
+    /// </summary>
+    [ContextMenu("5. アニメーションをテスト再生")]
     public void PlayAnimation()
     {
         if (!gameObject.activeSelf)
@@ -61,36 +140,20 @@ public class TelevisionAnimator : MonoBehaviour
         _animCoroutine = StartCoroutine(AnimateRoutine());
     }
 
-    /// <summary>
-    /// 現在の Transform 位置・回転を endPosition / endRotation として保存します（Inspector用便利機能）。
-    /// </summary>
-    [ContextMenu("Save Current Transform as End Position")]
-    public void SaveCurrentTransformAsEnd()
-    {
-        if (useWorldSpace)
-        {
-            endPosition = transform.position;
-            endRotation = transform.rotation;
-        }
-        else
-        {
-            endPosition = transform.localPosition;
-            endRotation = transform.localRotation;
-        }
-        Debug.Log($"[TelevisionAnimator] endPosition/endRotation を現在のTransform ({endPosition}) に更新しました。");
-    }
-
     private IEnumerator AnimateRoutine()
     {
+        Quaternion startRot = StartRotation;
+        Quaternion endRot = EndRotation;
+
         if (useWorldSpace)
         {
             transform.position = startPosition;
-            transform.rotation = startRotation;
+            transform.rotation = startRot;
         }
         else
         {
             transform.localPosition = startPosition;
-            transform.localRotation = startRotation;
+            transform.localRotation = startRot;
         }
 
         float elapsed = 0f;
@@ -105,12 +168,12 @@ public class TelevisionAnimator : MonoBehaviour
             if (useWorldSpace)
             {
                 transform.position = Vector3.Lerp(startPosition, endPosition, ease);
-                transform.rotation = Quaternion.Slerp(startRotation, endRotation, ease);
+                transform.rotation = Quaternion.Slerp(startRot, endRot, ease);
             }
             else
             {
                 transform.localPosition = Vector3.Lerp(startPosition, endPosition, ease);
-                transform.localRotation = Quaternion.Slerp(startRotation, endRotation, ease);
+                transform.localRotation = Quaternion.Slerp(startRot, endRot, ease);
             }
 
             yield return null;
@@ -119,12 +182,12 @@ public class TelevisionAnimator : MonoBehaviour
         if (useWorldSpace)
         {
             transform.position = endPosition;
-            transform.rotation = endRotation;
+            transform.rotation = endRot;
         }
         else
         {
             transform.localPosition = endPosition;
-            transform.localRotation = endRotation;
+            transform.localRotation = endRot;
         }
 
         _animCoroutine = null;
