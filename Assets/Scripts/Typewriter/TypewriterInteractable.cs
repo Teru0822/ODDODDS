@@ -142,18 +142,38 @@ public class TypewriterInteractable : InteractableHighlight
         }
 
         _busy = true;
-        // 選択肢が出た時点でレティクル照準のハイライトは不要 (この後 IsInteractable=false になるので
-        // CupPickupController 側で再ハイライトされることもない)
         ApplyHighlight(false);
-        selectionUI.Show(picks, OnRewardSelected);
+        try
+        {
+            selectionUI.Show(picks, OnRewardSelected);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[TypewriterInteractable] RewardSelectionUI.Show() で例外が発生しました: {e}", this);
+            _busy = false;
+            ApplyHighlight(true);
+            return;
+        }
+
+        // Show() が UI を開けなかった場合（Prefab 未設定など）は即座に解放
+        if (!selectionUI.IsActive)
+        {
+            _busy = false;
+            ApplyHighlight(true);
+            Debug.LogWarning("[TypewriterInteractable] RewardSelectionUI の表示に失敗しました。Inspector で _scrollContentPrefab または optionButtons を設定してください", this);
+        }
     }
 
     private void OnRewardSelected(RoguelikeData chosen)
     {
         Debug.Log($"[TypewriterInteractable] OnRewardSelected: \"{chosen}\"", this);
-        FindFirstObjectByType<RoguelikeManager>().UnlockSkill(chosen);
-        //RewardOptionsRepository.MarkSelected(chosen);
-        //RewardEffects.Apply(chosen); // 選択した報酬のゲームプレイ効果を反映 (分裂数強化など)
+
+        var mgr = FindFirstObjectByType<RoguelikeManager>();
+        if (mgr != null)
+            mgr.UnlockSkill(chosen);
+        else
+            Debug.LogWarning("[TypewriterInteractable] RoguelikeManager が見つかりません。スキルは反映されません", this);
+
         if (controller == null)
         {
             Debug.LogWarning("[TypewriterInteractable] TypewriterController が未設定 - 打鍵をスキップ", this);

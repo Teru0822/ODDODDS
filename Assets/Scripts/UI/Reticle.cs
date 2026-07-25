@@ -158,7 +158,7 @@ public class Reticle : MonoBehaviour
     private void Update()
     {
         bool showReticle = true;
-        if (UFOCameraController.IsPlayingUfo)
+        if (UFOCameraController.IsPlayingUfo || RewardSelectionUI.IsTypewriterUIShowing)
         {
             showReticle = false;
         }
