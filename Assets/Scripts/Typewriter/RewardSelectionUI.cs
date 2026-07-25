@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using UnityEngine.Video;
 
@@ -127,6 +128,9 @@ public class RewardSelectionUI : MonoBehaviour
 
     /// <summary>タイプライター UI の表示状態が変わったときに発火する静的イベント (true=表示, false=非表示)</summary>
     public static event Action<bool> OnTypewriterUIChanged;
+
+    /// <summary>ESC キーでUIがキャンセルされたときに発火する静的イベント</summary>
+    public static event Action OnTypewriterUICancelled;
 
     /// <summary>タイプライター報酬選択UI が現在表示中かどうか</summary>
     public static bool IsTypewriterUIShowing { get; private set; }
@@ -610,6 +614,15 @@ public class RewardSelectionUI : MonoBehaviour
             if (c.targetDisplay == display) return c;
         }
         return null;
+    }
+
+    private void Update()
+    {
+        if (IsActive && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            OnTypewriterUICancelled?.Invoke();
+            Hide();
+        }
     }
 
     public void Hide()

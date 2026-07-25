@@ -38,6 +38,19 @@ public class TypewriterInteractable : InteractableHighlight
         if (controller == null) controller = GetComponentInChildren<TypewriterController>();
         EnsureSelectionUI();
         WarnIfNoColliders();
+        RewardSelectionUI.OnTypewriterUICancelled += OnSelectionCancelled;
+    }
+
+    private void OnDestroy()
+    {
+        RewardSelectionUI.OnTypewriterUICancelled -= OnSelectionCancelled;
+    }
+
+    private void OnSelectionCancelled()
+    {
+        if (!_busy) return;
+        _busy = false;
+        ApplyHighlight(true);
     }
 
     private void EnsureSelectionUI()
