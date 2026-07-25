@@ -2,29 +2,39 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
-/// television オブジェクトに直接アタッチして使用するアニメーション制御スクリプト。
-/// コイン投入時（UFOCameraController.OnCoinInserted）に連動して
-/// 指定の初期座標・回転から目標（現在）座標・回転へスムーズにアニメーションします。
+/// television オブジェクトにアタッチして使用するアニメーション制御スクリプト。
+/// 1. UFOキャッチャーアクセス（カメラ遷移）時: 出現座標(spawn) -> スタート座標(start) へ移動
+/// 2. コイン投入時: スタート座標(start) -> ゴール座標(end) へ移動
 /// </summary>
 public class TelevisionAnimator : MonoBehaviour
 {
-    [Header("1. 出現時（スタート）の座標・回転設定")]
-    [Tooltip("出現時（スタート時）の位置")]
-    [SerializeField] private Vector3 startPosition = new Vector3(6.14467525f, 6.30035591f, -15.8870001f);
+    [Header("1. 出現（初期）座標設定")]
+    [Tooltip("UFOキャッチャーにアクセスした瞬間（モニター出現時）の位置")]
+    [SerializeField] private Vector3 spawnPosition = new Vector3(6.14467525f, 6.30035591f, -15.8870001f);
 
-    [Tooltip("出現時（スタート時）の回転角度（Inspector の Transform Rotation と同じ度数 X, Y, Z）")]
-    [SerializeField] private Vector3 startEulerAngles = new Vector3(-133.76f, 11.04f, -7.36f);
+    [Tooltip("UFOキャッチャーにアクセスした瞬間（モニター出現時）の回転角度 (Transform Rotation 度数 X, Y, Z)")]
+    [SerializeField] private Vector3 spawnEulerAngles = new Vector3(-133.76f, 11.04f, -7.36f);
 
-    [Header("2. アニメーション完了（ゴール）の座標・回転設定")]
-    [Tooltip("アニメーション完了時（目標/現在）の位置")]
+    [Header("2. スタート座標設定（コイン投入前）")]
+    [Tooltip("遷移アニメーション完了後・コイン投入前の位置")]
+    [SerializeField] private Vector3 startPosition = new Vector3(5.75500011f, 6.30035591f, -14.1708603f);
+
+    [Tooltip("遷移アニメーション完了後・コイン投入前の回転角度 (Transform Rotation 度数 X, Y, Z)")]
+    [SerializeField] private Vector3 startEulerAngles = new Vector3(-92.99f, -78.70f, -39.90f);
+
+    [Header("3. ゴール（着地）座標設定（コイン投入後）")]
+    [Tooltip("コイン投入アニメーション完了後の最終位置")]
     [SerializeField] private Vector3 endPosition = new Vector3(5.75500011f, 6.30035591f, -14.1708603f);
 
-    [Tooltip("アニメーション完了時（目標/現在）の回転角度（Inspector の Transform Rotation と同じ度数 X, Y, Z）")]
+    [Tooltip("コイン投入アニメーション完了後の最終回転角度 (Transform Rotation 度数 X, Y, Z)")]
     [SerializeField] private Vector3 endEulerAngles = new Vector3(-92.99f, -78.70f, -39.90f);
 
-    [Header("3. アニメーション設定")]
-    [Tooltip("アニメーション所要時間（秒）")]
-    [SerializeField, Min(0.01f)] private float animationDuration = 1.0f;
+    [Header("4. アニメーション設定")]
+    [Tooltip("UFOキャッチャー遷移時（出現 -> スタート）のアニメーション所要時間（秒）")]
+    [SerializeField, Min(0.01f)] private float enterAnimationDuration = 1.0f;
+
+    [Tooltip("コイン投入時（スタート -> ゴール）のアニメーション所要時間（秒）")]
+    [SerializeField, Min(0.01f)] private float coinAnimationDuration = 1.0f;
 
     [Tooltip("アニメーションのイージングカーブ")]
     [SerializeField] private AnimationCurve easeCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
@@ -33,6 +43,7 @@ public class TelevisionAnimator : MonoBehaviour
     [SerializeField] private bool useWorldSpace = false;
 
     // クォータニオン互換プロパティ
+    public Quaternion SpawnRotation => Quaternion.Euler(spawnEulerAngles);
     public Quaternion StartRotation => Quaternion.Euler(startEulerAngles);
     public Quaternion EndRotation => Quaternion.Euler(endEulerAngles);
 
@@ -40,18 +51,51 @@ public class TelevisionAnimator : MonoBehaviour
 
     private void OnEnable()
     {
-        UFOCameraController.OnCoinInserted += PlayAnimation;
+        UFOCameraController.OnUfoModeChanged += HandleUfoModeChanged;
+        UFOCameraController.OnCoinInserted += PlayCoinAnimation;
     }
 
     private void OnDisable()
     {
-        UFOCameraController.OnCoinInserted -= PlayAnimation;
+        UFOCameraController.OnUfoModeChanged -= HandleUfoModeChanged;
+        UFOCameraController.OnCoinInserted -= PlayCoinAnimation;
+    }
+
+    private void HandleUfoModeChanged(bool isUfoMode)
+    {
+        if (isUfoMode)
+        {
+            PlayEnterAnimation();
+        }
+        else
+        {
+            ResetToSpawnTransform();
+        }
     }
 
     /// <summary>
-    /// 現在の Transform 位置・回転を『スタート座標』に一括保存します（Inspector 右クリックから実行）。
+    /// 現在の Transform 位置・回転を『1. 出現(初期)座標』に保存します。
     /// </summary>
-    [ContextMenu("1. 現在の Transform を『スタート座標』として保存")]
+    [ContextMenu("1. 現在の Transform を『出現(初期)座標』として保存")]
+    public void SaveCurrentTransformAsSpawn()
+    {
+        if (useWorldSpace)
+        {
+            spawnPosition = transform.position;
+            spawnEulerAngles = transform.eulerAngles;
+        }
+        else
+        {
+            spawnPosition = transform.localPosition;
+            spawnEulerAngles = transform.localEulerAngles;
+        }
+        Debug.Log($"[TelevisionAnimator] 出現座標を保存しました → 位置: {spawnPosition}, 回転: {spawnEulerAngles}");
+    }
+
+    /// <summary>
+    /// 現在の Transform 位置・回転を『2. スタート座標』に保存します。
+    /// </summary>
+    [ContextMenu("2. 現在の Transform を『スタート座標』として保存")]
     public void SaveCurrentTransformAsStart()
     {
         if (useWorldSpace)
@@ -64,13 +108,13 @@ public class TelevisionAnimator : MonoBehaviour
             startPosition = transform.localPosition;
             startEulerAngles = transform.localEulerAngles;
         }
-        Debug.Log($"[TelevisionAnimator] スタート座標を保存しました → 位置: {startPosition}, 回転(Euler): {startEulerAngles}");
+        Debug.Log($"[TelevisionAnimator] スタート座標を保存しました → 位置: {startPosition}, 回転: {startEulerAngles}");
     }
 
     /// <summary>
-    /// 現在の Transform 位置・回転を『ゴール座標』に一括保存します（Inspector 右クリックから実行）。
+    /// 現在の Transform 位置・回転を『3. ゴール座標』に保存します。
     /// </summary>
-    [ContextMenu("2. 現在の Transform を『ゴール座標』として保存")]
+    [ContextMenu("3. 現在の Transform を『ゴール座標』として保存")]
     public void SaveCurrentTransformAsEnd()
     {
         if (useWorldSpace)
@@ -83,13 +127,29 @@ public class TelevisionAnimator : MonoBehaviour
             endPosition = transform.localPosition;
             endEulerAngles = transform.localEulerAngles;
         }
-        Debug.Log($"[TelevisionAnimator] ゴール座標を保存しました → 位置: {endPosition}, 回転(Euler): {endEulerAngles}");
+        Debug.Log($"[TelevisionAnimator] ゴール座標を保存しました → 位置: {endPosition}, 回転: {endEulerAngles}");
     }
 
     /// <summary>
-    /// スタート位置に手動でプレビュー配置します（Inspector 右クリックから実行）。
+    /// 出現(初期)位置にプレビュー配置します。
     /// </summary>
-    [ContextMenu("3. スタート位置にプレビュー配置")]
+    public void SetToSpawnTransform()
+    {
+        if (useWorldSpace)
+        {
+            transform.position = spawnPosition;
+            transform.rotation = SpawnRotation;
+        }
+        else
+        {
+            transform.localPosition = spawnPosition;
+            transform.localRotation = SpawnRotation;
+        }
+    }
+
+    /// <summary>
+    /// スタート位置にプレビュー配置します。
+    /// </summary>
     public void SetToStartTransform()
     {
         if (useWorldSpace)
@@ -105,9 +165,8 @@ public class TelevisionAnimator : MonoBehaviour
     }
 
     /// <summary>
-    /// ゴール位置に手動でプレビュー配置します（Inspector 右クリックから実行）。
+    /// ゴール位置にプレビュー配置します。
     /// </summary>
-    [ContextMenu("4. ゴール位置にプレビュー配置")]
     public void SetToEndTransform()
     {
         if (useWorldSpace)
@@ -123,10 +182,10 @@ public class TelevisionAnimator : MonoBehaviour
     }
 
     /// <summary>
-    /// アニメーションを再生します。外部や Inspector 右クリックメニューから実行可能。
+    /// UFOキャッチャーアクセス時（出現座標 -> スタート座標）のアニメーションを再生します。
     /// </summary>
-    [ContextMenu("5. アニメーションをテスト再生")]
-    public void PlayAnimation()
+    [ContextMenu("4. テスト再生: 進入時 (出現 -> スタート)")]
+    public void PlayEnterAnimation()
     {
         if (this == null || gameObject == null) return;
 
@@ -139,47 +198,75 @@ public class TelevisionAnimator : MonoBehaviour
         {
             StopCoroutine(_animCoroutine);
         }
-        _animCoroutine = StartCoroutine(AnimateRoutine());
+        _animCoroutine = StartCoroutine(AnimateRoutine(spawnPosition, SpawnRotation, startPosition, StartRotation, enterAnimationDuration));
     }
 
-    private IEnumerator AnimateRoutine()
+    /// <summary>
+    /// コイン投入時（スタート座標 -> ゴール座標）のアニメーションを再生します。
+    /// </summary>
+    [ContextMenu("5. テスト再生: コイン時 (スタート -> ゴール)")]
+    public void PlayCoinAnimation()
+    {
+        if (this == null || gameObject == null) return;
+
+        if (!gameObject.activeSelf)
+        {
+            gameObject.SetActive(true);
+        }
+
+        if (_animCoroutine != null)
+        {
+            StopCoroutine(_animCoroutine);
+        }
+        _animCoroutine = StartCoroutine(AnimateRoutine(startPosition, StartRotation, endPosition, EndRotation, coinAnimationDuration));
+    }
+
+    private void ResetToSpawnTransform()
+    {
+        if (this == null || gameObject == null || transform == null) return;
+        if (_animCoroutine != null)
+        {
+            StopCoroutine(_animCoroutine);
+            _animCoroutine = null;
+        }
+        SetToSpawnTransform();
+    }
+
+    private IEnumerator AnimateRoutine(Vector3 fromPos, Quaternion fromRot, Vector3 toPos, Quaternion toRot, float duration)
     {
         if (this == null || gameObject == null || transform == null) yield break;
 
-        Quaternion startRot = StartRotation;
-        Quaternion endRot = EndRotation;
-
         if (useWorldSpace)
         {
-            transform.position = startPosition;
-            transform.rotation = startRot;
+            transform.position = fromPos;
+            transform.rotation = fromRot;
         }
         else
         {
-            transform.localPosition = startPosition;
-            transform.localRotation = startRot;
+            transform.localPosition = fromPos;
+            transform.localRotation = fromRot;
         }
 
         float elapsed = 0f;
-        float duration = Mathf.Max(0.01f, animationDuration);
+        float dur = Mathf.Max(0.01f, duration);
 
-        while (elapsed < duration)
+        while (elapsed < dur)
         {
             if (this == null || gameObject == null || transform == null) yield break;
 
             elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / duration);
+            float t = Mathf.Clamp01(elapsed / dur);
             float ease = easeCurve != null ? easeCurve.Evaluate(t) : t;
 
             if (useWorldSpace)
             {
-                transform.position = Vector3.Lerp(startPosition, endPosition, ease);
-                transform.rotation = Quaternion.Slerp(startRot, endRot, ease);
+                transform.position = Vector3.Lerp(fromPos, toPos, ease);
+                transform.rotation = Quaternion.Slerp(fromRot, toRot, ease);
             }
             else
             {
-                transform.localPosition = Vector3.Lerp(startPosition, endPosition, ease);
-                transform.localRotation = Quaternion.Slerp(startRot, endRot, ease);
+                transform.localPosition = Vector3.Lerp(fromPos, toPos, ease);
+                transform.localRotation = Quaternion.Slerp(fromRot, toRot, ease);
             }
 
             yield return null;
@@ -189,13 +276,13 @@ public class TelevisionAnimator : MonoBehaviour
 
         if (useWorldSpace)
         {
-            transform.position = endPosition;
-            transform.rotation = endRot;
+            transform.position = toPos;
+            transform.rotation = toRot;
         }
         else
         {
-            transform.localPosition = endPosition;
-            transform.localRotation = endRot;
+            transform.localPosition = toPos;
+            transform.localRotation = toRot;
         }
 
         _animCoroutine = null;
