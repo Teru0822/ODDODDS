@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 using DG.Tweening;
 
@@ -57,6 +58,7 @@ namespace MiniGames.Transitions
         [Tooltip("ロード中だけオンにする専用のカメラ（Unity上で作成してアタッチしてください）")]
         [SerializeField] private Camera _loadingCamera;
 
+
         private Coroutine _loadingTextCoroutine;
         private Tween _loadingTextFadeTween;
         private Coroutine _blinkCoroutine;
@@ -72,6 +74,16 @@ namespace MiniGames.Transitions
 
         private bool _isTransitioning = false;
         private Vector3 _originalLogoScale = Vector3.one;
+        private Vector3 _originalLogoLocalPosition = Vector3.zero;
+
+        // タイトルシーンのアンビエント設定（ターン遷移ローディング画面のロゴ照明に再利用）
+        private bool _hasTitleAmbientCached = false;
+        private AmbientMode _titleAmbientMode;
+        private Color _titleAmbientLight;
+        private float _titleAmbientIntensity;
+        private Color _titleAmbientSkyColor;
+        private Color _titleAmbientEquatorColor;
+        private Color _titleAmbientGroundColor;
 
         private void Awake()
         {
@@ -82,7 +94,8 @@ namespace MiniGames.Transitions
 
                 if (_floatingLogoParent != null)
                 {
-                    _originalLogoScale = _floatingLogoParent.localScale;
+                    _originalLogoScale         = _floatingLogoParent.localScale;
+                    _originalLogoLocalPosition = _floatingLogoParent.localPosition;
                 }
 
                 InitializeUI();
@@ -167,6 +180,144 @@ namespace MiniGames.Transitions
         public void TransitionToScene(string sceneName, Action onTransitionComplete = null)
         {
             StartCoroutine(TransitionRoutine(sceneName, onTransitionComplete));
+        }
+
+        /// <summary>シーン遷移なし。ローディング画面を挟んでターン処理を実行しフェードインで戻る。</summary>
+        public void ShowTurnTransition(float minimumDuration, Action onDuringLoading, Action onComplete = null)
+        {
+            if (_isTransitioning) return;
+            StartCoroutine(TurnTransitionRoutine(minimumDuration, onDuringLoading, onComplete));
+        }
+
+        private IEnumerator TurnTransitionRoutine(float minimumDuration, Action onDuringLoading, Action onComplete)
+        {
+            _isTransitioning = true;
+
+            if (_loadingCamera != null) _loadingCamera.enabled = true;
+
+            // 1. フェードアウト（黒モヤ）
+            if (_fadeCanvasGroup != null)
+            {
+                _fadeCanvasGroup.gameObject.SetActive(true);
+                yield return _fadeCanvasGroup.DOFade(1f, _fadeDuration).WaitForCompletion();
+            }
+
+            // タイトルカメラ破棄後にOverlayへフォールバックしているcanvasを
+            // ScreenSpaceCameraモードに戻してCamera.mainで3Dロゴを描画できるようにする
+            Canvas transitionCanvas = null;
+            RenderMode originalRenderMode = RenderMode.ScreenSpaceOverlay;
+            if (_fadeCanvasGroup != null && Camera.main != null)
+            {
+                transitionCanvas = _fadeCanvasGroup.transform.root.GetComponent<Canvas>();
+                if (transitionCanvas != null)
+                {
+                    originalRenderMode = transitionCanvas.renderMode;
+                    transitionCanvas.renderMode = RenderMode.ScreenSpaceCamera;
+                    transitionCanvas.worldCamera = Camera.main;
+                    yield return null; // 1フレーム待ちcanvasをCamera.mainの前に再配置
+                }
+            }
+
+            // 2. ローディング画面 + アニメーション表示（モヤの上に重ねる）
+            if (_loadingScreenCanvasGroup != null)
+            {
+                _loadingScreenCanvasGroup.alpha = 0f;
+                _loadingScreenCanvasGroup.gameObject.SetActive(true);
+            }
+            bool showLogo = _floatingLogoParent != null;
+
+            // ロゴ照明: タイトルシーンと同じアンビエント＋専用ライトを再利用
+            var savedAmbientMode         = RenderSettings.ambientMode;
+            var savedAmbientLight        = RenderSettings.ambientLight;
+            var savedAmbientIntensity    = RenderSettings.ambientIntensity;
+            var savedAmbientSkyColor     = RenderSettings.ambientSkyColor;
+            var savedAmbientEquatorColor = RenderSettings.ambientEquatorColor;
+            var savedAmbientGroundColor  = RenderSettings.ambientGroundColor;
+            if (showLogo)
+            {
+                if (_hasTitleAmbientCached)
+                {
+                    RenderSettings.ambientMode         = _titleAmbientMode;
+                    RenderSettings.ambientLight        = _titleAmbientLight;
+                    RenderSettings.ambientIntensity    = _titleAmbientIntensity;
+                    RenderSettings.ambientSkyColor     = _titleAmbientSkyColor;
+                    RenderSettings.ambientEquatorColor = _titleAmbientEquatorColor;
+                    RenderSettings.ambientGroundColor  = _titleAmbientGroundColor;
+                }
+                else
+                {
+                    // デバッグ用（タイトルシーンを経由しない場合）
+                    RenderSettings.ambientMode      = AmbientMode.Flat;
+                    RenderSettings.ambientLight     = Color.white;
+                    RenderSettings.ambientIntensity = 1f;
+                }
+                if (_lightsToTurnOn != null)
+                    foreach (var l in _lightsToTurnOn)
+                        if (l != null) { l.gameObject.SetActive(true); l.enabled = true; }
+            }
+
+            if (showLogo)
+            {
+                _floatingLogoParent.localScale = _originalLogoScale;
+                _floatingLogoParent.gameObject.SetActive(true);
+            }
+
+            StartLoadingAnimation();
+            if (_loadingScreenCanvasGroup != null)
+                yield return _loadingScreenCanvasGroup.DOFade(1f, 0.5f).WaitForCompletion();
+
+            // 3. ターン処理
+            onDuringLoading?.Invoke();
+
+            // 4. 最低表示時間待機
+            yield return new WaitForSeconds(minimumDuration);
+
+            // 5. ローディング画面消去（ロゴ縮小 + フェードアウト並行）
+            if (showLogo)
+            {
+                _floatingLogoParent.DOScale(Vector3.zero, 0.5f).SetEase(Ease.InBack)
+                    .OnComplete(() => _floatingLogoParent.gameObject.SetActive(false));
+            }
+            if (_loadingScreenCanvasGroup != null)
+            {
+                yield return _loadingScreenCanvasGroup.DOFade(0f, 0.5f).WaitForCompletion();
+                _loadingScreenCanvasGroup.gameObject.SetActive(false);
+            }
+            StopLoadingAnimation();
+
+            // アンビエントライトをフェードイン前に元に戻す（ゲーム画面が見える前）
+            if (showLogo)
+            {
+                if (_lightsToTurnOn != null)
+                    foreach (var l in _lightsToTurnOn)
+                        if (l != null) l.gameObject.SetActive(false);
+                RenderSettings.ambientMode         = savedAmbientMode;
+                RenderSettings.ambientLight        = savedAmbientLight;
+                RenderSettings.ambientIntensity    = savedAmbientIntensity;
+                RenderSettings.ambientSkyColor     = savedAmbientSkyColor;
+                RenderSettings.ambientEquatorColor = savedAmbientEquatorColor;
+                RenderSettings.ambientGroundColor  = savedAmbientGroundColor;
+            }
+
+            // 6. フェードイン（モヤが晴れてゲーム画面が現れる）
+            if (_fadeCanvasGroup != null)
+            {
+                yield return _fadeCanvasGroup.DOFade(0f, _fadeDuration).WaitForCompletion();
+                _fadeCanvasGroup.gameObject.SetActive(false);
+            }
+
+            if (_loadingCamera != null) _loadingCamera.enabled = false;
+
+            // CanvasをScreenSpaceCameraに切り替えた場合は元のモードに戻す
+            if (transitionCanvas != null)
+            {
+                transitionCanvas.renderMode = originalRenderMode;
+                transitionCanvas.worldCamera = null;
+            }
+
+            RestoreOtherCanvases();
+            _isTransitioning = false;
+            onComplete?.Invoke();
         }
 
         private IEnumerator TransitionRoutine(string sceneName, Action onTransitionComplete)
@@ -279,6 +430,15 @@ namespace MiniGames.Transitions
             var savedAmbientSkyColor = RenderSettings.ambientSkyColor;
             var savedAmbientEquatorColor = RenderSettings.ambientEquatorColor;
             var savedAmbientGroundColor = RenderSettings.ambientGroundColor;
+
+            // ターン遷移のロゴ照明に再利用するためキャッシュ
+            _titleAmbientMode        = savedAmbientMode;
+            _titleAmbientLight       = savedAmbientLight;
+            _titleAmbientIntensity   = savedAmbientIntensity;
+            _titleAmbientSkyColor    = savedAmbientSkyColor;
+            _titleAmbientEquatorColor = savedAmbientEquatorColor;
+            _titleAmbientGroundColor = savedAmbientGroundColor;
+            _hasTitleAmbientCached   = true;
 
             AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName);
             asyncLoad.allowSceneActivation = false;
@@ -394,13 +554,27 @@ namespace MiniGames.Transitions
                     if (l != null) l.enabled = true;
                 }
             }
-            // ロード用に点けていたライトを消す
-            if (_lightsToTurnOn != null)
+            // ロード用に点けていたライトをロゴ親に移して無効化（ターン遷移で再利用するため）
+            // _preservedTitleCamera を破棄する前に行わないとライトも一緒に消える
+            if (_lightsToTurnOn != null && _floatingLogoParent != null)
             {
+                // DOScale で scale=0 になっている状態で SetParent(true) すると座標が壊れるため
+                // 再ペアレント前にスケールを戻す
+                _floatingLogoParent.localScale = _originalLogoScale;
                 foreach (var l in _lightsToTurnOn)
                 {
-                    if (l != null) l.gameObject.SetActive(false);
+                    if (l != null)
+                    {
+                        // ワールド座標を維持してロゴ親の子に移す（ロゴとの相対位置が保たれる）
+                        l.transform.SetParent(_floatingLogoParent, true);
+                        l.gameObject.SetActive(false);
+                    }
                 }
+            }
+            else if (_lightsToTurnOn != null)
+            {
+                foreach (var l in _lightsToTurnOn)
+                    if (l != null) l.gameObject.SetActive(false);
             }
 
             // --- 連れてきたタイトルカメラを破棄し、隠していたUIを元に戻す ---
@@ -473,14 +647,16 @@ namespace MiniGames.Transitions
 
             if (_floatingLogoParent != null)
             {
+                // 前回アニメーションの途中終了によるズレをリセット（SetRelativeの累積を防ぐ）
+                _floatingLogoParent.DOKill();
+                _floatingLogoParent.localPosition = _originalLogoLocalPosition;
+
                 // ScreenSpace-Camera Canvasの子オブジェクトは、Canvasのスケール（非常に小さい）が適用されるため、
                 // _floatDistanceをそのまま使うと動きが極めて微小になる。
                 // Canvas座標系で意味のある移動量に変換する（ロゴのlocalScaleで割って正規化）。
                 float adjustedFloatDistance = _floatDistance;
                 if (_floatingLogoParent.parent != null)
                 {
-                    // ロゴのlocalScaleが大きい（例: 1870）場合、
-                    // 世界座標での動きを揃えるため、同じ比率で距離を拡大する
                     float parentScale = _floatingLogoParent.localScale.y;
                     if (parentScale > 1f)
                     {
@@ -488,7 +664,7 @@ namespace MiniGames.Transitions
                         Debug.Log($"[STM-DEBUG] 浮遊距離を補正: {_floatDistance} -> {adjustedFloatDistance} (scale={parentScale})");
                     }
                 }
-                
+
                 _floatingLogoParent.DOLocalMoveY(adjustedFloatDistance, _floatDuration)
                     .SetRelative(true)
                     .SetLoops(-1, LoopType.Yoyo)

@@ -159,6 +159,12 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
         Debug.Log($"お金が減少しました: -{finalAmount} (現在: {Wallet.WashedAmount})");
     }
 
+    /// <summary>ターンを1進める。</summary>
+    public void AdvanceTurn()
+    {
+        _currentTurnCount.Value++;
+    }
+
     /// <summary>
     /// 「悪魔の取り立て」によるお金の減少処理
     /// </summary>
