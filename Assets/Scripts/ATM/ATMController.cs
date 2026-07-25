@@ -44,6 +44,9 @@ namespace App.ATM
         [Tooltip("ATMの画面モニター位置のメッシュまたはTransform。アサインされるとWorldSpace Canvasが自動フィット配置されます")]
         [SerializeField] private Transform screenTargetTransform;
 
+        [Tooltip("モニター画面に投影する Canvas のスケール倍率。モニターの大きさに合わせて調整してください")]
+        [SerializeField] private float uiScaleMultiplier = 0.00045f;
+
         [Header("インタラクション検出 (プレハブ内アセット)")]
         [Tooltip("ATMにアタッチした MouseHoverOutline。インスペクターでの指定が必須です")]
         [SerializeField] private MouseHoverOutline hoverOutline;
@@ -52,7 +55,7 @@ namespace App.ATM
         [Tooltip("起動時に有効化するライトオブジェクト群")]
         [SerializeField] private GameObject[] atmLights;
 
-        [Tooltip("ATMの操作用 Canvas。未指定（null）の場合は、起動時にWorldSpaceとして自動生成されます")]
+        [Tooltip("ATMの操作用 Canvas。未設定（null）の場合は、起動時にWorldSpaceとして自動生成されます")]
         [SerializeField] private GameObject atmUiCanvas;
 
         [Header("効果音")]
@@ -610,35 +613,38 @@ namespace App.ATM
         {
             _dynamicCanvasGo = new GameObject("ATMDynamicCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
             
-            // WorldSpace UI として設定し、マウスレイキャストが画面を突き抜けて3Dボタンに当たるようにするため、
-            // GraphicRaycaster コンポーネントはあえてアタッチしません（画面のマウスクリックを完全に透過させます）。
-            
-            // screenTargetTransform があればその位置にアタッチし、なければATMの前に配置
-            if (screenTargetTransform != null)
-            {
-                _dynamicCanvasGo.transform.SetParent(screenTargetTransform, false);
-            }
-            else
-            {
-                _dynamicCanvasGo.transform.SetParent(transform, false);
-                // モニターメッシュ位置のフォールバック (ATM前面の上部付近)
-                _dynamicCanvasGo.transform.localPosition = new Vector3(0f, 1.48f, 0.17f);
-                _dynamicCanvasGo.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
-            }
+            // 親スケール（FBXインポート時などの変則アスペクト比）の継承による画面歪みを防ぐため、
+            // 動的CanvasはATMのルートオブジェクト直下にアタッチし、ワールド座標で位置・回転を同期させます。
+            _dynamicCanvasGo.transform.SetParent(transform, false);
 
             Canvas canvas = _dynamicCanvasGo.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.WorldSpace;
             canvas.sortingOrder = 30000;
 
             CanvasScaler scaler = _dynamicCanvasGo.GetComponent<CanvasScaler>();
-            scaler.dynamicPixelsPerUnit = 10f; // テキストのにじみ防止
+            scaler.dynamicPixelsPerUnit = 10f; 
 
             RectTransform canvasRt = _dynamicCanvasGo.GetComponent<RectTransform>();
-            canvasRt.anchoredPosition3D = Vector3.zero;
-            // 800x600 解像度でスケーリング
+            
+            // screenTargetTransform があればその位置・角度にワールド座標を同期
+            if (screenTargetTransform != null)
+            {
+                // チラつき（Z-fighting）を防ぐため、画面メッシュの正面方向（forward）に 0.002f (2mm) だけオフセットして配置
+                Vector3 offsetPos = screenTargetTransform.position + screenTargetTransform.forward * 0.002f;
+                _dynamicCanvasGo.transform.position = offsetPos;
+                _dynamicCanvasGo.transform.rotation = screenTargetTransform.rotation;
+            }
+            else
+            {
+                // モニター位置のフォールバック (ATM前面の上部付近)
+                _dynamicCanvasGo.transform.localPosition = new Vector3(0f, 1.48f, 0.17f);
+                _dynamicCanvasGo.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+            }
+
+            // 800x600 解像度
             canvasRt.sizeDelta = new Vector2(800f, 600f);
-            // WorldSpace 上で適切な実寸になるようにスケーリング (約 30cm × 22.5cm)
-            canvasRt.localScale = new Vector3(0.00045f, 0.00045f, 0.00045f);
+            // インスペクターで設定された倍率でスケールを設定 (非等方スケール無効化)
+            canvasRt.localScale = Vector3.one * uiScaleMultiplier;
 
             // 全体の背景コンテナ (CRT風モニター)
             GameObject monitorGo = new GameObject("MonitorFrame", typeof(RectTransform), typeof(Image));
@@ -678,7 +684,6 @@ namespace App.ATM
             mainMenuPanel = CreatePanel(monitorGo.transform, "MainMenuPanel");
             CreateText(mainMenuPanel.transform, "MenuTitleText", "MAIN MENU - 資金洗浄・口座取引", 32, new Vector2(0f, 180f), new Color(0.2f, 1.0f, 0.4f));
 
-            // ボタン表示自体はクリック可能にする必要がないため、テキストとして表示
             CreateText(mainMenuPanel.transform, "InquiryText", "[1] 残高照会 (BALANCE)", 24, new Vector2(0f, 60f), Color.white);
             CreateText(mainMenuPanel.transform, "LaunderText", "[2] 資金洗浄 (LAUNDER CASH)", 24, new Vector2(0f, -10f), Color.white);
             CreateText(mainMenuPanel.transform, "ExitText", "[3] 取引終了 (EXIT)", 24, new Vector2(0f, -80f), new Color(0.9f, 0.3f, 0.2f));

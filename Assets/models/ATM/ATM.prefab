@@ -666,107 +666,6 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
---- !u!1 &5872123822420507580
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 602530504358546781}
-  - component: {fileID: 1742763287472535323}
-  - component: {fileID: 1848218627800354112}
-  - component: {fileID: 6721899319106114508}
-  m_Layer: 0
-  m_Name: Canvas
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &602530504358546781
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5872123822420507580}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0, y: 0, z: 0}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 7718053816494518415}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
-  m_Pivot: {x: 0, y: 0}
---- !u!223 &1742763287472535323
-Canvas:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5872123822420507580}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_RenderMode: 0
-  m_Camera: {fileID: 0}
-  m_PlaneDistance: 100
-  m_PixelPerfect: 0
-  m_ReceivesEvents: 1
-  m_OverrideSorting: 0
-  m_OverridePixelPerfect: 0
-  m_SortingBucketNormalizedSize: 0
-  m_VertexColorAlwaysGammaSpace: 0
-  m_AdditionalShaderChannelsFlag: 0
-  m_UpdateRectTransformForStandalone: 0
-  m_SortingLayerID: 0
-  m_SortingOrder: 0
-  m_TargetDisplay: 0
---- !u!114 &1848218627800354112
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5872123822420507580}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.CanvasScaler
-  m_UiScaleMode: 0
-  m_ReferencePixelsPerUnit: 100
-  m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
-  m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
-  m_PhysicalUnit: 3
-  m_FallbackScreenDPI: 96
-  m_DefaultSpriteDPI: 96
-  m_DynamicPixelsPerUnit: 1
-  m_PresetInfoIsWorld: 0
---- !u!114 &6721899319106114508
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5872123822420507580}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.GraphicRaycaster
-  m_IgnoreReversedGraphics: 1
-  m_BlockingObjects: 0
-  m_BlockingMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
 --- !u!1 &7086877145987393302
 GameObject:
   m_ObjectHideFlags: 0
@@ -1804,11 +1703,494 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
       insertIndex: -1
       addedObject: {fileID: 9112404271761465081}
-    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 602530504358546781}
-    m_AddedComponents: []
+      addedObject: {fileID: 6793279715523748171}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3288425737508563364}
+    - targetCorrespondingSourceObject: {fileID: 4354293647681379096, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8959751572237125232}
+    - targetCorrespondingSourceObject: {fileID: -1896646770351839268, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 9034922288507839796}
+    - targetCorrespondingSourceObject: {fileID: -6736451173531879224, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4961010837844985656}
+    - targetCorrespondingSourceObject: {fileID: -2226650825010837968, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3817956897882420007}
+    - targetCorrespondingSourceObject: {fileID: -103093237346253100, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5768076863434099165}
+    - targetCorrespondingSourceObject: {fileID: -1625065902967038299, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8224085876219546913}
+    - targetCorrespondingSourceObject: {fileID: -5833322062477973186, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6583752765047080911}
+    - targetCorrespondingSourceObject: {fileID: -2280568424848805483, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 825001231297076524}
+    - targetCorrespondingSourceObject: {fileID: 6933849399184539705, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4640392483588168454}
+    - targetCorrespondingSourceObject: {fileID: 6714881637153585867, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 824316551072845180}
+    - targetCorrespondingSourceObject: {fileID: -4748533039703239195, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3387058963811929104}
+    - targetCorrespondingSourceObject: {fileID: 2691139481040557899, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5873046968605391411}
+    - targetCorrespondingSourceObject: {fileID: -5149608235800572410, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8802782059642492375}
   m_SourcePrefab: {fileID: 100100000, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+--- !u!1 &424511936637520321 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -1625065902967038299, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+  m_PrefabInstance: {fileID: 7824635400491472740}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &8224085876219546913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 424511936637520321}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 6
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
+--- !u!1 &665250435320574136 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -1896646770351839268, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+  m_PrefabInstance: {fileID: 7824635400491472740}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &9034922288507839796
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 665250435320574136}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 8
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
+--- !u!1 &914031962854709085 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6933849399184539705, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+  m_PrefabInstance: {fileID: 7824635400491472740}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &4640392483588168454
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 914031962854709085}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 3
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
+--- !u!1 &923092139969586929 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -2280568424848805483, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+  m_PrefabInstance: {fileID: 7824635400491472740}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &825001231297076524
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 923092139969586929}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 2
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
+--- !u!1 &977255485153186132 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -2226650825010837968, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+  m_PrefabInstance: {fileID: 7824635400491472740}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &3817956897882420007
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 977255485153186132}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 4
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
+--- !u!1 &1299021652990284208 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -103093237346253100, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+  m_PrefabInstance: {fileID: 7824635400491472740}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &5768076863434099165
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1299021652990284208}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 5
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
+--- !u!4 &1864082596377185377 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -772299930437854459, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+  m_PrefabInstance: {fileID: 7824635400491472740}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &3577754989397323183 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6714881637153585867, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+  m_PrefabInstance: {fileID: 7824635400491472740}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &824316551072845180
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3577754989397323183}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 0
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
+--- !u!1 &4872138389365767770 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -5833322062477973186, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+  m_PrefabInstance: {fileID: 7824635400491472740}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &6583752765047080911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4872138389365767770}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 1
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
+--- !u!1 &5318304110457258031 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2691139481040557899, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+  m_PrefabInstance: {fileID: 7824635400491472740}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &5873046968605391411
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5318304110457258031}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 11
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
+--- !u!1 &5626650879804567468 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -6736451173531879224, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+  m_PrefabInstance: {fileID: 7824635400491472740}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &4961010837844985656
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5626650879804567468}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 9
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
+--- !u!1 &5835327492507061372 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4354293647681379096, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+  m_PrefabInstance: {fileID: 7824635400491472740}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &8959751572237125232
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5835327492507061372}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 7
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
+--- !u!1 &5949081571003056769 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -4748533039703239195, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+  m_PrefabInstance: {fileID: 7824635400491472740}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &3387058963811929104
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5949081571003056769}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+  role: 10
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.003
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  clickSound: {fileID: 0}
+--- !u!1 &6061382097804974434 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -5149608235800572410, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+  m_PrefabInstance: {fileID: 7824635400491472740}
+  m_PrefabAsset: {fileID: 0}
+--- !u!64 &8802782059642492375
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6061382097804974434}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: -2368994100136288977, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+--- !u!1 &6942256637255133749 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
+  m_PrefabInstance: {fileID: 7824635400491472740}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &6793279715523748171
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6942256637255133749}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a07af381807aea2419ef0efae1ac1841, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMController
+  playerCamera: {fileID: 0}
+  cameraTargetTransform: {fileID: 9112404271761465081}
+  transitionDuration: 1
+  transitionEase:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  screenTargetTransform: {fileID: 1864082596377185377}
+  hoverOutline: {fileID: 3288425737508563364}
+  atmLights:
+  - {fileID: 7086877145987393302}
+  - {fileID: 7657301022914243002}
+  - {fileID: 3897058050093555584}
+  - {fileID: 663601474649683708}
+  - {fileID: 7453638014600812312}
+  - {fileID: 5136579900588402589}
+  - {fileID: 3214383821159047244}
+  - {fileID: 7556913711360479913}
+  - {fileID: 5063629333999137238}
+  - {fileID: 7971796733245743201}
+  atmUiCanvas: {fileID: 0}
+  audioSource: {fileID: 0}
+  startupSound: {fileID: 0}
+  shutdownSound: {fileID: 0}
+  keyClickSound: {fileID: 0}
+  washSuccessSound: {fileID: 0}
+  keyButtons:
+  - {fileID: 8959751572237125232}
+  - {fileID: 9034922288507839796}
+  - {fileID: 4961010837844985656}
+  - {fileID: 3817956897882420007}
+  - {fileID: 5768076863434099165}
+  - {fileID: 8224085876219546913}
+  - {fileID: 6583752765047080911}
+  - {fileID: 825001231297076524}
+  - {fileID: 4640392483588168454}
+  - {fileID: 824316551072845180}
+  - {fileID: 3387058963811929104}
+  - {fileID: 5873046968605391411}
+  launderingFeeRate: 0.1
+  welcomePanel: {fileID: 0}
+  mainMenuPanel: {fileID: 0}
+  inquiryPanel: {fileID: 0}
+  launderPanel: {fileID: 0}
+  processingPanel: {fileID: 0}
+  successPanel: {fileID: 0}
+  cleanCashText: {fileID: 0}
+  dirtyCashText: {fileID: 0}
+  coinsText: {fileID: 0}
+  launderConfirmText: {fileID: 0}
+  processingSlider: {fileID: 0}
+  successAmountText: {fileID: 0}
+--- !u!114 &3288425737508563364
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6942256637255133749}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02ef1eeba5cb7a146933401745b7392b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MouseHoverOutline
+  outlineColor: {r: 0.9907571, g: 1, b: 0, a: 1}
+  outlineWidth: 0.01
+  autoCollectRenderers: 1
+  highlightTargets: []
+  hoverCamera: {fileID: 0}
+  maxDistance: 1000
+  ignoreOcclusion: 0
+  raycastLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  hoverEnterClip: {fileID: 8300000, guid: 0d47aa5ef60e1224abda0e0568dd694b, type: 3}
+  audioSource: {fileID: 0}
+  hoverVolume: 0.22
+  hoverPitchRange: {x: 1, y: 1}
+  hoverEnterStartOffset: 0.18
+  pressDownClip: {fileID: 8300000, guid: 94826d03cfc2c8148be7e49800e98929, type: 3}
+  pressDownPitchRange: {x: 1, y: 1}
+  pressDownStartOffset: 0
+  releaseClip: {fileID: 8300000, guid: 112381306147a854d98aeea2714b9cff, type: 3}
+  releasePitchRange: {x: 1, y: 1}
+  releaseStartOffset: 0
+  clickVolume: 1
+  pressMoveEnabled: 0
+  pressMoveTarget: {fileID: 0}
+  pressMoveLocalX: -0.1
+  pressMoveDuration: 0.1
+  pressMoveLatchUntilRelease: 1
+  onClicked:
+    m_PersistentCalls:
+      m_Calls: []
+  audioSpatialBlend: 0
+  logEvents: 1
 --- !u!4 &7718053816494518415 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: a2c42cc1b51334b45a328e4eff997765, type: 3}
