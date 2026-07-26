@@ -150,6 +150,14 @@ public class RouletteFloater : MonoBehaviour
 
     private void Update()
     {
+        if (Time.deltaTime <= 0f) return;
+
+        if (float.IsNaN(_basePosition.x) || float.IsNaN(_basePosition.y) || float.IsNaN(_basePosition.z))
+        {
+            _basePosition = transform.position;
+            _velocity = Vector3.zero;
+        }
+
         if (rangeCenter != null)
             _centerPosition = rangeCenter.position;
 
@@ -177,7 +185,11 @@ public class RouletteFloater : MonoBehaviour
         float wobbleX = Mathf.Sin(time * wobbleFrequency + _timeOffset + 1f) * wobbleAmplitude;
         float wobbleZ = Mathf.Cos(time * wobbleFrequency * 0.9f + _timeOffset) * wobbleAmplitude;
 
-        transform.position = _basePosition + new Vector3(wobbleX, floatY, wobbleZ);
+        Vector3 nextPos = _basePosition + new Vector3(wobbleX, floatY, wobbleZ);
+        if (!float.IsNaN(nextPos.x) && !float.IsNaN(nextPos.y) && !float.IsNaN(nextPos.z))
+        {
+            transform.position = nextPos;
+        }
 
         // ---- カメラ追従 ------------------------------------------------
         if (enableCameraFacing) ApplyCameraFacing();
@@ -227,7 +239,7 @@ public class RouletteFloater : MonoBehaviour
 
     private void UpdateAvoidTargetVelocity()
     {
-        if (avoidTarget == null) return;
+        if (avoidTarget == null || Time.deltaTime <= 0f) return;
 
         if (_avoidTargetPrevPosSet)
         {
