@@ -9,6 +9,7 @@ using UnityEngine.InputSystem;
 /// 1. UFOキャッチャークリック時: 出現座標(spawn)へ即座にワープし、そこからスタート座標(start)へアニメーション移動
 /// 2. 全コイン投入完了時: スタート座標(start)からゴール座標(end)へアニメーション移動
 /// 3. ゴール座標待機中にキーボードの「3」を押下時: ゴール座標(end)から収納座標(stow)へアニメーション移動
+/// 4. 収納座標待機中に再度キーボードの「3」を押下時: 収納座標(stow)からゴール座標(end)へ復元アニメーション移動
 /// </summary>
 public class TelevisionAnimator : MonoBehaviour
 {
@@ -59,8 +60,8 @@ public class TelevisionAnimator : MonoBehaviour
     [Tooltip("全コイン投入完了時（スタート -> ゴール）の所要時間（秒）")]
     [SerializeField, Min(0.01f)] private float coinAnimationDuration = 1.0f;
 
-    [Tooltip("収納時（ゴール -> 収納）の所要時間（秒）")]
-    [SerializeField, Min(0.01f)] private float stowAnimationDuration = 1.0f;
+    [Tooltip("収納・復元時（ゴール <-> 収納）の所要時間（秒）")]
+    [SerializeField, Min(0.01f)] private float stowAnimationDuration = 0.5f;
 
     [Tooltip("アニメーションのイージングカーブ")]
     [SerializeField] private AnimationCurve easeCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
@@ -89,6 +90,7 @@ public class TelevisionAnimator : MonoBehaviour
 
     private Coroutine _animCoroutine;
     private bool _isAtGoal = false;
+    private bool _isStowed = false;
 
     private void OnEnable()
     {
@@ -122,13 +124,18 @@ public class TelevisionAnimator : MonoBehaviour
         }
 #endif
 
-        // ゴール座標に位置しており、かつ「3」キー（テンキーの3含む）が押された場合に収納アニメーションを実行
-        if (_isAtGoal && isDigit3Pressed)
+        // 「3」キー（テンキーの3含む）が押された時、トグルで収納 <-> 復元を切り替え
+        if (isDigit3Pressed && UFOCameraController.IsPlayingUfo)
         {
-            if (UFOCameraController.IsPlayingUfo)
+            if (_isAtGoal)
             {
                 Debug.Log("[TelevisionAnimator] ゴール座標にてキー「3」が押されました。収納アニメーションを開始します。");
                 PlayStowAnimation();
+            }
+            else if (_isStowed)
+            {
+                Debug.Log("[TelevisionAnimator] 収納座標にてキー「3」が再押下されました。ゴール座標への復元アニメーションを開始します。");
+                PlayRestoreFromStowAnimation();
             }
         }
     }
@@ -142,6 +149,7 @@ public class TelevisionAnimator : MonoBehaviour
         else
         {
             _isAtGoal = false;
+            _isStowed = false;
             ResetToSpawnTransform();
         }
     }
@@ -297,6 +305,7 @@ public class TelevisionAnimator : MonoBehaviour
         if (this == null || gameObject == null) return;
 
         _isAtGoal = false;
+        _isStowed = false;
 
         if (!gameObject.activeSelf)
         {
@@ -311,12 +320,15 @@ public class TelevisionAnimator : MonoBehaviour
         {
             StopCoroutine(_animCoroutine);
         }
-        _animCoroutine = StartCoroutine(AnimateRoutine(spawnPosition, SpawnRotation, startPosition, StartRotation, enterAnimationDuration, () => _isAtGoal = false));
+        _animCoroutine = StartCoroutine(AnimateRoutine(spawnPosition, SpawnRotation, startPosition, StartRotation, enterAnimationDuration, () =>
+        {
+            _isAtGoal = false;
+            _isStowed = false;
+        }));
     }
 
     /// <summary>
     /// 2段階目：全コイン投入完了時（スタート座標 -> ゴール座標）のアニメーションを再生します。
-    /// 移動完了後にゴールフラグ（_isAtGoal）を true に更新します。
     /// </summary>
     [ContextMenu("6. テスト再生: 全コイン投入後 (スタート -> ゴール)")]
     public void PlayCoinAnimation()
@@ -324,6 +336,7 @@ public class TelevisionAnimator : MonoBehaviour
         if (this == null || gameObject == null) return;
 
         _isAtGoal = false;
+        _isStowed = false;
 
         if (!gameObject.activeSelf)
         {
@@ -337,6 +350,7 @@ public class TelevisionAnimator : MonoBehaviour
         _animCoroutine = StartCoroutine(AnimateRoutine(startPosition, StartRotation, endPosition, EndRotation, coinAnimationDuration, () =>
         {
             _isAtGoal = true;
+            _isStowed = false;
             Debug.Log("[TelevisionAnimator] ゴール座標への移動が完了しました。キー「3」で収納が可能です。");
         }));
     }
@@ -363,7 +377,35 @@ public class TelevisionAnimator : MonoBehaviour
         _animCoroutine = StartCoroutine(AnimateRoutine(endPosition, EndRotation, stowPosition, StowRotation, stowAnimationDuration, () =>
         {
             _isAtGoal = false;
-            Debug.Log("[TelevisionAnimator] モニターの収納移動が完了しました。");
+            _isStowed = true;
+            Debug.Log("[TelevisionAnimator] モニターの収納移動が完了しました。再度キー「3」で復元可能です。");
+        }));
+    }
+
+    /// <summary>
+    /// 4段階目：収納座標から「3」キー再押下時（収納座標 -> ゴール座標）のアニメーションを再生します。
+    /// </summary>
+    [ContextMenu("8. テスト再生: キー3再押下時 (収納 -> ゴール)")]
+    public void PlayRestoreFromStowAnimation()
+    {
+        if (this == null || gameObject == null) return;
+
+        _isStowed = false;
+
+        if (!gameObject.activeSelf)
+        {
+            gameObject.SetActive(true);
+        }
+
+        if (_animCoroutine != null)
+        {
+            StopCoroutine(_animCoroutine);
+        }
+        _animCoroutine = StartCoroutine(AnimateRoutine(stowPosition, StowRotation, endPosition, EndRotation, stowAnimationDuration, () =>
+        {
+            _isAtGoal = true;
+            _isStowed = false;
+            Debug.Log("[TelevisionAnimator] モニターがゴール座標へ復元しました。再度キー「3」で収納可能です。");
         }));
     }
 
@@ -381,6 +423,7 @@ public class TelevisionAnimator : MonoBehaviour
             _animCoroutine = null;
         }
         _isAtGoal = false;
+        _isStowed = false;
         SetToSpawnTransform();
     }
 

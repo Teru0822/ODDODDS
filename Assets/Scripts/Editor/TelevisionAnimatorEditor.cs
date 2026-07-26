@@ -97,19 +97,27 @@ public class TelevisionAnimatorEditor : Editor
 
         EditorGUILayout.BeginHorizontal();
 
-        if (GUILayout.Button("テスト: 1. アクセス時 (出現 → スタート)", GUILayout.Height(30)))
+        if (GUILayout.Button("1. アクセス時 (出現 → スタート)", GUILayout.Height(28)))
         {
             animator.PlayEnterAnimation();
         }
 
-        if (GUILayout.Button("テスト: 2. 全コイン完了時 (スタート → ゴール)", GUILayout.Height(30)))
+        if (GUILayout.Button("2. 全コイン完了時 (スタート → ゴール)", GUILayout.Height(28)))
         {
             animator.PlayCoinAnimation();
         }
 
-        if (GUILayout.Button("テスト: 3. キー3押下時 (ゴール → 収納)", GUILayout.Height(30)))
+        EditorGUILayout.EndHorizontal();
+        EditorGUILayout.BeginHorizontal();
+
+        if (GUILayout.Button("3. キー3押下時 (ゴール → 収納)", GUILayout.Height(28)))
         {
             animator.PlayStowAnimation();
+        }
+
+        if (GUILayout.Button("4. キー3再押下時 (収納 → ゴール)", GUILayout.Height(28)))
+        {
+            animator.PlayRestoreFromStowAnimation();
         }
 
         EditorGUILayout.EndHorizontal();

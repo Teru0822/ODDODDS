@@ -14,6 +14,7 @@ public class UFOCameraController : MonoBehaviour
     public static event System.Action<bool> OnUfoModeChanged;
     public static event System.Action OnCoinInserted;
     public static event System.Action OnAllCoinsInserted;
+    public static event System.Action<UfoSubCameraState> OnSubCameraChanged;
     public static bool IsPlaySessionActive { get; private set; } = false;
     public static bool IsControlActive => IsPlaySessionActive && IsPlaySpotlightActive && Instance != null && Instance._playTimer > 0f;
 
@@ -1109,10 +1110,12 @@ public class UFOCameraController : MonoBehaviour
             activeSubCam.gameObject.SetActive(true);
         }
 
+        OnSubCameraChanged?.Invoke(state);
+
         Debug.Log($"[UFOCameraController] サブカメラ切り替え → {state} (Camera: {activeSubCam?.name})");
     }
 
-    private Camera GetSubCamera(UfoSubCameraState state)
+    public Camera GetSubCamera(UfoSubCameraState state)
     {
         switch (state)
         {
