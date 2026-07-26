@@ -1,5 +1,6 @@
 using TMPro;
 using UniRx;
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -28,11 +29,11 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
     [SerializeField] private float _initialDecreaseAmount = 100f;
     [SerializeField] private int _debtCollectionFrequency = 10;
 
-    ReactiveProperty<int> _currentTurnCount = new ReactiveProperty<int>(0);
+    ReactiveProperty<int> _currentTurnCount = new ReactiveProperty<int>(1);
     ReactiveProperty<int> _nextDebtCollectionTurnCount = new ReactiveProperty<int>(0);
     public int CurrentTurnCount { get { return _currentTurnCount.Value; } }
-    public IReadOnlyReactiveProperty<int> OnCurrentTurnChange { get { return _currentTurnCount; } }
-    public IReadOnlyReactiveProperty<int> OnNextDebtCollectionTurnChange { get { return _nextDebtCollectionTurnCount; } }
+    public IObservable<int> OnCurrentTurnChange { get { return _currentTurnCount; } }
+    public IObservable<int> OnNextDebtCollectionTurnChange { get { return _nextDebtCollectionTurnCount; } }
 
     [Header("ローグライク要素（徳ポイント）")]
     [SerializeField, Tooltip("徳ポイント算出の基準倍率。大きいほど獲得量が増える")]
@@ -60,11 +61,11 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
     //ノルマの金額
     ReactiveProperty<float> _quotaAmount = new ReactiveProperty<float>(0);
     public float PreviousDecreaseAmount => _quotaAmount.Value;
-    public IReadOnlyReactiveProperty<float> OnQuotaAmount { get { return _quotaAmount; } }
+    public IObservable<float> OnQuotaAmount { get { return _quotaAmount; } }
 
     //借金の残りの金額
     ReactiveProperty<float> _leftDebtAmount = new ReactiveProperty<float>(10000000000);
-    public IReadOnlyReactiveProperty<float> OnLeftDebtAmount { get { return _leftDebtAmount; } }
+    public IObservable<float> OnLeftDebtAmount { get { return _leftDebtAmount; } }
 
     private void Awake()
     {

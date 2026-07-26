@@ -1,3 +1,5 @@
+using System;
+using UniRx;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -6,10 +8,10 @@ using UnityEngine.InputSystem;
 /// </summary>
 public class IntercomController : MonoBehaviour
 {
-    public enum IntercomState { Idle, Calling, Talking }
+    public enum IntercomState { Idle, Calling, Talking, Trade}
 
     [Header("Settings")]
-    [SerializeField] private IntercomState currentState = IntercomState.Idle;
+    [SerializeField] private ReactiveProperty<IntercomState> currentState = new ReactiveProperty<IntercomState>(IntercomState.Idle);
     [SerializeField] private Color lampColor = Color.green;
     [SerializeField] private float blinkSpeed = 2.0f;
     [SerializeField] private string emissionKeyword = "_EmissionColor";
@@ -26,8 +28,19 @@ public class IntercomController : MonoBehaviour
     private Material runtimeDisplayMaterial;
     private AudioSource audioSource;
 
+    //公開
+    public IntercomState CurrentState
+    {
+        get{return currentState.Value;}
+        set{currentState.Value = value;}
+    }
+    public IObservable<IntercomState> OnChangeCurrentState{get{return currentState;}}
+
     private void Start()
     {
+        //カメラのアタッチ
+        clickCamera = Camera.main;
+
         // 再生用 AudioSource の準備
         audioSource = gameObject.GetComponent<AudioSource>();
         if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
@@ -69,7 +82,7 @@ public class IntercomController : MonoBehaviour
         // U キーで着信開始
         if (Keyboard.current != null && Keyboard.current.uKey.wasPressedThisFrame)
         {
-            if (currentState == IntercomState.Idle) UpdateState(IntercomState.Calling);
+            if (currentState.Value == IntercomState.Idle) UpdateState(IntercomState.Calling);
         }
 
         // マウスクリックによるボタン操作
@@ -79,7 +92,7 @@ public class IntercomController : MonoBehaviour
         }
 
         // 着信中のランプ点滅
-        if (currentState == IntercomState.Calling)
+        if (currentState.Value == IntercomState.Calling)
         {
             bool blink = (Mathf.FloorToInt(Time.time * blinkSpeed) % 2 == 0);
             SetLampEmission(blink);
@@ -117,9 +130,9 @@ public class IntercomController : MonoBehaviour
 
     public void UpdateState(IntercomState newState)
     {
-        currentState = newState;
+        currentState.Value = newState;
 
-        switch (currentState)
+        switch (currentState.Value)
         {
             case IntercomState.Idle:
                 // 画面を消さずに黒くする
@@ -192,7 +205,7 @@ public class IntercomController : MonoBehaviour
         }
     }
 
-    public void OnClickCentralButton() { if (currentState == IntercomState.Calling) UpdateState(IntercomState.Talking); }
-    public void OnClickRightButton() { if (currentState != IntercomState.Idle) UpdateState(IntercomState.Idle); }
-    public void OnClickLeftButton() { /* 開錠ロジック用（将来） */ }
+    public void OnClickCentralButton() { if (currentState.Value == IntercomState.Calling) UpdateState(IntercomState.Talking); }
+    public void OnClickRightButton() { if (currentState.Value != IntercomState.Idle) UpdateState(IntercomState.Idle); }
+    public void OnClickLeftButton() { if (currentState.Value == IntercomState.Talking) UpdateState(IntercomState.Trade);/* 開錠ロジック用（将来） */ }
 }

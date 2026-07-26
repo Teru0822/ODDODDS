@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3cd05445ed91794a9c624e73515b2db, type: 3}
+  m_Name: Bell
+  m_EditorClassIdentifier: Assembly-CSharp::VisitorData
+  id: 0
+  visitorName: Bell
+  requests:
+  - {fileID: 11400000, guid: 6de26c17d13c371478cb58b5a1882d80, type: 2}
+  - {fileID: 11400000, guid: 1b23e0f43c1a5814fa93c036f3044760, type: 2}
+  - {fileID: 11400000, guid: a961060d0a9e94844acf42cf5107ab2e, type: 2}
+  - {fileID: 11400000, guid: a961060d0a9e94844acf42cf5107ab2e, type: 2}
+  - {fileID: 11400000, guid: a961060d0a9e94844acf42cf5107ab2e, type: 2}
+  rewards:
+  - {fileID: 11400000, guid: b367633b104082b4cb9b87a09f3062ba, type: 2}
+  - {fileID: 11400000, guid: b367633b104082b4cb9b87a09f3062ba, type: 2}
+  - {fileID: 11400000, guid: b367633b104082b4cb9b87a09f3062ba, type: 2}
+  - {fileID: 11400000, guid: b367633b104082b4cb9b87a09f3062ba, type: 2}
+  - {fileID: 11400000, guid: b367633b104082b4cb9b87a09f3062ba, type: 2}
+  conversations:
+    _dicElements:
+    - Key: Conversation1
+      Value:
+      - animation: 0
+        lineJp: "\u3054\u304D\u3052\u3093\u3088\u3046\u3001\u3042\u306A\u305F\u304C\u304A\u5144\u69D8\u306E\u30DA\u30C3\u30C8\u306D\u3002"
+        lineEn: Good day. So, you're my dear brother's little pet.
+      - animation: 0
+        lineJp: "\u79C1\u306E\u540D\u306F\u30D9\u30EB\u3002\u3042\u306A\u305F\u306E\u4E3B\u69D8\u306E\u59B9\u3067\u3059\u308F\u3002"
+        lineEn: My name is Bell, the younger sister of your master.
+      - animation: 0
+        lineJp: "\u304A\u5144\u69D8\u304C\u4EBA\u9593\u3092\u30DA\u30C3\u30C8\u306B\u3057\u3066\u904A\u3093\u3067\u3044\u308B\u3068\u805E\u3044\u3066..."
+        lineEn: I heard my brother has been keeping a human as a pet...
+      - animation: 2
+        lineJp: "\u5632\u7B11\u3044\u306B\u6765\u307E\u3057\u305F\u306E\u3002"
+        lineEn: So I came to laugh at you.
+      - animation: 1
+        lineJp: "\u5148\u307B\u3069\u304B\u3089\u3001\u5FC5\u6B7B\u306A\u9854\u3067\u3082\u304C\u3044\u3066\u3044\u308B\u3042\u306A\u305F\u3092\u898B\u3066\u3001\u6EFE\u3063\u3066\u3057\u307E\u3044\u307E\u3057\u305F\u3002"
+        lineEn: Watching you struggle so desperately this whole time has been...
+          quite exhilarating.
+      - animation: 2
+        lineJp: "\u3067\u3059\u306E\u3067\u3001\u79C1\u3082\u5C11\u3057\u8CB4\u65B9\u3067\u904A\u3093\u3067\u5DEE\u3057\u4E0A\u3052\u307E\u3059\u308F\u3002"
+        lineEn: Which is why I've decided to play with you a little as well.
+      - animation: 0
+        lineJp: "\u307E\u305A\u306F...\u60AA\u9B54\u306E\u30AD\u30E3\u30F3\u30C7\u30A3\u3092\u6301\u3063\u3066\u304D\u306A\u3055\u3044\u3002"
+        lineEn: First... Bring me a Devil's Candy.
+      - animation: 0
+        lineJp: "\u671F\u5F85\u3057\u3066\u307E\u3059\u308F\u3088"
+        lineEn: Don't disappoint me.
+    - Key: TradeSuccess1
+      Value:
+      - animation: 0
+        lineJp: "\u3088\u304F\u305E\u6301\u3063\u3066\u304D\u3066\u304F\u3060\u3055\u3044\u307E\u3057\u305F\u3002"
+        lineEn: Well done. You actually brought it to me.
+      - animation: 0
+        lineJp: "\u5B58\u5916\u3001\u3084\u308A\u307E\u3059\u306E\u306D\u3002\u5C11\u3057\u4FAE\u3063\u3066\u3044\u307E\u3057\u305F\u308F\u3002"
+        lineEn: I must confess, you've surprised me. It seems I underestimated you
+          just a little.
+      - animation: 0
+        lineJp: "\u304A\u793C\u3068\u8A00\u3063\u3066\u306F\u306A\u3093\u3067\u3059\u3051\u3069\u3001\u4E00\u5EA6\u3060\u3051\u304A\u91D1\u7A3C\u304E\u3092\u624B\u4F1D\u3063\u3066\u3042\u3052\u307E\u3059\u308F\u3002"
+        lineEn: "As a token of my appreciation... I'll help you earn some money\u2014just
+          this once."
+      - animation: 0
+        lineJp: "\u3053\u308C\u304B\u3089\u3082\u3001\u6C17\u304C\u5411\u3044\u305F\u3089\u904A\u3093\u3067\u5DEE\u3057\u4E0A\u3052\u307E\u3059\u306E\u3067\u3001\u697D\u3057\u307F\u306B\u5F85\u3063\u3066\u306A\u3055\u3044\u306A\u3002"
+        lineEn: If I happen to feel like it, I'll come play with you again. Be sure
+          to await my return.
+      - animation: 0
+        lineJp: "\u305D\u308C\u3067\u306F\u3001\u3054\u3081\u3093\u3042\u305D\u3070\u305B\u3002"
+        lineEn: Until then... farewell.

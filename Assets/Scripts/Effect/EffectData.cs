@@ -1,7 +1,7 @@
 using UnityEngine;
 using System;
 [Serializable]
-[CreateAssetMenu(menuName = "EffectData")]
+[CreateAssetMenu(menuName = "Data/EffectData")]
 public class EffectData  : ScriptableObject
 {
     public int id; //アイテムのID

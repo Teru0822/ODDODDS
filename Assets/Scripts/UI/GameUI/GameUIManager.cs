@@ -209,10 +209,10 @@ public class GameUIManager : MonoBehaviour
                 }
             }).AddTo(this);
 
-        MoneyManager.Instance.OnCurrentTurnChange.Subscribe(turnNum => _turnText.text = turnNum.ToString("000"));
-        MoneyManager.Instance.OnNextDebtCollectionTurnChange.Subscribe(turnNum => _nextDebtTurnText.text = turnNum.ToString("00"));
-        MoneyManager.Instance.OnQuotaAmount.Subscribe(quotaNum => _nextQuotaText.text = quotaNum.ToString("00"));
-        MoneyManager.Instance.OnLeftDebtAmount.Subscribe(leftDebtNum => _leftDebtMoneyText.text = leftDebtNum.ToString("00"));
+        MoneyManager.Instance.OnCurrentTurnChange.Subscribe(turnNum => _turnText.text = turnNum.ToString("000")).AddTo(this);
+        MoneyManager.Instance.OnNextDebtCollectionTurnChange.Subscribe(turnNum => _nextDebtTurnText.text = turnNum.ToString("00")).AddTo(this);
+        MoneyManager.Instance.OnQuotaAmount.Subscribe(quotaNum => _nextQuotaText.text = quotaNum.ToString("00")).AddTo(this);
+        MoneyManager.Instance.OnLeftDebtAmount.Subscribe(leftDebtNum => _leftDebtMoneyText.text = leftDebtNum.ToString("00")).AddTo(this);
         Debug.Log(this.name + "初期化完了");
     }
 
