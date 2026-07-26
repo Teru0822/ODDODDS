@@ -86,27 +86,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e15e7feff5fc6424882fe8205c28a838, type: 3}
   m_Name: HorrorDecayRendererFeature
   m_EditorClassIdentifier: Assembly-CSharp::HorrorDecayRendererFeature
-  m_Active: 1
+  m_Active: 0
   settings:
     renderPassEvent: 600
     shader: {fileID: 4800000, guid: b7cd7f31315fe5a4fa36b0550256468a, type: 3}
-    intensity: 0.057
+    intensity: 0
     desaturation: 1
     rotColor: {r: 0.32, g: 0.3, b: 0.18, a: 1}
-    rotStrength: 0.482
-    contrast: 1.155
-    blackLift: 0.0423
+    rotStrength: 0.536
+    contrast: 1.22
+    blackLift: 0.051
     moldColor: {r: 0.05, g: 0.06, b: 0.03, a: 1}
-    moldStrength: 0.596
+    moldStrength: 0.652
     moldScale: 4.5
     moldEdgeCreep: 0.517
     vignette: 1.78
     vignettePower: 6
     chromaticAberration: 1.91
     warp: 0.467
-    filmGrain: 0.15
-    lightFlicker: 0.12
-    flickerSpeed: 9
+    filmGrain: 0.427
+    lightFlicker: 0.227
+    flickerSpeed: 14.7
 --- !u!114 &7833122117494664109
 MonoBehaviour:
   m_ObjectHideFlags: 0
