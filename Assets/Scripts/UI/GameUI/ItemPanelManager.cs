@@ -384,6 +384,25 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
     }
 
     /// <summary>
+    /// 指定したIDを持つアイテムを所持しているかを返す関数
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    public bool isHasItem(int id)
+    {
+        foreach (var item in _ownedConsumeItems)
+        {
+            if (item.Id == id)
+            {
+                return true;
+            }
+            else
+                continue;
+        }
+        return false;
+    }
+
+    /// <summary>
     /// 指定されたIDのアイテムを所持リストに追加し、UI更新を行う
     /// </summary>
     public void AddItem(int id, ItemType type, int num = 1)

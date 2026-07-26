@@ -103,7 +103,7 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider
 
     void Start()
     {
-        MoneyManager.Instance.OnCurrentTurnChange.Subscribe(_ => ReduceEffectLeftTurn());
+        MoneyManager.Instance.OnCurrentTurnChange.Subscribe(_ => ReduceEffectLeftTurn()).AddTo(this);
     }
 
     void Update()

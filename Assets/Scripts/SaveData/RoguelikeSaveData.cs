@@ -18,6 +18,9 @@ public class RoguelikeSaveData
     //エフェクト関連
     public List<EffectSaveData> ownedEffects;//消費アイテムのリスト
 
+    //訪問者関連
+    public List<VisitorSaveData> visitorSaveDatas;
+
     // 今後ここに追加のメタプログレッション要素（スキル解放状態など）を記載
 
     //ーーー各遊技のローグライク要素をここに記述していくーーーー
