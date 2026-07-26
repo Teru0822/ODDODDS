@@ -410,8 +410,6 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
                 {
                     _audio.PlayOneShot(_openSE);
                 });
-
-
                 _tradeAnimSequence.Play();
                 yield return _tradeAnimSequence.WaitForCompletion();//アニメーションが終わるまで待つ
                 _patchObject.transform.DOLocalMoveZ(-0.0004f, 1.0f);
