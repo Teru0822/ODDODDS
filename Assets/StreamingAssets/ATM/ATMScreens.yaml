@@ -1,0 +1,184 @@
+# =============================================================
+#  ATM 画面テキスト定義ファイル
+#  - この YAML を編集するだけで各画面の文言・色・サイズ・画像を変更できます（再コンパイル不要）。
+#  - 1画面は要素(element)の並びです。要素は type: text または type: image。
+#
+#  text 要素:
+#    text  : 表示文字列。1要素 = 1行として上から連結されます（空行は text: "" の要素を置く）。
+#            {token} でランタイム値を差し込めます（下記トークン一覧参照）。
+#            TMP のリッチタグ(<b> など)も併用可。
+#            ★文字間インライン画像: images/ に PNG を置き、text に [img:ファイル名] と書くだけ。
+#              例) text: "所持金 [img:coin] {cleanBalance}"  ← coin.png が文字と同じ行に並ぶ。
+#              （拡張子は省略可。Sprite Asset は起動時に自動生成されます）
+#    color : 文字色 #RRGGBB（任意）
+#    size  : 文字サイズ％。100=標準（任意）
+#    align : left / center / right（任意）
+#    font  : TMP フォントアセット名（任意）。行ごとに変更可。
+#            ※フォントアセットは Resources/Fonts & Materials/ 配下に置く必要があります（TMPの<font>解決要件）。
+#
+#  image 要素:
+#    sprite        : StreamingAssets/ATM/ からの相対パス（例 images/logo.png）
+#    width, height : ピクセルサイズ
+#    x, y          : 画面中央を原点とした配置座標（+y=上）
+#
+#  トークン一覧:
+#    {cleanBalance} {unwashedDebt} {gold} {silver} {bronze} {diamond}
+#    {goldPrice} {silverPrice} {bronzePrice} {goldOwned} {silverOwned} {bronzeOwned}
+#    {feeRatePercent} {launderFee} {launderNet} {passcodeMasked} {creditedAmount}
+#    {typedTitle} {loginPrompt} {progressBar} {progressPercent}
+# =============================================================
+
+screens:
+
+  # --- 初期(起動)画面＝ログイン画面：タイピング演出後そのままパスコード入力。{typedTitle}はコードが差し込む ---
+  welcome:
+    - type: text
+      color: "#33FF66"
+      size: 120
+      text: "=== Devil's Bank ==="
+    - type: text
+      text: ""
+    - type: text
+      size: 240
+      color: "#33FF66"
+      text: "{typedTitle}"
+    - type: text
+      text: ""
+    - type: text
+      text: "INPUT YOUR PASSCODE:"
+    - type: text
+      size: 140
+      color: "#33FF99"
+      text: "[ {passcodeMasked} ]"
+    - type: text
+      text: ""
+
+
+  # --- ログイン(パスコード入力)画面 ---
+  passcode:
+    - type: text
+      color: "#33FF66"
+      text: "=== SECURITY LOGIN ==="
+    - type: text
+      text: "PLEASE ENTER 4-DIGIT PIN CODE"
+    - type: text
+      text: ""
+    - type: text
+      text: "INPUT YOUR PASSCODE:"
+    - type: text
+      size: 140
+      color: "#33FF99"
+      text: "[ {passcodeMasked} ]"
+    - type: text
+      text: ""
+    - type: text
+      color: "#558855"
+      text: "[ENTER] CONFIRM  /  [CANCEL] CLEAR"
+
+  # (メインメニュー画面は廃止：ログイン後はコイン両替へ直行)
+
+  # --- 残高照会 (現在は導線なし・参照用に残置) ---
+  inquiry:
+    - type: text
+      color: "#33FF66"
+      text: "=== BALANCE INQUIRY ==="
+    - type: text
+      text: "CLEAN BALANCE:  ¥{cleanBalance}"
+    - type: text
+      color: "#FF5533"
+      text: "UNWASHED DEBT:  ¥{unwashedDebt}"
+    - type: text
+      text: ""
+    - type: text
+      text: "COINS RETRIEVED:"
+    - type: text
+      text: "GOLD:{gold}  SILVER:{silver}  BRONZE:{bronze}"
+    - type: text
+      text: "BLACK DIAMOND:{diamond}"
+    - type: text
+      text: ""
+    - type: text
+      text: "[0] BACK TO MAIN MENU"
+
+  # --- 資金洗浄 確認画面（現状メニュー導線なし・別途接続予定） ---
+  launderConfirm:
+    - type: text
+      color: "#33FF66"
+      text: "=== LAUNDER DEBT ==="
+    - type: text
+      text: "DIRTY CASH: ¥{unwashedDebt}"
+    - type: text
+      text: "LAUNDERING FEE ({feeRatePercent}%): -¥{launderFee}"
+    - type: text
+      color: "#33FF99"
+      text: "CREDITED NET AMOUNT: ¥{launderNet}"
+    - type: text
+      text: ""
+    - type: text
+      text: "EXECUTE LAUNDERING?"
+    - type: text
+      text: "[ENTER] CONFIRM TRANSACTION"
+    - type: text
+      text: "[CANCEL] EXIT TO MENU"
+
+  # --- コイン両替（ログイン後ここに直行）。右側の縦スピンボックスはコード生成UIが重なる ---
+  # 各行の {sel*Open}/{sel*Close} は選択中の行だけ緑色にするためコードが差し込む。
+  # コイン画像は images/gold.png 等を置くと [img:gold] で表示される（無くても文字は出る）。
+  coinExchange:
+    - type: text
+      color: "#33FF66"
+      text: "=== COIN EXCHANGE ==="
+    - type: text
+      text: ""
+    - type: text
+      text: "CASH: ¥{cleanBalance}"
+    - type: text
+      text: ""
+    - type: text
+      text: "[img:gold] GOLD   : {selGoldOpen}{goldOwned}  (¥{goldPrice}/x1){selGoldClose}"
+    - type: text
+      text: ""
+    - type: text
+      text: "[img:silver] SILVER : {selSilverOpen}{silverOwned}  (¥{silverPrice}/x1){selSilverClose}"
+    - type: text
+      text: ""
+    - type: text
+      text: "[img:bronze] BRONZE : {selBronzeOpen}{bronzeOwned}  (¥{bronzePrice}/x1){selBronzeClose}"
+    - type: text
+      text: ""
+    - type: text
+      color: "#558855"
+      text: "[UP/DOWN] SELECT   [ENTER] EDIT/SELL   [CANCEL] EXIT"
+
+  # --- 処理中（プログレスバー）。{progressBar}/{progressPercent} はコードが差し込む ---
+  processing:
+    - type: text
+      color: "#FFCC33"
+      text: "=== PROCESSING ==="
+    - type: text
+      text: "LAUNDERING TRANSACTION IN PROGRESS..."
+    - type: text
+      text: ""
+    - type: text
+      text: "[{progressBar}] {progressPercent}%"
+    - type: text
+      text: ""
+    - type: text
+      color: "#FF3333"
+      text: "WARNING: DO NOT POWER OFF TERMINAL"
+
+  # --- 取引成功 ---
+  success:
+    - type: text
+      color: "#33FF66"
+      text: "=== TRANSACTION SUCCESS ==="
+    - type: text
+      text: "LAUNDERING COMPLETED SUCCESSFULLY."
+    - type: text
+      text: ""
+    - type: text
+      text: "CREDITED AMOUNT: ¥{creditedAmount}"
+    - type: text
+      text: ""
+    - type: text
+      text: "[ENTER] RETURN TO MENU"

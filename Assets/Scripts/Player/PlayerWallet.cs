@@ -20,6 +20,14 @@ public class PlayerWallet : MonoBehaviour
     [SerializeField, Tooltip("徳ポイント (ローグライク) の初期値の設定")]
     private int _virtuePoints = 0;
 
+    [Header("初期コイン枚数 (デバッグ用)")]
+    [SerializeField, Tooltip("金貨の初期枚数")]
+    private int _initialGoldCoins = 10;
+    [SerializeField, Tooltip("銀貨の初期枚数")]
+    private int _initialSilverCoins = 20;
+    [SerializeField, Tooltip("銅貨の初期枚数")]
+    private int _initialBronzeCoins = 30;
+
     //お金関連の変数
     private ReactiveProperty<float> _washedMoneyAmount = new ReactiveProperty<float>();
     private ReactiveProperty<float> _unwashedMoneyAmount = new ReactiveProperty<float>();
@@ -194,9 +202,9 @@ public class PlayerWallet : MonoBehaviour
         _washedMoneyAmount.Value = _washedAmount;
         _unwashedMoneyAmount.Value = _unwashedAmount;
         _virtuePointAmount.Value = _virtuePoints;
-        _bronzeCoins.Value = 0;
-        _silverCoins.Value = 0;
-        _goldCoins.Value = 0;
+        _bronzeCoins.Value = _initialBronzeCoins;
+        _silverCoins.Value = _initialSilverCoins;
+        _goldCoins.Value = _initialGoldCoins;
         _blackDiamonds.Value = 0;
     }
     private void OnDestroy()

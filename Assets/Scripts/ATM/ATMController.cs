@@ -93,6 +93,17 @@ namespace App.ATM
         [Range(0f, 0.9f)]
         [SerializeField] private float launderingFeeRate = 0.1f;
 
+        [Header("起動時に点灯させるマテリアルのEmission")]
+        [Tooltip("Emissionを制御する対象マテリアル。ATM起動中のみ点灯し、閉じると0(消灯)になります")]
+        [SerializeField] private Material emissionMaterial;
+
+        [Tooltip("ATM起動中のEmission色(HDR)。ここで設定した値で点灯します")]
+        [ColorUsage(false, true)]
+        [SerializeField] private Color emissionColor = Color.black;
+
+        // Emission制御用のシェーダプロパティID
+        private static readonly int EmissionColorID = Shader.PropertyToID("_EmissionColor");
+
         private ATMState _currentState = ATMState.Off;
         private ATMSubState _currentSubState = ATMSubState.Welcome;
         private App.Player.FirstPersonController _fpController;
@@ -122,14 +133,41 @@ namespace App.ATM
         private GameObject _uiCanvasGo;
         private GameObject _coinExchangePanelGo;
 
-        // スピンボックスのUIテキストコンポーネント
-        private TextMeshProUGUI _goldQtyText;
-        private TextMeshProUGUI _silverQtyText;
-        private TextMeshProUGUI _bronzeQtyText;
+        // コイン両替：縦スピンボックス(0=金,1=銀,2=銅)。text は "▲/数量/▼"、bg は緑ハイライト用
+        private readonly TextMeshProUGUI[] _spinTexts = new TextMeshProUGUI[3];
+        private readonly UnityEngine.UI.Image[] _spinBgs = new UnityEngine.UI.Image[3];
+
+        // コイン両替の選択/編集状態
+        private int _selectedCoinRow = 0;        // 0=金,1=銀,2=銅（初期選択は金）
+        private bool _isEditingQty = false;      // false=行選択モード, true=個数編集モード
+        private bool _qtyFreshInput = true;      // 編集開始後、最初の数字入力で置き換えるためのフラグ
+
+        [Header("コイン両替スピンボックス配置")]
+        [Tooltip("【推奨】金/銀/銅スピンボックスの位置アンカー。ATMの子に空オブジェクトを3個作り、Sceneビューで各コイン行の右にドラッグ配置してここに割当てるだけ。実行中もドラッグで即追従します。未割当ての行は下のVector2(Canvasローカル座標)で配置。")]
+        [SerializeField] private Transform[] _spinboxAnchors = new Transform[3];
+
+        [Tooltip("アンカー未割当て時のフォールバック配置(Canvasローカル座標)。金/銀/銅")]
+        [SerializeField] private Vector2 _spinboxGoldPos = new Vector2(250f, 40f);
+        [SerializeField] private Vector2 _spinboxSilverPos = new Vector2(250f, -50f);
+        [SerializeField] private Vector2 _spinboxBronzePos = new Vector2(250f, -140f);
+        [Tooltip("スピンボックスの大きさ(Canvasローカル px)")]
+        [SerializeField] private Vector2 _spinboxSize = new Vector2(64f, 96f);
+        private static readonly Color SpinboxDimColor = new Color(0.10f, 0.16f, 0.10f, 0.90f);
+        private static readonly Color SpinboxActiveColor = new Color(0.20f, 0.85f, 0.30f, 0.95f);
 
         // 高速カウントアップ表示用のキャッシュ金額
         private float _visualWashedAmount = 0f;
         private float successAmountTextValue = 0f;
+
+        // 画面テキストの外部データ(YAML)レンダラと画像オーバーレイ用コンテナ
+        private ATMScreenRenderer _screenRenderer;
+        private Transform _imageContainer;
+
+        // アニメーション演出でレンダラへ渡す可変トークンのバッキング値
+        private string _typedTitle = "";
+        private string _loginPrompt = "";
+        private string _progressBar = "";
+        private int _progressPercent = 0;
 
         private void Awake()
         {
@@ -176,6 +214,8 @@ namespace App.ATM
             {
                 hoverOutline.OnClicked -= OnATMClicked;
             }
+            // 対象マテリアルは共有アセットのため、破棄/プレイ停止時にEmissionを確実に消灯へ戻す
+            SetEmission(false);
             if (Instance == this) Instance = null;
         }
 
@@ -201,6 +241,12 @@ namespace App.ATM
 
             // 物理キーボードからの入力判定
             HandlePhysicalKeyboardInput();
+
+            // コイン両替中はスピンボックスをアンカーへ毎フレーム追従（実行中のドラッグ調整に即反応）
+            if (_currentSubState == ATMSubState.CoinExchange)
+            {
+                PositionSpinboxes();
+            }
         }
 
         private void ValidateReferences()
@@ -330,6 +376,7 @@ namespace App.ATM
             }
 
             SetATMState(false);
+            _screenRenderer?.ClearImages();
 
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
@@ -386,6 +433,27 @@ namespace App.ATM
             {
                 if (_coinExchangePanelGo != null) _coinExchangePanelGo.SetActive(false);
             }
+
+            // 起動中はインスペクター設定のEmission色、閉じると0(消灯)
+            SetEmission(active);
+        }
+
+        /// <summary>
+        /// 対象マテリアルのEmissionを制御する。active=true でインスペクター設定色、false で0(黒=消灯)。
+        /// </summary>
+        private void SetEmission(bool active)
+        {
+            if (emissionMaterial == null) return;
+
+            Color target = active ? emissionColor : Color.black;
+            emissionMaterial.SetColor(EmissionColorID, target);
+
+            // 点灯時はEmissionキーワード/GIフラグを有効化（URP Lit / Standard 双方で反映させるため）
+            if (active)
+            {
+                emissionMaterial.EnableKeyword("_EMISSION");
+                emissionMaterial.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+            }
         }
 
         // --- 画面表示更新とサブ状態遷移 ---
@@ -403,11 +471,129 @@ namespace App.ATM
             if (nextState == ATMSubState.Welcome)
             {
                 _canProceedFromWelcome = false;
+                _typedTitle = "";
+                _inputPasscode = ""; // 起動画面＝ログイン画面。パスコードを初期化
+                _screenRenderer?.SetScreen("welcome", BuildTokens());
                 StartCoroutine(TypeWelcomeText());
             }
             else
             {
-                UpdateDisplay();
+                // コイン両替に入るときは行選択を金(先頭)・編集モード解除にリセット
+                if (nextState == ATMSubState.CoinExchange)
+                {
+                    _selectedCoinRow = 0;
+                    _isEditingQty = false;
+                    _qtyFreshInput = true;
+                }
+
+                // 画面切替時に画像オーバーレイを再構築しつつテキストも更新
+                _screenRenderer?.SetScreen(ScreenIdFor(nextState), BuildTokens());
+                if (nextState == ATMSubState.CoinExchange) UpdateSpinboxes();
+            }
+        }
+
+        /// <summary>ATMSubState を YAML の画面 id に対応付ける。</summary>
+        private static string ScreenIdFor(ATMSubState s)
+        {
+            switch (s)
+            {
+                case ATMSubState.Welcome: return "welcome";
+                case ATMSubState.PasscodeInput: return "passcode";
+                case ATMSubState.MainMenu: return "mainMenu";
+                case ATMSubState.Inquiry: return "inquiry";
+                case ATMSubState.LaunderConfirm: return "launderConfirm";
+                case ATMSubState.CoinExchange: return "coinExchange";
+                case ATMSubState.Processing: return "processing";
+                case ATMSubState.Success: return "success";
+                default: return "welcome";
+            }
+        }
+
+        /// <summary>現在のウォレット/ATM状態から、画面テキストに差し込むトークン辞書を構築する。</summary>
+        private Dictionary<string, string> BuildTokens()
+        {
+            var wallet = PlayerWallet.Local;
+            float clean = wallet != null ? wallet.WashedAmount : 0f;
+            float dirty = wallet != null ? wallet.UnwashedAmount : 0f;
+            int gold = wallet != null ? wallet.GoldCoins : 0;
+            int silver = wallet != null ? wallet.SilverCoins : 0;
+            int bronze = wallet != null ? wallet.BronzeCoins : 0;
+            int diamond = wallet != null ? wallet.BlackDiamonds : 0;
+
+            // カウントアップ演出中以外は実残高を表示用キャッシュへ同期
+            if (!_isCountingUp) _visualWashedAmount = clean;
+
+            float fee = dirty * launderingFeeRate;
+            float net = dirty - fee;
+            string masked = new string('*', _inputPasscode.Length).PadRight(4, '_');
+
+            // コイン両替：選択中の行だけ緑色にするための color タグ差し込み用トークン
+            const string selOpen = "<color=#33FF66>";
+            const string selClose = "</color>";
+
+            return new Dictionary<string, string>(32)
+            {
+                { "selGoldOpen",   _selectedCoinRow == 0 ? selOpen : "" },
+                { "selGoldClose",  _selectedCoinRow == 0 ? selClose : "" },
+                { "selSilverOpen", _selectedCoinRow == 1 ? selOpen : "" },
+                { "selSilverClose",_selectedCoinRow == 1 ? selClose : "" },
+                { "selBronzeOpen", _selectedCoinRow == 2 ? selOpen : "" },
+                { "selBronzeClose",_selectedCoinRow == 2 ? selClose : "" },
+                { "cleanBalance", _visualWashedAmount.ToString("N0") },
+                { "unwashedDebt", dirty.ToString("N0") },
+                { "gold", gold.ToString() },
+                { "silver", silver.ToString() },
+                { "bronze", bronze.ToString() },
+                { "diamond", diamond.ToString() },
+                { "goldPrice", _goldPrice.ToString("N0") },
+                { "silverPrice", _silverPrice.ToString("N0") },
+                { "bronzePrice", _bronzePrice.ToString("N0") },
+                { "goldOwned", gold.ToString() },
+                { "silverOwned", silver.ToString() },
+                { "bronzeOwned", bronze.ToString() },
+                { "feeRatePercent", (launderingFeeRate * 100f).ToString("0") },
+                { "launderFee", fee.ToString("N0") },
+                { "launderNet", net.ToString("N0") },
+                { "passcodeMasked", masked },
+                { "creditedAmount", successAmountTextValue.ToString("N0") },
+                { "typedTitle", _typedTitle },
+                { "loginPrompt", _loginPrompt },
+                { "progressBar", _progressBar },
+                { "progressPercent", _progressPercent.ToString() },
+            };
+        }
+
+        /// <summary>縦スピンボックス3個の数量表示と、編集中行の緑ハイライトを更新する。</summary>
+        private void UpdateSpinboxes()
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                if (_spinTexts[i] == null) continue;
+                int qty = i == 0 ? _goldSellQty : (i == 1 ? _silverSellQty : _bronzeSellQty);
+                _spinTexts[i].text = $"▲\n{qty}\n▼";
+
+                bool active = _isEditingQty && _selectedCoinRow == i;
+                if (_spinBgs[i] != null) _spinBgs[i].color = active ? SpinboxActiveColor : SpinboxDimColor;
+                _spinTexts[i].color = active ? Color.white : new Color(0.7f, 0.8f, 0.7f, 1f);
+            }
+        }
+
+        /// <summary>
+        /// スピンボックスの位置を更新する。アンカーTransformが割当ててあればそのワールド座標に追従
+        /// （Sceneビューでドラッグ配置でき、実行中も即追従）。無ければCanvasローカルVector2で配置。
+        /// </summary>
+        private void PositionSpinboxes()
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                if (_spinBgs[i] == null) continue;
+                RectTransform rt = _spinBgs[i].rectTransform;
+                Transform anchor = (_spinboxAnchors != null && i < _spinboxAnchors.Length) ? _spinboxAnchors[i] : null;
+                if (anchor != null)
+                    rt.position = anchor.position; // ワールド座標に追従（Sceneで空オブジェクトをドラッグ）
+                else
+                    rt.anchoredPosition = i == 0 ? _spinboxGoldPos : (i == 1 ? _spinboxSilverPos : _spinboxBronzePos);
+                rt.sizeDelta = _spinboxSize;
             }
         }
 
@@ -415,26 +601,18 @@ namespace App.ATM
         {
             _isTyping = true;
             string fullTitle = "WELCOME";
-            
-            if (atmScreenText != null)
-            {
-                atmScreenText.text = 
-                    "<color=#33FF66>=== FEVER CAPITAL ATM ===</color>\n" +
-                    "SECURITY LEVEL: EXTREME\n\n";
-            }
+
+            // タイトルを1文字ずつ表示（レイアウト・色は YAML の welcome 画面が担う）
+            _typedTitle = "";
+            _screenRenderer?.UpdateText("welcome", BuildTokens());
 
             string currentText = "";
             for (int i = 0; i < fullTitle.Length; i++)
             {
                 currentText += fullTitle[i];
-                if (atmScreenText != null)
-                {
-                    atmScreenText.text = 
-                        "<color=#33FF66>=== FEVER CAPITAL ATM ===</color>\n" +
-                        "SECURITY LEVEL: EXTREME\n\n" +
-                        $"<size=120%><color=#33FF66>{currentText}</color></size>";
-                }
-                
+                _typedTitle = currentText;
+                _screenRenderer?.UpdateText("welcome", BuildTokens());
+
                 // 1文字ずつの電子音
                 if (keyClickSound != null && audioSource != null)
                 {
@@ -445,15 +623,10 @@ namespace App.ATM
 
             yield return new WaitForSeconds(0.2f);
 
-            if (atmScreenText != null)
-            {
-                atmScreenText.text = 
-                    "<color=#33FF66>=== FEVER CAPITAL ATM ===</color>\n" +
-                    "SECURITY LEVEL: EXTREME\n\n" +
-                    $"<size=120%><color=#33FF66>{fullTitle}</color></size>\n\n" +
-                    "<color=#88FF88>PRESS ANY KEY TO LOGIN</color>";
-            }
+            _typedTitle = fullTitle;
+            _screenRenderer?.UpdateText("welcome", BuildTokens());
 
+            // タイピング完了。以降このwelcome画面上でパスコード入力を受け付ける
             _isTyping = false;
             _canProceedFromWelcome = true;
         }
@@ -462,120 +635,10 @@ namespace App.ATM
         {
             if (atmScreenText == null || _isTyping || _currentSubState == ATMSubState.Welcome) return;
 
-            string displayText = "";
-            var wallet = PlayerWallet.Local;
+            _screenRenderer?.UpdateText(ScreenIdFor(_currentSubState), BuildTokens());
 
-            switch (_currentSubState)
-            {
-                case ATMSubState.PasscodeInput:
-                    string asterisks = new string('*', _inputPasscode.Length);
-                    // 4桁に満たない場合はアンダーバーで入力位置を表現
-                    string displayPass = asterisks.PadRight(4, '_');
-                    
-                    displayText =
-                        "<color=#33FF66>=== SECURITY LOGIN ===</color>\n" +
-                        "PLEASE ENTER 4-DIGIT PIN CODE\n\n" +
-                        "INPUT YOUR PASSCODE:\n" +
-                        $"<size=140%><color=#33FF99>[ {displayPass} ]</color></size>\n\n" +
-                        "<color=#558855>[ENTER] CONFIRM  /  [CANCEL] CLEAR</color>";
-                    break;
-
-                case ATMSubState.MainMenu:
-                    displayText =
-                        "<color=#33FF66>=== MAIN MENU ===</color>\n" +
-                        "SELECT TRANSACTION TYPE:\n\n" +
-                        "[1] INQUIRE BALANCE (BAL)\n" +
-                        "[2] COIN EXCHANGE (EXCH)\n" +
-                        "[3] EXIT TERMINAL (EXIT)\n\n" +
-                        "<color=#558855>CLICK 3D KEYPAD TO ENTER CHOICE</color>";
-                    break;
-
-                case ATMSubState.Inquiry:
-                    float clean = wallet != null ? wallet.WashedAmount : 0f;
-                    float dirty = wallet != null ? wallet.UnwashedAmount : 0f;
-                    int gold = wallet != null ? wallet.GoldCoins : 0;
-                    int silver = wallet != null ? wallet.SilverCoins : 0;
-                    int bronze = wallet != null ? wallet.BronzeCoins : 0;
-                    int diamond = wallet != null ? wallet.BlackDiamonds : 0;
-
-                    // 高速カウントアップ演出以外の時は実際の金額をキャッシュ
-                    if (!_isCountingUp)
-                    {
-                        _visualWashedAmount = clean;
-                    }
-
-                    displayText =
-                        "<color=#33FF66>=== BALANCE INQUIRY ===</color>\n" +
-                        $"CLEAN BALANCE:  ¥{_visualWashedAmount:N0}\n" +
-                        $"<color=#FF5533>UNWASHED DEBT:  ¥{dirty:N0}</color>\n\n" +
-                        $"COINS RETRIEVED:\n" +
-                        $"GOLD:{gold}  SILVER:{silver}  BRONZE:{bronze}\n" +
-                        $"BLACK DIAMOND:{diamond}\n\n" +
-                        "[0] BACK TO MAIN MENU";
-                    break;
-
-                case ATMSubState.LaunderConfirm:
-                    float unwashed = wallet != null ? wallet.UnwashedAmount : 0f;
-                    float fee = unwashed * launderingFeeRate;
-                    float washed = unwashed - fee;
-
-                    displayText =
-                        "<color=#33FF66>=== LAUNDER DEBT ===</color>\n" +
-                        $"DIRTY CASH: ¥{unwashed:N0}\n" +
-                        $"LAUNDERING FEE ({(launderingFeeRate * 100f):F0}%): -¥{fee:N0}\n" +
-                        $"<color=#33FF99>CREDITED NET AMOUNT: ¥{washed:N0}</color>\n\n" +
-                        "EXECUTE LAUNDERING?\n" +
-                        "[ENTER] CONFIRM TRANSACTION\n" +
-                        "[CANCEL] EXIT TO MENU";
-                    break;
-
-                case ATMSubState.CoinExchange:
-                    float cleanCash = wallet != null ? wallet.WashedAmount : 0f;
-                    int goldOwned = wallet != null ? wallet.GoldCoins : 0;
-                    int silverOwned = wallet != null ? wallet.SilverCoins : 0;
-                    int bronzeOwned = wallet != null ? wallet.BronzeCoins : 0;
-
-                    if (!_isCountingUp)
-                    {
-                        _visualWashedAmount = cleanCash;
-                    }
-
-                    // テキストのレイアウトに、スピンボックスと売却ボタンが綺麗に重なるように空白スペースを設けます。
-                    displayText =
-                        "<color=#33FF66>=== COIN EXCHANGE ===</color>\n" +
-                        $"CLEAN BALANCE: ¥{_visualWashedAmount:N0}\n\n" +
-                        $"GOLD  : {goldOwned} owned (¥{_goldPrice:N0})\n" +
-                        "        Qty: [     ]       [        ]\n\n" +
-                        $"SILVER: {silverOwned} owned (¥{_silverPrice:N0})\n" +
-                        "        Qty: [     ]       [        ]\n\n" +
-                        $"BRONZE: {bronzeOwned} owned (¥{_bronzePrice:N0})\n" +
-                        "        Qty: [     ]       [        ]\n\n" +
-                        "[0] BACK TO MAIN MENU";
-
-                    // スピンボックスの数値テキストを同期更新
-                    if (_goldQtyText != null) _goldQtyText.text = _goldSellQty.ToString();
-                    if (_silverQtyText != null) _silverQtyText.text = _silverSellQty.ToString();
-                    if (_bronzeQtyText != null) _bronzeQtyText.text = _bronzeSellQty.ToString();
-                    break;
-
-                case ATMSubState.Processing:
-                    displayText =
-                        "<color=#FFCC33>=== PROCESSING ===</color>\n" +
-                        "LAUNDERING TRANSACTION IN PROGRESS...\n\n" +
-                        "[□□□□□□□□□□] 0%\n\n" +
-                        "<color=#FF3333>WARNING: DO NOT POWER OFF TERMINAL</color>";
-                    break;
-
-                case ATMSubState.Success:
-                    displayText =
-                        "<color=#33FF66>=== TRANSACTION SUCCESS ===</color>\n" +
-                        "LAUNDERING COMPLETED SUCCESSFULLY.\n\n" +
-                        $"CREDITED AMOUNT: ¥{successAmountTextValue:N0}\n\n" +
-                        "[ENTER] RETURN TO MENU";
-                    break;
-            }
-
-            atmScreenText.text = displayText;
+            // コイン両替画面ではスピンボックスの数値表示も同期
+            if (_currentSubState == ATMSubState.CoinExchange) UpdateSpinboxes();
         }
 
         private void OnATMKeyPressed(KeyRole role)
@@ -585,12 +648,38 @@ namespace App.ATM
             // 処理中・カウントアップ演出中はキー入力をブロック
             if (_currentSubState == ATMSubState.Processing || _isLaunderProcessing || _isCountingUp) return;
 
+            // 起動画面＝ログイン画面に統合。タイピング完了後、この画面上で直接パスコードを入力する。
             if (_currentSubState == ATMSubState.Welcome)
             {
-                if (_canProceedFromWelcome)
+                if (!_canProceedFromWelcome) return; // タイピング完了までは入力不可
+
+                if (role >= KeyRole.Num0 && role <= KeyRole.Num9)
                 {
-                    _inputPasscode = "";
-                    ChangeSubState(ATMSubState.PasscodeInput);
+                    if (_inputPasscode.Length < 4)
+                    {
+                        _inputPasscode += ((int)role).ToString();
+                        _screenRenderer?.UpdateText("welcome", BuildTokens());
+                    }
+                }
+                else if (role == KeyRole.Cancel)
+                {
+                    if (_inputPasscode.Length > 0)
+                    {
+                        _inputPasscode = _inputPasscode.Substring(0, _inputPasscode.Length - 1);
+                        _screenRenderer?.UpdateText("welcome", BuildTokens());
+                    }
+                }
+                else if (role == KeyRole.Confirm)
+                {
+                    if (_inputPasscode.Length == 4)
+                    {
+                        // ログイン成功→メインメニューは廃止し、コイン両替画面へ直行
+                        ChangeSubState(ATMSubState.CoinExchange);
+                    }
+                    else if (keyClickSound != null && audioSource != null)
+                    {
+                        audioSource.PlayOneShot(keyClickSound, 1.2f); // 桁数不足エラー音
+                    }
                 }
                 return;
             }
@@ -655,10 +744,7 @@ namespace App.ATM
                     break;
 
                 case ATMSubState.CoinExchange:
-                    if (role == KeyRole.Num0 || role == KeyRole.Cancel)
-                    {
-                        ChangeSubState(ATMSubState.MainMenu);
-                    }
+                    HandleCoinExchangeKey(role);
                     break;
 
                 case ATMSubState.LaunderConfirm:
@@ -718,14 +804,10 @@ namespace App.ATM
                     barText += (i < bars) ? "■" : "□";
                 }
 
-                if (atmScreenText != null)
-                {
-                    atmScreenText.text =
-                        "<color=#FFCC33>=== PROCESSING ===</color>\n" +
-                        "LAUNDERING TRANSACTION IN PROGRESS...\n\n" +
-                        $"[{barText}] {Mathf.FloorToInt(progress * 100f)}%\n\n" +
-                        "<color=#FF3333>WARNING: DO NOT POWER OFF TERMINAL</color>";
-                }
+                // プログレスバーと％をトークンとして processing 画面(YAML)へ差し込む
+                _progressBar = barText;
+                _progressPercent = Mathf.FloorToInt(progress * 100f);
+                _screenRenderer?.UpdateText("processing", BuildTokens());
 
                 if (Time.frameCount % 25 == 0)
                 {
@@ -845,6 +927,111 @@ namespace App.ATM
             }
         }
 
+        // --- コイン両替：行選択 / 個数編集 の状態機械 ---
+
+        /// <summary>コイン両替画面でのキー入力処理。選択モードと編集モードで↑↓等の役割が変わる。</summary>
+        private void HandleCoinExchangeKey(KeyRole role)
+        {
+            if (!_isEditingQty)
+            {
+                // 行選択モード：↑↓で金/銀/銅を選択、Enterで編集開始、CancelでATM退出
+                if (role == KeyRole.Up)
+                {
+                    _selectedCoinRow = Mathf.Max(0, _selectedCoinRow - 1);
+                    PlayKeyFeedback();
+                    UpdateDisplay();
+                }
+                else if (role == KeyRole.Down)
+                {
+                    _selectedCoinRow = Mathf.Min(2, _selectedCoinRow + 1);
+                    PlayKeyFeedback();
+                    UpdateDisplay();
+                }
+                else if (role == KeyRole.Confirm)
+                {
+                    _isEditingQty = true;      // スピンボックスが緑に点灯し、個数を編集できる
+                    _qtyFreshInput = true;
+                    PlayKeyFeedback();
+                    UpdateDisplay();
+                }
+                else if (role == KeyRole.Cancel)
+                {
+                    TriggerExit();             // メニューが無いため選択モードのCancelはATMを閉じる
+                }
+            }
+            else
+            {
+                // 個数編集モード：数字キーで入力、↑↓で±1、Enterで売却確定、Cancelで中止
+                if (role >= KeyRole.Num0 && role <= KeyRole.Num9)
+                {
+                    int digit = (int)role;
+                    int next = _qtyFreshInput ? digit : GetSelectedQty() * 10 + digit;
+                    _qtyFreshInput = false;
+                    SetSelectedQty(next);
+                    PlayKeyFeedback();
+                    UpdateDisplay();
+                }
+                else if (role == KeyRole.Up)
+                {
+                    _qtyFreshInput = false;
+                    SetSelectedQty(GetSelectedQty() + 1);
+                    PlayKeyFeedback();
+                    UpdateDisplay();
+                }
+                else if (role == KeyRole.Down)
+                {
+                    _qtyFreshInput = false;
+                    SetSelectedQty(GetSelectedQty() - 1);
+                    PlayKeyFeedback();
+                    UpdateDisplay();
+                }
+                else if (role == KeyRole.Confirm)
+                {
+                    SellSelectedRow();         // 個数確定→売却(現金化)＆カウントアップ演出
+                    _isEditingQty = false;
+                    UpdateDisplay();
+                }
+                else if (role == KeyRole.Cancel)
+                {
+                    SetSelectedQty(0);         // 中止：個数を0に戻す
+                    _isEditingQty = false;
+                    PlayKeyFeedback();
+                    UpdateDisplay();
+                }
+            }
+        }
+
+        private int GetSelectedQty()
+        {
+            return _selectedCoinRow == 0 ? _goldSellQty : (_selectedCoinRow == 1 ? _silverSellQty : _bronzeSellQty);
+        }
+
+        private int GetOwned(int row)
+        {
+            var w = PlayerWallet.Local;
+            if (w == null) return 0;
+            return row == 0 ? w.GoldCoins : (row == 1 ? w.SilverCoins : w.BronzeCoins);
+        }
+
+        /// <summary>選択行の売却個数を所持数の範囲にクランプして設定する。</summary>
+        private void SetSelectedQty(int value)
+        {
+            int clamped = Mathf.Clamp(value, 0, GetOwned(_selectedCoinRow));
+            if (_selectedCoinRow == 0) _goldSellQty = clamped;
+            else if (_selectedCoinRow == 1) _silverSellQty = clamped;
+            else _bronzeSellQty = clamped;
+        }
+
+        private void SellSelectedRow()
+        {
+            switch (_selectedCoinRow)
+            {
+                case 0: SellGold(); break;
+                case 1: SellSilver(); break;
+                default: SellBronze(); break;
+            }
+        }
+
         /// <summary>
         /// 所持金が高速で流れ込むように上昇するカウントアップ演出。
         /// </summary>
@@ -961,6 +1148,8 @@ namespace App.ATM
             else if (Keyboard.current.digit9Key.wasPressedThisFrame || Keyboard.current.numpad9Key.wasPressedThisFrame) { inputRole = KeyRole.Num9; keyPressed = true; }
             else if (Keyboard.current.enterKey.wasPressedThisFrame || Keyboard.current.numpadEnterKey.wasPressedThisFrame) { inputRole = KeyRole.Confirm; keyPressed = true; }
             else if (Keyboard.current.backspaceKey.wasPressedThisFrame) { inputRole = KeyRole.Cancel; keyPressed = true; }
+            else if (Keyboard.current.upArrowKey.wasPressedThisFrame) { inputRole = KeyRole.Up; keyPressed = true; }
+            else if (Keyboard.current.downArrowKey.wasPressedThisFrame) { inputRole = KeyRole.Down; keyPressed = true; }
 
             if (keyPressed)
             {
@@ -1015,26 +1204,27 @@ namespace App.ATM
             panelRt.anchorMax = Vector2.one;
             panelRt.sizeDelta = Vector2.zero;
 
-            // 1. GOLD コイン行 (Y = 40f付近)
-            CreateSpinboxAndSellButton(_coinExchangePanelGo.transform, 40f, 
-                () => ChangeGoldQty(-1), 
-                () => ChangeGoldQty(1), 
-                () => SellGold(), 
-                out _goldQtyText);
+            // 金/銀/銅 の縦スピンボックスを生成（キーボード操作。編集中は緑に点灯）
+            CreateVerticalSpinbox(0);
+            CreateVerticalSpinbox(1);
+            CreateVerticalSpinbox(2);
+            PositionSpinboxes();
 
-            // 2. SILVER コイン行 (Y = -50f付近)
-            CreateSpinboxAndSellButton(_coinExchangePanelGo.transform, -50f, 
-                () => ChangeSilverQty(-1), 
-                () => ChangeSilverQty(1), 
-                () => SellSilver(), 
-                out _silverQtyText);
+            // 画面テキスト由来の画像オーバーレイを載せるコンテナ（キャンバス全面）
+            var imageContainerGo = new GameObject("ScreenImages", typeof(RectTransform));
+            imageContainerGo.transform.SetParent(_uiCanvasGo.transform, false);
+            RectTransform imgContRt = imageContainerGo.GetComponent<RectTransform>();
+            imgContRt.anchorMin = Vector2.zero;
+            imgContRt.anchorMax = Vector2.one;
+            imgContRt.sizeDelta = Vector2.zero;
+            _imageContainer = imageContainerGo.transform;
 
-            // 3. BRONZE コイン行 (Y = -140f付近)
-            CreateSpinboxAndSellButton(_coinExchangePanelGo.transform, -140f, 
-                () => ChangeBronzeQty(-1), 
-                () => ChangeBronzeQty(1), 
-                () => SellBronze(), 
-                out _bronzeQtyText);
+            // YAML から画面テキスト/画像を読み込むレンダラを生成
+            _screenRenderer = new ATMScreenRenderer(atmScreenText, _imageContainer);
+            if (!_screenRenderer.IsLoaded)
+            {
+                Debug.LogWarning("[ATMController] ATMScreens.yaml を読み込めませんでした。StreamingAssets/ATM/ATMScreens.yaml を確認してください。", this);
+            }
 
             // 初期状態は非アクティブ
             _coinExchangePanelGo.SetActive(false);
@@ -1042,37 +1232,35 @@ namespace App.ATM
         }
 
         /// <summary>
-        /// 指定されたY位置に、スピンボックス（マイナス、数量、プラス）と売却ボタンを組み立てます。
+        /// 指定行(0=金,1=銀,2=銅)の縦スピンボックスを生成する。
+        /// 背景Image(緑ハイライト用)＋ "▲/数量/▼" の3行テキストで構成。操作はキーボード。
         /// </summary>
-        private void CreateSpinboxAndSellButton(Transform parent, float yPos, 
-            UnityEngine.Events.UnityAction onMinus, 
-            UnityEngine.Events.UnityAction onPlus, 
-            UnityEngine.Events.UnityAction onSell,
-            out TextMeshProUGUI qtyTextComp)
+        private void CreateVerticalSpinbox(int row)
         {
-            // マイナスボタン
-            GameObject minusBtn = CreateUIButton(parent, "MinusBtn", "-", new Vector2(-195f, yPos), new Vector2(30f, 30f), new Color(0.1f, 0.25f, 0.15f, 0.95f));
-            minusBtn.GetComponent<Button>().onClick.AddListener(onMinus);
+            // 背景（点灯時に緑になる）。位置は PositionSpinboxes() が設定する。
+            GameObject bgGo = new GameObject($"Spinbox{row}", typeof(RectTransform), typeof(Image));
+            bgGo.transform.SetParent(_coinExchangePanelGo.transform, false);
+            Image bg = bgGo.GetComponent<Image>();
+            bg.color = SpinboxDimColor;
+            bg.raycastTarget = false;
+            RectTransform bgRt = bgGo.GetComponent<RectTransform>();
+            bgRt.sizeDelta = _spinboxSize;
+            _spinBgs[row] = bg;
 
-            // 数量表示テキスト
-            GameObject qtyTextGo = new GameObject("QtyText", typeof(RectTransform), typeof(TextMeshProUGUI));
-            qtyTextGo.transform.SetParent(parent, false);
-            qtyTextComp = qtyTextGo.GetComponent<TextMeshProUGUI>();
-            qtyTextComp.text = "0";
-            qtyTextComp.fontSize = 22;
-            qtyTextComp.color = Color.white;
-            qtyTextComp.alignment = TextAlignmentOptions.Center;
-            RectTransform qtyRt = qtyTextGo.GetComponent<RectTransform>();
-            qtyRt.anchoredPosition = new Vector2(-160f, yPos);
-            qtyRt.sizeDelta = new Vector2(40f, 30f);
-
-            // プラスボタン
-            GameObject plusBtn = CreateUIButton(parent, "PlusBtn", "+", new Vector2(-125f, yPos), new Vector2(30f, 30f), new Color(0.1f, 0.25f, 0.15f, 0.95f));
-            plusBtn.GetComponent<Button>().onClick.AddListener(onPlus);
-
-            // 売却実行ボタン
-            GameObject sellBtn = CreateUIButton(parent, "SellBtn", "SELL", new Vector2(100f, yPos), new Vector2(90f, 30f), new Color(0.2f, 0.7f, 0.3f, 0.95f));
-            sellBtn.GetComponent<Button>().onClick.AddListener(onSell);
+            // "▲ / 数量 / ▼" の縦並びテキスト
+            GameObject txtGo = new GameObject("Qty", typeof(RectTransform), typeof(TextMeshProUGUI));
+            txtGo.transform.SetParent(bgGo.transform, false);
+            TextMeshProUGUI tmp = txtGo.GetComponent<TextMeshProUGUI>();
+            tmp.text = "▲\n0\n▼";
+            tmp.fontSize = 20;
+            tmp.color = new Color(0.7f, 0.8f, 0.7f, 1f);
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.raycastTarget = false;
+            RectTransform txtRt = txtGo.GetComponent<RectTransform>();
+            txtRt.anchorMin = Vector2.zero;
+            txtRt.anchorMax = Vector2.one;
+            txtRt.sizeDelta = Vector2.zero;
+            _spinTexts[row] = tmp;
         }
 
         private GameObject CreateUIButton(Transform parent, string name, string text, Vector2 anchoredPos, Vector2 size, Color baseColor)
