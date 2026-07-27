@@ -20,7 +20,9 @@ namespace App.ATM
         Num9 = 9,
         Confirm = 10, // 確認 / 実行
         Cancel = 11,  // 取消 / 戻る
-        Other = 12
+        Other = 12,
+        Up = 13,      // ↑ (数量アップ等)
+        Down = 14     // ↓ (数量ダウン等)
     }
 
     /// <summary>
@@ -34,7 +36,7 @@ namespace App.ATM
         [SerializeField] private KeyRole role = KeyRole.Other;
 
         [Header("沈み込み設定")]
-        [Tooltip("沈み込むローカル方向")]
+        [Tooltip("沈み込む方向（ボタン自身のローカル軸）。既定 (0,0,-1)=ローカルZ軸負の方向に沈む")]
         [SerializeField] private Vector3 pressDirection = Vector3.back;
 
         [Tooltip("沈み込む量 (メートル)")]
@@ -89,7 +91,10 @@ namespace App.ATM
 
         private IEnumerator PressCoroutine()
         {
-            Vector3 targetPosition = _originalLocalPosition + pressDirection.normalized * pressDistance;
+            // pressDirection は「ボタン自身のローカル軸」での方向。localPosition(=親空間)に加算するため、
+            // localRotation で親空間ベクトルへ変換する。これによりボタンが回転していても自身の -Z 方向へ沈む。
+            Vector3 localOffset = transform.localRotation * (pressDirection.normalized * pressDistance);
+            Vector3 targetPosition = _originalLocalPosition + localOffset;
             
             // 1. 沈み込む (押し下げ)
             float elapsed = 0f;
