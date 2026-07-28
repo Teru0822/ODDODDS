@@ -17,6 +17,9 @@ using UnityEngine.SceneManagement;
 ///   3. subScenes にロードしたいサブシーン名を並べる。
 ///   4. activeSceneAfterLoad に、アクティブにしたいシーン名（通常はルートシーン or 環境シーン）を入れる。
 ///
+///   1. と 3. はメニュー「Tools > Multi-Scene > サブシーン構成を同期...」でまとめて行える
+///   （Assets/Scenes/Additive 内のシーンを一覧し、登録漏れをチェックボックスで解消する）。
+///
 /// 注意（重要）: シーンをまたぐ参照（Inspector で別シーンのオブジェクトを直接ドラッグ参照）は
 ///   保存時に Unity が null にする。サブシーンへ分割する際は、相互参照するオブジェクトは同じ
 ///   サブシーンにまとめるか、実行時の検索（FindAnyObjectByType / シングルトン / イベント）に切り替えること。
