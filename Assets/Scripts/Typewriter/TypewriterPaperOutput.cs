@@ -90,6 +90,9 @@ public class TypewriterPaperOutput : MonoBehaviour
 
     public bool HasActivePaper => _currentPaper != null;
 
+    /// <summary>ローンチ演出（紙が飛んでいく）が進行中かどうか。</summary>
+    public bool IsLaunching { get; private set; }
+
     public void BeginNewPaper()
     {
         if (paperPrefab == null)
@@ -147,6 +150,7 @@ public class TypewriterPaperOutput : MonoBehaviour
     private IEnumerator LaunchSequence(GameObject paper)
     {
         if (paper == null) yield break;
+        IsLaunching = true;
         Transform tr = paper.transform;
 
         // Phase 1: ぐるぐる回って加速
@@ -187,6 +191,7 @@ public class TypewriterPaperOutput : MonoBehaviour
         }
 
         if (paper != null) Destroy(paper);
+        IsLaunching = false;
     }
 
     private void Update()
