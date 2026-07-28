@@ -560,6 +560,7 @@ GameObject:
   - component: {fileID: 545639434}
   - component: {fileID: 545639433}
   - component: {fileID: 545639432}
+  - component: {fileID: 545639435}
   m_Layer: 5
   m_Name: Select1
   m_TagString: Untagged
@@ -669,6 +670,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 545639430}
   m_CullTransparentMesh: 1
+--- !u!114 &545639435
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 545639430}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81c5df753dee26148ba795ce1a73a6bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VisitorSelectionHover
 --- !u!1 &551837549
 GameObject:
   m_ObjectHideFlags: 0
@@ -1847,7 +1860,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0.010040283, z: 0, w: 0}
+  m_margin: {x: 0, y: 0.010040283, z: -211.84686, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -2042,6 +2055,8 @@ MonoBehaviour:
     _dicElements:
     - Key: Bell
       Value: {fileID: 8300000, guid: ef28cc7a160be124db6cde91de5c6e96, type: 3}
+    - Key: Gargantua
+      Value: {fileID: 8300000, guid: ef28cc7a160be124db6cde91de5c6e96, type: 3}
   _itemPanelManager: {fileID: 0}
   _effectManager: {fileID: 0}
   _otherLines:
@@ -2167,6 +2182,7 @@ GameObject:
   - component: {fileID: 1927698095}
   - component: {fileID: 1927698094}
   - component: {fileID: 1927698093}
+  - component: {fileID: 1927698096}
   m_Layer: 5
   m_Name: Select2
   m_TagString: Untagged
@@ -2276,6 +2292,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1927698091}
   m_CullTransparentMesh: 1
+--- !u!114 &1927698096
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1927698091}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81c5df753dee26148ba795ce1a73a6bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VisitorSelectionHover
 --- !u!1 &2026852819
 GameObject:
   m_ObjectHideFlags: 0
