@@ -9,6 +9,10 @@ using UnityEngine.SceneManagement;
 /// 毎回 Hierarchy で手動オープンする手間と、開き忘れによる事故を防ぐ。
 ///
 /// サブシーンは <see cref="SubSceneFolder"/> に置く前提。フォルダを変える場合は定数を編集する。
+///
+/// なお、ここで開くのはあくまでエディタ上の表示。実行時にロードさせるには Build Settings と
+/// MultiSceneLoader.subScenes への登録が別途必要で、そちらは
+/// <see cref="MultiSceneSetupWindow"/>（Tools > Multi-Scene > サブシーン構成を同期...）で行う。
 /// </summary>
 public static class MultiSceneEditorTools
 {
