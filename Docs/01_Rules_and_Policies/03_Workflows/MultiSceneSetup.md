@@ -25,6 +25,7 @@ MainScene.unity            ← ルート（常駐）シーン。常に1つ。
 
 - **実装済み（コード）**: [MultiSceneLoader.cs](../../../../Assets/Scripts/SceneManagement/MultiSceneLoader.cs) … 起動時にサブシーンを加法ロードしアクティブ化。
 - **実装済み（エディタ補助）**: [MultiSceneEditorTools.cs](../../../../Assets/Scripts/SceneManagement/Editor/MultiSceneEditorTools.cs) … メニュー **Tools > Multi-Scene** で「ルート＋全サブシーン」を一括加法オープン。
+- **実装済み（エディタ補助）**: [MultiSceneSetupWindow.cs](../../../../Assets/Scripts/SceneManagement/Editor/MultiSceneSetupWindow.cs) … メニュー **Tools > Multi-Scene > サブシーン構成を同期...** で、Build Settings と `MultiSceneLoader.subScenes` への登録状況を一覧・一括適用（STEP 4・STEP 5 の登録忘れ防止）。
 - **手動（Unity 上で実施が必須）**: オブジェクトをサブシーンへ移す作業。YAML 手編集は厳禁（破損する）。
 
 ---
@@ -81,16 +82,31 @@ MainScene には、常に必要な以下を残す：
 - 管理系（`RoundManager` / `GameObject` 等のマネージャ）
 - **`MultiSceneLoader` を付けた空オブジェクト**（次の STEP で設定）
 
-### STEP 4. Build Settings に登録
-- **File > Build Profiles > Scene List**（旧 Build Settings）に、MainScene と全サブシーンを追加。
-- 加法ロードするにはサブシーンも登録が必須。
+### STEP 4-5. Build Settings と MultiSceneLoader への登録（推奨: 同期ウィンドウ）
 
-### STEP 5. MultiSceneLoader を設定
-1. MainScene に空オブジェクト（例: `[MultiSceneLoader]`）を作り `MultiSceneLoader` をアタッチ。
-2. `Sub Scenes` に各サブシーン名（`Scene_Environment` `Scene_UI` 等）を追加する。
+サブシーンを新規追加したら、**Build Settings** と **ルートシーンの `MultiSceneLoader.subScenes`** の
+2箇所に登録が必要。どちらか片方を忘れると「ビルドで落ちる」「起動時にロードされない」が起きる。
+
+**メニュー Tools > Multi-Scene > サブシーン構成を同期...** を使うと、`Assets/Scenes/Additive` 内の
+全シーンについて両者の登録状況が一覧表示され、チェックボックスで一括適用できる。
+
+- ルートシーン（MainScene）を開いた状態で実行すること。
+- Build Settings に未登録の新規サブシーンは **NEW** と表示され、既定で両方オンになっている。
+- 既存シーンの設定は現状維持されるため、意図的にオンデマンドにしてあるシーンが勝手に起動ロードされることはない。
+- 「起動時にロード」をオンにすると Build Settings への登録も自動で行われる。
+- 適用後は**ルートシーンの保存が必要**（ウィンドウが保存を促す）。
+
+<details>
+<summary>手動で行う場合</summary>
+
+1. **File > Build Profiles > Scene List**（旧 Build Settings）に、MainScene と全サブシーンを追加。加法ロードするにはサブシーンも登録が必須。
+2. MainScene に空オブジェクト（例: `[MultiSceneLoader]`）を作り `MultiSceneLoader` をアタッチ。
+3. `Sub Scenes` に各サブシーン名（`Scene_Environment` `Scene_UI` 等）を追加する。
    **追加すれば既定でロードされる**（`Disable On Start` は通常オフのまま）。デバッグで一時的に外したいシーンだけ `Disable On Start` をオンにする。
-   - ⚠️ ロードしたいシーンを**リストに入れ忘れない**こと（特に `Scene_UI`）。リストに無いシーンはロードされない。
-3. `Active Scene After Load` に、ライティング基準にしたいシーン名を入れる（通常は `MainScene` か `Scene_Environment`）。
+   - ⚠️ ロードしたいシーンを**リストに入れ忘れない**こと。リストに無いシーンはロードされない。
+4. `Active Scene After Load` に、ライティング基準にしたいシーン名を入れる（通常は `MainScene` か `Scene_Environment`）。
+
+</details>
 
 ### STEP 6. 動作確認
 - **Play して**：全サブシーンがロードされ、ゲームが従来通り動くか。
