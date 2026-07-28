@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using MiniGames.Transitions;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -23,6 +24,10 @@ public class TypewriterInteractable : InteractableHighlight
     [Header("物理キーボード連動")]
     [Tooltip("このタイプライターに照準している間、物理キーボード入力で対応キーを打鍵させる")]
     public bool linkPhysicalKeyboard = true;
+
+    [Header("ターン遷移")]
+    [Tooltip("スキル取得後のローディング画面最低表示時間（秒）")]
+    [SerializeField] private float _turnTransitionDuration = 2f;
 
     [Header("デバッグ")]
     [Tooltip("ONにするとInspectorにローグライクスキルのオンオフパネルが表示される（Playモードのみ有効）")]
@@ -203,6 +208,25 @@ public class TypewriterInteractable : InteractableHighlight
         var c = controller.TypeText(text);
         if (c != null) yield return c;
         Debug.Log("[TypewriterInteractable] TypeText 完了", this);
+
+        // 紙のローンチアニメーション（飛んでいく演出）が終わるまで待つ
+        var paper = controller.paperOutput;
+        if (paper != null)
+            yield return new WaitUntil(() => !paper.IsLaunching);
+
+        var stm = SceneTransitionManager.Instance;
+if (stm != null)
+        {
+            bool done = false;
+            stm.ShowTurnTransition(
+                _turnTransitionDuration,
+                onDuringLoading: () => MoneyManager.Instance?.AdvanceTurn(),
+                onComplete:      () => done = true
+            );
+            yield return new WaitUntil(() => done);
+        }
+
         _busy = false;
+        ApplyHighlight(true);
     }
 }
