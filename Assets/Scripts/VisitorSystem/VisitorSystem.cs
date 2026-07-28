@@ -163,6 +163,11 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
     /// </summary>
     public void VisitorLottery()
     {
+        if (_visitorInstances == null || _visitorInstances.Count == 0)
+        {
+            Debug.LogWarning("[VisitorSystem] VisitorLottery: _visitorInstances が空のためスキップ");
+            return;
+        }
         Debug.LogError("抽選開始");
         int count = 0;
         while(_nowSelectedVisitorInstance.Value == null)

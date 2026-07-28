@@ -267,7 +267,8 @@ namespace MiniGames.Transitions
                 yield return _loadingScreenCanvasGroup.DOFade(1f, 0.5f).WaitForCompletion();
 
             // 3. ターン処理
-            onDuringLoading?.Invoke();
+            try { onDuringLoading?.Invoke(); }
+            catch (Exception e) { Debug.LogError($"[TurnTransition] onDuringLoading 例外: {e}"); }
 
             // 4. 最低表示時間待機
             yield return new WaitForSeconds(minimumDuration);
