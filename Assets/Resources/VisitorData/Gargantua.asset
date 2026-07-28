@@ -15,21 +15,80 @@ MonoBehaviour:
   id: 1
   visitorName: Gargantua
   requests:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - RequestElements: []
+  - RequestElements: []
+  - RequestElements: []
+  - RequestElements: []
+  - RequestElements: []
   rewards:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - RewardElements:
+    - content: {fileID: 11400000, guid: 25183c16e10623e4e951cc25a8c4b5b3, type: 2}
+      num: 1
+    - content: {fileID: 11400000, guid: eb29f58ec1127384f8436d4d023ac793, type: 2}
+      num: 1
+    - content: {fileID: 11400000, guid: b6af42aef36d1bf4abdc1c51f6d13d29, type: 2}
+      num: 1
+  - RewardElements:
+    - content: {fileID: 11400000, guid: 25183c16e10623e4e951cc25a8c4b5b3, type: 2}
+      num: 1
+    - content: {fileID: 11400000, guid: eb29f58ec1127384f8436d4d023ac793, type: 2}
+      num: 1
+    - content: {fileID: 11400000, guid: ef5a1626acb847447a04809848a32e2b, type: 2}
+      num: 1
+  - RewardElements:
+    - content: {fileID: 11400000, guid: 25183c16e10623e4e951cc25a8c4b5b3, type: 2}
+      num: 1
+    - content: {fileID: 11400000, guid: eb29f58ec1127384f8436d4d023ac793, type: 2}
+      num: 1
+    - content: {fileID: 11400000, guid: 15bb2cf45c375a945acb12b23c571cd0, type: 2}
+      num: 1
+  - RewardElements:
+    - content: {fileID: 11400000, guid: 25183c16e10623e4e951cc25a8c4b5b3, type: 2}
+      num: 1
+    - content: {fileID: 11400000, guid: eb29f58ec1127384f8436d4d023ac793, type: 2}
+      num: 1
+    - content: {fileID: 11400000, guid: 5efc0fe111d1018498adadef7b1acb37, type: 2}
+      num: 1
+  - RewardElements:
+    - content: {fileID: 11400000, guid: 25183c16e10623e4e951cc25a8c4b5b3, type: 2}
+      num: 1
+    - content: {fileID: 11400000, guid: eb29f58ec1127384f8436d4d023ac793, type: 2}
+      num: 1
+    - content: {fileID: 11400000, guid: 86905504011af3a4fa12bae220e474e6, type: 2}
+      num: 1
   conversations:
     _dicElements:
     - Key: Conversation1
       Value:
       - animation: 0
-        lineJp: q
+        lineJp: "\u30AC\u30CF\u30CF\u30CF\u30CF\u30C3\u3002\u805E\u3053\u3048\u3066\u308B\u304B\u4EBA\u9593"
+        lineEn: 
+      - animation: 0
+        lineJp: "\u3069\u3046\u3084\u3089\u30A2\u30AF\u30DE\u306E\u91CE\u90CE\u3001\u307E\u305F\u9762\u767D\u305D\u3046\u306A\u3053\u3068\u3092\u3057\u3066\u308B\u3089\u3057\u3044\u3058\u3083\u306D\u3047\u304B"
+        lineEn: 
+      - animation: 0
+        lineJp: "\u4FFA\u69D8\u3082\u6DF7\u305C\u3066\u3082\u3089\u308F\u306D\u3047\u3068\u306A\u3041"
+        lineEn: 
+      - animation: 0
+        lineJp: "\u2026\u3042\u3041\uFF1F\u3066\u3081\u3048\u306E\u610F\u898B\u306A\u3093\u305E\u805E\u304B\u306D\u3048\u3088\u3002\u304A\u3082\u3061\u3083\u306B\u62D2\u5426\u6A29\u304C\u3042\u308B\u3068\u601D\u3063\u3066\u3093\u306E\u304B\u3002"
+        lineEn: 
+      - animation: 0
+        lineJp: "\u2026\u2026\u307E\u3042\u3001\u4FFA\u69D8\u306F\u60AA\u9B54\u3060\u304C\u9B3C\u3058\u3083\u306D\u3048\u3002"
+        lineEn: 
+      - animation: 0
+        lineJp: "\u3066\u3081\u3048\u3067\u904A\u3076\u4EE3\u308F\u308A\u306B\u304A\u99C4\u8CC3\u3092\u3084\u308B\u3002\u904A\u3076\u3068\u304D\u306B\u91D1\u3092\u5165\u308C\u30F3\u306E\u306F\u8CED\u535A\u5834\u3058\u3083\u30DE\u30CA\u30FC\u3060\u304B\u3093\u306A\u3002"
+        lineEn: 
+    - Key: TradeSuccess1
+      Value:
+      - animation: 0
+        lineJp: "\u3088\u3057\u3001\u53D6\u5F15\u6210\u7ACB\u3060\u3002"
+        lineEn: 
+      - animation: 0
+        lineJp: "\u6B21\u3001\u307E\u305F\u60AA\u9B54\u306B\u4F1A\u3046\u3088\u306A\uFF1F\u305D\u306E\u6642\u306B\u596A\u308F\u308C\u308B\u91D1\u3092\u5897\u3084\u3057\u3066\u3084\u308B\u3002"
+        lineEn: 
+      - animation: 0
+        lineJp: "\u305D\u3046\u3060\u306A\u20261.3\u2026\u3044\u3084\u30011.5\u500D\u306B\u3057\u3088\u3046\u304B\u3002"
+        lineEn: 
+      - animation: 0
+        lineJp: "\u304A\u3082\u3061\u3083\u304C\u3059\u3050\u306B\u58CA\u308C\u3093\u306E\u306F\u8DA3\u5473\u3058\u3083\u306D\u3048\u3002\u6D41\u77F3\u306B\u3053\u308C\u304F\u3089\u3044\u306A\u3089\u8010\u3048\u308C\u308B\u3088\u306A\uFF1F"
         lineEn: 

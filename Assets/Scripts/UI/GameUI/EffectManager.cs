@@ -50,6 +50,7 @@ public class EffectInstance
 public class EffectManager : MonoBehaviour, IsaveDataProvider
 {
     public static EffectManager Instance;
+    [SerializeField] private GameUIManager _gameUIManager;
     [SerializeField] private EffectDataBase _effectDataBase;
     [SerializeField] private List<Button> _buttons;
 
@@ -76,7 +77,6 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider
                     Debug.LogError("付与されたEffectInstanceがnull");
                     return;
                 }
-
                 Debug.LogWarning(index.Value.EffectName + "が付与されました");
                 UpdateUI();
             }).AddTo(this);
@@ -90,7 +90,6 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider
                     Debug.LogError("削除されたEffectInstanceがnull");
                     return;
                 }
-
                 Debug.LogWarning(index.Value.EffectName + "が解除されました");
                 UpdateUI();
             }).AddTo(this);
@@ -259,7 +258,7 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider
     /// <returns></returns>
     public int GetIdByItemName(string itemName)
     {
-        var id = _effectDataBase.effectDataBase.Find(effect => effect.effectName == itemName).id;
+        var id = _effectDataBase.effectDataBase.Find(effect => effect.effectName == itemName+" Effect").id;
         if(id == 0)
             return -1;
         else
@@ -293,6 +292,7 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider
                 instance.LeftTurn = original.turn;
                 instance.Level = 1;
                 _ownedEffects.Add(instance);
+                _gameUIManager.AddPopupQueue(true,instance.master);
             }
             else
             {
@@ -313,6 +313,7 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider
             if (effect != null && effect.Id == id)
             {
                 _ownedEffects.Remove(effect);
+                _gameUIManager.AddPopupQueue(true,effect.master);
                 UpdateUI();
                 break;
             }
