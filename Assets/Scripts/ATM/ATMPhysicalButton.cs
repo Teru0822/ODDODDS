@@ -49,7 +49,7 @@ namespace App.ATM
         [SerializeField] private float releaseDuration = 0.12f;
 
         [Header("効果音")]
-        [Tooltip("クリック音 (任意)")]
+        [Tooltip("このボタン固有のクリック音 (任意)。未設定なら ATMController の「物理キークリック音」が鳴る")]
         [SerializeField] private AudioClip clickSound;
 
         private Vector3 _originalLocalPosition;
@@ -73,11 +73,13 @@ namespace App.ATM
         /// ボタンの沈み込みアニメーションをトリガーします。
         /// </summary>
         /// <param name="audioSource">再生用のAudioSource（オプション）</param>
-        public void Press(AudioSource audioSource = null)
+        /// <param name="fallbackClip">このボタンに clickSound が未設定のときに代わりに鳴らすクリップ（オプション）</param>
+        public void Press(AudioSource audioSource = null, AudioClip fallbackClip = null)
         {
-            if (audioSource != null && clickSound != null)
+            AudioClip clip = clickSound != null ? clickSound : fallbackClip;
+            if (audioSource != null && clip != null)
             {
-                audioSource.PlayOneShot(clickSound);
+                audioSource.PlayOneShot(clip);
             }
 
             if (_pressCoroutine != null)
