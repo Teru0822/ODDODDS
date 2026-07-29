@@ -36,6 +36,9 @@ public class IntercomController : MonoBehaviour
     }
     public IObservable<IntercomState> OnChangeCurrentState{get{return currentState;}}
 
+    private bool _isCanPushIdle = false;
+    public bool IsCanPushIdle{get{return _isCanPushIdle;} set{_isCanPushIdle = value;}}
+
     private void Start()
     {
         //カメラのアタッチ
@@ -206,6 +209,6 @@ public class IntercomController : MonoBehaviour
     }
 
     public void OnClickCentralButton() { if (currentState.Value == IntercomState.Calling) UpdateState(IntercomState.Talking); }
-    public void OnClickRightButton() { if (currentState.Value != IntercomState.Idle) UpdateState(IntercomState.Idle); }
+    public void OnClickRightButton() { if (currentState.Value != IntercomState.Idle && _isCanPushIdle) UpdateState(IntercomState.Idle); }
     public void OnClickLeftButton() { if (currentState.Value == IntercomState.Talking) UpdateState(IntercomState.Trade);/* 開錠ロジック用（将来） */ }
 }

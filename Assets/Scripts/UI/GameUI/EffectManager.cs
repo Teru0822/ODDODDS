@@ -102,7 +102,17 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider
 
     void Start()
     {
-        MoneyManager.Instance.OnCurrentTurnChange.Subscribe(_ => ReduceEffectLeftTurn()).AddTo(this);
+        //初期化処理
+        Observable.EveryUpdate()
+            .Select(_ => PlayerWallet.Local)
+            .Where(target => target != null)
+            .First()
+            .Subscribe(target =>
+            {
+                MoneyManager.Instance.OnCurrentTurnChange.Subscribe(_ => ReduceEffectLeftTurn()).AddTo(this);
+            })
+            .AddTo(this);
+        
     }
 
     void Update()

@@ -47,6 +47,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
 {
     [SerializeField] private VisitorDataBase _visitorDataBase;
     [SerializeField] private List<GameObject> _visitorPrefabs;
+    [SerializeField] private GameObject _visitorSpawnPoint;
     private GameObject _visitor;
     private List<VisitorInstance> _visitorInstances = new List<VisitorInstance>();
     private ReactiveProperty<VisitorInstance> _nowSelectedVisitorInstance = new ReactiveProperty<VisitorInstance>(null);
@@ -63,7 +64,10 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
         {
             VisitorLottery();
             if(_nowSelectedVisitorInstance.Value != null)
+            {
+                //TODO:抽選されたアバタを_visitorSpawnPointまでテレポートさせる
                 _icController.UpdateState(IntercomController.IntercomState.Calling);
+            }
         })
         .AddTo(this);
 
@@ -174,7 +178,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
         while(_nowSelectedVisitorInstance.Value == null)
         {
             int random = UnityEngine.Random.Range(0,_visitorInstances.Count);
-            random = 1;//ToDo:全員分のストーリー完成させたら消そう
+            random = UnityEngine.Random.Range(0,2);;//ToDo:全員分のストーリー完成させたら消そう
             if(!_visitorInstances[random].isCheck)//まだ抽選されていない人物の場合
             {
                 if(CheckClearEventTrigger(_visitorInstances[random].VisitorName, _visitorInstances[random].eventProgress))
@@ -294,6 +298,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
         {
             //セリフ用コルーチン
             yield return StartCoroutine(TextSystem("CanTradeText"));
+            _icController.IsCanPushIdle = true;
 
             //取引に応じるか決定するまで待つ
             yield return new WaitUntil(() => _icController.CurrentState != IntercomController.IntercomState.Talking);
@@ -368,7 +373,10 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
                     //選択していない方の報酬を削除
                     if(_nowSelectIndexInTradeContent != -1)
                     {
-                        reward.RewardElements.RemoveAt(_nowSelectIndexInTradeContent);
+                        if(_nowSelectIndexInTradeContent == 0)
+                            reward.RewardElements.RemoveAt(1);
+                        else if(_nowSelectIndexInTradeContent == 1)
+                            reward.RewardElements.RemoveAt(0);
                     }
                 }
                 foreach(var element in reward.RewardElements)
@@ -410,7 +418,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
                     _itemLight.SetActive(true);
                 })
                 .AppendInterval(1.0f)
-                .Append(_patchObject.transform.DOLocalMoveZ(0.0017f, 1.0f))
+                .Append(_patchObject.transform.DOLocalMoveZ(0.0016f, 1.0f))
                 .AppendCallback(() =>
                 {
                     //提出アイテムを出現させる
@@ -436,8 +444,9 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
                     else
                         Debug.LogError("スポーンされてない");
                 })
-                .AppendInterval(2.0f)
-                .Append(_patchObject.transform.DOLocalMoveZ(0.0017f, 1.0f));
+                .AppendInterval(1.0f)
+                .Append(_patchObject.transform.DOLocalMoveZ(0.0016f, 1.0f))
+                .AppendInterval(1.5f);
 
                 //SEを追加してから再生
                 _tradeAnimSequence.InsertCallback(2.0f, () =>
@@ -448,7 +457,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
                 {
                     _audio.PlayOneShot(_openSE);
                 });
-                _tradeAnimSequence.InsertCallback(7.0f, () =>
+                _tradeAnimSequence.InsertCallback(6.0f, () =>
                 {
                     _audio.PlayOneShot(_openSE);
                 });
@@ -484,6 +493,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
         _conversationText.text = "";
         _nowSelectIndexInTradeContent = -1;
         _nowSelectedVisitorInstance.Value = null;
+        _icController.IsCanPushIdle = false;
         _icController.UpdateState(IntercomController.IntercomState.Idle);
         _select1.gameObject.SetActive(false); 
         _select2.gameObject.SetActive(false);
