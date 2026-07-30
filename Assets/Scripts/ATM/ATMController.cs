@@ -68,21 +68,37 @@ namespace App.ATM
         [Tooltip("起動時に有効化するライトオブジェクト群")]
         [SerializeField] private GameObject[] atmLights;
 
-        [Header("効果音")]
+        [Header("効果音 - 共通")]
         [Tooltip("再生用 AudioSource")]
         [SerializeField] private AudioSource audioSource;
 
-        [Tooltip("起動時の電子音/HDD動作音")]
+        [Header("効果音 - ATM本体")]
+        [Tooltip("起動音。ATMに寄って電源が入る時に鳴る（起動電子音・HDD動作音など）")]
         [SerializeField] private AudioClip startupSound;
 
-        [Tooltip("終了（電源オフ）時の音")]
+        [Tooltip("電源オフ音。ATMを閉じて元の視点へ戻る時に鳴る")]
         [SerializeField] private AudioClip shutdownSound;
 
-        [Tooltip("ボタンを押した時のクリック音")]
+        [Tooltip("資金洗浄・コイン売却が成立した時の音 (SE/debtPay など)")]
+        [SerializeField] private AudioClip washSuccessSound;
+
+        [Header("効果音 - キー操作")]
+        [Tooltip("物理キークリック音。キーパッドを押した時の「カチッ」という機械音。" +
+                 "ATMPhysicalButton 側に個別の Click Sound があればそちらが優先され、無い場合にこれが鳴る")]
         [SerializeField] private AudioClip keyClickSound;
 
-        [Tooltip("資金洗浄に成功した時の音 (SE/debtPay など)")]
-        [SerializeField] private AudioClip washSuccessSound;
+        [Tooltip("選択音。↑↓で項目（金/銀/銅の行）を移動した時の電子音。物理キークリック音に重ねて鳴る")]
+        [SerializeField] private AudioClip selectSound;
+
+        [Tooltip("決定音。決定(Confirm)キーを押した時の電子音。物理キークリック音に重ねて鳴る")]
+        [SerializeField] private AudioClip confirmSound;
+
+        [Tooltip("キャンセル音。取消(Cancel)キーを押した時の電子音。物理キークリック音に重ねて鳴る")]
+        [SerializeField] private AudioClip cancelSound;
+
+        [Tooltip("選択音・決定音・キャンセル音の音量。物理キークリック音との音量バランス調整用")]
+        [Range(0f, 1f)]
+        [SerializeField] private float electronicSoundVolume = 1f;
 
         [Header("物理ボタン (テンキー) 設定 (プレハブ内アセット)")]
         [Tooltip("3Dモデル内の各ボタンオブジェクト。インスペクターでの指定が必須です")]
@@ -150,8 +166,16 @@ namespace App.ATM
         [SerializeField] private Vector2 _spinboxGoldPos = new Vector2(250f, 40f);
         [SerializeField] private Vector2 _spinboxSilverPos = new Vector2(250f, -50f);
         [SerializeField] private Vector2 _spinboxBronzePos = new Vector2(250f, -140f);
-        [Tooltip("スピンボックスの大きさ(Canvasローカル px)")]
-        [SerializeField] private Vector2 _spinboxSize = new Vector2(64f, 96f);
+
+        [Tooltip("スピンボックスの大きさ(Canvasローカル px)。実行中に変更しても毎フレーム反映される")]
+        [SerializeField] private Vector2 _spinboxSize = DefaultSpinboxSize;
+
+        [Tooltip("スピンボックス内の「▲/数量/▼」の文字サイズ。実行中に変更しても毎フレーム反映される")]
+        [SerializeField] private float _spinboxFontSize = DefaultSpinboxFontSize;
+
+        // 既定値。ContextMenu の「既定値にリセット」からも参照する
+        private static readonly Vector2 DefaultSpinboxSize = new Vector2(34f, 52f);
+        private const float DefaultSpinboxFontSize = 11f;
         private static readonly Color SpinboxDimColor = new Color(0.10f, 0.16f, 0.10f, 0.90f);
         private static readonly Color SpinboxActiveColor = new Color(0.20f, 0.85f, 0.30f, 0.95f);
 
@@ -594,7 +618,30 @@ namespace App.ATM
                 else
                     rt.anchoredPosition = i == 0 ? _spinboxGoldPos : (i == 1 ? _spinboxSilverPos : _spinboxBronzePos);
                 rt.sizeDelta = _spinboxSize;
+
+                // 文字サイズも追従させ、Inspector で大きさを詰めた時に文字がはみ出さないようにする
+                // (TMP の fontSize は同値なら再構築しないので毎フレーム代入して問題ない)
+                if (_spinTexts[i] != null) _spinTexts[i].fontSize = _spinboxFontSize;
             }
+        }
+
+        /// <summary>
+        /// スピンボックスの大きさ・文字サイズをコード上の既定値へ戻す。
+        /// シーン/プレハブに古い大きな値が保存済みの場合、コード側の既定値では上書きされないため、
+        /// Inspector の ATMController のコンテキストメニュー（コンポーネント右上の「⋮」）から実行する。
+        /// </summary>
+        [ContextMenu("スピンボックスの大きさを既定値にリセット")]
+        private void ResetSpinboxSize()
+        {
+            _spinboxSize = DefaultSpinboxSize;
+            _spinboxFontSize = DefaultSpinboxFontSize;
+#if UNITY_EDITOR
+            UnityEditor.EditorUtility.SetDirty(this);
+            if (!Application.isPlaying && gameObject.scene.IsValid())
+            {
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
+            }
+#endif
         }
 
         private IEnumerator TypeWelcomeText()
@@ -648,11 +695,16 @@ namespace App.ATM
             // 処理中・カウントアップ演出中はキー入力をブロック
             if (_currentSubState == ATMSubState.Processing || _isLaunderProcessing || _isCountingUp) return;
 
+            // 起動画面のタイピング演出が終わるまでは入力不可
+            if (_currentSubState == ATMSubState.Welcome && !_canProceedFromWelcome) return;
+
+            // 入力が受理される時だけ、役割に応じた電子音を物理キークリック音に重ねて鳴らす。
+            // ここが全入力経路（3Dキーパッドのクリック／物理キーボード）の合流点。
+            PlayRoleSound(role);
+
             // 起動画面＝ログイン画面に統合。タイピング完了後、この画面上で直接パスコードを入力する。
             if (_currentSubState == ATMSubState.Welcome)
             {
-                if (!_canProceedFromWelcome) return; // タイピング完了までは入力不可
-
                 if (role >= KeyRole.Num0 && role <= KeyRole.Num9)
                 {
                     if (_inputPasscode.Length < 4)
@@ -929,7 +981,11 @@ namespace App.ATM
 
         // --- コイン両替：行選択 / 個数編集 の状態機械 ---
 
-        /// <summary>コイン両替画面でのキー入力処理。選択モードと編集モードで↑↓等の役割が変わる。</summary>
+        /// <summary>
+        /// コイン両替画面でのキー入力処理。選択モードと編集モードで↑↓等の役割が変わる。
+        /// 効果音はここでは鳴らさない。物理キークリック音は入力経路（Handle3DButtonClicks /
+        /// AnimateButtonByRole）が、選択/決定/キャンセルの電子音は OnATMKeyPressed が担当する。
+        /// </summary>
         private void HandleCoinExchangeKey(KeyRole role)
         {
             if (!_isEditingQty)
@@ -938,20 +994,17 @@ namespace App.ATM
                 if (role == KeyRole.Up)
                 {
                     _selectedCoinRow = Mathf.Max(0, _selectedCoinRow - 1);
-                    PlayKeyFeedback();
                     UpdateDisplay();
                 }
                 else if (role == KeyRole.Down)
                 {
                     _selectedCoinRow = Mathf.Min(2, _selectedCoinRow + 1);
-                    PlayKeyFeedback();
                     UpdateDisplay();
                 }
                 else if (role == KeyRole.Confirm)
                 {
                     _isEditingQty = true;      // スピンボックスが緑に点灯し、個数を編集できる
                     _qtyFreshInput = true;
-                    PlayKeyFeedback();
                     UpdateDisplay();
                 }
                 else if (role == KeyRole.Cancel)
@@ -968,21 +1021,18 @@ namespace App.ATM
                     int next = _qtyFreshInput ? digit : GetSelectedQty() * 10 + digit;
                     _qtyFreshInput = false;
                     SetSelectedQty(next);
-                    PlayKeyFeedback();
                     UpdateDisplay();
                 }
                 else if (role == KeyRole.Up)
                 {
                     _qtyFreshInput = false;
                     SetSelectedQty(GetSelectedQty() + 1);
-                    PlayKeyFeedback();
                     UpdateDisplay();
                 }
                 else if (role == KeyRole.Down)
                 {
                     _qtyFreshInput = false;
                     SetSelectedQty(GetSelectedQty() - 1);
-                    PlayKeyFeedback();
                     UpdateDisplay();
                 }
                 else if (role == KeyRole.Confirm)
@@ -995,7 +1045,6 @@ namespace App.ATM
                 {
                     SetSelectedQty(0);         // 中止：個数を0に戻す
                     _isEditingQty = false;
-                    PlayKeyFeedback();
                     UpdateDisplay();
                 }
             }
@@ -1075,12 +1124,44 @@ namespace App.ATM
             UpdateDisplay();
         }
 
+        /// <summary>SEを鳴らす小さなヘルパー。クリップ／AudioSource 未設定時は何もしない。</summary>
+        private void PlaySe(AudioClip clip, float volume = 1f)
+        {
+            if (clip != null && audioSource != null)
+            {
+                audioSource.PlayOneShot(clip, volume);
+            }
+        }
+
+        /// <summary>
+        /// キーの役割に対応する電子音を鳴らす。物理キーの「カチッ」というクリック音とは独立しており、
+        /// 両方が重なって鳴る（クリック音は入力経路側の ATMPhysicalButton.Press が担当）。
+        /// 数字キーには専用の電子音を割り当てない（クリック音のみ）。
+        /// </summary>
+        private void PlayRoleSound(KeyRole role)
+        {
+            AudioClip clip;
+            switch (role)
+            {
+                case KeyRole.Up:
+                case KeyRole.Down:
+                    clip = selectSound;
+                    break;
+                case KeyRole.Confirm:
+                    clip = confirmSound;
+                    break;
+                case KeyRole.Cancel:
+                    clip = cancelSound;
+                    break;
+                default:
+                    return;
+            }
+            PlaySe(clip, electronicSoundVolume);
+        }
+
         public void PlayKeyFeedback()
         {
-            if (keyClickSound != null && audioSource != null)
-            {
-                audioSource.PlayOneShot(keyClickSound);
-            }
+            PlaySe(keyClickSound);
             AnimateRandomButton();
         }
 
@@ -1100,12 +1181,14 @@ namespace App.ATM
             {
                 if (btn != null && btn.Role == role)
                 {
-                    btn.Press(audioSource);
+                    btn.Press(audioSource, keyClickSound);
                     return;
                 }
             }
 
+            // 対応する3Dボタンが無い役割（↑↓を実機モデルに持たない等）でもクリック音は鳴らす
             AnimateRandomButton();
+            PlaySe(keyClickSound);
         }
 
         private void Handle3DButtonClicks()
@@ -1123,7 +1206,7 @@ namespace App.ATM
 
                 if (btn != null)
                 {
-                    btn.Press(audioSource);
+                    btn.Press(audioSource, keyClickSound);
                     OnATMKeyPressed(btn.Role);
                 }
             }
@@ -1252,7 +1335,7 @@ namespace App.ATM
             txtGo.transform.SetParent(bgGo.transform, false);
             TextMeshProUGUI tmp = txtGo.GetComponent<TextMeshProUGUI>();
             tmp.text = "▲\n0\n▼";
-            tmp.fontSize = 20;
+            tmp.fontSize = _spinboxFontSize;
             tmp.color = new Color(0.7f, 0.8f, 0.7f, 1f);
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.raycastTarget = false;

@@ -5,7 +5,6 @@ using UnityEngine.UI;
 using TMPro;
 using UniRx;
 using UnityEngine.InputSystem;
-using UnityEditor.SceneManagement;
 
 public enum EffectType
 {
@@ -103,16 +102,22 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider
     void Start()
     {
         //初期化処理
+        // このコンポーネントを含む GameUI プレハブはルートシーン(MainScene)側に配置されているが、
+        // MoneyManager は加法ロードされるサブシーン(Scene_Environment)側に居る。
+        // MultiSceneLoader の非同期ロードが終わるまで MoneyManager.Instance は null のため、
+        // Start() で直接購読すると NullReferenceException になる。生成されるまで待ってから購読する。
+        // 待つ対象は、この直後に参照する MoneyManager そのものにしている。PlayerWallet を待つ形でも
+        // 現状は動くが、それは PlayerWallet と MoneyManager がたまたま同じ Scene_Environment に
+        // 居るからで、マネージャをルートシーンへ移すなどの構成変更で壊れてしまうため。
         Observable.EveryUpdate()
-            .Select(_ => PlayerWallet.Local)
-            .Where(target => target != null)
+            .Select(_ => MoneyManager.Instance)
+            .Where(moneyManager => moneyManager != null)
             .First()
-            .Subscribe(target =>
+            .Subscribe(moneyManager =>
             {
-                MoneyManager.Instance.OnCurrentTurnChange.Subscribe(_ => ReduceEffectLeftTurn()).AddTo(this);
+                moneyManager.OnCurrentTurnChange.Subscribe(_ => ReduceEffectLeftTurn()).AddTo(this);
             })
             .AddTo(this);
-        
     }
 
     void Update()
