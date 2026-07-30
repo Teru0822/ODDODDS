@@ -49,6 +49,7 @@ public class EffectInstance
 public class EffectManager : MonoBehaviour, IsaveDataProvider
 {
     public static EffectManager Instance;
+    [SerializeField] private GameUIManager _gameUIManager;
     [SerializeField] private EffectDataBase _effectDataBase;
     [SerializeField] private List<Button> _buttons;
 
@@ -75,7 +76,6 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider
                     Debug.LogError("付与されたEffectInstanceがnull");
                     return;
                 }
-
                 Debug.LogWarning(index.Value.EffectName + "が付与されました");
                 UpdateUI();
             }).AddTo(this);
@@ -89,7 +89,6 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider
                     Debug.LogError("削除されたEffectInstanceがnull");
                     return;
                 }
-
                 Debug.LogWarning(index.Value.EffectName + "が解除されました");
                 UpdateUI();
             }).AddTo(this);
@@ -102,19 +101,22 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider
 
     void Start()
     {
+        //初期化処理
         // このコンポーネントを含む GameUI プレハブはルートシーン(MainScene)側に配置されているが、
         // MoneyManager は加法ロードされるサブシーン(Scene_Environment)側に居る。
         // MultiSceneLoader の非同期ロードが終わるまで MoneyManager.Instance は null のため、
-        // Start() で直接購読すると NullReferenceException になる。
-        // 生成されるまで待ってから購読する（GameUIManager が PlayerWallet を待つのと同じ方式）。
+        // Start() で直接購読すると NullReferenceException になる。生成されるまで待ってから購読する。
+        // 待つ対象は、この直後に参照する MoneyManager そのものにしている。PlayerWallet を待つ形でも
+        // 現状は動くが、それは PlayerWallet と MoneyManager がたまたま同じ Scene_Environment に
+        // 居るからで、マネージャをルートシーンへ移すなどの構成変更で壊れてしまうため。
         Observable.EveryUpdate()
             .Select(_ => MoneyManager.Instance)
             .Where(moneyManager => moneyManager != null)
             .First()
             .Subscribe(moneyManager =>
-                moneyManager.OnCurrentTurnChange
-                    .Subscribe(_ => ReduceEffectLeftTurn())
-                    .AddTo(this))
+            {
+                moneyManager.OnCurrentTurnChange.Subscribe(_ => ReduceEffectLeftTurn()).AddTo(this);
+            })
             .AddTo(this);
     }
 
@@ -271,7 +273,7 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider
     /// <returns></returns>
     public int GetIdByItemName(string itemName)
     {
-        var id = _effectDataBase.effectDataBase.Find(effect => effect.effectName == itemName).id;
+        var id = _effectDataBase.effectDataBase.Find(effect => effect.effectName == itemName+" Effect").id;
         if(id == 0)
             return -1;
         else
@@ -305,6 +307,7 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider
                 instance.LeftTurn = original.turn;
                 instance.Level = 1;
                 _ownedEffects.Add(instance);
+                _gameUIManager.AddPopupQueue(true,instance.master);
             }
             else
             {
@@ -325,6 +328,7 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider
             if (effect != null && effect.Id == id)
             {
                 _ownedEffects.Remove(effect);
+                _gameUIManager.AddPopupQueue(true,effect.master);
                 UpdateUI();
                 break;
             }

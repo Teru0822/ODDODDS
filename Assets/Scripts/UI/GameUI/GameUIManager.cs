@@ -1,8 +1,13 @@
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UniRx;
+using UnityEngine.UI;
+
 
 public class GameUIManager : MonoBehaviour
 {
@@ -16,6 +21,10 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] private GameObject _playerInfoPanel;
     [SerializeField] private TMP_Text _moneyText_info;
     [SerializeField] private TMP_Text _unwashedMoneyText_info;
+    [SerializeField] private TMP_Text _bronzeCoinText_info;
+    [SerializeField] private TMP_Text _silverCoinText_info;
+    [SerializeField] private TMP_Text _goldCoinText_info;
+    [SerializeField] private TMP_Text _blackDiamondText_info;
     [SerializeField] private TMP_Text _virtuePointText;
     [SerializeField] private TMP_Text _playerNameText;
     [SerializeField] private TMP_Text _leftDebtMoneyText;
@@ -39,6 +48,16 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] private SerializeDictionary<int, GameObject> _menuTitle = new SerializeDictionary<int, GameObject>();
     private bool _isOpenMenu = false;
     private int _index = 0;
+
+    [Header("アイテム取得・消失用UI")]
+    [SerializeField] private GameObject _getOrLostPanel;
+    [SerializeField] private TMP_Text _titleText;
+    [SerializeField] private List<GameObject> _popUpListIndex;
+
+    private  Queue<ScriptableObject> _getQueue = new();
+    private  Queue<ScriptableObject> _lostQueue = new();
+
+    private Coroutine _getOrLostAnimationCoroutine;
 
     //その他プライベート変数
     private float _previousMoneyValue = 0;
@@ -90,8 +109,8 @@ public class GameUIManager : MonoBehaviour
                         1.0f                                   //時間
                         ).OnUpdate(() =>
                         {
-                            _unwashedMoneyText.text = _previousUnwashedMoneyValue.ToString("N0");
-                            _unwashedMoneyText_info.text = _previousUnwashedMoneyValue.ToString("N0");
+                            //_unwashedMoneyText.text = _previousUnwashedMoneyValue.ToString("N0");
+                            //_unwashedMoneyText_info.text = _previousUnwashedMoneyValue.ToString("N0");
                         });
             }).AddTo(this);
 
@@ -117,7 +136,12 @@ public class GameUIManager : MonoBehaviour
                 {
                     _previousBronzeCoinValue = x;
                     isBronzeInitialized = true;
-                    if (_bronzeCoinText != null) _bronzeCoinText.text = "x" + x.ToString("N0");
+                    if (_bronzeCoinText != null)
+                    {
+                        _bronzeCoinText.text = "x" + x.ToString("N0");
+                        _bronzeCoinText_info.text = "x" + x.ToString("N0");
+                    }
+                    
                     return;
                 }
 
@@ -130,6 +154,7 @@ public class GameUIManager : MonoBehaviour
                     ).OnUpdate(() =>
                     {
                         _bronzeCoinText.text = "x" + _previousBronzeCoinValue.ToString("N0");
+                        _bronzeCoinText_info.text = "x" + _previousBronzeCoinValue.ToString("N0");
                     });
                 }
             }).AddTo(this);
@@ -142,7 +167,11 @@ public class GameUIManager : MonoBehaviour
                 {
                     _previousSilverCoinValue = x;
                     isSilverInitialized = true;
-                    if (_silverCoinText != null) _silverCoinText.text = "x" + x.ToString("N0");
+                    if (_silverCoinText != null)
+                    {
+                        _silverCoinText.text = "x" + x.ToString("N0");
+                        _silverCoinText_info.text = "x" + x.ToString("N0");
+                    } 
                     return;
                 }
 
@@ -155,6 +184,7 @@ public class GameUIManager : MonoBehaviour
                     ).OnUpdate(() =>
                     {
                         _silverCoinText.text = "x" + _previousSilverCoinValue.ToString("N0");
+                        _silverCoinText_info.text = "x" + _previousSilverCoinValue.ToString("N0");
                     });
                 }
             }).AddTo(this);
@@ -167,7 +197,11 @@ public class GameUIManager : MonoBehaviour
                 {
                     _previousGoldCoinValue = x;
                     isGoldInitialized = true;
-                    if (_goldCoinText != null) _goldCoinText.text = "x" + x.ToString("N0");
+                    if (_goldCoinText != null)
+                    {
+                        _goldCoinText.text = "x" + x.ToString("N0");
+                        _goldCoinText_info.text = "x" + x.ToString("N0");
+                    } 
                     return;
                 }
 
@@ -180,6 +214,7 @@ public class GameUIManager : MonoBehaviour
                     ).OnUpdate(() =>
                     {
                         _goldCoinText.text = "x" + _previousGoldCoinValue.ToString("N0");
+                        _goldCoinText_info.text = "x" + _previousGoldCoinValue.ToString("N0");
                     });
                 }
             }).AddTo(this);
@@ -192,7 +227,11 @@ public class GameUIManager : MonoBehaviour
                 {
                     _previousBlackDiamondValue = x;
                     isBlackDiamondInitialized = true;
-                    if (_blackDiamondText != null) _blackDiamondText.text = "x" + x.ToString("N0");
+                    if (_blackDiamondText != null)
+                    {
+                        _blackDiamondText.text = "x" + x.ToString("N0");
+                        _blackDiamondText_info.text = "x" + x.ToString("N0");
+                    }                   
                     return;
                 }
 
@@ -205,6 +244,7 @@ public class GameUIManager : MonoBehaviour
                     ).OnUpdate(() =>
                     {
                         _blackDiamondText.text = "x" + _previousBlackDiamondValue.ToString("N0");
+                        _blackDiamondText_info.text = "x" + _previousBlackDiamondValue.ToString("N0");
                     });
                 }
             }).AddTo(this);
@@ -308,5 +348,132 @@ public class GameUIManager : MonoBehaviour
     private void HandleTypewriterUIChanged(bool isShowing)
     {
         gameObject.SetActive(!isShowing);
+    }
+    /// <summary>
+    /// アイテム、エフェクト、お金（訪問者イベントのみ）を取得・消失した際にそれぞれキューに追加する。
+    /// </summary>
+    /// <param name="isGet"></param>
+    /// <param name="masterData"></param>
+    public void AddPopupQueue(bool isGet,ScriptableObject masterData)
+    {
+        if (isGet)
+        {
+            _getQueue.Enqueue(masterData);
+
+            if (_getOrLostAnimationCoroutine == null)
+                _getOrLostAnimationCoroutine = StartCoroutine(GetOrLostAnimation(true));
+        }
+        else
+        {
+            _lostQueue.Enqueue(masterData);
+
+            if (_getOrLostAnimationCoroutine == null)
+                _getOrLostAnimationCoroutine = StartCoroutine(GetOrLostAnimation(false));
+        }
+    }
+
+    /// <summary>
+    /// 取得・消失した時のUIアニメーションを再生させるコルーチン
+    /// </summary>
+    /// <param name="isGet"></param>
+    /// <returns></returns>
+    private IEnumerator GetOrLostAnimation(bool isGet)
+    {
+        //最初のセットアップ
+        Queue<ScriptableObject> queue = isGet ? _getQueue : _lostQueue;
+        _titleText.text = isGet ? "Get" : "Lost";
+        _titleText.color = isGet ? Color.skyBlue : Color.red;
+        _getOrLostPanel.SetActive(true);
+
+
+        if (!_getOrLostPanel.TryGetComponent<CanvasGroup>(out var canvasGroup))
+        {
+            canvasGroup = _getOrLostPanel.AddComponent<CanvasGroup>();
+        }
+
+        //_getOrLostPanelが0.5秒かけてフェードアウト（出現）してくる
+        canvasGroup.alpha = 0f;
+        yield return canvasGroup.DOFade(1f, 0.5f).WaitForCompletion();
+
+        //手に入れたアイテム・エフェクトを順にスケールアップ（0.5秒かけてスケールを1に変化）させる        
+        int index = 0;
+        while (true)
+        {
+            // キューが空なら終了(３秒だけ猶予は与える)
+            if (queue.Count == 0)
+            {
+                // 現在表示中の内容を3秒見せる
+                yield return new WaitForSeconds(3f);
+
+                // その間に追加されなかったら一旦終了
+                if (queue.Count == 0)
+                {
+                    Sequence disappear = DOTween.Sequence();
+                    for (int i = 0; i < index; i++)
+                    {
+                        disappear.Insert(i * 0.1f, _popUpListIndex[i].transform.DOScale(Vector3.zero, 0.3f));
+                    }
+                    yield return disappear.WaitForCompletion();
+                    break;
+                }
+            }
+
+            // 最大件数を表示したら一旦待機して消す
+            if(index == _popUpListIndex.Count)
+            {
+                Sequence disappear = DOTween.Sequence();
+                for (int i = 0; i < _popUpListIndex.Count; i++)
+                {
+                    disappear.Insert(i * 0.1f, _popUpListIndex[i].transform.DOScale(Vector3.zero, 0.3f));
+                }
+                
+                yield return disappear.WaitForCompletion();
+                index = 0;
+            }
+
+            //データをもとにUI表示アニメーションを再生
+            ScriptableObject data = queue.Dequeue();
+            Image image = _popUpListIndex[index].transform.Find("Image").GetComponentInChildren<Image>();
+            TMP_Text text = _popUpListIndex[index].GetComponentInChildren<TMP_Text>();
+
+            if (data is ItemData itemData)
+            {
+                image.sprite = itemData.iconImage;
+                text.text = itemData.itemName;
+            }
+            else if (data is EffectData effectData)
+            {
+                image.sprite = effectData.effectIcon;
+                text.text = effectData.effectName;
+            }
+            else if(data is MoneyData moneyData)
+            {
+                image.sprite = moneyData.iconImage;
+                text.text = moneyData.price.ToString("N0") + "DC";
+            }
+
+            _popUpListIndex[index].transform.localScale = Vector3.zero;
+            yield return _popUpListIndex[index].transform.DOScale(Vector3.one, 0.5f).WaitForCompletion();
+
+            index++;
+        }
+
+        //getOrLostPanelが0.5秒かけてフェードイン（消失）する
+        yield return canvasGroup.DOFade(0f, 0.5f).WaitForCompletion();
+        _getOrLostPanel.SetActive(false);
+
+        //コルーチンの情報をnullにする.そしてもう片方のキューに情報があったら、そっちの情報を記載するコルーチンを発動
+        if(isGet)
+        {
+            _getOrLostAnimationCoroutine = null;
+            if(_lostQueue.Count != 0 && _getOrLostAnimationCoroutine == null)
+                _getOrLostAnimationCoroutine = StartCoroutine(GetOrLostAnimation(false));
+        }
+        else
+        {
+            _getOrLostAnimationCoroutine = null;
+            if(_getQueue.Count != 0 && _getOrLostAnimationCoroutine == null)
+                _getOrLostAnimationCoroutine = StartCoroutine(GetOrLostAnimation(true));
+        }
     }
 }
