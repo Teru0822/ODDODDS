@@ -455,7 +455,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &134325254
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1166,9 +1166,9 @@ RectTransform:
   - {fileID: 2769335}
   m_Father: {fileID: 1681191643}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 80, y: -15}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &504803944
@@ -2901,7 +2901,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1525965635
 Transform:
   m_ObjectHideFlags: 0
@@ -4844,7 +4844,7 @@ PrefabInstance:
     - target: {fileID: 5336918042384276037, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: m_TargetTexture
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 8400000, guid: 3d7518e6a79b23f4da02cea631e8223f, type: 2}
     - target: {fileID: 5336918042384276037, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: near clip plane
       value: 5
