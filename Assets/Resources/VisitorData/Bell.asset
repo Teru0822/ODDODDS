@@ -15,17 +15,37 @@ MonoBehaviour:
   id: 0
   visitorName: Bell
   requests:
-  - {fileID: 11400000, guid: 6de26c17d13c371478cb58b5a1882d80, type: 2}
-  - {fileID: 11400000, guid: 1b23e0f43c1a5814fa93c036f3044760, type: 2}
-  - {fileID: 11400000, guid: a961060d0a9e94844acf42cf5107ab2e, type: 2}
-  - {fileID: 11400000, guid: a961060d0a9e94844acf42cf5107ab2e, type: 2}
-  - {fileID: 11400000, guid: a961060d0a9e94844acf42cf5107ab2e, type: 2}
+  - RequestElements:
+    - content: {fileID: 11400000, guid: 6de26c17d13c371478cb58b5a1882d80, type: 2}
+      num: 1
+  - RequestElements:
+    - content: {fileID: 11400000, guid: 1b23e0f43c1a5814fa93c036f3044760, type: 2}
+      num: 1
+  - RequestElements:
+    - content: {fileID: 11400000, guid: a961060d0a9e94844acf42cf5107ab2e, type: 2}
+      num: 1
+  - RequestElements:
+    - content: {fileID: 11400000, guid: a961060d0a9e94844acf42cf5107ab2e, type: 2}
+      num: 1
+  - RequestElements:
+    - content: {fileID: 11400000, guid: a961060d0a9e94844acf42cf5107ab2e, type: 2}
+      num: 1
   rewards:
-  - {fileID: 11400000, guid: b367633b104082b4cb9b87a09f3062ba, type: 2}
-  - {fileID: 11400000, guid: b367633b104082b4cb9b87a09f3062ba, type: 2}
-  - {fileID: 11400000, guid: b367633b104082b4cb9b87a09f3062ba, type: 2}
-  - {fileID: 11400000, guid: b367633b104082b4cb9b87a09f3062ba, type: 2}
-  - {fileID: 11400000, guid: b367633b104082b4cb9b87a09f3062ba, type: 2}
+  - RewardElements:
+    - content: {fileID: 11400000, guid: b367633b104082b4cb9b87a09f3062ba, type: 2}
+      num: 1
+  - RewardElements:
+    - content: {fileID: 11400000, guid: b367633b104082b4cb9b87a09f3062ba, type: 2}
+      num: 1
+  - RewardElements:
+    - content: {fileID: 11400000, guid: b367633b104082b4cb9b87a09f3062ba, type: 2}
+      num: 1
+  - RewardElements:
+    - content: {fileID: 11400000, guid: b367633b104082b4cb9b87a09f3062ba, type: 2}
+      num: 1
+  - RewardElements:
+    - content: {fileID: 11400000, guid: b367633b104082b4cb9b87a09f3062ba, type: 2}
+      num: 1
   conversations:
     _dicElements:
     - Key: Conversation1

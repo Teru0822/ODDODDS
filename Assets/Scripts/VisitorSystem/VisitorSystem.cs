@@ -29,8 +29,8 @@ public class VisitorInstance
     public string key = "";//現在選択中のキー
     public int Id => master.id;
     public string VisitorName => master.visitorName;
-    public List<ScriptableObject> Requests => master.requests;
-    public List<ScriptableObject> Rewards => master.rewards;
+    public List<Request> Requests => master.requests;
+    public List<Reward> Rewards => master.rewards;
     public Dictionary<string, VisitorConversationContainer[]> Conversations => master.conversations.GetDictionary;
 
     public VisitorSaveData CreateVisitorSaveData()
@@ -47,6 +47,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
 {
     [SerializeField] private VisitorDataBase _visitorDataBase;
     [SerializeField] private List<GameObject> _visitorPrefabs;
+    [SerializeField] private GameObject _visitorSpawnPoint;
     private GameObject _visitor;
     private List<VisitorInstance> _visitorInstances = new List<VisitorInstance>();
     private ReactiveProperty<VisitorInstance> _nowSelectedVisitorInstance = new ReactiveProperty<VisitorInstance>(null);
@@ -63,7 +64,10 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
         {
             VisitorLottery();
             if(_nowSelectedVisitorInstance.Value != null)
+            {
+                //TODO:抽選されたアバタを_visitorSpawnPointまでテレポートさせる
                 _icController.UpdateState(IntercomController.IntercomState.Calling);
+            }
         })
         .AddTo(this);
 
@@ -89,6 +93,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
 
             _itemPanelManager = FindAnyObjectByType<ItemPanelManager>();
             _effectManager = FindAnyObjectByType<EffectManager>();
+            _gameUIManager = FindFirstObjectByType<GameUIManager>();
         }
         catch (System.Exception)
         {
@@ -173,7 +178,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
         while(_nowSelectedVisitorInstance.Value == null)
         {
             int random = UnityEngine.Random.Range(0,_visitorInstances.Count);
-            random = 0;//ToDo:全員分のストーリー完成させたら消そう
+            random = UnityEngine.Random.Range(0,2);;//ToDo:全員分のストーリー完成させたら消そう
             if(!_visitorInstances[random].isCheck)//まだ抽選されていない人物の場合
             {
                 if(CheckClearEventTrigger(_visitorInstances[random].VisitorName, _visitorInstances[random].eventProgress))
@@ -276,6 +281,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
     [SerializeField] private AudioClip _openSE;
     private App.Player.FirstPersonController _fpController;
     private Sequence _tradeAnimSequence;
+    private GameUIManager _gameUIManager;
 
     /// <summary>
     /// 訪問者との会話フローを実行するコルーチン
@@ -292,6 +298,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
         {
             //セリフ用コルーチン
             yield return StartCoroutine(TextSystem("CanTradeText"));
+            _icController.IsCanPushIdle = true;
 
             //取引に応じるか決定するまで待つ
             yield return new WaitUntil(() => _icController.CurrentState != IntercomController.IntercomState.Talking);
@@ -302,12 +309,29 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
             }
             else if(_icController.CurrentState == IntercomController.IntercomState.Trade)//取引に応じた場合
             {
+                //要求・報酬に関する情報を取得
+                Request request = visitor.Requests[visitor.eventProgress - 1].Clone();
+                Reward reward = visitor.Rewards[visitor.eventProgress - 1].Clone();
+
                 //選択肢が存在する取引相手の場合,取引内容を決定するまで待機
-                if(visitor.VisitorName == "Faust" || visitor.VisitorName == "Gargantua")
+                if(visitor.VisitorName == "Faust" || (visitor.VisitorName == "Gargantua"/*&& visitor.eventProgress < 3*/))//ガルガンチュアはイベント3回目までは確定してるので無視
                 {
-                    _select1.gameObject.SetActive(true); 
+                    _visitorUI.SetActive(true);
+                    Cursor.lockState = CursorLockMode.None;
+                    Cursor.visible = true;
+                    _nameText.text = "You";
+                    _conversationText.text = "どちらを選ぼうか...？";
+                    _select1.gameObject.SetActive(true);
                     _select2.gameObject.SetActive(true);
-                    yield return new WaitUntil(() => _nowSelectIndexInTradeContent != -1);                
+                    _select1.GetComponentInChildren<VisitorSelectionHover>().Init(reward.RewardElements[0].content, _conversationText);
+                    _select2.GetComponentInChildren<VisitorSelectionHover>().Init(reward.RewardElements[1].content, _conversationText);
+
+                    yield return new WaitUntil(() => _nowSelectIndexInTradeContent != -1);
+                    _select1.gameObject.SetActive(false);
+                    _select2.gameObject.SetActive(false);
+                    _visitorUI.SetActive(false);
+                    Cursor.lockState = CursorLockMode.Locked;
+                    Cursor.visible = false;
                 }
 
                 if(visitor.VisitorName == "Lucas")
@@ -316,49 +340,70 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
                 }
 
                 //要求されたものを提出
-                GameObject reqObj = null;
-                GameObject rewObj = null;
-                var request = visitor.Requests[visitor.eventProgress - 1];
-                if (request is ItemData itemData)
+                List<GameObject> reqObj = new List<GameObject>();
+                List<GameObject> rewObj = new List<GameObject>();
+                
+                foreach(var element in request.RequestElements)
                 {
-                    if(itemData.prefabData != null)
+                    if (element.content is ItemData itemData)
                     {
-                        reqObj = itemData.prefabData;
-                        Debug.LogError(reqObj.name);
-                    } 
-                    _itemPanelManager.RemoveItem(itemData.id,itemData.itemType);
-                }
-                else if(request is MoneyData moneyData)
-                {
-                    if(moneyData.prefabData != null) reqObj = moneyData.prefabData;
-                    MoneyManager.Instance.ReduceMoney(moneyData.price);
-                }
-                else if (request is EffectData effectData)
-                {
-                    _effectManager.RemoveEffect(effectData.id);
+                        // ItemDataの処理
+                        if(itemData.prefabData != null)
+                        {
+                            reqObj.Add(itemData.prefabData);
+                        } 
+                        _itemPanelManager.RemoveItem(itemData.id,itemData.itemType);
+                    }
+                    else if(element.content is MoneyData moneyData)
+                    {
+                        if(moneyData.prefabData != null) reqObj.Add(moneyData.prefabData);
+                        MoneyManager.Instance.ReduceMoney(moneyData.price);
+                        if(_gameUIManager != null) _gameUIManager.AddPopupQueue(false,moneyData);
+                    }
+                    else if (element.content is EffectData effectData)
+                    {
+                        // EffectDataの処理
+                        _effectManager.RemoveEffect(effectData.id);
+                    }
                 }
 
                 //報酬の獲得
-                var reward = visitor.Rewards[visitor.eventProgress - 1];
-                if (reward is ItemData itemData2)
+                if(visitor.VisitorName == "Faust" || visitor.VisitorName == "Gargantua")
                 {
-                    if(itemData2.prefabData != null)
+                    //選択していない方の報酬を削除
+                    if(_nowSelectIndexInTradeContent != -1)
                     {
-                        rewObj = itemData2.prefabData;
+                        if(_nowSelectIndexInTradeContent == 0)
+                            reward.RewardElements.RemoveAt(1);
+                        else if(_nowSelectIndexInTradeContent == 1)
+                            reward.RewardElements.RemoveAt(0);
                     }
-
-                    _itemPanelManager.AddItem(itemData2.id,itemData2.itemType);
                 }
-                else if(reward is MoneyData moneyData2)
+                foreach(var element in reward.RewardElements)
                 {
-                    if(moneyData2.prefabData != null) rewObj = moneyData2.prefabData;
-                    MoneyManager.Instance.AddMoney(moneyData2.price);
-                }
-                else if (reward is EffectData effectData2)
-                {
-                    _effectManager.AddEffect(effectData2.id);
-                }
+                    if (element.content is ItemData itemData)
+                    {
+                        // ItemDataの処理
+                        if(itemData.prefabData != null)
+                        {
+                            rewObj.Add(itemData.prefabData);
+                        }
 
+                        _itemPanelManager.AddItem(itemData.id,itemData.itemType);
+                    }
+                    else if(element.content is MoneyData moneyData)
+                    {
+                        if(moneyData.prefabData != null) rewObj.Add(moneyData.prefabData);
+                        MoneyManager.Instance.AddMoney(moneyData.price);
+                        if(_gameUIManager != null) _gameUIManager.AddPopupQueue(true,moneyData);
+                    }
+                    else if (element.content is EffectData effectData)
+                    {
+                        // EffectDataの処理
+                        _effectManager.AddEffect(effectData.id);
+                    }
+                }
+                
                 //アニメーション開始
                 if (_fpController != null)
                     _fpController.enabled = false;
@@ -373,14 +418,14 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
                     _itemLight.SetActive(true);
                 })
                 .AppendInterval(1.0f)
-                .Append(_patchObject.transform.DOLocalMoveZ(0.0017f, 1.0f))
+                .Append(_patchObject.transform.DOLocalMoveZ(0.0016f, 1.0f))
                 .AppendCallback(() =>
                 {
                     //提出アイテムを出現させる
                     if(reqObj != null)
                     {
                         Debug.Log("提出アイテムをスポーンします");
-                        itemObj = Instantiate(reqObj,_itemPosition.position,Quaternion.identity);
+                        itemObj = Instantiate(reqObj[0],_itemPosition.position,Quaternion.identity);
                     }
                     else
                         Debug.LogError("提出アイテムは存在しない");
@@ -394,13 +439,14 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
                     if(rewObj != null)
                     {
                         Debug.Log("報酬アイテムをスポーンします");
-                        itemObj = Instantiate(rewObj,_itemPosition.position,Quaternion.identity);
+                        itemObj = Instantiate(rewObj[0],_itemPosition.position,Quaternion.identity);
                     }
                     else
                         Debug.LogError("スポーンされてない");
                 })
-                .AppendInterval(2.0f)
-                .Append(_patchObject.transform.DOLocalMoveZ(0.0017f, 1.0f));
+                .AppendInterval(1.0f)
+                .Append(_patchObject.transform.DOLocalMoveZ(0.0016f, 1.0f))
+                .AppendInterval(1.5f);
 
                 //SEを追加してから再生
                 _tradeAnimSequence.InsertCallback(2.0f, () =>
@@ -411,7 +457,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
                 {
                     _audio.PlayOneShot(_openSE);
                 });
-                _tradeAnimSequence.InsertCallback(7.0f, () =>
+                _tradeAnimSequence.InsertCallback(6.0f, () =>
                 {
                     _audio.PlayOneShot(_openSE);
                 });
@@ -421,6 +467,9 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
                 _itemLight.SetActive(false);
                 if (_fpController != null)
                     _fpController.enabled = true;
+
+                //報酬アイテムを破壊しておく
+                if(itemObj != null) Destroy(itemObj);
 
                 //アイテムやエフェクトの処理, イベント進行度更新
                 visitor.key = "TradeSuccess" + visitor.eventProgress.ToString("0");
@@ -444,6 +493,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
         _conversationText.text = "";
         _nowSelectIndexInTradeContent = -1;
         _nowSelectedVisitorInstance.Value = null;
+        _icController.IsCanPushIdle = false;
         _icController.UpdateState(IntercomController.IntercomState.Idle);
         _select1.gameObject.SetActive(false); 
         _select2.gameObject.SetActive(false);
@@ -457,21 +507,30 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
     private bool isClearRequest(VisitorInstance visitor)
     {
         var request = visitor.Requests[visitor.eventProgress];
-        if (request is ItemData itemData)
+        if(request.RequestElements.Count == 0)//要求アイテムが0のとき
         {
-            // ItemDataの処理
-            if(_itemPanelManager.isHasItem(itemData.id))
-                return true;
-        }
-        else if(request is MoneyData moneyData)
-        {
-            
-        }
-        else if (request is EffectData effectData)
-        {
-            // EffectDataの処理
+            return true;
         }
 
+        foreach(var element in request.RequestElements)
+        {
+            if (element.content is ItemData itemData)
+            {
+                // ItemDataの処理
+                if(_itemPanelManager.isHasItem(itemData.id, element.num))
+                    return true;
+            }
+            else if(element.content is MoneyData moneyData)
+            {
+                
+            }
+            else if (element.content is EffectData effectData)
+            {
+                // EffectDataの処理
+            }
+        }
+        
+        
         return false;
     }
 

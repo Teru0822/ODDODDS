@@ -58,8 +58,7 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
     ReactiveCollection<ItemInstance> _ownedConsumeItems = new ReactiveCollection<ItemInstance>();//消費アイテムのIDを保持したもの
 
     /*--- アイテムの処理で使うコンポーネントを記述 ---*/
-
-
+    [SerializeField] private GameUIManager _gameUIManager;
     private ItemType _displayedType = ItemType.Consume;//表示させるアイテムの種類を決定する変数
     private ItemInstance _nowSelectedItem = null;
 
@@ -74,22 +73,7 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
                     Debug.LogError("追加されたItemDataがnull");
                     return;
                 }
-
                 Debug.LogWarning(index.Value.ItemName + "をゲットしました。");
-                UpdateUI();
-            }).AddTo(this);
-
-        _ownedItems
-            .ObserveRemove()
-            .Subscribe(index =>
-            {
-                if (index.Value == null)
-                {
-                    Debug.LogError("削除されたItemDataがnull");
-                    return;
-                }
-
-                Debug.LogWarning(index.Value.ItemName + "を使用しました。");
                 UpdateUI();
             }).AddTo(this);
 
@@ -105,19 +89,6 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
             Debug.LogWarning(index.Value.ItemName + "をゲットしました。");
             UpdateUI();
         }).AddTo(this);
-
-        _ownedConsumeItems
-            .ObserveRemove()
-            .Subscribe(index =>
-            {
-                if (index.Value == null)
-                {
-                    Debug.LogError("削除されたItemDataがnull");
-                    return;
-                }
-                Debug.LogWarning(index.Value.ItemName + "を使用しました。");
-                UpdateUI();
-            }).AddTo(this);
 
         _useButton.onClick.AddListener(() =>
         {
@@ -386,13 +357,14 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
     /// <summary>
     /// 指定したIDを持つアイテムを所持しているかを返す関数
     /// </summary>
-    /// <param name="id"></param>
+    /// <param name="id">アイテムID</param>
+    /// <param name="num">必要な個数</param>
     /// <returns></returns>
-    public bool isHasItem(int id)
+    public bool isHasItem(int id, int num)
     {
         foreach (var item in _ownedConsumeItems)
         {
-            if (item.Id == id)
+            if (item.Id == id && item.Count >= num)//対象のIDのアイテムであり、必要個数持っていたら
             {
                 return true;
             }
@@ -416,6 +388,7 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
             {
                 exists = true;
                 if(type == ItemType.Consume) item.Count+=num;//消費アイテムの場合、アイテムの所持数を増加
+                _gameUIManager.AddPopupQueue(true,item.master);
                 break;
             }
         }
@@ -429,6 +402,7 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
                 instance.master = original;
                 instance.Count = num;
                 targetCollection.Add(instance);
+                _gameUIManager.AddPopupQueue(true,instance.master);
             }
             else
             {
@@ -453,6 +427,7 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
             {
                 if(type == ItemType.Consume) item.Count = Mathf.Max(item.Count - num, 0);//消費アイテムの場合、アイテムの所持数を減少
                 UpdateUI();
+                _gameUIManager.AddPopupQueue(false,item.master);
                 break;
             }
         }
