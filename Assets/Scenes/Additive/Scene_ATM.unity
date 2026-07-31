@@ -163,6 +163,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+--- !u!4 &630449661 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6557101732641306583, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &678558543 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7529574346700080311, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
@@ -185,6 +190,37 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+--- !u!1 &889347817
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 889347818}
+  m_Layer: 0
+  m_Name: cash_spawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &889347818
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 889347817}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.95904326, y: -0.0000000745058, z: 0.00000008940696, w: 0.28325984}
+  m_LocalPosition: {x: -0.465, y: 0.23, z: 0.257}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1177008531}
+  m_LocalEulerAnglesHint: {x: -147.09, y: 0, z: 0}
 --- !u!114 &952858216 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8168002104167268670, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
@@ -348,15 +384,30 @@ MonoBehaviour:
   launderingFeeRate: 0.1
   emissionMaterial: {fileID: 2100000, guid: 5976f6fbbfcd1f14cbef3a13e3c5398d, type: 2}
   emissionColor: {r: 0.67924523, g: 0.04165185, b: 0.04165185, a: 1}
+  atmDoor: {fileID: 630449661}
+  doorOpenDistance: 0.26
+  doorMoveDuration: 0.7
+  cashSpawnPoint: {fileID: 889347818}
+  moneyBigPrefab: {fileID: 5515078726583006773, guid: b7ac9c7020f583c4e89c64ef3b4cf1d2, type: 3}
+  moneyMiddlePrefab: {fileID: 3251457358012705680, guid: a32fac22e13c2fd478bdb117db859663, type: 3}
+  moneySmallPrefab: {fileID: 5693812434394980683, guid: f39190fd0e330954992c01a37ab32a28, type: 3}
+  moneyBigThreshold: 10000
+  moneyMiddleThreshold: 1000
+  moneyPropUsePhysics: 0
   _spinboxAnchors:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
-  _spinboxGoldPos: {x: 100, y: 40}
-  _spinboxSilverPos: {x: 250, y: -50}
-  _spinboxBronzePos: {x: 250, y: -140}
-  _spinboxSize: {x: 64, y: 96}
-  _spinboxFontSize: 11
+  _spinboxGoldPos: {x: 4.94, y: -1.81}
+  _spinboxSilverPos: {x: 4.94, y: -3.52}
+  _spinboxBronzePos: {x: 4.94, y: -5.16}
+  _spinboxSize: {x: 0.88, y: 1.58}
+  _spinboxFontSize: 0.51
+--- !u!4 &1177008531 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7718053816494518415, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &1214958071 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7829022221041823055, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
@@ -559,7 +610,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 7718053816494518415, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 889347818}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 6942256637255133749, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
       insertIndex: -1

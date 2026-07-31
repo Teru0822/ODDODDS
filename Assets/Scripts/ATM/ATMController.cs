@@ -117,6 +117,38 @@ namespace App.ATM
         [ColorUsage(false, true)]
         [SerializeField] private Color emissionColor = Color.black;
 
+        [Header("現金払い出し演出 (プレハブ内アセット)")]
+        [Tooltip("開閉させる紙幣の排出口。未指定なら子階層から \"atm_door\" を名前で自動検索します")]
+        [SerializeField] private Transform atmDoor;
+
+        [Tooltip("排出口が自身のローカルY軸の正方向へ開く距離")]
+        [SerializeField] private float doorOpenDistance = 0.1f;
+
+        [Tooltip("排出口の開閉にかける時間(秒)")]
+        [SerializeField] private float doorMoveDuration = 0.35f;
+
+        [Tooltip("紙幣プレハブを出す位置。未指定なら排出口(atm_door)の位置に出します")]
+        [SerializeField] private Transform cashSpawnPoint;
+
+        [Tooltip("払い出し金額が大きい時に出す紙幣プレハブ (money_big)")]
+        [SerializeField] private GameObject moneyBigPrefab;
+
+        [Tooltip("払い出し金額が中くらいの時に出す紙幣プレハブ (money_middle)")]
+        [SerializeField] private GameObject moneyMiddlePrefab;
+
+        [Tooltip("払い出し金額が小さい時に出す紙幣プレハブ (money_small)")]
+        [SerializeField] private GameObject moneySmallPrefab;
+
+        [Tooltip("この金額以上なら money_big を出す")]
+        [SerializeField] private float moneyBigThreshold = 10000f;
+
+        [Tooltip("この金額以上なら money_middle を出す (下回れば money_small)")]
+        [SerializeField] private float moneyMiddleThreshold = 1000f;
+
+        [Tooltip("紙幣を物理で落とすか。OFF(既定)なら指定位置に固定表示する。" +
+                 "money_* はピンボール用にRigidbody/Colliderを持つため、OFFの間はそれらを無効化します")]
+        [SerializeField] private bool moneyPropUsePhysics = false;
+
         // Emission制御用のシェーダプロパティID
         private static readonly int EmissionColorID = Shader.PropertyToID("_EmissionColor");
 
@@ -183,6 +215,11 @@ namespace App.ATM
         private float _visualWashedAmount = 0f;
         private float successAmountTextValue = 0f;
 
+        // 現金払い出し演出用。閉位置はAwakeで一度だけ控え、開位置はそこからの相対で毎回計算する
+        private Vector3 _doorClosedLocalPos;
+        private bool _doorPosCached = false;
+        private GameObject _spawnedMoney;
+
         // 画面テキストの外部データ(YAML)レンダラと画像オーバーレイ用コンテナ
         private ATMScreenRenderer _screenRenderer;
         private Transform _imageContainer;
@@ -215,6 +252,14 @@ namespace App.ATM
                 washSuccessSound = Resources.Load<AudioClip>("Sound/SE/debtPay");
             }
 
+            // 紙幣の排出口を解決し、閉状態のローカル座標を控える
+            if (atmDoor == null) atmDoor = FindChildByName(transform, "atm_door");
+            if (atmDoor != null)
+            {
+                _doorClosedLocalPos = atmDoor.localPosition;
+                _doorPosCached = true;
+            }
+
             // 必須アサインの確認と警告
             ValidateReferences();
 
@@ -230,6 +275,13 @@ namespace App.ATM
             {
                 hoverOutline.OnClicked += OnATMClicked;
             }
+        }
+
+        private void OnDisable()
+        {
+            // コルーチンが途中で止まっても、紙幣と開いたままの排出口を残さない
+            DespawnMoneyProp();
+            if (atmDoor != null && _doorPosCached) atmDoor.localPosition = _doorClosedLocalPos;
         }
 
         private void OnDestroy()
@@ -1083,11 +1135,13 @@ namespace App.ATM
 
         /// <summary>
         /// 所持金が高速で流れ込むように上昇するカウントアップ演出。
+        /// 併せて排出口(atm_door)を開き、払い出し金額に応じた紙幣プレハブを出す。
+        /// カウントアップが終わったら紙幣を消し、排出口を閉じる。
         /// </summary>
         private IEnumerator AnimateCashCountUp(float startAmount, float targetAmount)
         {
             _isCountingUp = true;
-            
+
             float duration = 1.0f; // 1秒かけてカウントアップ
             float elapsed = 0f;
 
@@ -1096,6 +1150,10 @@ namespace App.ATM
             {
                 audioSource.PlayOneShot(washSuccessSound, 0.8f);
             }
+
+            // 排出口を開けてから、払い出し金額に応じた紙幣を出す
+            yield return MoveDoor(true);
+            SpawnMoneyProp(targetAmount - startAmount);
 
             while (elapsed < duration)
             {
@@ -1120,8 +1178,101 @@ namespace App.ATM
             }
 
             _visualWashedAmount = targetAmount;
+            UpdateDisplay();
+
+            // 払い出し完了：紙幣を消して排出口を閉じる
+            DespawnMoneyProp();
+            yield return MoveDoor(false);
+
             _isCountingUp = false;
             UpdateDisplay();
+        }
+
+        /// <summary>
+        /// 排出口を自身のローカルY軸の正方向へ doorOpenDistance だけ Slerp で開閉する。
+        /// open=false のときは Awake で控えた閉位置へ戻す。未アサインなら何もしない。
+        /// </summary>
+        private IEnumerator MoveDoor(bool open)
+        {
+            if (atmDoor == null || !_doorPosCached) yield break;
+
+            Vector3 from = atmDoor.localPosition;
+            Vector3 to = open ? DoorOpenLocalPos() : _doorClosedLocalPos;
+
+            if (doorMoveDuration <= 0f)
+            {
+                atmDoor.localPosition = to;
+                yield break;
+            }
+
+            float elapsed = 0f;
+            while (elapsed < doorMoveDuration)
+            {
+                elapsed += Time.deltaTime;
+                atmDoor.localPosition = Vector3.Slerp(from, to, Mathf.Clamp01(elapsed / doorMoveDuration));
+                yield return null;
+            }
+            atmDoor.localPosition = to;
+        }
+
+        /// <summary>
+        /// 閉位置から扉自身のローカルY軸の正方向へ doorOpenDistance だけ進めた開位置を返す。
+        /// localRotation を掛けることで、親の軸ではなく扉自身の軸方向になる。
+        /// </summary>
+        private Vector3 DoorOpenLocalPos()
+        {
+            if (atmDoor == null) return _doorClosedLocalPos;
+            return _doorClosedLocalPos + (atmDoor.localRotation * Vector3.up) * doorOpenDistance;
+        }
+
+        /// <summary>払い出し金額に応じた紙幣プレハブを排出位置に出す。プレハブ未設定なら何もしない。</summary>
+        private void SpawnMoneyProp(float payoutAmount)
+        {
+            DespawnMoneyProp(); // 二重生成の保険
+
+            GameObject prefab = payoutAmount >= moneyBigThreshold
+                ? moneyBigPrefab
+                : (payoutAmount >= moneyMiddleThreshold ? moneyMiddlePrefab : moneySmallPrefab);
+            if (prefab == null) return;
+
+            Transform point = cashSpawnPoint != null ? cashSpawnPoint : atmDoor;
+            if (point == null) return;
+
+            // 固定表示なら排出位置の子にしてATMに追従させる。物理で落とす場合は親から切り離す
+            _spawnedMoney = moneyPropUsePhysics
+                ? Instantiate(prefab, point.position, point.rotation)
+                : Instantiate(prefab, point.position, point.rotation, point);
+
+            if (!moneyPropUsePhysics)
+            {
+                // ピンボール用のRigidbody/Colliderが付いているので、落下や押し出しが起きないよう止める
+                foreach (var rb in _spawnedMoney.GetComponentsInChildren<Rigidbody>()) rb.isKinematic = true;
+                foreach (var col in _spawnedMoney.GetComponentsInChildren<Collider>()) col.enabled = false;
+            }
+        }
+
+        /// <summary>出している紙幣プレハブを片付ける。</summary>
+        private void DespawnMoneyProp()
+        {
+            if (_spawnedMoney != null)
+            {
+                Destroy(_spawnedMoney);
+                _spawnedMoney = null;
+            }
+        }
+
+        /// <summary>子階層を再帰的に辿って指定名のTransformを探す。</summary>
+        private static Transform FindChildByName(Transform root, string targetName)
+        {
+            for (int i = 0; i < root.childCount; i++)
+            {
+                Transform child = root.GetChild(i);
+                if (child.name == targetName) return child;
+
+                Transform found = FindChildByName(child, targetName);
+                if (found != null) return found;
+            }
+            return null;
         }
 
         /// <summary>SEを鳴らす小さなヘルパー。クリップ／AudioSource 未設定時は何もしない。</summary>
