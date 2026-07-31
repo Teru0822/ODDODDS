@@ -19,6 +19,18 @@ public class TelevisionStaticController : MonoBehaviour
     [Tooltip("Ufo_Camera_Back に対応する Canvas")]
     [SerializeField] private Canvas canvasBack;
 
+    [Tooltip("初期表示用の Play Canvas（UFOキャッチャー遷移時に最初に表示される）")]
+    [SerializeField] private Canvas playCanvas;
+
+    [Tooltip("Play Canvas から 30/60/90 を選択した際に、砂嵐を挟んで切り替わる Canvas")]
+    [SerializeField] private Canvas playCanvas2;
+
+    [Tooltip("Play Canvas のコンテンツスケール（カメラ内に収める調整用。小さくすると全体が縮小される）")]
+    [SerializeField, Range(0.01f, 2.0f)] private float playCanvasScale = 0.5f;
+
+    [Tooltip("Play Canvas2 のコンテンツスケール（カメラ内に収める調整用。小さくすると全体が縮小される）")]
+    [SerializeField, Range(0.01f, 2.0f)] private float playCanvas2Scale = 0.5f;
+
     [Header("砂嵐（TV Static）演出設定")]
     [Tooltip("砂嵐を配置した Noise Canvas")]
     [SerializeField] private Canvas noiseCanvas;
@@ -44,7 +56,30 @@ public class TelevisionStaticController : MonoBehaviour
     [Tooltip("白画面（デコード遅延）を防ぐため、動画をバックグラウンドで常にループ再生しておくか")]
     [SerializeField] private bool keepVideoPlayingInBackground = true;
 
+    [Tooltip("動画冒頭のデコード遅延を避けるため、何秒目から再生を始めるか（ループ時も毎回この位置へシークし直す）")]
+    [SerializeField, Min(0f)] private double videoStartOffsetSeconds = 1.0;
+
+    [Header("砂嵐 SE")]
+    [Tooltip("SE 再生用の AudioSource。未設定なら自身に AddComponent して使う")]
+    [SerializeField] private AudioSource staticAudioSource;
+
+    [Tooltip("砂嵐（Canvas 切り替え時の演出）中に鳴らす SE")]
+    [SerializeField] private AudioClip staticSound;
+
+    [Range(0f, 5f)]
+    [Tooltip("砂嵐 SE のボリューム（1 を超えるとブースト）")]
+    [SerializeField] private float staticVolume = 1f;
+
+    [Tooltip("砂嵐の表示時間（staticDuration）に合わせてループ再生するか。false の場合は開始時に一度だけ再生する")]
+    [SerializeField] private bool loopStaticSound = true;
+
     private Coroutine _staticCoroutine;
+
+    /// <summary>
+    /// カメラ切り替え（Q/Eキー等）によるCanvas切り替えが有効かどうか。
+    /// 初期状態では false（Play_Canvas のみ表示）。外部から EnableCameraSwitching() で有効化する。
+    /// </summary>
+    private bool _cameraSwitchingEnabled = false;
 
     private void OnEnable()
     {
@@ -54,6 +89,11 @@ public class TelevisionStaticController : MonoBehaviour
     private void OnDisable()
     {
         UFOCameraController.OnSubCameraChanged -= HandleSubCameraChanged;
+
+        if (staticVideoPlayer != null)
+        {
+            staticVideoPlayer.loopPointReached -= OnStaticVideoLoopPointReached;
+        }
     }
 
     private void Start()
@@ -62,9 +102,10 @@ public class TelevisionStaticController : MonoBehaviour
         if (staticVideoPlayer != null)
         {
             staticVideoPlayer.isLooping = true;
+            staticVideoPlayer.loopPointReached += OnStaticVideoLoopPointReached;
             if (keepVideoPlayingInBackground)
             {
-                staticVideoPlayer.Play();
+                PlayStaticVideoFromOffset();
             }
             else
             {
@@ -78,8 +119,9 @@ public class TelevisionStaticController : MonoBehaviour
         // 初期状態では砂嵐を非表示にする
         SetStaticActive(false);
 
-        // 初期カメラの Canvas 可視化（Back をデフォルトとする）
-        UpdateCanvasVisibility(UFOCameraController.UfoSubCameraState.Back);
+        // 初期状態: Play_Canvas のみ表示し、カメラ用 Canvas はすべて非表示
+        _cameraSwitchingEnabled = false;
+        ShowPlayCanvas();
     }
 
     /// <summary>
@@ -88,6 +130,9 @@ public class TelevisionStaticController : MonoBehaviour
     public void HandleSubCameraChanged(UFOCameraController.UfoSubCameraState newState)
     {
         if (this == null || gameObject == null || !gameObject.activeInHierarchy) return;
+
+        // カメラ切り替えが無効な間はイベントを無視する
+        if (!_cameraSwitchingEnabled) return;
 
         if (_staticCoroutine != null)
         {
@@ -107,7 +152,7 @@ public class TelevisionStaticController : MonoBehaviour
 
         if (staticVideoPlayer != null && !keepVideoPlayingInBackground)
         {
-            staticVideoPlayer.Play();
+            PlayStaticVideoFromOffset();
         }
 
         // 3. 指定時間（デフォルト 0.5 秒）待機
@@ -129,13 +174,219 @@ public class TelevisionStaticController : MonoBehaviour
 
     /// <summary>
     /// 各カメラに対応する Canvas の表示を切り替えます。
+    /// カメラ用 Canvas が表示されると Play_Canvas は自動的に非表示になります。
     /// </summary>
     public void UpdateCanvasVisibility(UFOCameraController.UfoSubCameraState state)
     {
         if (canvasLeft != null)  canvasLeft.gameObject.SetActive(state == UFOCameraController.UfoSubCameraState.Left);
         if (canvasRight != null) canvasRight.gameObject.SetActive(state == UFOCameraController.UfoSubCameraState.Right);
         if (canvasBack != null)  canvasBack.gameObject.SetActive(state == UFOCameraController.UfoSubCameraState.Back);
+
+        // カメラ用 Canvas に切り替えたら Play_Canvas / Play_Canvas2 を非表示にする
+        if (playCanvas != null) playCanvas.gameObject.SetActive(false);
+        if (playCanvas2 != null) playCanvas2.gameObject.SetActive(false);
+
+        SyncTvCamerasEnabled();
     }
+
+    /// <summary>
+    /// Play_Canvas のみを表示し、カメラ用 Canvas をすべて非表示にします。
+    /// 初期状態および Play_Canvas に戻す際に使用します。
+    /// </summary>
+    public void ShowPlayCanvas()
+    {
+        if (canvasLeft != null)  canvasLeft.gameObject.SetActive(false);
+        if (canvasRight != null) canvasRight.gameObject.SetActive(false);
+        if (canvasBack != null)  canvasBack.gameObject.SetActive(false);
+        if (playCanvas2 != null) playCanvas2.gameObject.SetActive(false);
+        if (playCanvas != null)
+        {
+            playCanvas.gameObject.SetActive(true);
+            ScaleCanvasContent(playCanvas, playCanvasScale);
+        }
+
+        SyncTvCamerasEnabled();
+    }
+
+    /// <summary>
+    /// 砂嵐演出を挟んで、現在表示中の Canvas から targetCanvas（Play_Canvas2 等）へ切り替えます。
+    /// Play_Canvas 上で 30/60/90 が選択された際に TouchPanelOutlineController から呼び出されます。
+    /// </summary>
+    public void PlayStaticThenShowCanvas(Canvas targetCanvas)
+    {
+        if (this == null || gameObject == null || !gameObject.activeInHierarchy) return;
+
+        if (_canvasSwitchCoroutine != null)
+        {
+            StopCoroutine(_canvasSwitchCoroutine);
+        }
+        _canvasSwitchCoroutine = StartCoroutine(PlayStaticThenShowCanvasRoutine(targetCanvas));
+    }
+
+    private Coroutine _canvasSwitchCoroutine;
+
+    private IEnumerator PlayStaticThenShowCanvasRoutine(Canvas targetCanvas)
+    {
+        SetStaticActive(true);
+
+        if (staticVideoPlayer != null && !keepVideoPlayingInBackground)
+        {
+            PlayStaticVideoFromOffset();
+        }
+
+        yield return new WaitForSeconds(staticDuration);
+
+        if (canvasLeft != null)  canvasLeft.gameObject.SetActive(false);
+        if (canvasRight != null) canvasRight.gameObject.SetActive(false);
+        if (canvasBack != null)  canvasBack.gameObject.SetActive(false);
+        if (playCanvas != null)  playCanvas.gameObject.SetActive(false);
+        if (playCanvas2 != null) playCanvas2.gameObject.SetActive(false);
+        if (targetCanvas != null)
+        {
+            targetCanvas.gameObject.SetActive(true);
+            ScaleCanvasContent(targetCanvas, targetCanvas == playCanvas2 ? playCanvas2Scale : playCanvasScale);
+        }
+
+        SyncTvCamerasEnabled();
+
+        SetStaticActive(false);
+
+        if (staticVideoPlayer != null && !keepVideoPlayingInBackground)
+        {
+            staticVideoPlayer.Pause();
+        }
+
+        _canvasSwitchCoroutine = null;
+    }
+
+    /// <summary>
+    /// Play_Canvas / canvasLeft / canvasRight / canvasBack の worldCamera（PlayCamera, 左右背面カメラ）は
+    /// 全て同じ RenderTexture へ描画するため、対応する Canvas が非表示の間は必ず無効化しておかないと
+    /// 描画が競合してしまう（例: UFOCameraController.SetSubCameraState はカメラ切り替えが未解禁でも
+    /// backCamera.enabled を直接 true にするため、対応する canvasBack が表示されるまでは無効化し続ける必要がある）。
+    /// Play_Canvas2 は Screen Space - Overlay（専用カメラなし）で TV 画面の上に重ねて表示する仕組みのため、
+    /// Play_Canvas2 表示中もその背景として PlayCamera は有効なままにしておく
+    /// （そうしないと RenderTexture に描画するカメラが1つも無くなり、直前の砂嵐フレームで画面が固まってしまう）。
+    /// Canvas の表示切り替えを行うメソッドの最後で必ず呼び出す。
+    /// </summary>
+    private void SyncTvCamerasEnabled()
+    {
+        bool playCameraNeeded = (playCanvas != null && playCanvas.gameObject.activeSelf)
+            || (playCanvas2 != null && playCanvas2.gameObject.activeSelf);
+        SetCanvasCameraEnabled(playCanvas, playCameraNeeded);
+
+        SyncCanvasCameraEnabled(canvasLeft);
+        SyncCanvasCameraEnabled(canvasRight);
+        SyncCanvasCameraEnabled(canvasBack);
+    }
+
+    private static void SyncCanvasCameraEnabled(Canvas canvas)
+    {
+        if (canvas == null) return;
+        SetCanvasCameraEnabled(canvas, canvas.gameObject.activeSelf);
+    }
+
+    private static void SetCanvasCameraEnabled(Canvas canvas, bool active)
+    {
+        if (canvas == null) return;
+        Camera cam = canvas.worldCamera;
+        if (cam == null) return;
+        cam.enabled = active;
+    }
+
+    /// <summary>
+    /// 指定した Canvas 内の全子要素を __PlayCanvasScaleContainer にまとめ、scale 倍にスケーリングしてカメラ内に収めます。
+    /// Play_Canvas / Play_Canvas2 の両方で共通して使用します（それぞれ playCanvasScale / playCanvas2Scale で調整）。
+    /// </summary>
+    private void ScaleCanvasContent(Canvas canvas, float scale)
+    {
+        if (canvas == null) return;
+
+        RectTransform canvasRT = canvas.GetComponent<RectTransform>();
+        if (canvasRT == null) return;
+
+        // Canvas直下のコンテナを探す or 作成する
+        Transform container = canvasRT.Find("__PlayCanvasScaleContainer");
+        if (container == null)
+        {
+            // 初回のみ: 既存の子要素をすべてコンテナの下に移動する
+            GameObject containerObj = new GameObject("__PlayCanvasScaleContainer", typeof(RectTransform));
+            RectTransform containerRT = containerObj.GetComponent<RectTransform>();
+            containerRT.SetParent(canvasRT, false);
+
+            // コンテナを Canvas 全体に広げる
+            containerRT.anchorMin = Vector2.zero;
+            containerRT.anchorMax = Vector2.one;
+            containerRT.offsetMin = Vector2.zero;
+            containerRT.offsetMax = Vector2.zero;
+            containerRT.pivot = new Vector2(0.5f, 0.5f);
+
+            // 既存の子要素をコンテナ配下に移動
+            var children = new System.Collections.Generic.List<Transform>();
+            for (int i = 0; i < canvasRT.childCount; i++)
+            {
+                Transform child = canvasRT.GetChild(i);
+                if (child != containerRT.transform)
+                {
+                    children.Add(child);
+                }
+            }
+            foreach (var child in children)
+            {
+                child.SetParent(containerRT, false);
+            }
+
+            container = containerRT;
+        }
+
+        // スケールを適用
+        container.localScale = new Vector3(scale, scale, 1f);
+
+        // PosZ を固定
+        Vector3 pos = container.localPosition;
+        pos.z = 10.69f;
+        container.localPosition = pos;
+    }
+
+    /// <summary>
+    /// カメラ切り替え（Q/Eキー等）を有効化します。
+    /// 有効化後は OnSubCameraChanged イベントに応じて Canvas が切り替わります。
+    /// </summary>
+    public void EnableCameraSwitching()
+    {
+        _cameraSwitchingEnabled = true;
+        Debug.Log("[TelevisionStaticController] カメラ切り替えを有効化しました。");
+    }
+
+    /// <summary>
+    /// カメラ切り替えを無効化し、Play_Canvas を表示します。
+    /// </summary>
+    public void DisableCameraSwitching()
+    {
+        _cameraSwitchingEnabled = false;
+        ShowPlayCanvas();
+        Debug.Log("[TelevisionStaticController] カメラ切り替えを無効化し、Play_Canvas を表示しました。");
+    }
+
+    /// <summary>
+    /// カメラ切り替えが現在有効かどうかを返します。
+    /// </summary>
+    public bool IsCameraSwitchingEnabled => _cameraSwitchingEnabled;
+
+    /// <summary>
+    /// 初期表示用の Play Canvas を外部（TouchPanelOutlineController 等）から参照するための公開プロパティ。
+    /// </summary>
+    public Canvas PlayCanvas => playCanvas;
+
+    /// <summary>
+    /// 30/60/90 選択後に切り替わる Play Canvas2 を外部から参照するための公開プロパティ。
+    /// </summary>
+    public Canvas PlayCanvas2 => playCanvas2;
+
+    /// <summary>
+    /// Play Canvas2 が現在表示中かどうか。UFOCameraController が Esc/F キーの挙動を切り替える際に参照する。
+    /// </summary>
+    public bool IsPlayCanvas2Active => playCanvas2 != null && playCanvas2.gameObject.activeSelf;
 
     /// <summary>
     /// Screen Space - Camera モード使用時、各 Canvas の worldCamera を対応するサブカメラ / NoiseCamera に動的割り当てします。
@@ -195,6 +446,65 @@ public class TelevisionStaticController : MonoBehaviour
         else if (staticVideoPlayer != null)
         {
             staticVideoPlayer.gameObject.SetActive(active);
+        }
+
+        // 4. 砂嵐 SE の再生・停止
+        PlayStaticSound(active);
+    }
+
+    private void PlayStaticSound(bool active)
+    {
+        if (staticSound == null) return;
+
+        EnsureStaticAudioSource();
+
+        if (active)
+        {
+            if (loopStaticSound)
+            {
+                staticAudioSource.clip = staticSound;
+                staticAudioSource.loop = true;
+                staticAudioSource.volume = staticVolume;
+                staticAudioSource.Play();
+            }
+            else
+            {
+                staticAudioSource.PlayOneShot(staticSound, staticVolume);
+            }
+        }
+        else if (loopStaticSound)
+        {
+            staticAudioSource.Stop();
+        }
+    }
+
+    /// <summary>
+    /// 冒頭のデコード遅延（白画面/カクつき）を避けるため、videoStartOffsetSeconds 秒目までシークしてから再生する。
+    /// </summary>
+    private void PlayStaticVideoFromOffset()
+    {
+        if (staticVideoPlayer == null) return;
+        staticVideoPlayer.time = videoStartOffsetSeconds;
+        staticVideoPlayer.Play();
+    }
+
+    /// <summary>
+    /// ループ再生で先頭（0秒）に戻った瞬間に呼ばれる。毎回 videoStartOffsetSeconds 秒目へシークし直す。
+    /// </summary>
+    private void OnStaticVideoLoopPointReached(VideoPlayer vp)
+    {
+        if (vp == null) return;
+        vp.time = videoStartOffsetSeconds;
+    }
+
+    private void EnsureStaticAudioSource()
+    {
+        if (staticAudioSource == null) staticAudioSource = GetComponent<AudioSource>();
+        if (staticAudioSource == null)
+        {
+            staticAudioSource = gameObject.AddComponent<AudioSource>();
+            staticAudioSource.playOnAwake = false;
+            staticAudioSource.spatialBlend = 0f; // 2D再生
         }
     }
 

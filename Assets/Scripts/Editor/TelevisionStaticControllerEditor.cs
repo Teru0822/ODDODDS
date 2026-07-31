@@ -53,6 +53,31 @@ public class TelevisionStaticControllerEditor : Editor
 
         EditorGUILayout.EndHorizontal();
 
+        EditorGUILayout.Space(5);
+        EditorGUILayout.BeginHorizontal();
+
+        if (GUILayout.Button("Play Canvas 表示", GUILayout.Height(26)))
+        {
+            controller.ShowPlayCanvas();
+        }
+
+        if (controller.IsCameraSwitchingEnabled)
+        {
+            if (GUILayout.Button("カメラ切り替え: 無効化", GUILayout.Height(26)))
+            {
+                controller.DisableCameraSwitching();
+            }
+        }
+        else
+        {
+            if (GUILayout.Button("カメラ切り替え: 有効化", GUILayout.Height(26)))
+            {
+                controller.EnableCameraSwitching();
+            }
+        }
+
+        EditorGUILayout.EndHorizontal();
+
         serializedObject.ApplyModifiedProperties();
     }
 }
