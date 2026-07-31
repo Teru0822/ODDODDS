@@ -352,8 +352,15 @@ public class TelevisionAnimator : MonoBehaviour
             _isAtGoal = true;
             _isStowed = false;
             Debug.Log("[TelevisionAnimator] ゴール座標への移動が完了しました。キー「3」で収納が可能です。");
+            OnCoinAnimationComplete?.Invoke();
         }));
     }
+
+    /// <summary>
+    /// television がゴール座標への移動を完了した瞬間に発火するイベント。
+    /// UFOCameraController がこれを購読し、レバー/ボタン操作の解禁タイミングとして使用する。
+    /// </summary>
+    public static event System.Action OnCoinAnimationComplete;
 
     /// <summary>
     /// 3段階目：ゴール座標から「3」キー押下時（ゴール座標 -> 収納座標）のアニメーションを再生します。

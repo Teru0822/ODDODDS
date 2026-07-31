@@ -80,7 +80,10 @@ public class LeverController : MonoBehaviour
 
         // クリック検出
         if (mouse.leftButton.wasPressedThisFrame && IsMouseOverThis(mouse.position.ReadValue()))
+        {
             _isDragging = true;
+            UFOCameraController.Instance?.NotifyControlInputUsed();
+        }
         if (mouse.leftButton.wasReleasedThisFrame)
             _isDragging = false;
 

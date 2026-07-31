@@ -3803,6 +3803,9 @@ MonoBehaviour:
   _unwashedAmount: 10000
   _washedAmount: 10000
   _virtuePoints: 0
+  _initialGoldCoins: 10
+  _initialSilverCoins: 20
+  _initialBronzeCoins: 30
 --- !u!81 &1122561452
 AudioListener:
   m_ObjectHideFlags: 0
@@ -3956,7 +3959,7 @@ Camera:
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 247
+    m_Bits: 2295
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 3
@@ -5708,7 +5711,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5b7be85f9420745d586c56a77d93e4b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IntercomController
-  currentState: 0
+  currentState:
+    value: 0
   lampColor: {r: 0, g: 1, b: 0, a: 1}
   blinkSpeed: 2
   emissionKeyword: _EmissionColor

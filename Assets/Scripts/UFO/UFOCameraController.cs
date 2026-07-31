@@ -1,8 +1,6 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using TMPro;
-using UnityEngine.UI;
 
 /// <summary>
 /// Class to manage UFO Catcher camera switching and keyboard control modes.
@@ -16,7 +14,7 @@ public class UFOCameraController : MonoBehaviour
     public static event System.Action OnAllCoinsInserted;
     public static event System.Action<UfoSubCameraState> OnSubCameraChanged;
     public static bool IsPlaySessionActive { get; private set; } = false;
-    public static bool IsControlActive => IsPlaySessionActive && IsPlaySpotlightActive && Instance != null && Instance._playTimer > 0f;
+    public static bool IsControlActive => IsPlaySessionActive && IsPlaySpotlightActive && Instance != null && Instance._controlsUnlocked && Instance._playTimer > 0f;
 
     [Header("Camera Settings")]
     [Tooltip("Player's first-person camera")]
@@ -49,17 +47,11 @@ public class UFOCameraController : MonoBehaviour
 
 
     [Header("Cost / Timer / Spotlight Settings")]
-    [Tooltip("Base play cost")]
-    [SerializeField] private float playCostBase = 100f;
-
     [Tooltip("Control time limit per play (seconds)")]
     [SerializeField] private float playDuration = 30f;
 
-    [Tooltip("Max play count per session")]
-    [SerializeField] private int maxPlayCount = 3;
-
-    [Tooltip("Multiplier by which the cost increases per play")]
-    [SerializeField] private float costIncreaseMultiplier = 1.5f;
+    [Tooltip("Max play count per session（今後複数回プレイに対応予定。現在は1）")]
+    [SerializeField] private int maxPlayCount = 1;
 
     [Tooltip("Spotlight GameObject enabled only during active play session")]
     [SerializeField] private GameObject playSpotlight;
@@ -188,7 +180,6 @@ public class UFOCameraController : MonoBehaviour
     private App.Player.FirstPersonController _fpController;
     private UFOArmController _ufoController;
     private Camera _activeCamera;
-    private bool _showPrompt = false;
     private Texture2D _bgTexture;
 
 
@@ -254,14 +245,16 @@ public class UFOCameraController : MonoBehaviour
     private Vector3 _originalPlayerCamPos;
     private Quaternion _originalPlayerCamRot;
 
-    // 動的UI要素
-    private Canvas _dynamicCanvas;
-    private TextMeshProUGUI _promptText;
-    private GameObject _paymentPanel;
-    private TextMeshProUGUI _paymentStatusText;
-    private UnityEngine.UI.Button _payButton;
-    private TextMeshProUGUI _payButtonText;
+    /// <summary>
+    /// television 経由でのプレイセッション開始時、コイン投入演出＋television 移動アニメーションが
+    /// 完了するまで true。この間はレバー/ボタン操作を受け付けない。
+    /// </summary>
+    private bool _controlsUnlocked = false;
 
+    /// <summary>
+    /// プレイヤーが実際にレバー/ボタンを操作した瞬間に true になり、以後 _playTimer のカウントダウンを開始する。
+    /// </summary>
+    private bool _timerStarted = false;
 
     private void Awake()
     {
@@ -273,6 +266,36 @@ public class UFOCameraController : MonoBehaviour
         {
             Debug.LogWarning("[UFOCameraController] Multiple instances of UFOCameraController detected in the scene.");
         }
+    }
+
+    private void OnEnable()
+    {
+        TelevisionAnimator.OnCoinAnimationComplete += HandleTelevisionAnimationComplete;
+    }
+
+    private void OnDisable()
+    {
+        TelevisionAnimator.OnCoinAnimationComplete -= HandleTelevisionAnimationComplete;
+    }
+
+    /// <summary>
+    /// television がゴール座標への移動を完了した時に呼ばれる。これ以降レバー/ボタン操作を解禁する。
+    /// </summary>
+    private void HandleTelevisionAnimationComplete()
+    {
+        _controlsUnlocked = true;
+        Debug.Log("[UFOCameraController] television のアニメーションが完了しました。レバー/ボタン操作を解禁します。");
+    }
+
+    /// <summary>
+    /// レバー/ボタンの操作を検知した際に LeverController / ButtonController から呼び出される。
+    /// 最初の操作の瞬間にタイマーのカウントダウンを開始する。
+    /// </summary>
+    public void NotifyControlInputUsed()
+    {
+        if (_timerStarted) return;
+        _timerStarted = true;
+        Debug.Log("[UFOCameraController] レバー/ボタン操作を検知しました。タイマーのカウントダウンを開始します。");
     }
 
     /// <summary>
@@ -328,9 +351,6 @@ public class UFOCameraController : MonoBehaviour
         // =======================
 
         SetupDynamicCameras();
-
-        // 動的UIの生成
-        CreateDynamicUI();
 
         // AudioSourceの自動取得
         if (audioSource == null)
@@ -467,22 +487,9 @@ public class UFOCameraController : MonoBehaviour
             {
                 machineHover.enabled = canPlayUfo && !_isTransitioning;
             }
-
-            // プレイ不可かつ近くにいる場合のみ、ロックされている旨を表示
-            if (!canPlayUfo && isClose)
-            {
-                _showPrompt = true;
-                if (_promptText != null) _promptText.text = "UFO Locked: Finish Pinball Phase First";
-            }
-            else
-            {
-                _showPrompt = false;
-            }
         }
         else
         {
-            _showPrompt = false;
-
             // フィーバータイムのカウントダウン
             if (_feverTimer > 0f)
             {
@@ -497,8 +504,9 @@ public class UFOCameraController : MonoBehaviour
             // プレイセッションがアクティブ、かつライトが点灯している場合のみカウントダウンを起動
             if (IsPlaySessionActive && IsPlaySpotlightActive)
             {
-                // フィーバータイム中およびルーレットスピン中でない時のみタイマーを減少させる
-                if (_feverTimer <= 0f && !IsRouletteTimePaused)
+                // レバー/ボタンを実際に操作するまではタイマーを減少させない。
+                // フィーバータイム中およびルーレットスピン中も同様に減少させない。
+                if (_timerStarted && _feverTimer <= 0f && !IsRouletteTimePaused)
                 {
                     _playTimer -= Time.deltaTime;
                 }
@@ -522,28 +530,20 @@ public class UFOCameraController : MonoBehaviour
                         // 遷移中（UFOプレイモード中）はライトをつけたままにするため、ここでの自動消灯は行いません
                         _destroyedCoinCount = 0; // 反応数をリセット
                         Debug.Log("[UFOCameraController] UFO Catcher play session expired. Coin count reset.");
-                    }
-                }
-            }
-            else
-            {
-                // Waiting for payment: Spacebar shortcut to pay
-                if (_paymentCount < maxPlayCount)
-                {
-                    float cost = GetCurrentPlayCost();
-                    bool hasEnoughMoney = MoneyManager.Instance != null && MoneyManager.Instance.CurrentMoney >= cost;
-                    if (hasEnoughMoney && Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
-                    {
-                        PayAndStartPlay(cost);
+
+                        // もう追加でプレイできる回数が残っていなければ、自動でプレイヤー視点へ戻る
+                        // （これにより OnUfoModeChanged(false) が発火し、獲得コイン・ダイヤの加算も確定する）
+                        if (_paymentCount >= maxPlayCount)
+                        {
+                            Debug.Log("[UFOCameraController] 残りプレイ回数が0のため、自動的にUFOキャッチャーを終了します。");
+                            ExitUfoMode();
+                        }
                     }
                 }
             }
 
             HandleUfoInput();
         }
-
-        // 毎フレーム動的UIの状態を更新
-        UpdateDynamicUI();
 
         // 警告音（残り時間10秒以下）の再生・停止管理
         UpdateWarningSound();
@@ -558,11 +558,6 @@ public class UFOCameraController : MonoBehaviour
     public void ResetPaymentCount()
     {
         _paymentCount = 0;
-    }
-
-    public float GetCurrentPlayCost()
-    {
-        return playCostBase * Mathf.Pow(costIncreaseMultiplier, _paymentCount);
     }
 
     /// <summary>
@@ -589,21 +584,44 @@ public class UFOCameraController : MonoBehaviour
         Debug.Log($"[UFOCameraController] 残り時間を {seconds}秒延長しました。現在の残り時間: {_playTimer:F1}秒");
     }
 
-    private void PayAndStartPlay(float cost)
+    /// <summary>
+    /// television の Play_Canvas2 側 "Play" から呼び出される、UFOキャッチャーのプレイセッション開始処理。
+    /// costDevilCoins 分の所持金（MoneyManager 経由）を消費してから、選択された秒数をプレイ時間として使用する。
+    /// 旧 UFODynamicUICanvas の Pay to Play と同じ一連の流れ（コイン投入演出 → 完了時に television がゴール座標へ移動 →
+    /// カメラ切り替え解禁 → ライト点灯）を引き継ぐ。
+    /// </summary>
+    /// <returns>プレイセッションを開始できた場合 true。プレイ中・上限回数到達・所持金不足の場合は false。</returns>
+    public bool StartPlaySessionFromTelevision(float durationSeconds, float costDevilCoins)
     {
+        if (IsPlaySessionActive) return false;
+        if (_paymentCount >= maxPlayCount) return false;
+
         if (MoneyManager.Instance != null)
         {
-            MoneyManager.Instance.ReduceMoney(cost);
+            if (MoneyManager.Instance.CurrentMoney < costDevilCoins) return false;
+            MoneyManager.Instance.ReduceMoney(costDevilCoins);
         }
+        else
+        {
+            Debug.LogWarning("[UFOCameraController] MoneyManager が見つからないため、決済をスキップしてプレイを開始します。");
+        }
+
+        playDuration = durationSeconds;
+
         _paymentCount++;
         _playTimer = playDuration;
         IsPlaySessionActive = true;
         _hasPlayedLowTimeWarning = false; // 新規セッション開始時に警告音再生フラグをリセット
 
+        // アニメーション（コイン投入 → television 移動）完了までレバー/ボタン操作を禁止し、
+        // 実際に操作されるまではタイマーも進めない
+        _controlsUnlocked = false;
+        _timerStarted = false;
+
         // コイン投入中のみ点灯する追加ライトをON
         SetCoinInsertionLightsActive(true);
 
-        // コイン投入演出の開始（カウンターをリセットして1枚目を投入）
+        // コイン投入演出の開始（カウンターをリセットして1枚目を投入。完了時に television がゴール座標へ移動する）
         _triggeredCoinCount = 0;
         _completedCoinAnimationCount = 0;
         TriggerCoinInsertionAnimation();
@@ -611,7 +629,17 @@ public class UFOCameraController : MonoBehaviour
         // コイン投入音の再生
         PlaySound(coinInsertSound);
 
-        Debug.Log($"[UFOCameraController] Started UFO play session. Cost: ¥{cost}, Limit: {playDuration}s, Total plays: {_paymentCount}");
+        // カメラ切り替え（Q/E）を解禁したうえで、Back状態への切り替えを発火させ、
+        // 砂嵐を挟んで Play_Canvas2 から TelevisionB_Canvas（Backカメラ映像）へ表示を切り替える
+        var tvController = FindAnyObjectByType<TelevisionStaticController>();
+        if (tvController != null)
+        {
+            tvController.EnableCameraSwitching();
+        }
+        SetSubCameraState(UfoSubCameraState.Back);
+
+        Debug.Log($"[UFOCameraController] television 経由でプレイセッションを開始しました。Duration: {playDuration}s, Cost: {costDevilCoins} Devil Coins, Total plays: {_paymentCount}");
+        return true;
     }
 
     /// <summary>
@@ -928,12 +956,17 @@ public class UFOCameraController : MonoBehaviour
         SetPlaySpotlight(false);
         SetCoinInsertionLightsActive(false);
 
+        // 途中でやめた場合・プレイが終了した場合ともに、television の画面を初期状態（Play_Canvas）へ戻す
+        var tvControllerOnExit = FindAnyObjectByType<TelevisionStaticController>();
+        if (tvControllerOnExit != null)
+        {
+            tvControllerOnExit.DisableCameraSwitching(); // カメラ切り替えを無効化しつつ Play_Canvas を表示する
+        }
+
         if (ufoUiCanvas != null)
         {
             ufoUiCanvas.SetActive(false);
         }
-
-        if (_paymentPanel != null) _paymentPanel.SetActive(false);
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -1004,6 +1037,8 @@ public class UFOCameraController : MonoBehaviour
         _paymentCount = 0;
         _playTimer = 0f;
         IsPlaySessionActive = false;
+        _controlsUnlocked = false;
+        _timerStarted = false;
 
         SetUfoMode(true);
         Debug.Log($"[UFOCameraController] EnterUfoMode: frontCamera={( frontCamera != null ? frontCamera.name + " display=" + frontCamera.targetDisplay : "NULL")}");
@@ -1026,6 +1061,15 @@ public class UFOCameraController : MonoBehaviour
     {
         if (_isTransitioning) return;
         StartCoroutine(TransitionBackToPlayerCamera());
+    }
+
+    /// <summary>
+    /// television の Quit ボタン（TouchPanelOutlineController）等、外部から UFO キャッチャーモードの終了を
+    /// リクエストするための公開メソッド。F / Escape キーでの終了と同じ処理を行う。
+    /// </summary>
+    public void RequestExitUfoMode()
+    {
+        ExitUfoMode();
     }
 
     private void SetUfoMode(bool active)
@@ -1130,15 +1174,36 @@ public class UFOCameraController : MonoBehaviour
     {
         if (Keyboard.current == null) return;
 
+        var tvController = FindAnyObjectByType<TelevisionStaticController>();
+
         // モード終了（F, Escape）※Qキーはカメラ操作に使用
         if (Keyboard.current.fKey.wasPressedThisFrame ||
             Keyboard.current.escapeKey.wasPressedThisFrame)
         {
-            ExitUfoMode();
+            // Play_Canvas2（television の選択画面）を表示中は、UFO自体を終了せず砂嵐を挟んで Play_Canvas へ戻る
+            if (tvController != null && tvController.IsPlayCanvas2Active)
+            {
+                var touchPanel = FindAnyObjectByType<TouchPanelOutlineController>();
+                if (touchPanel != null)
+                {
+                    touchPanel.ReturnToPlay1();
+                }
+                else
+                {
+                    tvController.PlayStaticThenShowCanvas(tvController.PlayCanvas);
+                }
+            }
+            else
+            {
+                ExitUfoMode();
+            }
             return;
         }
 
         // Q / E キーでのサブカメラ切り替え（状態遷移）
+        // TelevisionStaticController でカメラ切り替えが無効な場合はスキップ
+        if (tvController != null && !tvController.IsCameraSwitchingEnabled) return;
+
         if (Keyboard.current.qKey.wasPressedThisFrame)
         {
             switch (_currentSubCameraState)
@@ -1168,202 +1233,6 @@ public class UFOCameraController : MonoBehaviour
                     // RightのときEは反応しない
                     break;
             }
-        }
-    }
-
-    private void CreateDynamicUI()
-    {
-        // 1. Canvasの生成
-        GameObject canvasGo = new GameObject("UFODynamicUICanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-        _dynamicCanvas = canvasGo.GetComponent<Canvas>();
-        _dynamicCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        _dynamicCanvas.sortingOrder = 31000;
-        if (frontCamera != null)
-        {
-            _dynamicCanvas.targetDisplay = frontCamera.targetDisplay;
-        }
-        else
-        {
-            _dynamicCanvas.targetDisplay = 3; // デフォルト Display 4 (インデックス3)
-        }
-
-        CanvasScaler scaler = canvasGo.GetComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920, 1080);
-        scaler.matchWidthOrHeight = 0.5f;
-
-        // 2. Prompt Text
-        GameObject promptGo = new GameObject("PromptText", typeof(RectTransform), typeof(TextMeshProUGUI));
-        promptGo.transform.SetParent(canvasGo.transform, false);
-        _promptText = promptGo.GetComponent<TextMeshProUGUI>();
-        _promptText.fontSize = 28;
-        _promptText.alignment = TextAlignmentOptions.Center;
-        _promptText.color = Color.white;
-        _promptText.text = "[F] Play UFO Catcher";
-        
-        RectTransform promptRt = promptGo.GetComponent<RectTransform>();
-        promptRt.anchorMin = new Vector2(0.5f, 0f);
-        promptRt.anchorMax = new Vector2(0.5f, 0f);
-        promptRt.pivot = new Vector2(0.5f, 0f);
-        promptRt.anchoredPosition = new Vector2(0f, 120f);
-        promptRt.sizeDelta = new Vector2(600f, 60f);
-
-        var shadow = promptGo.AddComponent<Shadow>();
-        shadow.effectColor = new Color(0f, 0f, 0f, 0.75f);
-        shadow.effectDistance = new Vector2(2f, -2f);
-
-        // 3. 支払いパネルの生成
-        _paymentPanel = new GameObject("PaymentPanel", typeof(RectTransform), typeof(Image));
-        _paymentPanel.transform.SetParent(canvasGo.transform, false);
-        
-        Image panelImage = _paymentPanel.GetComponent<Image>();
-        panelImage.color = new Color(0.1f, 0.1f, 0.1f, 0.85f);
-
-        RectTransform panelRt = _paymentPanel.GetComponent<RectTransform>();
-        panelRt.anchorMin = new Vector2(0.5f, 0.5f);
-        panelRt.anchorMax = new Vector2(0.5f, 0.5f);
-        panelRt.pivot = new Vector2(0.5f, 0.5f);
-        panelRt.anchoredPosition = Vector2.zero;
-        panelRt.sizeDelta = new Vector2(500f, 320f);
-
-        // Title Text
-        GameObject titleGo = new GameObject("TitleText", typeof(RectTransform), typeof(TextMeshProUGUI));
-        titleGo.transform.SetParent(_paymentPanel.transform, false);
-        TextMeshProUGUI titleText = titleGo.GetComponent<TextMeshProUGUI>();
-        titleText.fontSize = 26;
-        titleText.fontStyle = FontStyles.Bold;
-        titleText.alignment = TextAlignmentOptions.Center;
-        titleText.color = Color.white;
-        titleText.text = "UFO Catcher Payment";
-
-        RectTransform titleRt = titleGo.GetComponent<RectTransform>();
-        titleRt.anchorMin = new Vector2(0.5f, 1f);
-        titleRt.anchorMax = new Vector2(0.5f, 1f);
-        titleRt.pivot = new Vector2(0.5f, 1f);
-        titleRt.anchoredPosition = new Vector2(0f, -25f);
-        titleRt.sizeDelta = new Vector2(460f, 40f);
-
-        // ステータステキスト
-        GameObject statusGo = new GameObject("StatusText", typeof(RectTransform), typeof(TextMeshProUGUI));
-        statusGo.transform.SetParent(_paymentPanel.transform, false);
-        _paymentStatusText = statusGo.GetComponent<TextMeshProUGUI>();
-        _paymentStatusText.fontSize = 18;
-        _paymentStatusText.alignment = TextAlignmentOptions.Center;
-        _paymentStatusText.color = Color.white;
-
-        RectTransform statusRt = statusGo.GetComponent<RectTransform>();
-        statusRt.anchorMin = new Vector2(0.5f, 0.5f);
-        statusRt.anchorMax = new Vector2(0.5f, 0.5f);
-        statusRt.pivot = new Vector2(0.5f, 0.5f);
-        statusRt.anchoredPosition = new Vector2(0f, 10f);
-        statusRt.sizeDelta = new Vector2(460f, 120f);
-
-        // 支払いボタン
-        GameObject btnGo = new GameObject("PayButton", typeof(RectTransform), typeof(Image), typeof(UnityEngine.UI.Button));
-        btnGo.transform.SetParent(_paymentPanel.transform, false);
-        _payButton = btnGo.GetComponent<UnityEngine.UI.Button>();
-
-        Image btnImg = btnGo.GetComponent<Image>();
-        btnImg.color = new Color(0.2f, 0.6f, 0.2f, 1f);
-
-        RectTransform btnRt = btnGo.GetComponent<RectTransform>();
-        btnRt.anchorMin = new Vector2(0.5f, 0f);
-        btnRt.anchorMax = new Vector2(0.5f, 0f);
-        btnRt.pivot = new Vector2(0.5f, 0f);
-        btnRt.anchoredPosition = new Vector2(0f, 75f);
-        btnRt.sizeDelta = new Vector2(300f, 50f);
-
-        GameObject btnTextGo = new GameObject("BtnText", typeof(RectTransform), typeof(TextMeshProUGUI));
-        btnTextGo.transform.SetParent(btnGo.transform, false);
-        _payButtonText = btnTextGo.GetComponent<TextMeshProUGUI>();
-        _payButtonText.fontSize = 20;
-        _payButtonText.fontStyle = FontStyles.Bold;
-        _payButtonText.alignment = TextAlignmentOptions.Center;
-        _payButtonText.color = Color.white;
-
-        RectTransform btnTextRt = btnTextGo.GetComponent<RectTransform>();
-        btnTextRt.anchorMin = Vector2.zero;
-        btnTextRt.anchorMax = Vector2.one;
-        btnTextRt.sizeDelta = Vector2.zero;
-
-        _payButton.onClick.AddListener(() => {
-            float cost = GetCurrentPlayCost();
-            bool hasEnoughMoney = MoneyManager.Instance != null && MoneyManager.Instance.CurrentMoney >= cost;
-            if (hasEnoughMoney && !IsPlaySessionActive && _paymentCount < maxPlayCount)
-            {
-                PayAndStartPlay(cost);
-            }
-        });
-
-        // Close Guide Text
-        GameObject closeTextGo = new GameObject("CloseText", typeof(RectTransform), typeof(TextMeshProUGUI));
-        closeTextGo.transform.SetParent(_paymentPanel.transform, false);
-        TextMeshProUGUI closeText = closeTextGo.GetComponent<TextMeshProUGUI>();
-        closeText.fontSize = 16;
-        closeText.alignment = TextAlignmentOptions.Center;
-        closeText.color = Color.gray;
-        closeText.text = "[F] Exit and Return";
-
-        RectTransform closeTextRt = closeTextGo.GetComponent<RectTransform>();
-        closeTextRt.anchorMin = new Vector2(0.5f, 0f);
-        closeTextRt.anchorMax = new Vector2(0.5f, 0f);
-        closeTextRt.pivot = new Vector2(0.5f, 0f);
-        closeTextRt.anchoredPosition = new Vector2(0f, 25f);
-        closeTextRt.sizeDelta = new Vector2(460f, 30f);
-
-        // 初期非活性
-        _promptText.gameObject.SetActive(false);
-        _paymentPanel.SetActive(false);
-    }
-
-    private void UpdateDynamicUI()
-    {
-        if (_dynamicCanvas == null) return;
-
-        if (_showPrompt)
-        {
-            _promptText.gameObject.SetActive(true);
-            _paymentPanel.SetActive(false);
-        }
-        else if (IsPlayingUfo)
-        {
-            _promptText.gameObject.SetActive(false);
-
-            if (IsPlaySessionActive)
-            {
-                _paymentPanel.SetActive(false);
-            }
-            else
-            {
-                _paymentPanel.SetActive(true);
-
-                if (_paymentCount >= maxPlayCount)
-                {
-                    _paymentStatusText.text = "Play limit reached for this session.\nPress [F] to exit.";
-                    _payButton.gameObject.SetActive(false);
-                }
-                else
-                {
-                    _payButton.gameObject.SetActive(true);
-                    float cost = GetCurrentPlayCost();
-                    _paymentStatusText.text = $"Cost: ¥{cost:N0}\nRemaining Plays: {maxPlayCount - _paymentCount}\n({playDuration}s control time per play)\nPress [Space] to Pay";
-
-                    bool hasEnoughMoney = MoneyManager.Instance != null && MoneyManager.Instance.CurrentMoney >= cost;
-                    _payButton.interactable = hasEnoughMoney;
-                    _payButtonText.text = hasEnoughMoney ? $"Pay to Play (¥{cost:N0})" : "Insufficient Funds";
-                    
-                    Image btnImg = _payButton.GetComponent<Image>();
-                    if (btnImg != null)
-                    {
-                        btnImg.color = hasEnoughMoney ? new Color(0.2f, 0.6f, 0.2f, 1f) : new Color(0.5f, 0.5f, 0.5f, 1f);
-                    }
-                }
-            }
-        }
-        else
-        {
-            _promptText.gameObject.SetActive(false);
-            _paymentPanel.SetActive(false);
         }
     }
 
@@ -1421,11 +1290,6 @@ public class UFOCameraController : MonoBehaviour
         if (_bgTexture != null)
         {
             Destroy(_bgTexture);
-        }
-
-        if (_dynamicCanvas != null)
-        {
-            Destroy(_dynamicCanvas.gameObject);
         }
 
         if (machineHover != null)

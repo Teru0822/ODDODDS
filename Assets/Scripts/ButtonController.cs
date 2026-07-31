@@ -72,7 +72,8 @@ public class ButtonController : MonoBehaviour
             if (IsMouseOverThis(mouse.position.ReadValue()))
             {
                 _isPressed = true;
-                
+                UFOCameraController.Instance?.NotifyControlInputUsed();
+
                 // クリック効果音の再生
                 PlaySound(clickSound);
                 
