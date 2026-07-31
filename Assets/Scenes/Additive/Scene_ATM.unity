@@ -322,8 +322,12 @@ MonoBehaviour:
   audioSource: {fileID: 0}
   startupSound: {fileID: 0}
   shutdownSound: {fileID: 0}
-  keyClickSound: {fileID: 0}
   washSuccessSound: {fileID: 0}
+  keyClickSound: {fileID: 0}
+  selectSound: {fileID: 0}
+  confirmSound: {fileID: 0}
+  cancelSound: {fileID: 0}
+  electronicSoundVolume: 1
   keyButtons:
   - {fileID: 599287927}
   - {fileID: 841444890}
@@ -352,6 +356,7 @@ MonoBehaviour:
   _spinboxSilverPos: {x: 250, y: -50}
   _spinboxBronzePos: {x: 250, y: -140}
   _spinboxSize: {x: 64, y: 96}
+  _spinboxFontSize: 11
 --- !u!114 &1214958071 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7829022221041823055, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
