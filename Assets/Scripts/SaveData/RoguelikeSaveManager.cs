@@ -119,7 +119,16 @@ public static class RoguelikeSaveManager
         var providers = InterfaceFinder.FindAllByInterface<IsaveDataProvider>();
         foreach (var provider in providers)
         {
-            provider.ReadSaveData(saveData);
+            //1つのProviderが例外を出しても、他のProviderと呼び出し元の処理を止めない
+            try
+            {
+                provider.ReadSaveData(saveData);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[RoguelikeSaveManager] {provider.GetType().Name} のReadSaveDataに失敗しました");
+                Debug.LogException(e);
+            }
         }
     }
 

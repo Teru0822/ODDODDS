@@ -12,6 +12,7 @@ using DG.Tweening;
 /// <summary>
 /// Jsonファイルにセーブする、ランタイム時に必要なデータをまとめたクラス
 /// </summary>
+[Serializable]//JsonUtilityは非Serializableな型のListを丸ごと無視するため必須
 public class VisitorSaveData
 {
     public int id;
@@ -118,7 +119,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
     public void ReadSaveData(RoguelikeSaveData saveData)
     {
         _visitorInstances.Clear();
-        if (saveData.visitorSaveDatas != null)
+        if (saveData.visitorSaveDatas != null && saveData.visitorSaveDatas.Count > 0)
         {
             foreach (var visitorSaveData in saveData.visitorSaveDatas)
             {
@@ -140,7 +141,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
         }
         else //セーブデータに情報がなかった場合は新規作成
         {
-            Debug.LogError("訪問者用セーブデータ新規作成");
+            Debug.Log("訪問者用セーブデータ新規作成");
             //_visitorDataBaseに登録されているVisitorDataを元にVisitorInstanceを生成する
             foreach (var visitorData in _visitorDataBase.visitorDataBase)
             {
@@ -152,14 +153,17 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
                 _visitorInstances.Add(visitorInstance);
             }
 
-            Debug.LogError("訪問者用セーブデータ新規作成が完了");
+            Debug.Log("訪問者用セーブデータ新規作成が完了");
         }
 
         //デバッグ用
         foreach(var visitorInstance in _visitorInstances)
         {
-            VisitorConversationContainer[] a;
-            Debug.LogWarning(visitorInstance.VisitorName + "\n" + visitorInstance.eventProgress + "\n" + visitorInstance.Conversations.TryGetValue("Conversation1" ,out a) + "\n" + a[0].lineJp);
+            //キーが無い/中身が空のマスターデータでも落ちないようにする
+            bool hasFirstConversation = visitorInstance.Conversations.TryGetValue("Conversation1", out VisitorConversationContainer[] conversations)
+                                        && conversations != null && conversations.Length > 0;
+            string firstLine = hasFirstConversation ? conversations[0].lineJp : "(Conversation1が未設定)";
+            Debug.Log($"{visitorInstance.VisitorName}\n{visitorInstance.eventProgress}\n{hasFirstConversation}\n{firstLine}");
         }
     }
 
@@ -173,7 +177,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
             Debug.LogWarning("[VisitorSystem] VisitorLottery: _visitorInstances が空のためスキップ");
             return;
         }
-        Debug.LogError("抽選開始");
+        Debug.Log("抽選開始");
         int count = 0;
         while(_nowSelectedVisitorInstance.Value == null)
         {
@@ -184,25 +188,25 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
                 if(CheckClearEventTrigger(_visitorInstances[random].VisitorName, _visitorInstances[random].eventProgress))
                 {
                     _nowSelectedVisitorInstance.Value = _visitorInstances[random];
-                    Debug.LogError($"抽選の結果{_visitorInstances[random].VisitorName}に決定しました");
+                    Debug.Log($"抽選の結果{_visitorInstances[random].VisitorName}に決定しました");
                     break;
                 }
                 else
                 {
-                    Debug.LogError(_visitorInstances[random].VisitorName + "は満たしていない");
+                    Debug.Log(_visitorInstances[random].VisitorName + "は満たしていない");
                     _visitorInstances[random].isCheck = true;
                     count++;
                 }
 
                 if(count >= _visitorInstances.Count)//全員条件を満たしていない場合
                 {
-                    Debug.LogError("全員条件を満たしていませんでした");
+                    Debug.LogWarning("全員条件を満たしていませんでした");
                     break;
                 }
             }
             else
             {
-                Debug.LogError(_visitorInstances[random].VisitorName + "は確認済み");
+                Debug.Log(_visitorInstances[random].VisitorName + "は確認済み");
                 continue;
             }
         }
@@ -246,7 +250,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
         }
 
         //switch文を突破出来たら条件を満たしているとみなす
-        Debug.LogError(visitorName + "のイベント条件を満たしています");
+        Debug.Log(visitorName + "のイベント条件を満たしています");
         return true;
     }
 
