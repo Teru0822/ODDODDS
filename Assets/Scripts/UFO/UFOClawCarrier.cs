@@ -38,6 +38,9 @@ public class UFOClawCarrier : MonoBehaviour
     private BoxCollider _boxCollider;
     private int _logThrottleCounter = 0;
 
+    // Physics.OverlapBox 用の使い回しバッファ（毎 FixedUpdate の GC アロケーションを防ぐ）
+    private readonly Collider[] _overlapBuffer = new Collider[64];
+
     private void Start()
     {
         _boxCollider = GetComponent<BoxCollider>();
@@ -86,7 +89,12 @@ public class UFOClawCarrier : MonoBehaviour
         Quaternion worldRotation = transform.rotation;
 
         // 2. OverlapBox による範囲内のコライダーの強制検出（アタッチされたBoxColliderと完全に同じ範囲）
-        Collider[] hits = Physics.OverlapBox(worldCenter, halfExtents, worldRotation, carryLayerMask);
+        // NonAlloc 版を使い回しバッファで呼ぶことで、毎 FixedUpdate の配列アロケーション（GC負荷）を避ける
+        int hitCount = Physics.OverlapBoxNonAlloc(worldCenter, halfExtents, _overlapBuffer, worldRotation, carryLayerMask);
+        if (hitCount >= _overlapBuffer.Length)
+        {
+            Debug.LogWarning($"[UFOClawCarrier] OverlapBox のヒット数がバッファ上限({_overlapBuffer.Length})に達しました。取りこぼしがある可能性があります。", this);
+        }
 
         // ログの間引き（30フレームに1回アームの移動状況を出力）
         _logThrottleCounter++;
@@ -94,12 +102,12 @@ public class UFOClawCarrier : MonoBehaviour
 
         if (shouldLogThisFrame)
         {
-            Debug.Log($"[UFOClawCarrier] FixedUpdate Tick. Position: {currentPosition.ToString("F3")}, Delta: {delta.ToString("F4")}, RawHitsCount: {hits.Length}, BoxSize: {_boxCollider.size}");
-            for (int i = 0; i < hits.Length; i++)
+            Debug.Log($"[UFOClawCarrier] FixedUpdate Tick. Position: {currentPosition.ToString("F3")}, Delta: {delta.ToString("F4")}, RawHitsCount: {hitCount}, BoxSize: {_boxCollider.size}");
+            for (int i = 0; i < hitCount; i++)
             {
-                bool isChild = hits[i].transform.IsChildOf(transform.parent);
-                Rigidbody rb = hits[i].attachedRigidbody;
-                Debug.Log($"[UFOClawCarrier] Hit[{i}]: {hits[i].name}, Layer: {LayerMask.LayerToName(hits[i].gameObject.layer)}, IsChildOfClawParent: {isChild}, HasRigidbody: {rb != null}");
+                bool isChild = _overlapBuffer[i].transform.IsChildOf(transform.parent);
+                Rigidbody rb = _overlapBuffer[i].attachedRigidbody;
+                Debug.Log($"[UFOClawCarrier] Hit[{i}]: {_overlapBuffer[i].name}, Layer: {LayerMask.LayerToName(_overlapBuffer[i].gameObject.layer)}, IsChildOfClawParent: {isChild}, HasRigidbody: {rb != null}");
             }
         }
 
@@ -120,8 +128,10 @@ public class UFOClawCarrier : MonoBehaviour
         Vector3 appliedDelta = delta * effectiveEfficiency;
 
         int carriedCount = 0;
-        foreach (Collider hit in hits)
+        for (int i = 0; i < hitCount; i++)
         {
+            Collider hit = _overlapBuffer[i];
+
             // 爪自体のパーツやアームの構成オブジェクト（親やアームコントローラーの管轄下）は運ばない
             if (hit.transform.IsChildOf(transform.parent)) continue;
             if (hit.GetComponentInParent<UFOArmController>() != null) continue;
@@ -133,12 +143,15 @@ public class UFOClawCarrier : MonoBehaviour
                 // アームのルートRigidbody（armRoot）は運ばない
                 if (_armController != null && rb == _armController.armRoot?.GetComponent<Rigidbody>()) continue;
 
-                // コイン最適化（スリープ）を解除して物理演算を確実に有効にする
-                CoinOptimizer coin = rb.GetComponent<CoinOptimizer>();
-                if (coin != null)
+                // ルーレットアイテム・ダイヤモンド等、まだCoinOptimizerが付いているものはKinematic凍結を解除する
+                CoinOptimizer optimizer = hit.GetComponent<CoinOptimizer>();
+                if (optimizer != null)
                 {
-                    coin.WakeUp();
+                    optimizer.WakeUp();
                 }
+
+                // 寝ている状態だとMovePositionが正しく反映されないことがあるため、運ぶ前に必ず起こす
+                if (rb.IsSleeping()) rb.WakeUp();
 
                 // 追従率を加味した差分を座標移動させる
                 Vector3 newPos = rb.position + appliedDelta;

@@ -65,6 +65,10 @@ PrefabInstance:
       value: coinBaseBronse
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: cbe952784aad72a4b81957b151946cf8, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: cbe952784aad72a4b81957b151946cf8, type: 3}
       propertyPath: m_TagString
       value: coin
       objectReference: {fileID: 0}
@@ -78,9 +82,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: cbe952784aad72a4b81957b151946cf8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4811848662048737424}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: cbe952784aad72a4b81957b151946cf8, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1963288272646098879}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: cbe952784aad72a4b81957b151946cf8, type: 3}
       insertIndex: -1
       addedObject: {fileID: -3541911415530289604}
@@ -142,20 +143,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &1963288272646098879
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4563478140741147117}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 41815de3609d09e42aa8da97f26aba64, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CoinOptimizer
-  useSphereColliderAutoReplacement: 0
-  individualFreezeDelay: 2
 --- !u!114 &-3541911415530289604
 MonoBehaviour:
   m_ObjectHideFlags: 0

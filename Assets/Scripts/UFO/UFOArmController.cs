@@ -125,6 +125,8 @@ public class UFOArmController : MonoBehaviour
     public Vector3 wakeUpDownwardsOffset = Vector3.zero;
     [Tooltip("叩き起こし処理を実行する間隔（秒）。処理落ちを防ぐため毎フレームは行いません")]
     public float wakeUpInterval = 0.2f;
+    [Tooltip("叩き起こし対象のレイヤー（コイン等の物理演算対象レイヤーのみに絞ることで負荷を抑えます）")]
+    public LayerMask wakeUpLayerMask = 1 << 12;
 
     [Header("【新規】第3アーム用 吸着(マグネット)機能")]
     [Tooltip("オンにすると、爪が閉じる時と上昇する時に周囲のコインを吸着します")]
@@ -167,7 +169,6 @@ public class UFOArmController : MonoBehaviour
     private Vector3  _rail2InitialPos;
     private Vector3  _visualOffset; // ピボットと実際の見た目の中心（ロープ）とのズレ
     private float    _stateTimer; // 様々な待機タイマー兼用
-    private float    _wakeUpTimer;
     private Rigidbody _armRigidbody;
 
     private Quaternion[] _fingerDefaultRot;
@@ -180,6 +181,10 @@ public class UFOArmController : MonoBehaviour
 
     private bool         _wantFingerOpen = false;
     public bool WantFingerOpen => _wantFingerOpen;
+
+    private float _wakeUpTimer = 0f;
+    // Physics.OverlapBox 用の使い回しバッファ（毎フレームの配列アロケーションを防ぐ）
+    private readonly Collider[] _wakeUpBuffer = new Collider[32];
 
 
 
@@ -510,8 +515,65 @@ public class UFOArmController : MonoBehaviour
         UpdateColliderStateForSpawning();
         UpdateFingersAndSway();
         UpdateStateMachine();
-        WakeUpNearbyCoins();
         UpdateMagnet();
+        WakeUpNearbyCoins();
+    }
+
+    /// <summary>
+    /// 降下・掴み中のみ、爪の直下にあるコイン（wakeUpLayerMask対象）を強制的に起こす。
+    /// CoinOptimizer廃止に伴い、寝ているRigidbodyが爪の接触だけでは反応しないケースがあるため、
+    /// 掴む瞬間だけ狭い範囲・低頻度で叩き起こす。
+    /// </summary>
+    void WakeUpNearbyCoins()
+    {
+        if (_state != ArmState.Descending && _state != ArmState.Grabbing) return;
+        if (fingerParts == null || fingerParts.Length == 0 || fingerParts[0] == null) return;
+
+        _wakeUpTimer -= Time.deltaTime;
+        if (_wakeUpTimer > 0f) return;
+        _wakeUpTimer = wakeUpInterval;
+
+        // OnDrawGizmosSelected の黄色ボックスと同じ計算式（揺れを防ぐためX・ZはarmRoot基準、Yは親フォルダ基準）
+        Transform parentFolder = fingerParts[0].parent;
+        Vector3 centerPos;
+        if (parentFolder != null)
+        {
+            Transform refTransform = (armRoot != null) ? armRoot : transform;
+            centerPos = new Vector3(refTransform.position.x, parentFolder.position.y, refTransform.position.z);
+        }
+        else
+        {
+            centerPos = transform.position;
+        }
+
+        Vector3 boxCenter = centerPos + wakeUpDownwardsOffset;
+        boxCenter.y -= wakeUpDownwardsLength * 0.5f;
+        Vector3 halfExtents = new Vector3(wakeUpDownwardsWidth, wakeUpDownwardsLength * 0.5f, wakeUpDownwardsWidth);
+
+        int hitCount = Physics.OverlapBoxNonAlloc(
+            boxCenter,
+            halfExtents,
+            _wakeUpBuffer,
+            Quaternion.identity,
+            wakeUpLayerMask
+        );
+
+        for (int i = 0; i < hitCount; i++)
+        {
+            // ルーレットアイテム・ダイヤモンド等、まだCoinOptimizerが付いているものはKinematic凍結を解除する
+            CoinOptimizer optimizer = _wakeUpBuffer[i].GetComponent<CoinOptimizer>();
+            if (optimizer != null)
+            {
+                optimizer.WakeUp();
+                continue;
+            }
+
+            Rigidbody rb = _wakeUpBuffer[i].attachedRigidbody;
+            if (rb != null && !rb.isKinematic)
+            {
+                rb.WakeUp();
+            }
+        }
     }
 
     void UpdateColliderStateForSpawning()
@@ -556,86 +618,6 @@ public class UFOArmController : MonoBehaviour
         UpdateRailFollow();
     }
 
-    void WakeUpNearbyCoins()
-    {
-        // 処理落ちを防ぐため、常に実行するのではなく一定時間ごと（例: 0.2秒ごと）に実行する
-        _wakeUpTimer -= Time.deltaTime;
-        if (_wakeUpTimer > 0f) return;
-        _wakeUpTimer = wakeUpInterval;
-
-        if (fingerParts == null || fingerParts.Length == 0 || fingerParts[0] == null) return;
-
-        // アームの中心（指の親オブジェクト）の位置を取得
-        Transform parentFolder = fingerParts[0].parent;
-        
-        // 揺れを防ぐため、X・Z座標は揺れない armRoot (または transform) を使い、Y座標（高さ）は親フォルダを使用
-        Vector3 centerPos;
-        if (parentFolder != null)
-        {
-            Transform refTransform = (armRoot != null) ? armRoot : transform;
-            centerPos = new Vector3(refTransform.position.x, parentFolder.position.y, refTransform.position.z);
-        }
-        else
-        {
-            centerPos = transform.position;
-        }
-
-        // アーム降下中・爪閉じ中（下降開始〜掴み完了まで）は、アーム直下のコインを徐々にスリープ解除
-        // 上昇中（Ascending）は無駄な物理演算を防ぐため、この直下ボックス判定は行いません
-        bool isDescendingOrGrabbing = (_state == ArmState.OpeningClaw || 
-                                       _state == ArmState.Descending || 
-                                       _state == ArmState.Grabbing);
-
-        if (isDescendingOrGrabbing)
-        {
-            // 手首位置から指定のオフセットだけズラした位置を基準にする
-            Vector3 boxCenter = centerPos + wakeUpDownwardsOffset;
-            boxCenter.y -= wakeUpDownwardsLength * 0.5f; // 中心点を真下にずらす
-            
-            Vector3 halfExtents = new Vector3(
-                wakeUpDownwardsWidth,
-                wakeUpDownwardsLength * 0.5f,
-                wakeUpDownwardsWidth
-            );
-            
-            Collider[] hits = Physics.OverlapBox(boxCenter, halfExtents, Quaternion.identity);
-            foreach (var hit in hits)
-            {
-                CoinOptimizer coin = hit.GetComponent<CoinOptimizer>();
-                if (coin != null)
-                {
-                    coin.WakeUp();
-                }
-            }
-        }
-        else
-        {
-            // 待機中/移動中/上昇中は従来通り、爪のパーツ（指パーツ）の周囲のみ
-            foreach (Transform finger in fingerParts)
-            {
-                if (finger != null)
-                {
-                    // 指（爪）のローカル座標オフセットを加味した位置を判定中心とする
-                    Vector3 targetPos = finger.TransformPoint(wakeUpOffset);
-                    WakeUpInSphere(targetPos, wakeUpRadius);
-                }
-            }
-        }
-    }
-
-    private void WakeUpInSphere(Vector3 pos, float radius)
-    {
-        Collider[] hits = Physics.OverlapSphere(pos, radius);
-        foreach (var hit in hits)
-        {
-            CoinOptimizer coin = hit.GetComponent<CoinOptimizer>();
-            if (coin != null)
-            {
-                coin.WakeUp();
-            }
-        }
-    }
-
     void UpdateMagnet()
     {
         if (!isMagnetMode) return;
@@ -658,13 +640,9 @@ public class UFOArmController : MonoBehaviour
         foreach (var hit in hits)
         {
             Rigidbody rb = hit.GetComponent<Rigidbody>();
-            CoinOptimizer coin = hit.GetComponent<CoinOptimizer>();
-            
-            if (rb != null && coin != null)
+
+            if (rb != null)
             {
-                // 吸着するためにまず叩き起こす
-                coin.WakeUp();
-                
                 // コインを中心に向かって吸い寄せる
                 Vector3 directionToCenter = (centerPos - hit.transform.position).normalized;
                 
