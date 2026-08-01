@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -125,6 +126,22 @@ public class RewardSelectionUI : MonoBehaviour
     [Tooltip("UI 操作音の音量")]
     [Range(0f, 2f)]
     [SerializeField] private float _uiKeySoundVolume = 1f;
+    [Tooltip("スキルボタン押下瞬間の効果音（ホバー音とは別の、より鋭いキー音）")]
+    [SerializeField] private AudioClip _skillPressClip;
+    [Range(0f, 2f)]
+    [SerializeField] private float _skillPressVolume = 1f;
+    [Tooltip("スキル確定時の効果音（タイプライターのカーリッジリターンベル音）")]
+    [SerializeField] private AudioClip _skillConfirmClip;
+    [Range(0f, 2f)]
+    [SerializeField] private float _skillConfirmVolume = 1f;
+
+    [Header("確定エフェクト")]
+    [Tooltip("スキル確定時に再生するエフェクト Prefab（SkillConfirmEffectPlayer をアタッチしたもの）")]
+    [SerializeField] private SkillConfirmEffectPlayer _confirmEffectPrefab;
+    [Tooltip("確定時のUIシェイク強度（px単位。Screen Space Cameraでは20〜30程度が目安）")]
+    [SerializeField] private float _confirmShakeStrength = 25f;
+    [Tooltip("確定時のUIシェイク時間（秒）。この後 Hide が呼ばれる）")]
+    [SerializeField] private float _confirmShakeDuration = 0.35f;
 
     /// <summary>タイプライター UI の表示状態が変わったときに発火する静的イベント (true=表示, false=非表示)</summary>
     public static event Action<bool> OnTypewriterUIChanged;
@@ -378,6 +395,13 @@ public class RewardSelectionUI : MonoBehaviour
     public void OnSkillButtonExit(int index)
     {
         if (_lastSoundedIndex == index) _lastSoundedIndex = -1;
+    }
+
+    /// <summary>ボタン押下瞬間（ButtonHover.OnPointerDown から呼ばれる）</summary>
+    public void OnSkillButtonPress(int index)
+    {
+        if (_skillPressClip == null || _uiAudioSource == null) return;
+        _uiAudioSource.PlayOneShot(_skillPressClip, _skillPressVolume);
     }
 
     private void PlayKeySound()
@@ -650,9 +674,31 @@ public class RewardSelectionUI : MonoBehaviour
         SetExplainText("");
         RoguelikeData picked = _currentOptions[index];
         Debug.Log($"[RewardSelectionUI] OnOptionClicked: index={index} text=\"{picked}\"", this);
+
+        // ① 確定音（即再生）
+        if (_skillConfirmClip != null && _uiAudioSource != null)
+            _uiAudioSource.PlayOneShot(_skillConfirmClip, _skillConfirmVolume);
+
+        // ② 選択ボタンのスケールポップ ＋ 確定エフェクト再生
+        var root = uiRoot != null ? uiRoot.transform : transform;
+        if (index < _dynButtons.Count)
+        {
+            var btn = _dynButtons[index];
+            btn.transform.DOKill();
+            btn.transform.DOPunchScale(Vector3.one * 0.15f, 0.35f, 5, 0.5f);
+
+            if (_confirmEffectPrefab != null)
+            {
+                var effect = Instantiate(_confirmEffectPrefab, btn.transform.position, Quaternion.identity, root);
+                effect.Play();
+            }
+        }
+
+        // ③ UI全体シェイク → 完了後に Hide + callback（二重呼び出し防止のため先にクリア）
         var cb = _onSelected;
-        Hide();
-        cb?.Invoke(picked);
+        _onSelected = null;
+        root.DOShakePosition(_confirmShakeDuration, _confirmShakeStrength, 12, 90f, false, true)
+            .OnComplete(() => { Hide(); cb?.Invoke(picked); });
     }
 
     private void AutoCreateUI()

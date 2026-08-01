@@ -82,11 +82,29 @@ public class TypewriterPaperOutput : MonoBehaviour
     [Tooltip("発射フェーズの長さ (秒)。終了後に紙を破棄")]
     public float launchUpDuration = 1.2f;
 
+    [Header("ローンチ効果音")]
+    [Tooltip("発射フェーズ開始時の whoosh 音")]
+    [SerializeField] private AudioClip _launchWhooshClip;
+    [SerializeField, Range(0f, 2f)] private float _launchWhooshVolume = 1f;
+    [Tooltip("音声再生用 AudioSource。null なら自動生成")]
+    [SerializeField] private AudioSource _launchAudioSource;
+
     private GameObject _currentPaper;
     private TMP_Text _currentText;
     private Vector3 _baseLocalPos;
     private Quaternion _baseLocalRot;
     private float _bobPhase;
+
+    private void Awake()
+    {
+        if (_launchAudioSource == null)
+        {
+            _launchAudioSource = GetComponent<AudioSource>()
+                ?? gameObject.AddComponent<AudioSource>();
+            _launchAudioSource.playOnAwake = false;
+            _launchAudioSource.spatialBlend = 0f;
+        }
+    }
 
     public bool HasActivePaper => _currentPaper != null;
 
@@ -179,6 +197,8 @@ public class TypewriterPaperOutput : MonoBehaviour
         }
 
         // Phase 3: ワールド +Y へぶっ飛ぶ (加速しながら)
+        if (_launchWhooshClip != null)
+            _launchAudioSource.PlayOneShot(_launchWhooshClip, _launchWhooshVolume);
         float launchElapsed = 0f;
         float currentSpeed = launchUpInitialSpeed;
         while (launchElapsed < launchUpDuration && paper != null)
