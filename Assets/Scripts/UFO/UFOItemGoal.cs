@@ -5,7 +5,7 @@ using TMPro; // 画面の文字（UI）を操作するために追加
 /// UFOキャッチャーの落とし口（透明なTriggerBox）にアタッチするクラス
 /// 落とし口の拡張（強化要素）にも対応しやすい設計
 /// </summary>
-public class UFOItemGoal : MonoBehaviour
+public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
 {
     [Header("強化要素用（外部から変更可能）")]
     [Tooltip("アイテム獲得時の金額倍率。強化で1.5倍などに変更できる")]
@@ -124,11 +124,108 @@ public class UFOItemGoal : MonoBehaviour
     [Tooltip("スピンさせるルーレットのコントローラー")]
     [SerializeField] private RouletteController rouletteController;
 
+    [Header("特別演出（Element2 / Roulette03 専用）")]
+    [Tooltip("この番号のスロットが当選したときだけ、通常のアイテム降雨の代わりに特別演出（candy/ピンボールのどちらかがランダムに落下）を行う")]
+    [SerializeField] private int specialDropSlotIndex = 2;
+
+    [Tooltip("特別演出候補1：キャンディのプレハブ")]
+    [SerializeField] private GameObject specialDropCandyPrefab;
+
+    [Tooltip("特別演出候補2：小さなピンボールのプレハブ")]
+    [SerializeField] private GameObject specialDropPinballPrefab;
+
+    [Tooltip("特別演出の落下開始位置（空のTransformをSceneビューで配置してください）")]
+    [SerializeField] private Transform specialDropStartPoint;
+
+    [Tooltip("特別演出の落下終了位置（空のTransformをSceneビューで配置してください）")]
+    [SerializeField] private Transform specialDropEndPoint;
+
+    [Tooltip("落下にかける時間（秒）")]
+    [SerializeField] private float specialDropDuration = 1.0f;
+
+    [Tooltip("落下の動きのイージング（重力っぽく加速させたい場合はEaseIn系のカーブにする）")]
+    [SerializeField] private AnimationCurve specialDropEase = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+
+    [Tooltip("着地後、何秒でオブジェクトを消すか")]
+    [SerializeField] private float specialDropDestroyDelay = 2.0f;
+
+    // candy / pinball をそれぞれ入手済みかどうか（セーブデータから復元される）
+    private bool _isCandyObtained = false;
+    private bool _isPinballObtained = false;
+
+    // 特別演出スロットの元々のweight（当選不可にした後、ラウンドリセット時に元へ戻すため）
+    private float _originalSpecialDropWeight = 1f;
+    private bool _originalSpecialDropWeightCaptured = false;
+
     public static UFOItemGoal Instance { get; private set; }
 
     private void Awake()
     {
         if (Instance == null) Instance = this;
+
+        // セーブデータ読み込み（当選不可化）が行われる前に、元のweightを控えておく
+        if (rouletteController != null && !_originalSpecialDropWeightCaptured)
+        {
+            var slot = rouletteController.GetSlotEntry(specialDropSlotIndex);
+            if (slot != null)
+            {
+                _originalSpecialDropWeight = slot.weight;
+                _originalSpecialDropWeightCaptured = true;
+            }
+        }
+    }
+
+    public void WriteSaveData(RoguelikeSaveData saveData)
+    {
+        saveData.isRouletteCandyObtained = _isCandyObtained;
+        saveData.isRoulettePinballObtained = _isPinballObtained;
+    }
+
+    public void ReadSaveData(RoguelikeSaveData saveData)
+    {
+        _isCandyObtained = saveData.isRouletteCandyObtained;
+        _isPinballObtained = saveData.isRoulettePinballObtained;
+        ApplySpecialDropSlotAvailability();
+    }
+
+    /// <summary>
+    /// candy・pinball の両方を入手済みの場合、対象スロット（はてなマーク）の当選確率を0にして
+    /// 二度と当たらないようにする。
+    /// </summary>
+    private void ApplySpecialDropSlotAvailability()
+    {
+        if (!_isCandyObtained || !_isPinballObtained) return;
+        if (rouletteController == null) return;
+
+        var slot = rouletteController.GetSlotEntry(specialDropSlotIndex);
+        if (slot != null)
+        {
+            slot.weight = 0f;
+            Debug.Log("[UFOItemGoal] candy/pinball を両方入手済みのため、特別演出スロットの当選確率を0にしました。");
+        }
+    }
+
+    /// <summary>
+    /// candy/pinball の入手状況をリセットし、特別演出スロットを再度当選可能に戻す。
+    /// 【接続待ち】ラウンド進行・ゲームオーバー処理が実装され次第、そこから呼び出してください
+    /// （例: MoneyManager.CheckGameOver() のゲームオーバー確定処理内など）。
+    /// </summary>
+    public void ResetSpecialDropProgress()
+    {
+        _isCandyObtained = false;
+        _isPinballObtained = false;
+
+        if (rouletteController != null)
+        {
+            var slot = rouletteController.GetSlotEntry(specialDropSlotIndex);
+            if (slot != null)
+            {
+                slot.weight = _originalSpecialDropWeight;
+            }
+        }
+
+        RoguelikeSaveManager.Save();
+        Debug.Log("[UFOItemGoal] candy/pinball の入手状況をリセットしました。次のラウンドで再び抽選対象になります。");
     }
 
     private void Start()
@@ -154,6 +251,19 @@ public class UFOItemGoal : MonoBehaviour
 
         // UFOカメラのプレイ開始・終了イベントを購読
         UFOCameraController.OnUfoModeChanged += HandleUfoModeChanged;
+
+        // 【暫定】ラウンド・ゲームオーバー処理が未実装のため、Unity再生開始のたびに
+        // candy/pinballの入手状況をリセットする。ラウンドシステム実装後はここを削除し、
+        // ResetSpecialDropProgress() をゲームオーバー処理側から呼ぶように差し替えること。
+        StartCoroutine(ResetSpecialDropProgressOnPlayStart());
+    }
+
+    private System.Collections.IEnumerator ResetSpecialDropProgressOnPlayStart()
+    {
+        // MoneyManager.Start() 経由の RoguelikeSaveManager.Load()（ReadSaveData）が
+        // 先に走っていても、確実に後勝ちでリセットされるよう1フレーム待つ
+        yield return null;
+        ResetSpecialDropProgress();
     }
 
     private Coroutine _lampCoroutine;
@@ -270,7 +380,14 @@ public class UFOItemGoal : MonoBehaviour
             Debug.Log("[UFOItemGoal] ルーレット完了につき時間の一時停止を解除しました。");
         }
 
-        // 2. 当選インデックスに応じたアイテムを降らせる
+        // 2. 特別演出スロット（Element2 / Roulette03）の場合は、通常の降雨処理をスキップして専用演出を行う
+        if (winningIndex == specialDropSlotIndex)
+        {
+            TriggerSpecialDrop();
+            return;
+        }
+
+        // 3. 当選インデックスに応じたアイテムを降らせる
         if (ItemSpawner.Instance != null)
         {
             GameObject rewardPrefab = null;
@@ -336,6 +453,86 @@ public class UFOItemGoal : MonoBehaviour
         {
             Debug.LogError("[UFOItemGoal] ItemSpawner.Instance が null のため、ドロップを生成できません！");
         }
+    }
+
+    /// <summary>
+    /// candy / 小さなピンボール のどちらかをランダムに選び、当たり判定なしの見た目だけの落下演出を行う。
+    /// （Element2 / Roulette03 が当選したときの専用演出）
+    /// </summary>
+    private void TriggerSpecialDrop()
+    {
+        // 両方入手済みならこのスロット自体が当たらないはずだが、念のための保険
+        if (_isCandyObtained && _isPinballObtained)
+        {
+            Debug.LogWarning("[UFOItemGoal] candy/pinball を両方入手済みのため、特別演出をスキップします。");
+            return;
+        }
+
+        bool giveCandy;
+        if (!_isCandyObtained && !_isPinballObtained)
+        {
+            // まだどちらも入手していない：ランダムに選ぶ
+            giveCandy = Random.value < 0.5f;
+        }
+        else
+        {
+            // 片方だけ入手済み：まだ持っていない方を確定で出す
+            giveCandy = !_isCandyObtained;
+        }
+
+        GameObject prefabToUse = giveCandy ? specialDropCandyPrefab : specialDropPinballPrefab;
+
+        if (prefabToUse == null)
+        {
+            Debug.LogWarning("[UFOItemGoal] 特別演出用のプレハブ（candy/ピンボール）がインスペクターに設定されていません。");
+            return;
+        }
+
+        if (specialDropStartPoint == null || specialDropEndPoint == null)
+        {
+            Debug.LogWarning("[UFOItemGoal] 特別演出の落下開始/終了位置がインスペクターに設定されていません。");
+            return;
+        }
+
+        // 入手状態を更新し、両方揃ったらこのスロットを二度と当たらないようにする
+        if (giveCandy) _isCandyObtained = true;
+        else _isPinballObtained = true;
+        ApplySpecialDropSlotAvailability();
+        RoguelikeSaveManager.Save();
+
+        Debug.Log($"[UFOItemGoal] 特別演出（Element{specialDropSlotIndex}）: {prefabToUse.name} を落下させます。");
+        StartCoroutine(SpecialDropRoutine(prefabToUse));
+    }
+
+    private System.Collections.IEnumerator SpecialDropRoutine(GameObject prefab)
+    {
+        GameObject obj = Instantiate(prefab, specialDropStartPoint.position, specialDropStartPoint.rotation);
+
+        // 当たり判定を完全に無くし、純粋な見た目の演出にする
+        foreach (var col in obj.GetComponentsInChildren<Collider>())
+        {
+            col.enabled = false;
+        }
+        foreach (var rb in obj.GetComponentsInChildren<Rigidbody>())
+        {
+            rb.isKinematic = true;
+        }
+
+        Vector3 startPos = specialDropStartPoint.position;
+        Vector3 endPos = specialDropEndPoint.position;
+
+        float elapsed = 0f;
+        while (elapsed < specialDropDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = specialDropEase.Evaluate(Mathf.Clamp01(elapsed / specialDropDuration));
+            obj.transform.position = Vector3.Lerp(startPos, endPos, t);
+            yield return null;
+        }
+        obj.transform.position = endPos;
+
+        yield return new WaitForSeconds(specialDropDestroyDelay);
+        Destroy(obj);
     }
 
     private void HandleUnwashedMoneyChanged(float newAmount)
