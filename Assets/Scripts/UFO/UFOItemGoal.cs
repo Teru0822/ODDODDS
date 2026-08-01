@@ -500,7 +500,25 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
         ApplySpecialDropSlotAvailability();
         RoguelikeSaveManager.Save();
 
-        Debug.Log($"[UFOItemGoal] 特別演出（Element{specialDropSlotIndex}）: {prefabToUse.name} を落下させます。");
+        // インベントリ（ItemPanelManager）へ加算する。当たり判定が無い演出のため、
+        // 抽選が確定したこの瞬間を「獲得」として扱う
+        // id=0: 悪魔のキャンディ (Demon's Candy) / id=1: 古びたピンボール玉 (Vintage PinBall)
+        int acquiredItemId = giveCandy ? 0 : 1;
+
+        // UFOキャッチャープレイ中は GameUI（ItemPanelManagerが乗っているオブジェクト）自体が
+        // GameUIManager.HandleUfoModeChanged() によって非表示(SetActive(false))にされているため、
+        // 非アクティブなオブジェクトも検索対象に含める必要がある
+        var itemPanelManager = FindFirstObjectByType<ItemPanelManager>(FindObjectsInactive.Include);
+        if (itemPanelManager != null)
+        {
+            itemPanelManager.AddItem(acquiredItemId, ItemType.Consume);
+        }
+        else
+        {
+            Debug.LogWarning("[UFOItemGoal] ItemPanelManager が見つからないため、アイテム加算をスキップしました。");
+        }
+
+        Debug.Log($"[UFOItemGoal] 特別演出（Element{specialDropSlotIndex}）: {prefabToUse.name} を落下させます。(id={acquiredItemId})");
         StartCoroutine(SpecialDropRoutine(prefabToUse));
     }
 
