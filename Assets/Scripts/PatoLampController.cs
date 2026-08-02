@@ -36,6 +36,16 @@ public class PatoLampController : MonoBehaviour
     {
         bool shouldBeActive = false;
 
+        // 【デバッグ用】どの条件で止まっているか特定するための一時ログ（0.5秒間隔で出力）
+        if (Time.frameCount % 30 == 0)
+        {
+            Debug.Log($"[PatoLampController] DEBUG: Instance={(UFOCameraController.Instance != null)}, " +
+                      $"IsPlaySessionActive={UFOCameraController.IsPlaySessionActive}, " +
+                      $"Remaining={(UFOCameraController.Instance != null ? UFOCameraController.Instance.RemainingTime : -999f):F1}, " +
+                      $"IsFlashing={UFOItemGoal.IsFlashing}, " +
+                      $"lightsCount={(_lights != null ? _lights.Length : -1)}");
+        }
+
         // セッションが有効かつ残り時間が10秒以下で、かつアイテム獲得演出中でない時のみアクティブにする
         if (UFOCameraController.Instance != null && UFOCameraController.IsPlaySessionActive)
         {

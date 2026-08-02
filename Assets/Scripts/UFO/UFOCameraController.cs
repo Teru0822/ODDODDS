@@ -56,6 +56,9 @@ public class UFOCameraController : MonoBehaviour
     [Tooltip("Spotlight GameObject enabled only during active play session")]
     [SerializeField] private GameObject playSpotlight;
 
+    [Tooltip("タイマー終了時、ルーレットのコイン降雨(ItemSpawner.IsSpawning)が発生中の場合、それが終わってから消灯・終了処理をするまでの追加待機秒数")]
+    [SerializeField] private float postRouletteRainExitDelay = 2f;
+
     [Header("Audio Settings")]
     [Tooltip("再生用のAudioSource。未設定の場合は自動でGetComponentします")]
     [SerializeField] private AudioSource audioSource;
@@ -358,8 +361,8 @@ public class UFOCameraController : MonoBehaviour
             audioSource = GetComponent<AudioSource>();
         }
 
-        // 開始時はUFOプレイモードではない状態にする
-        SetUfoMode(false);
+        // 開始時はUFOプレイモードではない状態にする（実際のセッション終了ではないのでイベント通知はしない）
+        SetUfoMode(false, notifyListeners: false);
 
         // 開始時はライトをオフにしておく
         SetPlaySpotlight(false, false);
@@ -536,7 +539,7 @@ public class UFOCameraController : MonoBehaviour
                         if (_paymentCount >= maxPlayCount)
                         {
                             Debug.Log("[UFOCameraController] 残りプレイ回数が0のため、自動的にUFOキャッチャーを終了します。");
-                            ExitUfoMode();
+                            StartCoroutine(ExitAfterRouletteRainRoutine());
                         }
                     }
                 }
@@ -951,7 +954,14 @@ public class UFOCameraController : MonoBehaviour
         _isTransitioning = true;
 
         IsPlayingUfo = false;
-        OnUfoModeChanged?.Invoke(false); // UFO終了イベントを通知
+        OnUfoModeChanged?.Invoke(false); // UFO終了イベントを通知（ここで引き出しの演出が開始される）
+
+        // 引き出しの演出（開く→見せる→閉じる）が終わるまで、プレイヤー視点への切り替えを待つ
+        if (UFODrawerRewardDisplay.Instance != null)
+        {
+            yield return new WaitUntil(() => !UFODrawerRewardDisplay.Instance.IsShowing);
+        }
+
         IsPlaySessionActive = false;
         SetPlaySpotlight(false);
         SetCoinInsertionLightsActive(false);
@@ -1064,6 +1074,24 @@ public class UFOCameraController : MonoBehaviour
     }
 
     /// <summary>
+    /// タイマー終了による自動終了時、ルーレットのコイン降雨中（ItemSpawner.IsSpawning）であれば
+    /// それが終わるまで待ち、さらに postRouletteRainExitDelay 秒待ってから ExitUfoMode() を呼ぶ。
+    /// 操作自体はこの待機中も IsPlaySessionActive = false により既にロックされている。
+    /// </summary>
+    private System.Collections.IEnumerator ExitAfterRouletteRainRoutine()
+    {
+        while (ItemSpawner.Instance != null && ItemSpawner.IsSpawning)
+        {
+            yield return null;
+        }
+
+        yield return new WaitForSeconds(postRouletteRainExitDelay);
+
+        Debug.Log("[UFOCameraController] コイン降雨終了（または無し）+ 待機完了。UFOキャッチャーを終了します。");
+        ExitUfoMode();
+    }
+
+    /// <summary>
     /// television の Quit ボタン（TouchPanelOutlineController）等、外部から UFO キャッチャーモードの終了を
     /// リクエストするための公開メソッド。F / Escape キーでの終了と同じ処理を行う。
     /// </summary>
@@ -1072,12 +1100,17 @@ public class UFOCameraController : MonoBehaviour
         ExitUfoMode();
     }
 
-    private void SetUfoMode(bool active)
+    private void SetUfoMode(bool active, bool notifyListeners = true)
     {
         IsPlayingUfo = active;
 
         // イベントを通じて外部UIやシステムに状態変更を通知（Observerパターン）
-        OnUfoModeChanged?.Invoke(active);
+        // ※起動時の初期化呼び出し（Start内）では、実際にセッションが終了したわけではないため
+        //   notifyListeners=false にして、引き出し演出等が誤って走らないようにする
+        if (notifyListeners)
+        {
+            OnUfoModeChanged?.Invoke(active);
+        }
 
         if (_fpController != null)
         {

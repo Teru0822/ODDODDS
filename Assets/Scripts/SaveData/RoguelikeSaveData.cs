@@ -32,4 +32,8 @@ public class RoguelikeSaveData
 
     //ピンボール
     public bool isPinballUnlocked = false;    // 例: ピンボールが解放されたかどうか
+
+    //UFOキャッチャー・ルーレット特別演出（Element2 / Roulette03）
+    public bool isRouletteCandyObtained = false;    // candyを入手済みか
+    public bool isRoulettePinballObtained = false;  // pinballを入手済みか
 }

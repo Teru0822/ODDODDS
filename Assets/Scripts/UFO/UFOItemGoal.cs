@@ -5,7 +5,7 @@ using TMPro; // 画面の文字（UI）を操作するために追加
 /// UFOキャッチャーの落とし口（透明なTriggerBox）にアタッチするクラス
 /// 落とし口の拡張（強化要素）にも対応しやすい設計
 /// </summary>
-public class UFOItemGoal : MonoBehaviour
+public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
 {
     [Header("強化要素用（外部から変更可能）")]
     [Tooltip("アイテム獲得時の金額倍率。強化で1.5倍などに変更できる")]
@@ -124,11 +124,117 @@ public class UFOItemGoal : MonoBehaviour
     [Tooltip("スピンさせるルーレットのコントローラー")]
     [SerializeField] private RouletteController rouletteController;
 
+    [Header("特別演出（Element2 / Roulette03 専用）")]
+    [Tooltip("この番号のスロットが当選したときだけ、通常のアイテム降雨の代わりに特別演出（candy/ピンボールのどちらかがランダムに落下）を行う")]
+    [SerializeField] private int specialDropSlotIndex = 2;
+
+    [Tooltip("特別演出候補1：キャンディのプレハブ")]
+    [SerializeField] private GameObject specialDropCandyPrefab;
+
+    [Tooltip("特別演出候補2：小さなピンボールのプレハブ")]
+    [SerializeField] private GameObject specialDropPinballPrefab;
+
+    [Tooltip("特別演出の落下開始位置（空のTransformをSceneビューで配置してください）")]
+    [SerializeField] private Transform specialDropStartPoint;
+
+    [Tooltip("特別演出の落下終了位置（空のTransformをSceneビューで配置してください）")]
+    [SerializeField] private Transform specialDropEndPoint;
+
+    [Tooltip("落下にかける時間（秒）")]
+    [SerializeField] private float specialDropDuration = 1.0f;
+
+    [Tooltip("落下の動きのイージング（重力っぽく加速させたい場合はEaseIn系のカーブにする）")]
+    [SerializeField] private AnimationCurve specialDropEase = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+
+    [Tooltip("落下中に左右へふわふわ揺れる幅")]
+    [SerializeField] private float specialDropSwayAmplitude = 0.3f;
+
+    [Tooltip("左右に揺れる速さ（大きいほど小刻みに揺れる）")]
+    [SerializeField] private float specialDropSwayFrequency = 3f;
+
+    [Tooltip("落下中に回転でも揺れさせる角度（度）。0にすると回転の揺れは無し")]
+    [SerializeField] private float specialDropWobbleAngle = 15f;
+
+    [Tooltip("着地後、何秒でオブジェクトを消すか")]
+    [SerializeField] private float specialDropDestroyDelay = 2.0f;
+
+    // candy / pinball をそれぞれ入手済みかどうか（セーブデータから復元される）
+    private bool _isCandyObtained = false;
+    private bool _isPinballObtained = false;
+
+    // 特別演出スロットの元々のweight（当選不可にした後、ラウンドリセット時に元へ戻すため）
+    private float _originalSpecialDropWeight = 1f;
+    private bool _originalSpecialDropWeightCaptured = false;
+
     public static UFOItemGoal Instance { get; private set; }
 
     private void Awake()
     {
         if (Instance == null) Instance = this;
+
+        // セーブデータ読み込み（当選不可化）が行われる前に、元のweightを控えておく
+        if (rouletteController != null && !_originalSpecialDropWeightCaptured)
+        {
+            var slot = rouletteController.GetSlotEntry(specialDropSlotIndex);
+            if (slot != null)
+            {
+                _originalSpecialDropWeight = slot.weight;
+                _originalSpecialDropWeightCaptured = true;
+            }
+        }
+    }
+
+    public void WriteSaveData(RoguelikeSaveData saveData)
+    {
+        saveData.isRouletteCandyObtained = _isCandyObtained;
+        saveData.isRoulettePinballObtained = _isPinballObtained;
+    }
+
+    public void ReadSaveData(RoguelikeSaveData saveData)
+    {
+        _isCandyObtained = saveData.isRouletteCandyObtained;
+        _isPinballObtained = saveData.isRoulettePinballObtained;
+        ApplySpecialDropSlotAvailability();
+    }
+
+    /// <summary>
+    /// candy・pinball の両方を入手済みの場合、対象スロット（はてなマーク）の当選確率を0にして
+    /// 二度と当たらないようにする。
+    /// </summary>
+    private void ApplySpecialDropSlotAvailability()
+    {
+        if (!_isCandyObtained || !_isPinballObtained) return;
+        if (rouletteController == null) return;
+
+        var slot = rouletteController.GetSlotEntry(specialDropSlotIndex);
+        if (slot != null)
+        {
+            slot.weight = 0f;
+            Debug.Log("[UFOItemGoal] candy/pinball を両方入手済みのため、特別演出スロットの当選確率を0にしました。");
+        }
+    }
+
+    /// <summary>
+    /// candy/pinball の入手状況をリセットし、特別演出スロットを再度当選可能に戻す。
+    /// 【接続待ち】ラウンド進行・ゲームオーバー処理が実装され次第、そこから呼び出してください
+    /// （例: MoneyManager.CheckGameOver() のゲームオーバー確定処理内など）。
+    /// </summary>
+    public void ResetSpecialDropProgress()
+    {
+        _isCandyObtained = false;
+        _isPinballObtained = false;
+
+        if (rouletteController != null)
+        {
+            var slot = rouletteController.GetSlotEntry(specialDropSlotIndex);
+            if (slot != null)
+            {
+                slot.weight = _originalSpecialDropWeight;
+            }
+        }
+
+        RoguelikeSaveManager.Save();
+        Debug.Log("[UFOItemGoal] candy/pinball の入手状況をリセットしました。次のラウンドで再び抽選対象になります。");
     }
 
     private void Start()
@@ -154,6 +260,19 @@ public class UFOItemGoal : MonoBehaviour
 
         // UFOカメラのプレイ開始・終了イベントを購読
         UFOCameraController.OnUfoModeChanged += HandleUfoModeChanged;
+
+        // 【暫定】ラウンド・ゲームオーバー処理が未実装のため、Unity再生開始のたびに
+        // candy/pinballの入手状況をリセットする。ラウンドシステム実装後はここを削除し、
+        // ResetSpecialDropProgress() をゲームオーバー処理側から呼ぶように差し替えること。
+        StartCoroutine(ResetSpecialDropProgressOnPlayStart());
+    }
+
+    private System.Collections.IEnumerator ResetSpecialDropProgressOnPlayStart()
+    {
+        // MoneyManager.Start() 経由の RoguelikeSaveManager.Load()（ReadSaveData）が
+        // 先に走っていても、確実に後勝ちでリセットされるよう1フレーム待つ
+        yield return null;
+        ResetSpecialDropProgress();
     }
 
     private Coroutine _lampCoroutine;
@@ -182,21 +301,37 @@ public class UFOItemGoal : MonoBehaviour
 
     private void HandleUfoModeChanged(bool isPlayingUfo)
     {
-        if (!isPlayingUfo)
+        if (isPlayingUfo)
         {
-            // セッション終了時、とった分だけ所持枚数（PlayerWallet）を増やす
-            if (UnwashedMoneyManager.Instance != null)
-            {
-                UnwashedMoneyManager.Instance.AddCoins(_sessionBronzeCoins, _sessionSilverCoins, _sessionGoldCoins, _sessionBlackDiamonds);
-                Debug.Log($"[UFOキャッチャー終了] 獲得コイン・ダイヤを所持金に加算しました: 銅{_sessionBronzeCoins}枚, 銀{_sessionSilverCoins}枚, 金{_sessionGoldCoins}枚, 黒ダイヤ{_sessionBlackDiamonds}個");
-            }
-            
-            // セッション用カウンターをリセット
-            _sessionBronzeCoins = 0;
-            _sessionSilverCoins = 0;
-            _sessionGoldCoins = 0;
-            _sessionBlackDiamonds = 0;
+            // プレイ開始時、前回セッション分の引き出しの中身をリセットしておく
+            UFODrawerRewardDisplay.Instance?.ResetContents();
+            return;
         }
+
+        // プレイ中に積み上がった引き出しの中身を、そのまま見せる（引き出しを開くだけ）。
+        // 所持金への加算（FinalizeSessionRewards）は、カメラが Drawer Camera Viewpoint に
+        // 到着したタイミングで UFODrawerRewardDisplay 側から呼ばれる。
+        UFODrawerRewardDisplay.Instance?.OpenDrawer();
+    }
+
+    /// <summary>
+    /// セッション中に獲得した金・銀・銅コイン、黒ダイヤを所持枚数（PlayerWallet）に加算する。
+    /// UnwashCoinのカウントアップUIとタイミングを合わせたいため、即時実行せず、
+    /// UFODrawerRewardDisplay がカメラをDrawer Camera Viewpointへ到着させたタイミングで呼ぶ。
+    /// </summary>
+    public void FinalizeSessionRewards()
+    {
+        if (UnwashedMoneyManager.Instance != null)
+        {
+            UnwashedMoneyManager.Instance.AddCoins(_sessionBronzeCoins, _sessionSilverCoins, _sessionGoldCoins, _sessionBlackDiamonds);
+            Debug.Log($"[UFOキャッチャー終了] 獲得コイン・ダイヤを所持金に加算しました: 銅{_sessionBronzeCoins}枚, 銀{_sessionSilverCoins}枚, 金{_sessionGoldCoins}枚, 黒ダイヤ{_sessionBlackDiamonds}個");
+        }
+
+        // セッション用カウンターをリセット
+        _sessionBronzeCoins = 0;
+        _sessionSilverCoins = 0;
+        _sessionGoldCoins = 0;
+        _sessionBlackDiamonds = 0;
     }
 
     /// <summary>
@@ -270,7 +405,14 @@ public class UFOItemGoal : MonoBehaviour
             Debug.Log("[UFOItemGoal] ルーレット完了につき時間の一時停止を解除しました。");
         }
 
-        // 2. 当選インデックスに応じたアイテムを降らせる
+        // 2. 特別演出スロット（Element2 / Roulette03）の場合は、通常の降雨処理をスキップして専用演出を行う
+        if (winningIndex == specialDropSlotIndex)
+        {
+            TriggerSpecialDrop();
+            return;
+        }
+
+        // 3. 当選インデックスに応じたアイテムを降らせる
         if (ItemSpawner.Instance != null)
         {
             GameObject rewardPrefab = null;
@@ -338,6 +480,136 @@ public class UFOItemGoal : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// candy / 小さなピンボール のどちらかをランダムに選び、当たり判定なしの見た目だけの落下演出を行う。
+    /// （Element2 / Roulette03 が当選したときの専用演出）
+    /// </summary>
+    private void TriggerSpecialDrop()
+    {
+        // 両方入手済みならこのスロット自体が当たらないはずだが、念のための保険
+        if (_isCandyObtained && _isPinballObtained)
+        {
+            Debug.LogWarning("[UFOItemGoal] candy/pinball を両方入手済みのため、特別演出をスキップします。");
+            return;
+        }
+
+        bool giveCandy;
+        if (!_isCandyObtained && !_isPinballObtained)
+        {
+            // まだどちらも入手していない：ランダムに選ぶ
+            giveCandy = Random.value < 0.5f;
+        }
+        else
+        {
+            // 片方だけ入手済み：まだ持っていない方を確定で出す
+            giveCandy = !_isCandyObtained;
+        }
+
+        GameObject prefabToUse = giveCandy ? specialDropCandyPrefab : specialDropPinballPrefab;
+
+        if (prefabToUse == null)
+        {
+            Debug.LogWarning("[UFOItemGoal] 特別演出用のプレハブ（candy/ピンボール）がインスペクターに設定されていません。");
+            return;
+        }
+
+        if (specialDropStartPoint == null || specialDropEndPoint == null)
+        {
+            Debug.LogWarning("[UFOItemGoal] 特別演出の落下開始/終了位置がインスペクターに設定されていません。");
+            return;
+        }
+
+        // 入手状態を更新し、両方揃ったらこのスロットを二度と当たらないようにする
+        if (giveCandy) _isCandyObtained = true;
+        else _isPinballObtained = true;
+        ApplySpecialDropSlotAvailability();
+        RoguelikeSaveManager.Save();
+
+        // インベントリ（ItemPanelManager）へ加算する。当たり判定が無い演出のため、
+        // 抽選が確定したこの瞬間を「獲得」として扱う
+        // id=0: 悪魔のキャンディ (Demon's Candy) / id=1: 古びたピンボール玉 (Vintage PinBall)
+        int acquiredItemId = giveCandy ? 0 : 1;
+
+        // UFOキャッチャープレイ中は GameUI（ItemPanelManagerが乗っているオブジェクト）自体が
+        // GameUIManager.HandleUfoModeChanged() によって非表示(SetActive(false))にされているため、
+        // 非アクティブなオブジェクトも検索対象に含める必要がある
+        var itemPanelManager = FindFirstObjectByType<ItemPanelManager>(FindObjectsInactive.Include);
+        if (itemPanelManager != null)
+        {
+            itemPanelManager.AddItem(acquiredItemId, ItemType.Consume);
+        }
+        else
+        {
+            Debug.LogWarning("[UFOItemGoal] ItemPanelManager が見つからないため、アイテム加算をスキップしました。");
+        }
+
+        Debug.Log($"[UFOItemGoal] 特別演出（Element{specialDropSlotIndex}）: {prefabToUse.name} を落下させます。(id={acquiredItemId})");
+
+        // 左下の3D回転ポップアップは、着地（END Point到達）のタイミングで表示する
+        string acquiredItemDisplayName = giveCandy ? "悪魔のキャンディ" : "古びたピンボール玉";
+
+        StartCoroutine(SpecialDropRoutine(prefabToUse, acquiredItemDisplayName));
+    }
+
+    private System.Collections.IEnumerator SpecialDropRoutine(GameObject prefab, string displayName)
+    {
+        GameObject obj = Instantiate(prefab, specialDropStartPoint.position, specialDropStartPoint.rotation);
+
+        // 当たり判定を完全に無くし、純粋な見た目の演出にする
+        foreach (var col in obj.GetComponentsInChildren<Collider>())
+        {
+            col.enabled = false;
+        }
+        foreach (var rb in obj.GetComponentsInChildren<Rigidbody>())
+        {
+            rb.isKinematic = true;
+        }
+
+        Vector3 startPos = specialDropStartPoint.position;
+        Vector3 endPos = specialDropEndPoint.position;
+
+        // 落下方向に対して垂直な軸を求め、そちら方向にふわふわ揺らす
+        Vector3 fallDirection = (endPos - startPos).normalized;
+        Vector3 swayAxis = Vector3.Cross(fallDirection, Vector3.up);
+        if (swayAxis.sqrMagnitude < 0.0001f) swayAxis = Vector3.right; // 真上/真下に落ちる場合のフォールバック
+        swayAxis.Normalize();
+
+        Quaternion baseRotation = obj.transform.rotation;
+
+        float elapsed = 0f;
+        while (elapsed < specialDropDuration)
+        {
+            elapsed += Time.deltaTime;
+            float progress = Mathf.Clamp01(elapsed / specialDropDuration);
+            float t = specialDropEase.Evaluate(progress);
+            Vector3 basePos = Vector3.Lerp(startPos, endPos, t);
+
+            // 落下が進むほど（終盤）揺れを収束させて、着地位置ではきっちり止まるようにする
+            float swaySettle = 1f - progress;
+            float sway = Mathf.Sin(elapsed * specialDropSwayFrequency) * specialDropSwayAmplitude * swaySettle;
+            obj.transform.position = basePos + swayAxis * sway;
+
+            if (specialDropWobbleAngle != 0f)
+            {
+                float wobble = Mathf.Sin(elapsed * specialDropSwayFrequency) * specialDropWobbleAngle * swaySettle;
+                obj.transform.rotation = Quaternion.AngleAxis(wobble, fallDirection) * baseRotation;
+            }
+
+            yield return null;
+        }
+        obj.transform.position = endPos;
+        obj.transform.rotation = baseRotation;
+
+        // END Pointに到達したタイミングで、左下の3D回転ポップアップに表示を切り替える
+        if (UFOItemPickupDisplay.Instance != null)
+        {
+            UFOItemPickupDisplay.Instance.ShowItemPrefabDirect(prefab, displayName);
+        }
+
+        yield return new WaitForSeconds(specialDropDestroyDelay);
+        Destroy(obj);
+    }
+
     private void HandleUnwashedMoneyChanged(float newAmount)
     {
         unwashedMoney = newAmount;
@@ -347,6 +619,18 @@ public class UFOItemGoal : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         HandleItemDrop(other);
+    }
+
+    /// <summary>
+    /// 引き出しの実物を count 個分まとめて積む（変換アイテムで複数枚まとまって入る場合用）
+    /// </summary>
+    private void AddDrawerItems(UFODrawerRewardDisplay.RewardItemType type, int count)
+    {
+        if (UFODrawerRewardDisplay.Instance == null) return;
+        for (int i = 0; i < count; i++)
+        {
+            UFODrawerRewardDisplay.Instance.AddItem(type);
+        }
     }
 
     /// <summary>
@@ -402,6 +686,10 @@ public class UFOItemGoal : MonoBehaviour
                     _sessionSilverCoins += silverConvert;
                     _sessionBronzeCoins += bronzeConvert;
                     Debug.Log($"[獲得変換] {item.itemType} (名前: {other.gameObject.name}) を獲得！ (金貨+{goldConvert}, 銀貨+{silverConvert}, 銅貨+{bronzeConvert})");
+
+                    AddDrawerItems(UFODrawerRewardDisplay.RewardItemType.Gold, goldConvert);
+                    AddDrawerItems(UFODrawerRewardDisplay.RewardItemType.Silver, silverConvert);
+                    AddDrawerItems(UFODrawerRewardDisplay.RewardItemType.Bronze, bronzeConvert);
                 }
                 else
                 {
@@ -411,6 +699,7 @@ public class UFOItemGoal : MonoBehaviour
                         // デフォルト設定
                         _sessionBronzeCoins += 10;
                         Debug.Log($"[獲得変換] {item.itemType} (名前: {other.gameObject.name}) を獲得！ (デフォルトフォールバック: 銅貨+10)");
+                        AddDrawerItems(UFODrawerRewardDisplay.RewardItemType.Bronze, 10);
                     }
                 }
             }
@@ -423,18 +712,21 @@ public class UFOItemGoal : MonoBehaviour
                     Debug.Log($"[獲得] 銅貨！ (今回セッション累計: 銅{_sessionBronzeCoins})");
                     // コイン獲得音の再生
                     PlaySound(coinGetSound);
+                    UFODrawerRewardDisplay.Instance?.AddItem(UFODrawerRewardDisplay.RewardItemType.Bronze);
                     break;
                 case UFOItemType.SilverCoin:
                     _sessionSilverCoins++;
                     Debug.Log($"[獲得] 銀貨！ (今回セッション累計: 銀{_sessionSilverCoins})");
                     // コイン獲得音の再生
                     PlaySound(coinGetSound);
+                    UFODrawerRewardDisplay.Instance?.AddItem(UFODrawerRewardDisplay.RewardItemType.Silver);
                     break;
                 case UFOItemType.GoldCoin:
                     _sessionGoldCoins++;
                     Debug.Log($"[獲得] 金貨！ (今回セッション累計: 金{_sessionGoldCoins})");
                     // コイン獲得音の再生
                     PlaySound(coinGetSound);
+                    UFODrawerRewardDisplay.Instance?.AddItem(UFODrawerRewardDisplay.RewardItemType.Gold);
                     break;
                 case UFOItemType.RouletteItem:
                     TriggerRouletteItemGoalEffect(finalValue);
@@ -459,10 +751,17 @@ public class UFOItemGoal : MonoBehaviour
                     _sessionBlackDiamonds++;
                     Debug.Log($"[獲得] BlackDiamond！ (今回セッション累計: 黒{_sessionBlackDiamonds})");
                     PlaySound(blackDiamondGetSound != null ? blackDiamondGetSound : coinGetSound);
+                    UFODrawerRewardDisplay.Instance?.AddItem(UFODrawerRewardDisplay.RewardItemType.BlackDiamond);
 
                     // ランプを紫に光らせる（常灯）
                     TriggerLampFlash(blackDiamondFlashColor, false);
                     break;
+            }
+
+            // 左下の3D回転ポップアップに、今取得したアイテムを表示する
+            if (UFOItemPickupDisplay.Instance != null)
+            {
+                UFOItemPickupDisplay.Instance.ShowPickedItem(other.gameObject);
             }
 
             // アイテムを消去する

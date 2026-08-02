@@ -1504,6 +1504,16 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 549408614309992999, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
   m_PrefabInstance: {fileID: 2838122684108357249}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &281203211 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5732188314401267476, guid: 613ddb3aa382d0549b41c4cb655d409a, type: 3}
+  m_PrefabInstance: {fileID: 2821728039331258562}
+  m_PrefabAsset: {fileID: 0}
+--- !u!224 &294986765 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 2474361816044113538, guid: 613ddb3aa382d0549b41c4cb655d409a, type: 3}
+  m_PrefabInstance: {fileID: 2821728039331258562}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &348406975
 GameObject:
   m_ObjectHideFlags: 0
@@ -1949,6 +1959,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 380124247}
   m_CullTransparentMesh: 1
+--- !u!1 &385320626 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7124093294592840305, guid: 613ddb3aa382d0549b41c4cb655d409a, type: 3}
+  m_PrefabInstance: {fileID: 2821728039331258562}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &438577641
 GameObject:
   m_ObjectHideFlags: 0
@@ -3564,6 +3579,11 @@ RectTransform:
   m_AnchoredPosition: {x: 15, y: 100}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1011609206 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1706431490397632674, guid: 613ddb3aa382d0549b41c4cb655d409a, type: 3}
+  m_PrefabInstance: {fileID: 2821728039331258562}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1039705538
 GameObject:
   m_ObjectHideFlags: 0
@@ -7128,6 +7148,38 @@ PrefabInstance:
       propertyPath: _blackDiamondText
       value: 
       objectReference: {fileID: 1807428892}
+    - target: {fileID: 2107196397162315229, guid: 613ddb3aa382d0549b41c4cb655d409a, type: 3}
+      propertyPath: _rewardFocusScale
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2107196397162315229, guid: 613ddb3aa382d0549b41c4cb655d409a, type: 3}
+      propertyPath: _unwashCoinGroupContainer
+      value: 
+      objectReference: {fileID: 294986765}
+    - target: {fileID: 2107196397162315229, guid: 613ddb3aa382d0549b41c4cb655d409a, type: 3}
+      propertyPath: _unwashCoinGroupFocusPosition.x
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 2107196397162315229, guid: 613ddb3aa382d0549b41c4cb655d409a, type: 3}
+      propertyPath: _unwashCoinGroupFocusPosition.y
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 2107196397162315229, guid: 613ddb3aa382d0549b41c4cb655d409a, type: 3}
+      propertyPath: _hudElementsToHideDuringRewardFocus.Array.size
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2107196397162315229, guid: 613ddb3aa382d0549b41c4cb655d409a, type: 3}
+      propertyPath: '_hudElementsToHideDuringRewardFocus.Array.data[0]'
+      value: 
+      objectReference: {fileID: 281203211}
+    - target: {fileID: 2107196397162315229, guid: 613ddb3aa382d0549b41c4cb655d409a, type: 3}
+      propertyPath: '_hudElementsToHideDuringRewardFocus.Array.data[1]'
+      value: 
+      objectReference: {fileID: 385320626}
+    - target: {fileID: 2107196397162315229, guid: 613ddb3aa382d0549b41c4cb655d409a, type: 3}
+      propertyPath: '_hudElementsToHideDuringRewardFocus.Array.data[2]'
+      value: 
+      objectReference: {fileID: 1011609206}
     - target: {fileID: 2504732544080596390, guid: 613ddb3aa382d0549b41c4cb655d409a, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -7835,6 +7887,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3306037517936428828, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
       propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3306037517936428828, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
+      propertyPath: m_AnchorMin.x
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3327847065134276216, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
