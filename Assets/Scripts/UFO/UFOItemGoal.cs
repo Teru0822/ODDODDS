@@ -146,6 +146,15 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
     [Tooltip("落下の動きのイージング（重力っぽく加速させたい場合はEaseIn系のカーブにする）")]
     [SerializeField] private AnimationCurve specialDropEase = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
+    [Tooltip("落下中に左右へふわふわ揺れる幅")]
+    [SerializeField] private float specialDropSwayAmplitude = 0.3f;
+
+    [Tooltip("左右に揺れる速さ（大きいほど小刻みに揺れる）")]
+    [SerializeField] private float specialDropSwayFrequency = 3f;
+
+    [Tooltip("落下中に回転でも揺れさせる角度（度）。0にすると回転の揺れは無し")]
+    [SerializeField] private float specialDropWobbleAngle = 15f;
+
     [Tooltip("着地後、何秒でオブジェクトを消すか")]
     [SerializeField] private float specialDropDestroyDelay = 2.0f;
 
@@ -520,17 +529,13 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
 
         Debug.Log($"[UFOItemGoal] 特別演出（Element{specialDropSlotIndex}）: {prefabToUse.name} を落下させます。(id={acquiredItemId})");
 
-        // 左下の3D回転ポップアップにも表示する（candy/pinballはItemSpawnData化していないためプレハブを直接渡す）
+        // 左下の3D回転ポップアップは、着地（END Point到達）のタイミングで表示する
         string acquiredItemDisplayName = giveCandy ? "悪魔のキャンディ" : "古びたピンボール玉";
-        if (UFOItemPickupDisplay.Instance != null)
-        {
-            UFOItemPickupDisplay.Instance.ShowItemPrefabDirect(prefabToUse, acquiredItemDisplayName);
-        }
 
-        StartCoroutine(SpecialDropRoutine(prefabToUse));
+        StartCoroutine(SpecialDropRoutine(prefabToUse, acquiredItemDisplayName));
     }
 
-    private System.Collections.IEnumerator SpecialDropRoutine(GameObject prefab)
+    private System.Collections.IEnumerator SpecialDropRoutine(GameObject prefab, string displayName)
     {
         GameObject obj = Instantiate(prefab, specialDropStartPoint.position, specialDropStartPoint.rotation);
 
@@ -547,15 +552,43 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
         Vector3 startPos = specialDropStartPoint.position;
         Vector3 endPos = specialDropEndPoint.position;
 
+        // 落下方向に対して垂直な軸を求め、そちら方向にふわふわ揺らす
+        Vector3 fallDirection = (endPos - startPos).normalized;
+        Vector3 swayAxis = Vector3.Cross(fallDirection, Vector3.up);
+        if (swayAxis.sqrMagnitude < 0.0001f) swayAxis = Vector3.right; // 真上/真下に落ちる場合のフォールバック
+        swayAxis.Normalize();
+
+        Quaternion baseRotation = obj.transform.rotation;
+
         float elapsed = 0f;
         while (elapsed < specialDropDuration)
         {
             elapsed += Time.deltaTime;
-            float t = specialDropEase.Evaluate(Mathf.Clamp01(elapsed / specialDropDuration));
-            obj.transform.position = Vector3.Lerp(startPos, endPos, t);
+            float progress = Mathf.Clamp01(elapsed / specialDropDuration);
+            float t = specialDropEase.Evaluate(progress);
+            Vector3 basePos = Vector3.Lerp(startPos, endPos, t);
+
+            // 落下が進むほど（終盤）揺れを収束させて、着地位置ではきっちり止まるようにする
+            float swaySettle = 1f - progress;
+            float sway = Mathf.Sin(elapsed * specialDropSwayFrequency) * specialDropSwayAmplitude * swaySettle;
+            obj.transform.position = basePos + swayAxis * sway;
+
+            if (specialDropWobbleAngle != 0f)
+            {
+                float wobble = Mathf.Sin(elapsed * specialDropSwayFrequency) * specialDropWobbleAngle * swaySettle;
+                obj.transform.rotation = Quaternion.AngleAxis(wobble, fallDirection) * baseRotation;
+            }
+
             yield return null;
         }
         obj.transform.position = endPos;
+        obj.transform.rotation = baseRotation;
+
+        // END Pointに到達したタイミングで、左下の3D回転ポップアップに表示を切り替える
+        if (UFOItemPickupDisplay.Instance != null)
+        {
+            UFOItemPickupDisplay.Instance.ShowItemPrefabDirect(prefab, displayName);
+        }
 
         yield return new WaitForSeconds(specialDropDestroyDelay);
         Destroy(obj);

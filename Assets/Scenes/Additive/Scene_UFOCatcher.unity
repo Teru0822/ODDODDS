@@ -1699,6 +1699,7 @@ GameObject:
   - component: {fileID: 481385876}
   - component: {fileID: 481385878}
   - component: {fileID: 481385877}
+  - component: {fileID: 481385879}
   m_Layer: 0
   m_Name: RawImage
   m_TagString: Untagged
@@ -1761,6 +1762,33 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 481385875}
   m_CullTransparentMesh: 1
+--- !u!114 &481385879
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 481385875}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f0eeb00f9942e242838eb1c24460d3f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UFOItemPickupDisplay
+  itemDatabase:
+  - {fileID: 11400000, guid: e53f8d62073195d40965c9b4a3363751, type: 2}
+  - {fileID: 11400000, guid: be94224a19db61348abb9df7e39a425d, type: 2}
+  - {fileID: 11400000, guid: a0fde58b3622c464c8e2dfa92aaac988, type: 2}
+  - {fileID: 11400000, guid: 2874668e1e6a02741ad69048e43045cc, type: 2}
+  - {fileID: 11400000, guid: ef5692d8237e72645a41f1f9f556a5d4, type: 2}
+  - {fileID: 11400000, guid: b7c3c4c00354e094597555d42a0999a0, type: 2}
+  displayImage: {fileID: 481385877}
+  displayStage: {fileID: 1214303395}
+  itemNameText: {fileID: 1960887935}
+  displayLayerName: ItemShowcase
+  targetDisplaySize: 0.26
+  rotationAxis: {x: 0, y: 1, z: 0}
+  rotationSpeed: 60
+  displayHoldSeconds: 3
 --- !u!1 &494161864 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: bec7e6c26b248244cafa88bc464aa3f3, type: 3}
@@ -2152,7 +2180,6 @@ GameObject:
   - component: {fileID: 587000852}
   - component: {fileID: 587000851}
   - component: {fileID: 587000850}
-  - component: {fileID: 587000853}
   m_Layer: 0
   m_Name: price_table
   m_TagString: Untagged
@@ -2245,33 +2272,6 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 3
---- !u!114 &587000853
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 587000848}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1f0eeb00f9942e242838eb1c24460d3f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UFOItemPickupDisplay
-  itemDatabase:
-  - {fileID: 11400000, guid: e53f8d62073195d40965c9b4a3363751, type: 2}
-  - {fileID: 11400000, guid: be94224a19db61348abb9df7e39a425d, type: 2}
-  - {fileID: 11400000, guid: a0fde58b3622c464c8e2dfa92aaac988, type: 2}
-  - {fileID: 11400000, guid: 2874668e1e6a02741ad69048e43045cc, type: 2}
-  - {fileID: 11400000, guid: ef5692d8237e72645a41f1f9f556a5d4, type: 2}
-  - {fileID: 11400000, guid: b7c3c4c00354e094597555d42a0999a0, type: 2}
-  displayPanelRoot: {fileID: 587000848}
-  displayStage: {fileID: 1214303395}
-  itemNameText: {fileID: 1960887935}
-  displayLayerName: ItemShowcase
-  targetDisplaySize: 0.26
-  rotationAxis: {x: 0, y: 1, z: 0}
-  rotationSpeed: 60
-  displayHoldSeconds: 0
 --- !u!114 &588870059 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7587156506030312916, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
@@ -2888,7 +2888,7 @@ Transform:
   m_GameObject: {fileID: 898318472}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.128, y: 0.257, z: 0}
+  m_LocalPosition: {x: -0.451, y: 0.448, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -7909,7 +7909,7 @@ Transform:
   m_GameObject: {fileID: 1965922486}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.231, y: 0.257, z: 0}
+  m_LocalPosition: {x: 0.55, y: 0.455, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -9583,7 +9583,7 @@ PrefabInstance:
       objectReference: {fileID: 1604523055}
     - target: {fileID: 1995868394668917846, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: specialDropDuration
-      value: 3
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 1995868394668917846, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: specialDropEndPoint
@@ -9614,9 +9614,25 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 3127508438403709159, guid: 0583f5f19b211d440acdeaa68bc2c327, type: 3}
     - target: {fileID: 1995868394668917846, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: specialDropWobbleAngle
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 1995868394668917846, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: specialDropDestroyDelay
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1995868394668917846, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: specialDropPinballPrefab
       value: 
       objectReference: {fileID: 273887596041344241, guid: 780c9b83e0090ae468e0f29f297dc85c, type: 3}
+    - target: {fileID: 1995868394668917846, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: specialDropSwayAmplitude
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1995868394668917846, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: specialDropSwayFrequency
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 1995868394668917846, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: jackpotRainPrefabs.Array.size
       value: 3

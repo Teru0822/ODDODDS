@@ -22,8 +22,9 @@ public class UFOItemPickupDisplay : MonoBehaviour
     [SerializeField] private List<ItemSpawnData> itemDatabase = new List<ItemSpawnData>();
 
     [Header("表示先")]
-    [Tooltip("表示パネル全体のGameObject（表示中だけアクティブにする場合。未設定でも動作します）")]
-    [SerializeField] private GameObject displayPanelRoot;
+    [Tooltip("3DモデルをRenderTexture経由で映すRawImage。表示/非表示はこのコンポーネント単体で切り替えます" +
+             "（親のCanvas等を丸ごとSetActiveすると他のUIまで消えてしまうため）")]
+    [SerializeField] private RawImage displayImage;
     [Tooltip("モデルを実際に置く、表示専用カメラだけが映すステージのTransform")]
     [SerializeField] private Transform displayStage;
 
@@ -62,7 +63,7 @@ public class UFOItemPickupDisplay : MonoBehaviour
             return;
         }
 
-        if (displayPanelRoot != null) displayPanelRoot.SetActive(false);
+        SetVisible(false);
     }
 
     private void Update()
@@ -176,7 +177,7 @@ public class UFOItemPickupDisplay : MonoBehaviour
 
         if (itemNameText != null) itemNameText.text = displayName;
 
-        if (displayPanelRoot != null) displayPanelRoot.SetActive(true);
+        SetVisible(true);
 
         if (displayHoldSeconds > 0f)
         {
@@ -188,13 +189,22 @@ public class UFOItemPickupDisplay : MonoBehaviour
     {
         yield return new WaitForSeconds(displayHoldSeconds);
 
-        if (displayPanelRoot != null) displayPanelRoot.SetActive(false);
+        SetVisible(false);
         if (_currentModelInstance != null)
         {
             Destroy(_currentModelInstance);
             _currentModelInstance = null;
         }
         _hideCoroutine = null;
+    }
+
+    /// <summary>
+    /// RawImage・アイテム名テキストだけを個別にON/OFFする（共有Canvasを巻き込まないため）。
+    /// </summary>
+    private void SetVisible(bool visible)
+    {
+        if (displayImage != null) displayImage.enabled = visible;
+        if (itemNameText != null) itemNameText.enabled = visible;
     }
 
     private static void SetLayerRecursively(Transform root, int layer)
