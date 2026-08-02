@@ -519,6 +519,14 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
         }
 
         Debug.Log($"[UFOItemGoal] 特別演出（Element{specialDropSlotIndex}）: {prefabToUse.name} を落下させます。(id={acquiredItemId})");
+
+        // 左下の3D回転ポップアップにも表示する（candy/pinballはItemSpawnData化していないためプレハブを直接渡す）
+        string acquiredItemDisplayName = giveCandy ? "悪魔のキャンディ" : "古びたピンボール玉";
+        if (UFOItemPickupDisplay.Instance != null)
+        {
+            UFOItemPickupDisplay.Instance.ShowItemPrefabDirect(prefabToUse, acquiredItemDisplayName);
+        }
+
         StartCoroutine(SpecialDropRoutine(prefabToUse));
     }
 
@@ -678,6 +686,12 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
                     // ランプを紫に光らせる（常灯）
                     TriggerLampFlash(blackDiamondFlashColor, false);
                     break;
+            }
+
+            // 左下の3D回転ポップアップに、今取得したアイテムを表示する
+            if (UFOItemPickupDisplay.Instance != null)
+            {
+                UFOItemPickupDisplay.Instance.ShowPickedItem(other.gameObject);
             }
 
             // アイテムを消去する
