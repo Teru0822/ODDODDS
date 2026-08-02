@@ -40,8 +40,13 @@ public enum ItemCategory
 /// </summary>
 public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
 {
+    /// <summary>AddItem でアイテムが追加されたときに発火。引数はアイテムID。</summary>
+    public static event System.Action<int> OnItemObtained;
+
     [Header("アイテム表示用オブジェクト")]
     [SerializeField] private ItemDataBase _itemDataBase;
+
+    public ItemDataBase ItemDatabase => _itemDataBase;
     [SerializeField] private Button _consumeButton;
     [SerializeField] private Button _permanentButton;
     [SerializeField] private List<Button> _itemButtons = new List<Button>();
@@ -355,6 +360,18 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
     }
 
     /// <summary>
+    /// 指定したIDのアイテムを一度でも入手したことがあるかどうか（図鑑表示用）
+    /// </summary>
+    public bool IsItemOwned(int id)
+    {
+        foreach (var item in _ownedItems)
+            if (item != null && item.Id == id) return true;
+        foreach (var item in _ownedConsumeItems)
+            if (item != null && item.Id == id) return true;
+        return false;
+    }
+
+    /// <summary>
     /// 指定したIDを持つアイテムを所持しているかを返す関数
     /// </summary>
     /// <param name="id">アイテムID</param>
@@ -411,6 +428,7 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
             }
         }
 
+        OnItemObtained?.Invoke(id);
         UpdateUI();
     }
 
