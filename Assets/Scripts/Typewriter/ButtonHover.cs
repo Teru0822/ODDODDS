@@ -32,7 +32,7 @@ public class ButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
         _rewardSelectionUI.ShowPreview(data);
 
         _scaleTarget.DOKill();
-        _scaleTarget.DOScale(_originalScale * 1.05f, 0.1f).SetEase(Ease.OutCubic);
+        _scaleTarget.DOScale(_originalScale * 1.02f, 0.1f).SetEase(Ease.OutCubic);
     }
 
     public void OnPointerExit(PointerEventData eventData)

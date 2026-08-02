@@ -31,21 +31,21 @@ public class SkillConfirmEffectPlayer : MonoBehaviour
         if (_glowBurst != null)
         {
             var burstRT = _glowBurst.rectTransform;
-            burstRT.localScale = Vector3.zero;
+            burstRT.localScale = Vector3.one * 0.1f;
             _glowBurst.color = new Color(_glowBurst.color.r, _glowBurst.color.g, _glowBurst.color.b, 1f);
 
             seq.Join(burstRT.DOScale(_burstTargetScale, _burstDuration).SetEase(_burstScaleEase));
-            seq.Join(_glowBurst.DOFade(0f, _burstDuration).SetEase(Ease.InQuad));
+            seq.Join(_glowBurst.DOFade(0f, _burstDuration).SetEase(Ease.Linear));
         }
 
         if (_ringPulse != null)
         {
             var ringRT = _ringPulse.rectTransform;
-            ringRT.localScale = Vector3.one * 0.3f;
-            _ringPulse.color = new Color(_ringPulse.color.r, _ringPulse.color.g, _ringPulse.color.b, 0.7f);
+            ringRT.localScale = Vector3.one * 0.2f;
+            _ringPulse.color = new Color(_ringPulse.color.r, _ringPulse.color.g, _ringPulse.color.b, 0.85f);
 
             seq.Insert(_ringDelay, ringRT.DOScale(_ringTargetScale, _ringDuration).SetEase(_ringScaleEase));
-            seq.Insert(_ringDelay, _ringPulse.DOFade(0f, _ringDuration).SetEase(Ease.InQuad));
+            seq.Insert(_ringDelay, _ringPulse.DOFade(0f, _ringDuration).SetEase(Ease.Linear));
         }
 
         float totalDuration = Mathf.Max(_burstDuration, _ringDelay + _ringDuration);

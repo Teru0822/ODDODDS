@@ -4869,11 +4869,11 @@ MonoBehaviour:
   _skillButtonNormalSprite: {fileID: 21300000, guid: 4b4821c46969d46008eff535fc81df27, type: 3}
   _skillButtonHoverSprite: {fileID: 21300000, guid: e6dbf8b11ffba4c70aaf7c3157c11f7e, type: 3}
   _skillButtonNormalTextColor: {r: 0.78431374, g: 0.65882355, b: 0.29411766, a: 1}
-  _skillButtonHoverTextColor: {r: 0.78431374, g: 0.65882355, b: 0.29411766, a: 1}
+  _skillButtonHoverTextColor: {r: 0.754717, g: 0.7239402, b: 0.32395872, a: 1}
   _skillButtonHeight: 90
   _skillButtonSpacing: 8
-  _skillButtonPaddingVertical: 8
-  _skillButtonPaddingHorizontal: 8
+  _skillButtonPaddingVertical: 20
+  _skillButtonPaddingHorizontal: 20
   _skillButtonFontSize: 28
   _skillButtonFont: {fileID: 0}
   _skillButtonTMPFont: {fileID: 11400000, guid: 8d7c62a28a11c4e1e875474fc9259002, type: 2}
@@ -4888,6 +4888,30 @@ MonoBehaviour:
   - {fileID: 8300000, guid: ab6109cece800014ab1e139460679e55, type: 3}
   - {fileID: 8300000, guid: 4f658e40a67d1d34792d69d41aeb5279, type: 3}
   _uiKeySoundVolume: 1
+  _skillPressClip: {fileID: 0}
+  _skillPressVolume: 1
+  _skillConfirmClip: {fileID: 8300000, guid: 150c0ae54e7c143e88cff92511cb8644, type: 3}
+  _skillConfirmVolume: 1
+  _confirmShakeStrength: 6
+  _confirmShakeDuration: 0.12
+  _flashColor: {r: 1, g: 0.97, b: 0.85, a: 0.03529412}
+  _flashStartScale: 0.664
+  _flashEndScale: 1.55
+  _flashDuration: 0.22
+  _burstColor: {r: 1, g: 0.82, b: 0.15, a: 0.050980393}
+  _burstStartScale: 0.684
+  _burstEndScale: 1.9
+  _burstDuration: 0.5
+  _ringColor: {r: 1, g: 0.88, b: 0.35, a: 0.05490196}
+  _ringStartScale: 0.704
+  _ringEndScale: 2.1
+  _ringDuration: 0.55
+  _sparkColor: {r: 1, g: 0.95, b: 0.5, a: 0.039215688}
+  _sparkSize: 22
+  _sparkStartRadius: 0.35
+  _sparkEndRadius: 1.75
+  _sparkDuration: 0.3
+  _glowCornerRatio: 0.28
 --- !u!4 &1445989892
 Transform:
   m_ObjectHideFlags: 0
@@ -7727,7 +7751,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2611626270513595168, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
       propertyPath: m_Color.a
-      value: 0.3882353
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2658819227476894573, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
       propertyPath: m_SizeDelta.x
@@ -7839,19 +7863,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3488418804715835297, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 1615.5184
+      value: 967.15
       objectReference: {fileID: 0}
     - target: {fileID: 3488418804715835297, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 735.59
+      value: 500.38
       objectReference: {fileID: 0}
     - target: {fileID: 3488418804715835297, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 5.2125
+      value: -318.95
       objectReference: {fileID: 0}
     - target: {fileID: 3488418804715835297, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -32.1774
+      value: 71.81
       objectReference: {fileID: 0}
     - target: {fileID: 3528964459693894734, guid: 77813ac51643b47848c3c810f19b1ec4, type: 3}
       propertyPath: m_AnchoredPosition.y
