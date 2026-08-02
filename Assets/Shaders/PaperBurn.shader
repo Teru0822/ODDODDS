@@ -172,8 +172,10 @@ Shader "Custom/PaperBurn"
                 float fiber = VNoise(float2(uv.x, uv.y * 0.04), 80.0) * 0.10;
                 float grain = (g1 + g2 + g3 + fiber) * 0.50;
                 half3 paperCol = lerp(_PaperColor.rgb, _PaperColorB.rgb, grain);
-                half3 texCol   = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv).rgb;
-                half3 paper    = lerp(paperCol, texCol, _TexBlend);
+                // テクスチャのアルファを使って紙の色とブレンド
+                // （文字部分 alpha=1 → テキスト色、背景 alpha=0 → 紙の色）
+                half4 texSample = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv);
+                half3 paper     = lerp(paperCol, texSample.rgb, texSample.a * _TexBlend);
 
                 // Apply char scorching
                 half3 base = lerp(paper, _CharColor.rgb, charMask);

@@ -103,8 +103,9 @@ public class TypewriterPaperOutput : MonoBehaviour
     {
         if (_launchAudioSource == null)
         {
-            _launchAudioSource = GetComponent<AudioSource>()
-                ?? gameObject.AddComponent<AudioSource>();
+            _launchAudioSource = GetComponent<AudioSource>();
+            if (_launchAudioSource == null)
+                _launchAudioSource = gameObject.AddComponent<AudioSource>();
             _launchAudioSource.playOnAwake = false;
             _launchAudioSource.spatialBlend = 0f;
         }

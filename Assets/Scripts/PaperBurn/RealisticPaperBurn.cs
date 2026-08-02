@@ -12,9 +12,6 @@ public class RealisticPaperBurn : MonoBehaviour
     [Tooltip("燃焼中に周囲を照らすライト（省略可）")]
     public Light fireLight;
 
-    [Tooltip("燃焼と同時に消えるテキスト。未設定の場合は子から自動検索")]
-    public TextMeshPro burnText;
-
     [Header("Burn Settings")]
     [Range(1f, 10f)]
     public float burnDuration = 3.0f;
@@ -24,6 +21,9 @@ public class RealisticPaperBurn : MonoBehaviour
     public AudioClip burnSound;
     [Range(0f, 1f)]
     public float burnVolume = 1f;
+    [Tooltip("0=2D（常に一定音量）/ 1=3D（距離で減衰）。テストは0推奨")]
+    [Range(0f, 1f)]
+    public float spatialBlend = 0f;
 
     [Header("Light Flicker")]
     [Range(0f, 5f)]  public float minIntensity = 0.3f;
@@ -34,11 +34,12 @@ public class RealisticPaperBurn : MonoBehaviour
     public UnityEvent onBurnComplete;
 
     private Material    _mat;
+    private Material    _tmpMat;
+    private Renderer    _tmpRenderer;
     private float       _progress;
     private bool        _burning;
     private float       _flickerSeed;
     private AudioSource _audio;
-    private Color       _textStartColor;
 
     void Awake()
     {
@@ -51,24 +52,18 @@ public class RealisticPaperBurn : MonoBehaviour
         if (paperRenderer != null)
             _mat = paperRenderer.material;
 
-        // AudioSource を自動生成（Loop 再生・PlayOnAwake なし）
-        _audio             = gameObject.AddComponent<AudioSource>();
-        _audio.clip        = burnSound;
-        _audio.loop        = true;
-        _audio.playOnAwake = false;
-        _audio.volume      = burnVolume;
-        _audio.spatialBlend = 1f;
-
-        // テキストが未設定なら子から自動検索
-        if (burnText == null)
-            burnText = GetComponentInChildren<TextMeshPro>();
-        if (burnText != null)
-            _textStartColor = burnText.color;
+        _audio              = gameObject.AddComponent<AudioSource>();
+        _audio.clip         = burnSound;
+        _audio.loop         = true;
+        _audio.playOnAwake  = false;
+        _audio.volume       = burnVolume;
+        _audio.spatialBlend = spatialBlend;
     }
 
     void OnDestroy()
     {
-        if (_mat != null) Destroy(_mat);
+        if (_mat    != null) Destroy(_mat);
+        if (_tmpMat != null) Destroy(_tmpMat);
     }
 
     void Update()
@@ -77,16 +72,8 @@ public class RealisticPaperBurn : MonoBehaviour
 
         _progress = Mathf.Min(_progress + Time.deltaTime / burnDuration, 1.25f);
         _mat?.SetFloat("_BurnProgress", _progress);
+        _tmpMat?.SetFloat("_BurnProgress", _progress);
 
-        // テキストを燃焼に合わせてフェードアウト（progress 0→1 でアルファ 1→0）
-        if (burnText != null)
-        {
-            Color c = _textStartColor;
-            c.a = Mathf.Lerp(1f, 0f, Mathf.Clamp01(_progress));
-            burnText.color = c;
-        }
-
-        // ライトの揺らめき
         if (fireLight != null)
         {
             float noise = Mathf.PerlinNoise(Time.time * flickerSpeed, _flickerSeed);
@@ -105,9 +92,14 @@ public class RealisticPaperBurn : MonoBehaviour
     public void StartBurning()
     {
         if (_burning) return;
+
+        // タイプ完了後に呼ばれるので、ここで TMP マテリアルを差し替える
+        // （Start() で設定するとタイプ中に TMP がメッシュ再生成して上書きされるため）
+        SetupTMPBurnMaterial();
+        _tmpMat?.SetMatrix("_PaperW2L", transform.worldToLocalMatrix);
+
         _burning  = true;
         _progress = 0f;
-
         if (fireLight != null) fireLight.enabled = true;
         if (burnSound != null) _audio.Play();
     }
@@ -117,11 +109,39 @@ public class RealisticPaperBurn : MonoBehaviour
         _burning  = false;
         _progress = 0f;
         _mat?.SetFloat("_BurnProgress", 0f);
+        _tmpMat?.SetFloat("_BurnProgress", 0f);
         if (fireLight != null) fireLight.enabled = false;
         _audio.Stop();
+    }
 
-        // テキストを元の色に戻す
-        if (burnText != null) burnText.color = _textStartColor;
+    void SetupTMPBurnMaterial()
+    {
+        var tmp = GetComponentInChildren<TextMeshPro>(true);
+        if (tmp == null) return;
+
+        var shader = Shader.Find("Custom/PaperBurnTMP");
+        if (shader == null)
+        {
+            Debug.LogWarning("[RealisticPaperBurn] Custom/PaperBurnTMP シェーダーが見つかりません。", this);
+            return;
+        }
+
+        // TMP の MeshRenderer を直接差し替える
+        // fontMaterial 経由だとタイプ完了後でも TMP が内部で上書きするケースがある
+        _tmpRenderer = tmp.GetComponent<MeshRenderer>();
+        if (_tmpRenderer == null) return;
+
+        _tmpMat        = new Material(_tmpRenderer.sharedMaterial);
+        _tmpMat.shader = shader;
+
+        if (_mat != null)
+        {
+            _tmpMat.SetFloat("_MacroScale", _mat.GetFloat("_MacroScale"));
+            _tmpMat.SetFloat("_FineScale",  _mat.GetFloat("_FineScale"));
+        }
+
+        _tmpMat.SetFloat("_BurnProgress", 0f);
+        _tmpRenderer.material = _tmpMat;
     }
 
     [ContextMenu("Test Burn")]

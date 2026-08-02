@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 5648392918304823203}
   - component: {fileID: 1390173935534857410}
   - component: {fileID: 7332191910913632166}
+  - component: {fileID: 7061708832470735491}
   m_Layer: 0
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -62,7 +63,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  - {fileID: 2333653592751237744, guid: 4ed5b47db8cb6426a8d0424a0bb3e79d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -108,8 +109,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Sample text
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 4ed5b47db8cb6426a8d0424a0bb3e79d, type: 2}
+  m_sharedMaterial: {fileID: 2333653592751237744, guid: 4ed5b47db8cb6426a8d0424a0bb3e79d, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -181,6 +182,31 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_renderer: {fileID: 1390173935534857410}
   m_maskType: 0
+--- !u!114 &7061708832470735491
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 255295662967812151}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e3fcccb2bb364f75aaf7d46992d2109, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RealisticPaperBurn
+  paperRenderer: {fileID: 0}
+  fireLight: {fileID: 0}
+  burnText: {fileID: 0}
+  burnDuration: 3
+  burnSound: {fileID: 0}
+  burnVolume: 1
+  spatialBlend: 0
+  minIntensity: 0.3
+  maxIntensity: 2
+  flickerSpeed: 12
+  onBurnComplete:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &5075539662643875245
 GameObject:
   m_ObjectHideFlags: 0
@@ -440,7 +466,8 @@ MonoBehaviour:
   burnText: {fileID: 7332191910913632166}
   burnDuration: 3
   burnSound: {fileID: 8300000, guid: 94bc8546fe222904c9fd6e0438c1b6fc, type: 3}
-  burnVolume: 0.706
+  burnVolume: 1
+  spatialBlend: 0
   minIntensity: 0.3
   maxIntensity: 2
   flickerSpeed: 12
