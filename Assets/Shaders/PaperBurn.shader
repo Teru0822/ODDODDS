@@ -178,12 +178,13 @@ Shader "Custom/PaperBurn"
                 // Apply char scorching
                 half3 base = lerp(paper, _CharColor.rgb, charMask);
 
-                // Simple Lambert lighting + soft ambient
+                // Lambert + SH ambient（ライトがなくてもスカイボックス・ライトプローブから色が取れる）
                 float3 nrmWS    = normalize(IN.nrmWS);
                 float4 shadowUV = TransformWorldToShadowCoord(IN.posWS);
                 Light  mainLit  = GetMainLight(shadowUV);
                 float  NdotL    = saturate(dot(nrmWS, mainLit.direction));
-                half3  lighting = mainLit.color * (NdotL * 0.75 + 0.25);
+                half3  ambient  = SampleSH(nrmWS);
+                half3  lighting = mainLit.color * NdotL + ambient;
 
                 // Fire emission uses HDR color (high RGB → Bloom glows)
                 half3 col = base * lighting + _FireColor.rgb * fireMask;
