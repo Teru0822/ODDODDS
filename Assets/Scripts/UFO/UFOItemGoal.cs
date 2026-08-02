@@ -639,7 +639,9 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
     public void HandleItemDrop(Collider other)
     {
         // ぶつかった相手が UFOItem コンポーネントを持っているか確認
-        UFOItem item = other.GetComponent<UFOItem>();
+        // （複数パーツ構成のモデルで、Colliderと UFOItem が別オブジェクトの場合にも対応するため、
+        //   親方向も辿って検索する）
+        UFOItem item = other.GetComponentInParent<UFOItem>();
         
         if (item != null)
         {
@@ -660,8 +662,9 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
 
                 if (ItemSpawner.Instance != null)
                 {
-                    // オブジェクトのプレハブ名をクローン表記などを除いて一致させる
-                    string itemName = other.gameObject.name.Replace("(Clone)", "").Trim();
+                    // オブジェクトのプレハブ名をクローン表記などを除いて一致させる（UFOItemが付いている
+                    // ルートオブジェクトの名前を使う。子のCollider名だと複数パーツ構成のモデルでズレるため）
+                    string itemName = item.gameObject.name.Replace("(Clone)", "").Trim();
 
                     // initialActiveItems から検索
                     var settings = ItemSpawner.Instance.initialActiveItems.Find(x => x.prefab != null && x.prefab.name == itemName);
@@ -685,7 +688,7 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
                     _sessionGoldCoins += goldConvert;
                     _sessionSilverCoins += silverConvert;
                     _sessionBronzeCoins += bronzeConvert;
-                    Debug.Log($"[獲得変換] {item.itemType} (名前: {other.gameObject.name}) を獲得！ (金貨+{goldConvert}, 銀貨+{silverConvert}, 銅貨+{bronzeConvert})");
+                    Debug.Log($"[獲得変換] {item.itemType} (名前: {item.gameObject.name}) を獲得！ (金貨+{goldConvert}, 銀貨+{silverConvert}, 銅貨+{bronzeConvert})");
 
                     AddDrawerItems(UFODrawerRewardDisplay.RewardItemType.Gold, goldConvert);
                     AddDrawerItems(UFODrawerRewardDisplay.RewardItemType.Silver, silverConvert);
@@ -698,7 +701,7 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
                     {
                         // デフォルト設定
                         _sessionBronzeCoins += 10;
-                        Debug.Log($"[獲得変換] {item.itemType} (名前: {other.gameObject.name}) を獲得！ (デフォルトフォールバック: 銅貨+10)");
+                        Debug.Log($"[獲得変換] {item.itemType} (名前: {item.gameObject.name}) を獲得！ (デフォルトフォールバック: 銅貨+10)");
                         AddDrawerItems(UFODrawerRewardDisplay.RewardItemType.Bronze, 10);
                     }
                 }
@@ -761,11 +764,12 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
             // 左下の3D回転ポップアップに、今取得したアイテムを表示する
             if (UFOItemPickupDisplay.Instance != null)
             {
-                UFOItemPickupDisplay.Instance.ShowPickedItem(other.gameObject);
+                UFOItemPickupDisplay.Instance.ShowPickedItem(item.gameObject);
             }
 
-            // アイテムを消去する
-            Destroy(other.gameObject);
+            // アイテムを消去する（複数パーツ構成の場合、Collider単体ではなくUFOItemの付いた
+            // ルートごと消すことで、他のパーツが取り残されたり二重判定されたりするのを防ぐ）
+            Destroy(item.gameObject);
         }
     }
 

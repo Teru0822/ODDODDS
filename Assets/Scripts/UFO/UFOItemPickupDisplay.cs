@@ -173,6 +173,17 @@ public class UFOItemPickupDisplay : MonoBehaviour
                 float scale = targetDisplaySize / maxDimension;
                 _currentModelInstance.transform.localScale *= scale;
             }
+
+            // Pivot（原点）ではなく見た目の中心（Bounds）がステージ位置に来るよう補正する。
+            // Pivotが見た目の中心からズレているモデル（例: 時計）だと、Pivot基準のままでは
+            // 表示が上下左右にズレて見えるため。
+            Bounds scaledBounds = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++)
+            {
+                scaledBounds.Encapsulate(renderers[i].bounds);
+            }
+            Vector3 centerOffset = displayStage.position - scaledBounds.center;
+            _currentModelInstance.transform.position += centerOffset;
         }
 
         if (itemNameText != null) itemNameText.text = displayName;
