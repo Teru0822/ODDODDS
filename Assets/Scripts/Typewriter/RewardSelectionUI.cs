@@ -172,6 +172,10 @@ public class RewardSelectionUI : MonoBehaviour
     [Tooltip("角丸の半径比率（テクスチャ高さに対する割合）。大きいほど丸くなる")]
     [SerializeField, Range(0.05f, 0.5f)] private float _glowCornerRatio = 0.28f;
 
+    [Header("確定エフェクト（外部コンポーネント）")]
+    [Tooltip("SkillConfirmEffect コンポーネントをアサインすると、こちらの演出を使用する（旧 SpawnConfirmEffect の上位互換）")]
+    [SerializeField] private SkillConfirmEffect _confirmEffect;
+
     private static Sprite _glowSprite;
 
     /// <summary>タイプライター UI の表示状態が変わったときに発火する静的イベント (true=表示, false=非表示)</summary>
@@ -775,6 +779,12 @@ public class RewardSelectionUI : MonoBehaviour
 
     private void SpawnConfirmEffect(Vector2 canvasLocalPos, Transform canvasTransform, Vector2 buttonSize)
     {
+        if (_confirmEffect != null)
+        {
+            _confirmEffect.PlayAt(canvasLocalPos, buttonSize, canvasTransform);
+            return;
+        }
+
         if (_glowSprite == null) _glowSprite = BuildCircleSprite(64);
 
         // ボタンの縦横比に合わせた角丸矩形スプライトを動的生成
