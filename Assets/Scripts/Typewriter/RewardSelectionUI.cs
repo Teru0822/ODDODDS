@@ -443,6 +443,40 @@ public class RewardSelectionUI : MonoBehaviour
         _uiAudioSource.PlayOneShot(clip, _uiKeySoundVolume);
     }
 
+    /// <summary>アイテム図鑑でアイテムをクリックしたときに呼ぶ。既存のプレビュー枠と説明欄を流用して情報を表示する。</summary>
+    public void ShowItemPreview(Sprite icon, string itemName, string description)
+    {
+        if (_videoPlayer != null) _videoPlayer.Stop();
+        if (_previewRawImage != null) _previewRawImage.gameObject.SetActive(false);
+        if (_previewFallbackImage != null)
+        {
+            _previewFallbackImage.sprite = icon;
+            _previewFallbackImage.color = Color.white;
+            _previewFallbackImage.gameObject.SetActive(icon != null);
+        }
+        if (_explainTextTMP != null)
+        {
+            _explainTextTMP.enableWordWrapping = true;
+            _explainTextTMP.overflowMode = TMPro.TextOverflowModes.Truncate;
+        }
+        var text = string.IsNullOrEmpty(description) ? itemName : $"{itemName}\n{description}";
+        SetExplainText(text);
+    }
+
+    /// <summary>未入手アイテム選択時のプレビュー。アイコンは非表示にして説明欄にメッセージを出す。</summary>
+    public void ShowItemPreviewUnknown()
+    {
+        if (_videoPlayer != null) _videoPlayer.Stop();
+        if (_previewRawImage != null) _previewRawImage.gameObject.SetActive(false);
+        if (_previewFallbackImage != null) _previewFallbackImage.gameObject.SetActive(false);
+        if (_explainTextTMP != null)
+        {
+            _explainTextTMP.enableWordWrapping = true;
+            _explainTextTMP.overflowMode = TMPro.TextOverflowModes.Truncate;
+        }
+        SetExplainText("未入手のアイテムです。入手すると情報が解放されます。");
+    }
+
     /// <summary>ホバー中スキルのプレビューを表示する（ButtonHover から呼ばれる）。null で停止。</summary>
     public void ShowPreview(RoguelikeData data)
     {
