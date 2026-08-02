@@ -89,6 +89,10 @@ public class TypewriterPaperOutput : MonoBehaviour
     [Tooltip("音声再生用 AudioSource。null なら自動生成")]
     [SerializeField] private AudioSource _launchAudioSource;
 
+    [Header("燃焼演出（ローンチの代替）")]
+    [Tooltip("true にするとローンチ演出の代わりに紙が燃える。paperPrefab に RealisticPaperBurn が必要")]
+    [SerializeField] private bool _burnOnEnd = false;
+
     private GameObject _currentPaper;
     private TMP_Text _currentText;
     private Vector3 _baseLocalPos;
@@ -150,18 +154,34 @@ public class TypewriterPaperOutput : MonoBehaviour
         _currentText.text += c;
     }
 
-    /// <summary>打鍵完了。enableLaunch=true ならローンチ演出を開始する (紙はその後破棄される)。</summary>
+    /// <summary>打鍵完了。_burnOnEnd=true なら燃焼、enableLaunch=true ならローンチ演出を開始する。</summary>
     public void EndPaper()
     {
         if (_currentPaper == null) return;
-        if (!enableLaunch) return;
 
-        // 浮遊 Update から手放してローンチ専用に
         var paper = _currentPaper;
         _currentPaper = null;
         _currentText = null;
-        // spawnPoint から切り離してワールド空間で動かす
         paper.transform.SetParent(null, true);
+
+        if (_burnOnEnd)
+        {
+            var burn = paper.GetComponent<RealisticPaperBurn>();
+            if (burn != null)
+            {
+                // 燃え尽きたら自動で紙を破棄
+                burn.onBurnComplete.AddListener(() => Destroy(paper));
+                burn.StartBurning();
+            }
+            else
+            {
+                Debug.LogWarning("[TypewriterPaperOutput] _burnOnEnd=true だが RealisticPaperBurn が見つかりません", paper);
+                Destroy(paper, 3f);
+            }
+            return;
+        }
+
+        if (!enableLaunch) return;
         StartCoroutine(LaunchSequence(paper));
     }
 
