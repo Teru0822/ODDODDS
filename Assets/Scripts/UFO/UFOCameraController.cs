@@ -361,8 +361,8 @@ public class UFOCameraController : MonoBehaviour
             audioSource = GetComponent<AudioSource>();
         }
 
-        // 開始時はUFOプレイモードではない状態にする
-        SetUfoMode(false);
+        // 開始時はUFOプレイモードではない状態にする（実際のセッション終了ではないのでイベント通知はしない）
+        SetUfoMode(false, notifyListeners: false);
 
         // 開始時はライトをオフにしておく
         SetPlaySpotlight(false, false);
@@ -954,7 +954,14 @@ public class UFOCameraController : MonoBehaviour
         _isTransitioning = true;
 
         IsPlayingUfo = false;
-        OnUfoModeChanged?.Invoke(false); // UFO終了イベントを通知
+        OnUfoModeChanged?.Invoke(false); // UFO終了イベントを通知（ここで引き出しの演出が開始される）
+
+        // 引き出しの演出（開く→見せる→閉じる）が終わるまで、プレイヤー視点への切り替えを待つ
+        if (UFODrawerRewardDisplay.Instance != null)
+        {
+            yield return new WaitUntil(() => !UFODrawerRewardDisplay.Instance.IsShowing);
+        }
+
         IsPlaySessionActive = false;
         SetPlaySpotlight(false);
         SetCoinInsertionLightsActive(false);
@@ -1093,12 +1100,17 @@ public class UFOCameraController : MonoBehaviour
         ExitUfoMode();
     }
 
-    private void SetUfoMode(bool active)
+    private void SetUfoMode(bool active, bool notifyListeners = true)
     {
         IsPlayingUfo = active;
 
         // イベントを通じて外部UIやシステムに状態変更を通知（Observerパターン）
-        OnUfoModeChanged?.Invoke(active);
+        // ※起動時の初期化呼び出し（Start内）では、実際にセッションが終了したわけではないため
+        //   notifyListeners=false にして、引き出し演出等が誤って走らないようにする
+        if (notifyListeners)
+        {
+            OnUfoModeChanged?.Invoke(active);
+        }
 
         if (_fpController != null)
         {

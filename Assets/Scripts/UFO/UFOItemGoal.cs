@@ -301,21 +301,37 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
 
     private void HandleUfoModeChanged(bool isPlayingUfo)
     {
-        if (!isPlayingUfo)
+        if (isPlayingUfo)
         {
-            // セッション終了時、とった分だけ所持枚数（PlayerWallet）を増やす
-            if (UnwashedMoneyManager.Instance != null)
-            {
-                UnwashedMoneyManager.Instance.AddCoins(_sessionBronzeCoins, _sessionSilverCoins, _sessionGoldCoins, _sessionBlackDiamonds);
-                Debug.Log($"[UFOキャッチャー終了] 獲得コイン・ダイヤを所持金に加算しました: 銅{_sessionBronzeCoins}枚, 銀{_sessionSilverCoins}枚, 金{_sessionGoldCoins}枚, 黒ダイヤ{_sessionBlackDiamonds}個");
-            }
-            
-            // セッション用カウンターをリセット
-            _sessionBronzeCoins = 0;
-            _sessionSilverCoins = 0;
-            _sessionGoldCoins = 0;
-            _sessionBlackDiamonds = 0;
+            // プレイ開始時、前回セッション分の引き出しの中身をリセットしておく
+            UFODrawerRewardDisplay.Instance?.ResetContents();
+            return;
         }
+
+        // プレイ中に積み上がった引き出しの中身を、そのまま見せる（引き出しを開くだけ）。
+        // 所持金への加算（FinalizeSessionRewards）は、カメラが Drawer Camera Viewpoint に
+        // 到着したタイミングで UFODrawerRewardDisplay 側から呼ばれる。
+        UFODrawerRewardDisplay.Instance?.OpenDrawer();
+    }
+
+    /// <summary>
+    /// セッション中に獲得した金・銀・銅コイン、黒ダイヤを所持枚数（PlayerWallet）に加算する。
+    /// UnwashCoinのカウントアップUIとタイミングを合わせたいため、即時実行せず、
+    /// UFODrawerRewardDisplay がカメラをDrawer Camera Viewpointへ到着させたタイミングで呼ぶ。
+    /// </summary>
+    public void FinalizeSessionRewards()
+    {
+        if (UnwashedMoneyManager.Instance != null)
+        {
+            UnwashedMoneyManager.Instance.AddCoins(_sessionBronzeCoins, _sessionSilverCoins, _sessionGoldCoins, _sessionBlackDiamonds);
+            Debug.Log($"[UFOキャッチャー終了] 獲得コイン・ダイヤを所持金に加算しました: 銅{_sessionBronzeCoins}枚, 銀{_sessionSilverCoins}枚, 金{_sessionGoldCoins}枚, 黒ダイヤ{_sessionBlackDiamonds}個");
+        }
+
+        // セッション用カウンターをリセット
+        _sessionBronzeCoins = 0;
+        _sessionSilverCoins = 0;
+        _sessionGoldCoins = 0;
+        _sessionBlackDiamonds = 0;
     }
 
     /// <summary>
@@ -606,6 +622,18 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
     }
 
     /// <summary>
+    /// 引き出しの実物を count 個分まとめて積む（変換アイテムで複数枚まとまって入る場合用）
+    /// </summary>
+    private void AddDrawerItems(UFODrawerRewardDisplay.RewardItemType type, int count)
+    {
+        if (UFODrawerRewardDisplay.Instance == null) return;
+        for (int i = 0; i < count; i++)
+        {
+            UFODrawerRewardDisplay.Instance.AddItem(type);
+        }
+    }
+
+    /// <summary>
     /// アイテムが入ったときの実際の処理（子オブジェクトからも呼ばれる）
     /// </summary>
     public void HandleItemDrop(Collider other)
@@ -658,6 +686,10 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
                     _sessionSilverCoins += silverConvert;
                     _sessionBronzeCoins += bronzeConvert;
                     Debug.Log($"[獲得変換] {item.itemType} (名前: {other.gameObject.name}) を獲得！ (金貨+{goldConvert}, 銀貨+{silverConvert}, 銅貨+{bronzeConvert})");
+
+                    AddDrawerItems(UFODrawerRewardDisplay.RewardItemType.Gold, goldConvert);
+                    AddDrawerItems(UFODrawerRewardDisplay.RewardItemType.Silver, silverConvert);
+                    AddDrawerItems(UFODrawerRewardDisplay.RewardItemType.Bronze, bronzeConvert);
                 }
                 else
                 {
@@ -667,6 +699,7 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
                         // デフォルト設定
                         _sessionBronzeCoins += 10;
                         Debug.Log($"[獲得変換] {item.itemType} (名前: {other.gameObject.name}) を獲得！ (デフォルトフォールバック: 銅貨+10)");
+                        AddDrawerItems(UFODrawerRewardDisplay.RewardItemType.Bronze, 10);
                     }
                 }
             }
@@ -679,18 +712,21 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
                     Debug.Log($"[獲得] 銅貨！ (今回セッション累計: 銅{_sessionBronzeCoins})");
                     // コイン獲得音の再生
                     PlaySound(coinGetSound);
+                    UFODrawerRewardDisplay.Instance?.AddItem(UFODrawerRewardDisplay.RewardItemType.Bronze);
                     break;
                 case UFOItemType.SilverCoin:
                     _sessionSilverCoins++;
                     Debug.Log($"[獲得] 銀貨！ (今回セッション累計: 銀{_sessionSilverCoins})");
                     // コイン獲得音の再生
                     PlaySound(coinGetSound);
+                    UFODrawerRewardDisplay.Instance?.AddItem(UFODrawerRewardDisplay.RewardItemType.Silver);
                     break;
                 case UFOItemType.GoldCoin:
                     _sessionGoldCoins++;
                     Debug.Log($"[獲得] 金貨！ (今回セッション累計: 金{_sessionGoldCoins})");
                     // コイン獲得音の再生
                     PlaySound(coinGetSound);
+                    UFODrawerRewardDisplay.Instance?.AddItem(UFODrawerRewardDisplay.RewardItemType.Gold);
                     break;
                 case UFOItemType.RouletteItem:
                     TriggerRouletteItemGoalEffect(finalValue);
@@ -715,6 +751,7 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
                     _sessionBlackDiamonds++;
                     Debug.Log($"[獲得] BlackDiamond！ (今回セッション累計: 黒{_sessionBlackDiamonds})");
                     PlaySound(blackDiamondGetSound != null ? blackDiamondGetSound : coinGetSound);
+                    UFODrawerRewardDisplay.Instance?.AddItem(UFODrawerRewardDisplay.RewardItemType.BlackDiamond);
 
                     // ランプを紫に光らせる（常灯）
                     TriggerLampFlash(blackDiamondFlashColor, false);
