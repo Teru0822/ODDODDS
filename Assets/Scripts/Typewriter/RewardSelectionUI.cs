@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -125,6 +126,53 @@ public class RewardSelectionUI : MonoBehaviour
     [Tooltip("UI 操作音の音量")]
     [Range(0f, 2f)]
     [SerializeField] private float _uiKeySoundVolume = 1f;
+    [Tooltip("スキルボタン押下瞬間の効果音（ホバー音とは別の、より鋭いキー音）")]
+    [SerializeField] private AudioClip _skillPressClip;
+    [Range(0f, 2f)]
+    [SerializeField] private float _skillPressVolume = 1f;
+    [Tooltip("スキル確定時の効果音（タイプライターのカーリッジリターンベル音）")]
+    [SerializeField] private AudioClip _skillConfirmClip;
+    [Range(0f, 2f)]
+    [SerializeField] private float _skillConfirmVolume = 1f;
+
+    [Header("確定エフェクト - シェイク")]
+    [Tooltip("確定時のUIシェイク強度（px単位。Screen Space Cameraでは20〜30程度が目安）")]
+    [SerializeField] private float _confirmShakeStrength = 25f;
+    [Tooltip("確定時のUIシェイク時間（秒）。この後 Hide が呼ばれる）")]
+    [SerializeField] private float _confirmShakeDuration = 0.35f;
+
+    [Header("確定エフェクト - フラッシュ")]
+    [SerializeField] private Color _flashColor = new Color(1f, 0.97f, 0.85f, 1f);
+    [SerializeField, Range(0.3f, 1.5f)] private float _flashStartScale = 0.9f;
+    [SerializeField, Range(1f, 5f)] private float _flashEndScale = 1.55f;
+    [SerializeField, Range(0.05f, 1f)] private float _flashDuration = 0.22f;
+
+    [Header("確定エフェクト - グロー")]
+    [SerializeField] private Color _burstColor = new Color(1f, 0.82f, 0.15f, 1f);
+    [SerializeField, Range(0.3f, 1.5f)] private float _burstStartScale = 0.82f;
+    [SerializeField, Range(1f, 5f)] private float _burstEndScale = 1.9f;
+    [SerializeField, Range(0.05f, 2f)] private float _burstDuration = 0.50f;
+
+    [Header("確定エフェクト - リング")]
+    [SerializeField] private Color _ringColor = new Color(1f, 0.88f, 0.35f, 1f);
+    [SerializeField, Range(0.3f, 1.5f)] private float _ringStartScale = 0.88f;
+    [SerializeField, Range(1f, 6f)] private float _ringEndScale = 2.1f;
+    [SerializeField, Range(0.05f, 2f)] private float _ringDuration = 0.55f;
+
+    [Header("確定エフェクト - スパーク")]
+    [SerializeField] private Color _sparkColor = new Color(1f, 0.95f, 0.5f, 1f);
+    [SerializeField, Range(4f, 64f)] private float _sparkSize = 22f;
+    [Tooltip("スパーク開始位置：ボタン半サイズに乗じる係数（0＝中心、1＝コーナー端）")]
+    [SerializeField, Range(0f, 1f)] private float _sparkStartRadius = 0.35f;
+    [Tooltip("スパーク終了位置：ボタン半サイズに乗じる係数（1.75＝コーナーより外側）")]
+    [SerializeField, Range(1f, 4f)] private float _sparkEndRadius = 1.75f;
+    [SerializeField, Range(0.05f, 1f)] private float _sparkDuration = 0.30f;
+
+    [Header("確定エフェクト - テクスチャ")]
+    [Tooltip("角丸の半径比率（テクスチャ高さに対する割合）。大きいほど丸くなる")]
+    [SerializeField, Range(0.05f, 0.5f)] private float _glowCornerRatio = 0.28f;
+
+    private static Sprite _glowSprite;
 
     /// <summary>タイプライター UI の表示状態が変わったときに発火する静的イベント (true=表示, false=非表示)</summary>
     public static event Action<bool> OnTypewriterUIChanged;
@@ -378,6 +426,13 @@ public class RewardSelectionUI : MonoBehaviour
     public void OnSkillButtonExit(int index)
     {
         if (_lastSoundedIndex == index) _lastSoundedIndex = -1;
+    }
+
+    /// <summary>ボタン押下瞬間（ButtonHover.OnPointerDown から呼ばれる）</summary>
+    public void OnSkillButtonPress(int index)
+    {
+        if (_skillPressClip == null || _uiAudioSource == null) return;
+        _uiAudioSource.PlayOneShot(_skillPressClip, _skillPressVolume);
     }
 
     private void PlayKeySound()
@@ -650,9 +705,202 @@ public class RewardSelectionUI : MonoBehaviour
         SetExplainText("");
         RoguelikeData picked = _currentOptions[index];
         Debug.Log($"[RewardSelectionUI] OnOptionClicked: index={index} text=\"{picked}\"", this);
+
+        // ① 確定音（即再生）
+        if (_skillConfirmClip != null && _uiAudioSource != null)
+            _uiAudioSource.PlayOneShot(_skillConfirmClip, _skillConfirmVolume);
+
+        // ② 選択ボタンの押し込み演出 ＋ 確定エフェクト再生
+        var root = uiRoot != null ? uiRoot.transform : transform;
+        if (index < _dynButtons.Count)
+        {
+            var btn = _dynButtons[index];
+            btn.transform.DOKill();
+            // 外側に膨らむと ScrollView でクリップされるため、内側への押し込みのみ
+            btn.transform.DOPunchScale(Vector3.one * -0.06f, 0.25f, 4, 0.5f);
+
+            var canvas = root.GetComponentInParent<Canvas>();
+            if (canvas != null)
+            {
+                var canvasRT = (RectTransform)canvas.transform;
+                var cam = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+                Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(cam, btn.transform.position);
+                var btnRT = btn.GetComponent<RectTransform>();
+                var btnSize = btnRT != null ? new Vector2(btnRT.rect.width, btnRT.rect.height) : new Vector2(300f, 72f);
+                if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRT, screenPos, cam, out Vector2 localPos))
+                    SpawnConfirmEffect(localPos, canvas.transform, btnSize);
+            }
+        }
+
+        // ③ UI全体シェイク → 完了後に Hide + callback（二重呼び出し防止のため先にクリア）
         var cb = _onSelected;
-        Hide();
-        cb?.Invoke(picked);
+        _onSelected = null;
+        root.DOShakePosition(_confirmShakeDuration, _confirmShakeStrength, 12, 90f, false, true)
+            .OnComplete(() => { Hide(); cb?.Invoke(picked); });
+    }
+
+    private void SpawnConfirmEffect(Vector2 canvasLocalPos, Transform canvasTransform, Vector2 buttonSize)
+    {
+        if (_glowSprite == null) _glowSprite = BuildCircleSprite(64);
+
+        // ボタンの縦横比に合わせた角丸矩形スプライトを動的生成
+        int th = 64;
+        int tw = Mathf.Max(4, Mathf.RoundToInt(th * buttonSize.x / buttonSize.y));
+        Texture2D glowTex = BuildRoundedRectGlowTex(tw, th, _glowCornerRatio);
+        Texture2D ringTex = BuildRoundedRectRingTex(tw, th, _glowCornerRatio);
+        Sprite glowRectSpr = Sprite.Create(glowTex, new Rect(0, 0, tw, th), new Vector2(0.5f, 0.5f));
+        Sprite ringRectSpr = Sprite.Create(ringTex, new Rect(0, 0, tw, th), new Vector2(0.5f, 0.5f));
+
+        // ルートをボタンサイズで配置
+        var root = new GameObject("SkillConfirmEffect", typeof(RectTransform));
+        root.transform.SetParent(canvasTransform, false);
+        var rootRT = (RectTransform)root.transform;
+        rootRT.anchoredPosition = canvasLocalPos;
+        rootRT.sizeDelta = buttonSize;
+        rootRT.SetAsLastSibling();
+
+        // 矩形レイヤー：ルートを満たして広がる
+        Image MakeRectLayer(string name, Sprite spr, Color color, float startScale)
+        {
+            var go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(root.transform, false);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.sizeDelta = Vector2.zero;
+            rt.localScale = Vector3.one * startScale;
+            var img = go.AddComponent<Image>();
+            img.sprite = spr;
+            img.color = color;
+            img.raycastTarget = false;
+            return img;
+        }
+
+        // スパーク：固定円サイズ、ボタン四隅から飛ぶ
+        Image MakeSpark(Vector2 startPos)
+        {
+            var go = new GameObject("Spark", typeof(RectTransform));
+            go.transform.SetParent(root.transform, false);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(_sparkSize, _sparkSize);
+            rt.anchoredPosition = startPos;
+            var img = go.AddComponent<Image>();
+            img.sprite = _glowSprite;
+            img.color = _sparkColor;
+            img.raycastTarget = false;
+            return img;
+        }
+
+        var seq = DOTween.Sequence();
+
+        // 瞬間フラッシュ：ボタン形状で白く光る
+        var flash = MakeRectLayer("Flash", glowRectSpr, _flashColor, _flashStartScale);
+        seq.Join(flash.rectTransform.DOScale(_flashEndScale, _flashDuration).SetEase(Ease.OutCubic));
+        seq.Join(flash.DOFade(0f, _flashDuration).SetEase(Ease.OutCubic));
+
+        // 金色グロー：ボタン形状のまま外側へ広がる
+        var burst = MakeRectLayer("Burst", glowRectSpr, _burstColor, _burstStartScale);
+        seq.Insert(0.02f, burst.rectTransform.DOScale(_burstEndScale, _burstDuration).SetEase(Ease.OutCubic));
+        seq.Insert(0.02f, burst.DOFade(0f, _burstDuration).SetEase(Ease.Linear));
+
+        // 角丸矩形リング：ボタン輪郭から外側に拡散
+        var ring = MakeRectLayer("Ring", ringRectSpr, _ringColor, _ringStartScale);
+        seq.Insert(0.03f, ring.rectTransform.DOScale(_ringEndScale, _ringDuration).SetEase(Ease.OutCubic));
+        seq.Insert(0.03f, ring.DOFade(0f, _ringDuration).SetEase(Ease.Linear));
+
+        // 四隅スパーク：ボタンコーナーから斜め外側へ飛ぶ
+        float hw = buttonSize.x * 0.45f;
+        float hh = buttonSize.y * 0.45f;
+        Vector2[] corners = {
+            new Vector2(-hw, -hh), new Vector2(hw, -hh),
+            new Vector2(-hw,  hh), new Vector2(hw,  hh)
+        };
+        foreach (var corner in corners)
+        {
+            var spark = MakeSpark(corner * _sparkStartRadius);
+            seq.Insert(0.03f, spark.rectTransform.DOAnchorPos(corner * _sparkEndRadius, _sparkDuration).SetEase(Ease.OutCubic));
+            seq.Insert(0.03f, spark.DOFade(0f, _sparkDuration).SetEase(Ease.InCubic));
+        }
+
+        seq.OnComplete(() =>
+        {
+            if (root != null) Destroy(root);
+            Destroy(glowTex); Destroy(ringTex);
+            Destroy(glowRectSpr); Destroy(ringRectSpr);
+        });
+    }
+
+    private static Sprite BuildCircleSprite(int size)
+    {
+        var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        tex.filterMode = FilterMode.Bilinear;
+        var pix = new Color32[size * size];
+        float c = size * 0.5f;
+        for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+            {
+                float d = Mathf.Sqrt((x - c) * (x - c) + (y - c) * (y - c)) / c;
+                float a = Mathf.Clamp01(1f - d);
+                a = a * a;
+                pix[y * size + x] = new Color32(255, 255, 255, (byte)(a * 255));
+            }
+        tex.SetPixels32(pix);
+        tex.Apply();
+        return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
+    }
+
+    private static float SdRoundedRect(float px, float py, float bx, float by, float r)
+    {
+        float qx = Mathf.Abs(px) - bx + r;
+        float qy = Mathf.Abs(py) - by + r;
+        float outer = Mathf.Sqrt(Mathf.Max(qx, 0f) * Mathf.Max(qx, 0f) + Mathf.Max(qy, 0f) * Mathf.Max(qy, 0f));
+        return outer + Mathf.Min(Mathf.Max(qx, qy), 0f) - r;
+    }
+
+    private static Texture2D BuildRoundedRectGlowTex(int tw, int th, float cornerRatio)
+    {
+        var tex = new Texture2D(tw, th, TextureFormat.RGBA32, false);
+        tex.filterMode = FilterMode.Bilinear;
+        var pix = new Color32[tw * th];
+        float cx = tw * 0.5f, cy = th * 0.5f;
+        float r  = th * cornerRatio;
+        float bx = tw * 0.5f - r, by = th * 0.5f - r;
+        float glowRange = th * 0.28f;
+        for (int y = 0; y < th; y++)
+            for (int x = 0; x < tw; x++)
+            {
+                float sdf = SdRoundedRect(x - cx, y - cy, bx, by, r);
+                float a   = Mathf.Clamp01(1f - sdf / glowRange);
+                a = Mathf.Sqrt(a);
+                pix[y * tw + x] = new Color32(255, 255, 255, (byte)(a * 255));
+            }
+        tex.SetPixels32(pix);
+        tex.Apply();
+        return tex;
+    }
+
+    private static Texture2D BuildRoundedRectRingTex(int tw, int th, float cornerRatio)
+    {
+        var tex = new Texture2D(tw, th, TextureFormat.RGBA32, false);
+        tex.filterMode = FilterMode.Bilinear;
+        var pix = new Color32[tw * th];
+        float cx = tw * 0.5f, cy = th * 0.5f;
+        float r  = th * cornerRatio;
+        float bx = tw * 0.5f - r, by = th * 0.5f - r;
+        float ringWidth = th * 0.12f;
+        for (int y = 0; y < th; y++)
+            for (int x = 0; x < tw; x++)
+            {
+                float sdf = SdRoundedRect(x - cx, y - cy, bx, by, r);
+                float a   = 1f - Mathf.Abs(sdf) / ringWidth;
+                a = Mathf.Clamp01(a);
+                a = Mathf.Sqrt(a);
+                pix[y * tw + x] = new Color32(255, 255, 255, (byte)(a * 255));
+            }
+        tex.SetPixels32(pix);
+        tex.Apply();
+        return tex;
     }
 
     private void AutoCreateUI()

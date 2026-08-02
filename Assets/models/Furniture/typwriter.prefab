@@ -2958,7 +2958,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 46ed2fd6d5dc3f14faac49297f40d0b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TypewriterPaperOutput
-  paperPrefab: {fileID: 5104948186415670969, guid: fcc2de323e7babf4da82645ed360dbb0, type: 3}
+  paperPrefab: {fileID: 5104948186415670969, guid: 35ee0b18235d3430291ac005802d1191, type: 3}
   spawnPoint: {fileID: 8299332342728373798}
   floatMotion: 1
   bobAmplitudeV: 0.015
@@ -2970,7 +2970,8 @@ MonoBehaviour:
   rotAmplitude: 3
   rotPeriod: 3.5
   rotAxis: {x: 0, y: 1, z: 1}
-  enableLaunch: 1
+  enableLaunch: 0
+  _burnOnEnd: 1
   launchSpinAxis: {x: 0, y: 1, z: 0}
   launchSpinStartSpeed: 180
   launchSpinEndSpeed: 2400
