@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &402039545167523663
+--- !u!1 &80648585177180741
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,22 +8,22 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 652049650363615699}
-  - component: {fileID: 7945060970081056907}
+  - component: {fileID: 9063419729111913700}
+  - component: {fileID: 5673281826529234387}
   m_Layer: 0
-  m_Name: Handle (2, 1, 0)
+  m_Name: Handle (4, 1, 4)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &652049650363615699
+--- !u!4 &9063419729111913700
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 402039545167523663}
+  m_GameObject: {fileID: 80648585177180741}
   serializedVersion: 2
   m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
   m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
@@ -32,13 +32,238 @@ Transform:
   m_Children: []
   m_Father: {fileID: 398832432843978742}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7945060970081056907
+--- !u!114 &5673281826529234387
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 402039545167523663}
+  m_GameObject: {fileID: 80648585177180741}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &86354659950613656
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1611626737257273427}
+  - component: {fileID: 522614697830616488}
+  m_Layer: 0
+  m_Name: Handle (3, 1, 4)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1611626737257273427
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 86354659950613656}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &522614697830616488
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 86354659950613656}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &117793843283968953
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4230813435029497232}
+  - component: {fileID: 6031749473665819508}
+  m_Layer: 0
+  m_Name: Handle (1, 1, 2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4230813435029497232
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 117793843283968953}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6031749473665819508
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 117793843283968953}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &173714090052602011
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5202466498130091418}
+  - component: {fileID: 1407462831384430854}
+  m_Layer: 0
+  m_Name: Handle (1, 0, 3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5202466498130091418
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 173714090052602011}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1407462831384430854
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 173714090052602011}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &190933294357806316
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2675016246446393033}
+  - component: {fileID: 4748717046638992050}
+  m_Layer: 0
+  m_Name: Handle (4, 2, 3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2675016246446393033
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 190933294357806316}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4748717046638992050
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 190933294357806316}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &474845653430977582
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4000242270715479890}
+  - component: {fileID: 1744245195883163615}
+  m_Layer: 0
+  m_Name: Handle (1, 0, 1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4000242270715479890
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 474845653430977582}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1744245195883163615
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 474845653430977582}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
@@ -252,7 +477,7 @@ MonoBehaviour:
   onBurnComplete:
     m_PersistentCalls:
       m_Calls: []
---- !u!1 &741576894323781043
+--- !u!1 &591842666637650836
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -260,22 +485,22 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 928036459042907576}
-  - component: {fileID: 5308366917481026789}
+  - component: {fileID: 6953921705521033319}
+  - component: {fileID: 2364449736218345156}
   m_Layer: 0
-  m_Name: Handle (2, 0, 0)
+  m_Name: Handle (2, 2, 3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &928036459042907576
+--- !u!4 &6953921705521033319
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 741576894323781043}
+  m_GameObject: {fileID: 591842666637650836}
   serializedVersion: 2
   m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
   m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
@@ -284,20 +509,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 398832432843978742}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5308366917481026789
+--- !u!114 &2364449736218345156
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 741576894323781043}
+  m_GameObject: {fileID: 591842666637650836}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
   offset: {x: 0, y: 0, z: 0}
---- !u!1 &1725971828452712457
+--- !u!1 &601210711679222469
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -305,22 +530,22 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5360201341823971529}
-  - component: {fileID: 1087540382400692468}
+  - component: {fileID: 5244253699378440954}
+  - component: {fileID: 8716038321046927773}
   m_Layer: 0
-  m_Name: Handle (1, 2, 1)
+  m_Name: Handle (4, 2, 1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5360201341823971529
+--- !u!4 &5244253699378440954
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1725971828452712457}
+  m_GameObject: {fileID: 601210711679222469}
   serializedVersion: 2
   m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
   m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
@@ -329,20 +554,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 398832432843978742}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1087540382400692468
+--- !u!114 &8716038321046927773
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1725971828452712457}
+  m_GameObject: {fileID: 601210711679222469}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
   offset: {x: 0, y: 0, z: 0}
---- !u!1 &2441000043875806714
+--- !u!1 &762330462601739294
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -350,22 +575,22 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5623019265164368994}
-  - component: {fileID: 7595519938988065806}
+  - component: {fileID: 2693239548612872441}
+  - component: {fileID: 3934673595540241160}
   m_Layer: 0
-  m_Name: Handle (0, 1, 0)
+  m_Name: Handle (4, 2, 0)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5623019265164368994
+--- !u!4 &2693239548612872441
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2441000043875806714}
+  m_GameObject: {fileID: 762330462601739294}
   serializedVersion: 2
   m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
   m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
@@ -374,20 +599,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 398832432843978742}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7595519938988065806
+--- !u!114 &3934673595540241160
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2441000043875806714}
+  m_GameObject: {fileID: 762330462601739294}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
   offset: {x: 0, y: 0, z: 0}
---- !u!1 &2982490515022048177
+--- !u!1 &768073057703329583
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -395,22 +620,22 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5103703012672255590}
-  - component: {fileID: 4847244182364599516}
+  - component: {fileID: 332166407228610942}
+  - component: {fileID: 3078544620136836986}
   m_Layer: 0
-  m_Name: Handle (2, 1, 1)
+  m_Name: Handle (1, 2, 3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5103703012672255590
+--- !u!4 &332166407228610942
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2982490515022048177}
+  m_GameObject: {fileID: 768073057703329583}
   serializedVersion: 2
   m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
   m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
@@ -419,20 +644,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 398832432843978742}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &4847244182364599516
+--- !u!114 &3078544620136836986
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2982490515022048177}
+  m_GameObject: {fileID: 768073057703329583}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
   offset: {x: 0, y: 0, z: 0}
---- !u!1 &3753674004836643580
+--- !u!1 &802527840732192567
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -440,22 +665,22 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8732968308540455622}
-  - component: {fileID: 4649608431686504645}
+  - component: {fileID: 5631905523470737761}
+  - component: {fileID: 1553490081138303710}
   m_Layer: 0
-  m_Name: Handle (0, 2, 1)
+  m_Name: Handle (3, 2, 0)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8732968308540455622
+--- !u!4 &5631905523470737761
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3753674004836643580}
+  m_GameObject: {fileID: 802527840732192567}
   serializedVersion: 2
   m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
   m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
@@ -464,20 +689,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 398832432843978742}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &4649608431686504645
+--- !u!114 &1553490081138303710
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3753674004836643580}
+  m_GameObject: {fileID: 802527840732192567}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
   offset: {x: 0, y: 0, z: 0}
---- !u!1 &3912112743907844776
+--- !u!1 &869781869098037202
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -485,22 +710,22 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 2438675656146044811}
-  - component: {fileID: 5529553486045557252}
+  - component: {fileID: 8781620112393946314}
+  - component: {fileID: 798388555174370278}
   m_Layer: 0
-  m_Name: Handle (0, 0, 0)
+  m_Name: Handle (0, 2, 4)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &2438675656146044811
+--- !u!4 &8781620112393946314
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3912112743907844776}
+  m_GameObject: {fileID: 869781869098037202}
   serializedVersion: 2
   m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
   m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
@@ -509,20 +734,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 398832432843978742}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5529553486045557252
+--- !u!114 &798388555174370278
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3912112743907844776}
+  m_GameObject: {fileID: 869781869098037202}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
   offset: {x: 0, y: 0, z: 0}
---- !u!1 &4108132472698847872
+--- !u!1 &1142936598372730233
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -530,8 +755,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 4540111224310417240}
-  - component: {fileID: 4345638196408478113}
+  - component: {fileID: 7253136492801697963}
+  - component: {fileID: 5431192484460141526}
   m_Layer: 0
   m_Name: Handle (2, 0, 1)
   m_TagString: Untagged
@@ -539,13 +764,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &4540111224310417240
+--- !u!4 &7253136492801697963
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4108132472698847872}
+  m_GameObject: {fileID: 1142936598372730233}
   serializedVersion: 2
   m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
   m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
@@ -554,20 +779,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 398832432843978742}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &4345638196408478113
+--- !u!114 &5431192484460141526
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4108132472698847872}
+  m_GameObject: {fileID: 1142936598372730233}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
   offset: {x: 0, y: 0, z: 0}
---- !u!1 &5663065315154019738
+--- !u!1 &1311512852623065428
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -575,8 +800,98 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5582806682177914636}
-  - component: {fileID: 4898551323388739593}
+  - component: {fileID: 229771221964318793}
+  - component: {fileID: 693450063013932782}
+  m_Layer: 0
+  m_Name: Handle (3, 2, 3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &229771221964318793
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1311512852623065428}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &693450063013932782
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1311512852623065428}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &1487068910318924831
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6341793709064233995}
+  - component: {fileID: 4481207295744347998}
+  m_Layer: 0
+  m_Name: Handle (0, 0, 2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6341793709064233995
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1487068910318924831}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4481207295744347998
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1487068910318924831}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &1806102350463802022
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8878767674846257485}
+  - component: {fileID: 857821055210855876}
   m_Layer: 0
   m_Name: Handle (1, 1, 0)
   m_TagString: Untagged
@@ -584,13 +899,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5582806682177914636
+--- !u!4 &8878767674846257485
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5663065315154019738}
+  m_GameObject: {fileID: 1806102350463802022}
   serializedVersion: 2
   m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
   m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
@@ -599,20 +914,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 398832432843978742}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &4898551323388739593
+--- !u!114 &857821055210855876
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5663065315154019738}
+  m_GameObject: {fileID: 1806102350463802022}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
   offset: {x: 0, y: 0, z: 0}
---- !u!1 &5762838172993390418
+--- !u!1 &2028471064844486571
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -620,8 +935,728 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5388766789529236117}
-  - component: {fileID: 1838102839186074430}
+  - component: {fileID: 3458849102903071383}
+  - component: {fileID: 5090227657542505461}
+  m_Layer: 0
+  m_Name: Handle (4, 0, 4)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3458849102903071383
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2028471064844486571}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5090227657542505461
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2028471064844486571}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &2074853117926029840
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2716317254789693073}
+  - component: {fileID: 815988058398069904}
+  m_Layer: 0
+  m_Name: Handle (3, 1, 1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2716317254789693073
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2074853117926029840}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &815988058398069904
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2074853117926029840}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &2247297998601420618
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3536367798935447840}
+  - component: {fileID: 5552575585885454295}
+  m_Layer: 0
+  m_Name: Handle (2, 0, 4)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3536367798935447840
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2247297998601420618}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5552575585885454295
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2247297998601420618}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &2403352350413228697
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 406919952751021758}
+  - component: {fileID: 8212271381101685290}
+  m_Layer: 0
+  m_Name: Handle (2, 2, 4)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &406919952751021758
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2403352350413228697}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8212271381101685290
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2403352350413228697}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &2491488681578108877
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5436729538637393622}
+  - component: {fileID: 7217506448373098600}
+  m_Layer: 0
+  m_Name: Handle (1, 2, 4)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5436729538637393622
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2491488681578108877}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7217506448373098600
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2491488681578108877}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &2637014162097681014
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2072950820936269230}
+  - component: {fileID: 489068066193904765}
+  m_Layer: 0
+  m_Name: Handle (2, 1, 1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2072950820936269230
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2637014162097681014}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &489068066193904765
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2637014162097681014}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &2664337223182067366
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4759008782135211044}
+  - component: {fileID: 1132309402158197024}
+  m_Layer: 0
+  m_Name: Handle (2, 1, 3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4759008782135211044
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2664337223182067366}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1132309402158197024
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2664337223182067366}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &2741710386077968727
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1160609740835888915}
+  - component: {fileID: 4555285079963631237}
+  m_Layer: 0
+  m_Name: Handle (0, 0, 4)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1160609740835888915
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2741710386077968727}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4555285079963631237
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2741710386077968727}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &2763156321102554696
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1530584981148104195}
+  - component: {fileID: 3493228170955477986}
+  m_Layer: 0
+  m_Name: Handle (0, 1, 2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1530584981148104195
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2763156321102554696}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3493228170955477986
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2763156321102554696}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &3025727660307383675
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3149014689579582455}
+  - component: {fileID: 5297040851629802240}
+  m_Layer: 0
+  m_Name: Handle (4, 0, 0)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3149014689579582455
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3025727660307383675}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5297040851629802240
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3025727660307383675}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &3026874709133637190
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9109448293986119489}
+  - component: {fileID: 4037415043402031831}
+  m_Layer: 0
+  m_Name: Handle (2, 1, 0)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9109448293986119489
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3026874709133637190}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4037415043402031831
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3026874709133637190}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &3077674763019035929
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8119196538279867774}
+  - component: {fileID: 8046773762958480667}
+  m_Layer: 0
+  m_Name: Handle (3, 2, 1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8119196538279867774
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3077674763019035929}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8046773762958480667
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3077674763019035929}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &3291497672386765139
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8360138538282548747}
+  - component: {fileID: 2878369028595077429}
+  m_Layer: 0
+  m_Name: Handle (2, 0, 3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8360138538282548747
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3291497672386765139}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2878369028595077429
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3291497672386765139}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &3313867497216100433
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1384257891949369857}
+  - component: {fileID: 3734106699577030057}
+  m_Layer: 0
+  m_Name: Handle (3, 2, 4)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1384257891949369857
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3313867497216100433}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3734106699577030057
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3313867497216100433}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &3539060022639431366
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5778941353656855283}
+  - component: {fileID: 6443781393695838044}
+  m_Layer: 0
+  m_Name: Handle (3, 1, 2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5778941353656855283
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3539060022639431366}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6443781393695838044
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3539060022639431366}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &3608196750907447504
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5698183041176837144}
+  - component: {fileID: 552095439380561885}
+  m_Layer: 0
+  m_Name: Handle (4, 1, 2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5698183041176837144
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3608196750907447504}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &552095439380561885
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3608196750907447504}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &3743761031414581508
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7725744821905887783}
+  - component: {fileID: 69366021603060660}
   m_Layer: 0
   m_Name: Handle (1, 1, 1)
   m_TagString: Untagged
@@ -629,13 +1664,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5388766789529236117
+--- !u!4 &7725744821905887783
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5762838172993390418}
+  m_GameObject: {fileID: 3743761031414581508}
   serializedVersion: 2
   m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
   m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
@@ -644,20 +1679,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 398832432843978742}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1838102839186074430
+--- !u!114 &69366021603060660
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5762838172993390418}
+  m_GameObject: {fileID: 3743761031414581508}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
   offset: {x: 0, y: 0, z: 0}
---- !u!1 &6402257197545533839
+--- !u!1 &3757635496364977732
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -665,8 +1700,233 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1092253450548224458}
-  - component: {fileID: 9209190786164045701}
+  - component: {fileID: 7217563157084988996}
+  - component: {fileID: 7182244962539716098}
+  m_Layer: 0
+  m_Name: Handle (3, 0, 0)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7217563157084988996
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3757635496364977732}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7182244962539716098
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3757635496364977732}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &3788648480230903916
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3998324085690501250}
+  - component: {fileID: 4836285520432363505}
+  m_Layer: 0
+  m_Name: Handle (4, 0, 3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3998324085690501250
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3788648480230903916}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4836285520432363505
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3788648480230903916}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &3860819306011556175
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3769346771771613810}
+  - component: {fileID: 1162247366064054552}
+  m_Layer: 0
+  m_Name: Handle (3, 0, 4)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3769346771771613810
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3860819306011556175}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1162247366064054552
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3860819306011556175}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &3902680502639621151
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1993166674217970553}
+  - component: {fileID: 6081757163161069301}
+  m_Layer: 0
+  m_Name: Handle (0, 2, 3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1993166674217970553
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3902680502639621151}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6081757163161069301
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3902680502639621151}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &4032056455161486371
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7836777677229862815}
+  - component: {fileID: 5797902238913339127}
+  m_Layer: 0
+  m_Name: Handle (4, 2, 2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7836777677229862815
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4032056455161486371}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5797902238913339127
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4032056455161486371}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &4064150384557046363
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 957342967573470308}
+  - component: {fileID: 6349515548164256517}
   m_Layer: 0
   m_Name: Handle (1, 0, 0)
   m_TagString: Untagged
@@ -674,13 +1934,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1092253450548224458
+--- !u!4 &957342967573470308
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6402257197545533839}
+  m_GameObject: {fileID: 4064150384557046363}
   serializedVersion: 2
   m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
   m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
@@ -689,20 +1949,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 398832432843978742}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &9209190786164045701
+--- !u!114 &6349515548164256517
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6402257197545533839}
+  m_GameObject: {fileID: 4064150384557046363}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
   offset: {x: 0, y: 0, z: 0}
---- !u!1 &7294753029219577758
+--- !u!1 &4071226526087009088
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -710,22 +1970,22 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 7843097649197035249}
-  - component: {fileID: 7203125917868727716}
+  - component: {fileID: 6709095355554049442}
+  - component: {fileID: 4578678749062882034}
   m_Layer: 0
-  m_Name: Handle (0, 2, 0)
+  m_Name: Handle (1, 2, 1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &7843097649197035249
+--- !u!4 &6709095355554049442
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7294753029219577758}
+  m_GameObject: {fileID: 4071226526087009088}
   serializedVersion: 2
   m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
   m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
@@ -734,20 +1994,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 398832432843978742}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7203125917868727716
+--- !u!114 &4578678749062882034
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7294753029219577758}
+  m_GameObject: {fileID: 4071226526087009088}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
   offset: {x: 0, y: 0, z: 0}
---- !u!1 &7500448013770429914
+--- !u!1 &4390197206734397339
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -755,143 +2015,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 3676030683674543955}
-  - component: {fileID: 8367468975630470959}
-  m_Layer: 0
-  m_Name: Handle (2, 2, 0)
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &3676030683674543955
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7500448013770429914}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
-  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
-  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 398832432843978742}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8367468975630470959
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7500448013770429914}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
-  offset: {x: 0, y: 0, z: 0}
---- !u!1 &7543860282516301748
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 6956176599005264074}
-  - component: {fileID: 837871743159452526}
-  m_Layer: 0
-  m_Name: Handle (1, 2, 0)
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &6956176599005264074
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7543860282516301748}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
-  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
-  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 398832432843978742}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &837871743159452526
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7543860282516301748}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
-  offset: {x: 0, y: 0, z: 0}
---- !u!1 &7620157320800257362
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 8401454088009878568}
-  - component: {fileID: 1790360188315413383}
-  m_Layer: 0
-  m_Name: Handle (0, 1, 1)
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &8401454088009878568
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7620157320800257362}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
-  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
-  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 398832432843978742}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1790360188315413383
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7620157320800257362}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
-  offset: {x: 0, y: 0, z: 0}
---- !u!1 &7729359702342200619
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 3870751480357009620}
-  - component: {fileID: 5939211937933579417}
+  - component: {fileID: 238836590478582903}
+  - component: {fileID: 4757690584851088829}
   m_Layer: 0
   m_Name: Handle (2, 2, 1)
   m_TagString: Untagged
@@ -899,13 +2024,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &3870751480357009620
+--- !u!4 &238836590478582903
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7729359702342200619}
+  m_GameObject: {fileID: 4390197206734397339}
   serializedVersion: 2
   m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
   m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
@@ -914,13 +2039,1093 @@ Transform:
   m_Children: []
   m_Father: {fileID: 398832432843978742}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5939211937933579417
+--- !u!114 &4757690584851088829
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7729359702342200619}
+  m_GameObject: {fileID: 4390197206734397339}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &4393689868351926831
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4105736265852220192}
+  - component: {fileID: 264424009573645932}
+  m_Layer: 0
+  m_Name: Handle (2, 0, 0)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4105736265852220192
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4393689868351926831}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &264424009573645932
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4393689868351926831}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &4783569140631399117
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1946804160535264544}
+  - component: {fileID: 1474752377269867448}
+  m_Layer: 0
+  m_Name: Handle (0, 0, 3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1946804160535264544
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4783569140631399117}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1474752377269867448
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4783569140631399117}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &4922618220272556951
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 529412639894752474}
+  - component: {fileID: 8443990217983349708}
+  m_Layer: 0
+  m_Name: Handle (3, 0, 3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &529412639894752474
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4922618220272556951}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8443990217983349708
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4922618220272556951}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &4996698385862436812
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3648708047111312802}
+  - component: {fileID: 7400622331938809489}
+  m_Layer: 0
+  m_Name: Handle (3, 0, 2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3648708047111312802
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4996698385862436812}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7400622331938809489
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4996698385862436812}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &5027613184583808953
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1196047270795513655}
+  - component: {fileID: 1019724137371122225}
+  m_Layer: 0
+  m_Name: Handle (0, 1, 0)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1196047270795513655
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5027613184583808953}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1019724137371122225
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5027613184583808953}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &5265007032135873150
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1772365087401908611}
+  - component: {fileID: 6320127319772230981}
+  m_Layer: 0
+  m_Name: Handle (2, 2, 0)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1772365087401908611
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5265007032135873150}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6320127319772230981
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5265007032135873150}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &5329137130876667577
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1168458770545239340}
+  - component: {fileID: 5709491156887757540}
+  m_Layer: 0
+  m_Name: Handle (0, 2, 0)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1168458770545239340
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5329137130876667577}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5709491156887757540
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5329137130876667577}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &5362166493249619758
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3438711401061477640}
+  - component: {fileID: 4817569819441086843}
+  m_Layer: 0
+  m_Name: Handle (2, 1, 4)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3438711401061477640
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5362166493249619758}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4817569819441086843
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5362166493249619758}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &5558667495699969820
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5586142097929929498}
+  - component: {fileID: 6658218612352658954}
+  m_Layer: 0
+  m_Name: Handle (0, 1, 3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5586142097929929498
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5558667495699969820}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6658218612352658954
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5558667495699969820}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &5758758419033581903
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7266252434384406572}
+  - component: {fileID: 2987002010645197296}
+  m_Layer: 0
+  m_Name: Handle (1, 0, 2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7266252434384406572
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5758758419033581903}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2987002010645197296
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5758758419033581903}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &5873615173851915274
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3521847803287038475}
+  - component: {fileID: 2886270637958635301}
+  m_Layer: 0
+  m_Name: Handle (3, 0, 1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3521847803287038475
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5873615173851915274}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2886270637958635301
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5873615173851915274}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &5947301800038233897
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7784426978669303886}
+  - component: {fileID: 8207010541694710064}
+  m_Layer: 0
+  m_Name: Handle (3, 2, 2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7784426978669303886
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5947301800038233897}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8207010541694710064
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5947301800038233897}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &6130895699857920060
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2407235578120558654}
+  - component: {fileID: 7776924775231193872}
+  m_Layer: 0
+  m_Name: Handle (4, 0, 1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2407235578120558654
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6130895699857920060}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7776924775231193872
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6130895699857920060}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &6150496995996386752
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9130055561828718046}
+  - component: {fileID: 872055623327722366}
+  m_Layer: 0
+  m_Name: Handle (4, 1, 0)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9130055561828718046
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6150496995996386752}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &872055623327722366
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6150496995996386752}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &6184633256252694726
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2440950129290542065}
+  - component: {fileID: 5636029355746488198}
+  m_Layer: 0
+  m_Name: Handle (2, 2, 2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2440950129290542065
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6184633256252694726}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5636029355746488198
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6184633256252694726}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &6305489662719768105
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1703184725175647529}
+  - component: {fileID: 713385264421594485}
+  m_Layer: 0
+  m_Name: Handle (1, 2, 0)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1703184725175647529
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6305489662719768105}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &713385264421594485
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6305489662719768105}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &6344118851759343645
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8061255887103707968}
+  - component: {fileID: 6079973292976813198}
+  m_Layer: 0
+  m_Name: Handle (4, 0, 2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8061255887103707968
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6344118851759343645}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6079973292976813198
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6344118851759343645}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &6649999109876345417
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8590734450847051111}
+  - component: {fileID: 3926230120205579354}
+  m_Layer: 0
+  m_Name: Handle (2, 1, 2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8590734450847051111
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6649999109876345417}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3926230120205579354
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6649999109876345417}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &7247273464053528997
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6465821810007583255}
+  - component: {fileID: 4175738442653937207}
+  m_Layer: 0
+  m_Name: Handle (3, 1, 0)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6465821810007583255
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7247273464053528997}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4175738442653937207
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7247273464053528997}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &7453847455102786694
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2631518749529641841}
+  - component: {fileID: 5905821480904423948}
+  m_Layer: 0
+  m_Name: Handle (0, 0, 0)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2631518749529641841
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7453847455102786694}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5905821480904423948
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7453847455102786694}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &7509667483006241355
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 509659928455487970}
+  - component: {fileID: 8801017923083637750}
+  m_Layer: 0
+  m_Name: Handle (2, 0, 2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &509659928455487970
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7509667483006241355}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8801017923083637750
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7509667483006241355}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &7548125675860387588
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6875781486057690156}
+  - component: {fileID: 8008907545853170141}
+  m_Layer: 0
+  m_Name: Handle (4, 2, 4)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6875781486057690156
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7548125675860387588}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8008907545853170141
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7548125675860387588}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &7738823605740541696
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6424520454192133307}
+  - component: {fileID: 4747570788228622289}
+  m_Layer: 0
+  m_Name: Handle (0, 1, 4)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6424520454192133307
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7738823605740541696}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4747570788228622289
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7738823605740541696}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &7891831102967897063
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 242468223858255601}
+  - component: {fileID: 7418292375465424454}
+  m_Layer: 0
+  m_Name: Handle (0, 2, 2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &242468223858255601
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7891831102967897063}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7418292375465424454
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7891831102967897063}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
@@ -957,24 +3162,81 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 2438675656146044811}
-  - {fileID: 1092253450548224458}
-  - {fileID: 928036459042907576}
-  - {fileID: 5623019265164368994}
-  - {fileID: 5582806682177914636}
-  - {fileID: 652049650363615699}
-  - {fileID: 7843097649197035249}
-  - {fileID: 6956176599005264074}
-  - {fileID: 3676030683674543955}
-  - {fileID: 1113335098745261481}
-  - {fileID: 2626872464446828639}
-  - {fileID: 4540111224310417240}
-  - {fileID: 8401454088009878568}
-  - {fileID: 5388766789529236117}
-  - {fileID: 5103703012672255590}
-  - {fileID: 8732968308540455622}
-  - {fileID: 5360201341823971529}
-  - {fileID: 3870751480357009620}
+  - {fileID: 2631518749529641841}
+  - {fileID: 957342967573470308}
+  - {fileID: 4105736265852220192}
+  - {fileID: 7217563157084988996}
+  - {fileID: 3149014689579582455}
+  - {fileID: 1196047270795513655}
+  - {fileID: 8878767674846257485}
+  - {fileID: 9109448293986119489}
+  - {fileID: 6465821810007583255}
+  - {fileID: 9130055561828718046}
+  - {fileID: 1168458770545239340}
+  - {fileID: 1703184725175647529}
+  - {fileID: 1772365087401908611}
+  - {fileID: 5631905523470737761}
+  - {fileID: 2693239548612872441}
+  - {fileID: 6682314908706171429}
+  - {fileID: 4000242270715479890}
+  - {fileID: 7253136492801697963}
+  - {fileID: 3521847803287038475}
+  - {fileID: 2407235578120558654}
+  - {fileID: 1180584831558703417}
+  - {fileID: 7725744821905887783}
+  - {fileID: 2072950820936269230}
+  - {fileID: 2716317254789693073}
+  - {fileID: 4077402510037821420}
+  - {fileID: 4229412027669555801}
+  - {fileID: 6709095355554049442}
+  - {fileID: 238836590478582903}
+  - {fileID: 8119196538279867774}
+  - {fileID: 5244253699378440954}
+  - {fileID: 6341793709064233995}
+  - {fileID: 7266252434384406572}
+  - {fileID: 509659928455487970}
+  - {fileID: 3648708047111312802}
+  - {fileID: 8061255887103707968}
+  - {fileID: 1530584981148104195}
+  - {fileID: 4230813435029497232}
+  - {fileID: 8590734450847051111}
+  - {fileID: 5778941353656855283}
+  - {fileID: 5698183041176837144}
+  - {fileID: 242468223858255601}
+  - {fileID: 45156696679027538}
+  - {fileID: 2440950129290542065}
+  - {fileID: 7784426978669303886}
+  - {fileID: 7836777677229862815}
+  - {fileID: 1946804160535264544}
+  - {fileID: 5202466498130091418}
+  - {fileID: 8360138538282548747}
+  - {fileID: 529412639894752474}
+  - {fileID: 3998324085690501250}
+  - {fileID: 5586142097929929498}
+  - {fileID: 7103903728733101163}
+  - {fileID: 4759008782135211044}
+  - {fileID: 4364543335721969617}
+  - {fileID: 5426366049118807131}
+  - {fileID: 1993166674217970553}
+  - {fileID: 332166407228610942}
+  - {fileID: 6953921705521033319}
+  - {fileID: 229771221964318793}
+  - {fileID: 2675016246446393033}
+  - {fileID: 1160609740835888915}
+  - {fileID: 697228830133542923}
+  - {fileID: 3536367798935447840}
+  - {fileID: 3769346771771613810}
+  - {fileID: 3458849102903071383}
+  - {fileID: 6424520454192133307}
+  - {fileID: 8108126105655403922}
+  - {fileID: 3438711401061477640}
+  - {fileID: 1611626737257273427}
+  - {fileID: 9063419729111913700}
+  - {fileID: 8781620112393946314}
+  - {fileID: 5436729538637393622}
+  - {fileID: 406919952751021758}
+  - {fileID: 1384257891949369857}
+  - {fileID: 6875781486057690156}
   m_Father: {fileID: 4692776926628012239}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &4320616879161834428
@@ -989,27 +3251,84 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 57b33fd7527a9ca4a8002eb77e836085, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Lattice.Runtime::Lattice.Lattice
-  _resolution: {x: 3, y: 3, z: 2}
+  _resolution: {x: 5, y: 3, z: 5}
   _handles:
-  - {fileID: 5529553486045557252}
-  - {fileID: 9209190786164045701}
-  - {fileID: 5308366917481026789}
-  - {fileID: 7595519938988065806}
-  - {fileID: 4898551323388739593}
-  - {fileID: 7945060970081056907}
-  - {fileID: 7203125917868727716}
-  - {fileID: 837871743159452526}
-  - {fileID: 8367468975630470959}
-  - {fileID: 5172747049073778847}
-  - {fileID: 1193245297799816511}
-  - {fileID: 4345638196408478113}
-  - {fileID: 1790360188315413383}
-  - {fileID: 1838102839186074430}
-  - {fileID: 4847244182364599516}
-  - {fileID: 4649608431686504645}
-  - {fileID: 1087540382400692468}
-  - {fileID: 5939211937933579417}
---- !u!1 &8176859047780159672
+  - {fileID: 5905821480904423948}
+  - {fileID: 6349515548164256517}
+  - {fileID: 264424009573645932}
+  - {fileID: 7182244962539716098}
+  - {fileID: 5297040851629802240}
+  - {fileID: 1019724137371122225}
+  - {fileID: 857821055210855876}
+  - {fileID: 4037415043402031831}
+  - {fileID: 4175738442653937207}
+  - {fileID: 872055623327722366}
+  - {fileID: 5709491156887757540}
+  - {fileID: 713385264421594485}
+  - {fileID: 6320127319772230981}
+  - {fileID: 1553490081138303710}
+  - {fileID: 3934673595540241160}
+  - {fileID: 537590042949113040}
+  - {fileID: 1744245195883163615}
+  - {fileID: 5431192484460141526}
+  - {fileID: 2886270637958635301}
+  - {fileID: 7776924775231193872}
+  - {fileID: 3773956028306664486}
+  - {fileID: 69366021603060660}
+  - {fileID: 489068066193904765}
+  - {fileID: 815988058398069904}
+  - {fileID: 3080506181017303346}
+  - {fileID: 5616820462415059919}
+  - {fileID: 4578678749062882034}
+  - {fileID: 4757690584851088829}
+  - {fileID: 8046773762958480667}
+  - {fileID: 8716038321046927773}
+  - {fileID: 4481207295744347998}
+  - {fileID: 2987002010645197296}
+  - {fileID: 8801017923083637750}
+  - {fileID: 7400622331938809489}
+  - {fileID: 6079973292976813198}
+  - {fileID: 3493228170955477986}
+  - {fileID: 6031749473665819508}
+  - {fileID: 3926230120205579354}
+  - {fileID: 6443781393695838044}
+  - {fileID: 552095439380561885}
+  - {fileID: 7418292375465424454}
+  - {fileID: 2822333080928891493}
+  - {fileID: 5636029355746488198}
+  - {fileID: 8207010541694710064}
+  - {fileID: 5797902238913339127}
+  - {fileID: 1474752377269867448}
+  - {fileID: 1407462831384430854}
+  - {fileID: 2878369028595077429}
+  - {fileID: 8443990217983349708}
+  - {fileID: 4836285520432363505}
+  - {fileID: 6658218612352658954}
+  - {fileID: 1664092448850867444}
+  - {fileID: 1132309402158197024}
+  - {fileID: 7419688247224028847}
+  - {fileID: 3425689329560180469}
+  - {fileID: 6081757163161069301}
+  - {fileID: 3078544620136836986}
+  - {fileID: 2364449736218345156}
+  - {fileID: 693450063013932782}
+  - {fileID: 4748717046638992050}
+  - {fileID: 4555285079963631237}
+  - {fileID: 6328440822347053525}
+  - {fileID: 5552575585885454295}
+  - {fileID: 1162247366064054552}
+  - {fileID: 5090227657542505461}
+  - {fileID: 4747570788228622289}
+  - {fileID: 3031103152938831118}
+  - {fileID: 4817569819441086843}
+  - {fileID: 522614697830616488}
+  - {fileID: 5673281826529234387}
+  - {fileID: 798388555174370278}
+  - {fileID: 7217506448373098600}
+  - {fileID: 8212271381101685290}
+  - {fileID: 3734106699577030057}
+  - {fileID: 8008907545853170141}
+--- !u!1 &7936363930205372369
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1017,22 +3336,22 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 2626872464446828639}
-  - component: {fileID: 1193245297799816511}
+  - component: {fileID: 4077402510037821420}
+  - component: {fileID: 3080506181017303346}
   m_Layer: 0
-  m_Name: Handle (1, 0, 1)
+  m_Name: Handle (4, 1, 1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &2626872464446828639
+--- !u!4 &4077402510037821420
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8176859047780159672}
+  m_GameObject: {fileID: 7936363930205372369}
   serializedVersion: 2
   m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
   m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
@@ -1041,20 +3360,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 398832432843978742}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1193245297799816511
+--- !u!114 &3080506181017303346
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8176859047780159672}
+  m_GameObject: {fileID: 7936363930205372369}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
   offset: {x: 0, y: 0, z: 0}
---- !u!1 &8445030925273933320
+--- !u!1 &8073655843383619104
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1062,8 +3381,188 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1113335098745261481}
-  - component: {fileID: 5172747049073778847}
+  - component: {fileID: 8108126105655403922}
+  - component: {fileID: 3031103152938831118}
+  m_Layer: 0
+  m_Name: Handle (1, 1, 4)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8108126105655403922
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8073655843383619104}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3031103152938831118
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8073655843383619104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &8097359099667345454
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1180584831558703417}
+  - component: {fileID: 3773956028306664486}
+  m_Layer: 0
+  m_Name: Handle (0, 1, 1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1180584831558703417
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8097359099667345454}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3773956028306664486
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8097359099667345454}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &8165668454248622515
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4229412027669555801}
+  - component: {fileID: 5616820462415059919}
+  m_Layer: 0
+  m_Name: Handle (0, 2, 1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4229412027669555801
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8165668454248622515}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5616820462415059919
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8165668454248622515}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &8232888287119118655
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4364543335721969617}
+  - component: {fileID: 7419688247224028847}
+  m_Layer: 0
+  m_Name: Handle (3, 1, 3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4364543335721969617
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8232888287119118655}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7419688247224028847
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8232888287119118655}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &8572459775548222936
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6682314908706171429}
+  - component: {fileID: 537590042949113040}
   m_Layer: 0
   m_Name: Handle (0, 0, 1)
   m_TagString: Untagged
@@ -1071,13 +3570,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1113335098745261481
+--- !u!4 &6682314908706171429
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8445030925273933320}
+  m_GameObject: {fileID: 8572459775548222936}
   serializedVersion: 2
   m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
   m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
@@ -1086,13 +3585,193 @@ Transform:
   m_Children: []
   m_Father: {fileID: 398832432843978742}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5172747049073778847
+--- !u!114 &537590042949113040
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8445030925273933320}
+  m_GameObject: {fileID: 8572459775548222936}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &8682459859321190395
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7103903728733101163}
+  - component: {fileID: 1664092448850867444}
+  m_Layer: 0
+  m_Name: Handle (1, 1, 3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7103903728733101163
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8682459859321190395}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1664092448850867444
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8682459859321190395}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &8866726501901689267
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 697228830133542923}
+  - component: {fileID: 6328440822347053525}
+  m_Layer: 0
+  m_Name: Handle (1, 0, 4)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &697228830133542923
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8866726501901689267}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6328440822347053525
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8866726501901689267}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &8937173497754007695
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5426366049118807131}
+  - component: {fileID: 3425689329560180469}
+  m_Layer: 0
+  m_Name: Handle (4, 1, 3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5426366049118807131
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8937173497754007695}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3425689329560180469
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8937173497754007695}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lattice.Runtime::Lattice.LatticeHandle
+  offset: {x: 0, y: 0, z: 0}
+--- !u!1 &9183700347336653951
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 45156696679027538}
+  - component: {fileID: 2822333080928891493}
+  m_Layer: 0
+  m_Name: Handle (1, 2, 2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &45156696679027538
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9183700347336653951}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.6742497, y: 0.21304302, z: -0.21304302, w: 0.6742497}
+  m_LocalPosition: {x: -33.541763, y: 23.543364, z: 31.07204}
+  m_LocalScale: {x: 0.12946682, y: 0.12946683, z: 0.12946682}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 398832432843978742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2822333080928891493
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9183700347336653951}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62c05467019ae884d86f7e09213efda5, type: 3}
@@ -1220,7 +3899,7 @@ MonoBehaviour:
   _lattices:
   - Lattice: {fileID: 4320616879161834428}
     Interpolation: 0
-    Global: 0
+    Global: 1
     Mask:
       Selection:
         Type: 0
@@ -1249,9 +3928,9 @@ MonoBehaviour:
   _useSubdividedMesh: 0
   _subdivX: 6
   _subdivY: 8
-  _burnCurlAmount: 0.4
+  _burnCurlAmount: 0.09
   _burnShakeSpeed: 6
-  _burnShakeAmount: 0.025
+  _burnShakeAmount: 0.079
   _burnCurlPositiveZ: 1
   _launchTwistAmount: 0.07
   _launchTwistSpeed: 5

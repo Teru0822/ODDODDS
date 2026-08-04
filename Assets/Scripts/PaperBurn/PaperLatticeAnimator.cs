@@ -1,4 +1,5 @@
 using Lattice;
+using TMPro;
 using UnityEngine;
 
 /// <summary>
@@ -26,9 +27,9 @@ public class PaperLatticeAnimator : MonoBehaviour
     [SerializeField, Range(4, 16)] private int _subdivY = 8;
 
     [Header("Burn（燃焼時の丸まり）")]
-    [SerializeField, Range(0f, 1f)]   private float _burnCurlAmount   = 0.40f;
+    [SerializeField, Range(0f, 3f)]   private float _burnCurlAmount   = 0.40f;
     [SerializeField, Range(0f, 15f)]  private float _burnShakeSpeed   = 6f;
-    [SerializeField, Range(0f, 0.1f)] private float _burnShakeAmount  = 0.025f;
+    [SerializeField, Range(0f, 1f)]   private float _burnShakeAmount  = 0.025f;
     [Tooltip("コーナーが丸まる方向（true=Z+, false=Z-）")]
     [SerializeField] private bool _burnCurlPositiveZ = true;
 
@@ -53,6 +54,7 @@ public class PaperLatticeAnimator : MonoBehaviour
     private Vector3 _burnBasePos;
     private bool   _burnJitterActive;
     private RealisticPaperBurn _burn;
+    private TextMeshPro        _tmp;
 
     private void Start()
     {
@@ -71,9 +73,17 @@ public class PaperLatticeAnimator : MonoBehaviour
         var mesh = filter?.sharedMesh ?? mod?.TargetMesh;
         FixLatticeScale(mesh);
 
-        AutoWireModifier();
+        // LatticeModifier の OnEnable より後に実行するため 1 フレーム遅延
+        StartCoroutine(LateAutoWire());
 
         _burn = GetComponent<RealisticPaperBurn>();
+        _tmp  = GetComponentInChildren<TextMeshPro>(true);
+    }
+
+    private System.Collections.IEnumerator LateAutoWire()
+    {
+        yield return null;
+        AutoWireModifier();
     }
 
     // ────────────────────────────────────────────────
@@ -190,24 +200,18 @@ public class PaperLatticeAnimator : MonoBehaviour
 
     private void WireLatticeItem(LatticeModifier modifier)
     {
-        var list = modifier.Lattices;
-        if (list.Count == 0)
+        // Clear して Add し直すことで Global 等の設定を確実に上書きする
+        modifier.Lattices.Clear();
+        modifier.Lattices.Add(new LatticeItem
         {
-            list.Add(new LatticeItem
-            {
-                Lattice       = _lattice,
-                Interpolation = InterpolationMethod.LinearSmooth,
-                Global        = true,
-                Mask          = new LatticeMask { Vertex = new LatticeMask.VertexSettings { Multiplier = 1f } }
-            });
-        }
-        else
-        {
-            var item = list[0];
-            item.Lattice = _lattice;
-            item.Global  = true;
-            list[0] = item;
-        }
+            Lattice       = _lattice,
+            Interpolation = InterpolationMethod.LinearSmooth,
+            Global        = true,
+            Mask          = new LatticeMask { Vertex = new LatticeMask.VertexSettings { Multiplier = 1f } }
+        });
+
+        if (modifier.Lattices.Count == 0)
+            Debug.LogWarning("[PaperLatticeAnimator] LatticeModifier.Lattices への追加が反映されませんでした。Inspector で Global=true を手動設定してください。", this);
     }
 
     // ────────────────────────────────────────────────
@@ -279,33 +283,32 @@ public class PaperLatticeAnimator : MonoBehaviour
     /// </summary>
     private void UpdateIdleAndBurn(float burnT)
     {
-        float t     = Time.time;
-        int   resX  = _lattice.Resolution.x;
-        int   resY  = _lattice.Resolution.y;
-        float zSign = _burnCurlPositiveZ ? 1f : -1f;
+        float t    = Time.time;
+        int   resX = _lattice.Resolution.x;
+        int   resY = _lattice.Resolution.y;
+        int   resZ = _lattice.Resolution.z;
+
+        // ワールド上方向を（スケール無視・回転のみ）ラティスローカルに変換して高さ軸を判定
+        Vector3 upInLocal = _lattice.transform.InverseTransformDirection(Vector3.up).normalized;
+        float   aX = Mathf.Abs(upInLocal.x), aY = Mathf.Abs(upInLocal.y), aZ = Mathf.Abs(upInLocal.z);
+        int     upAxis = (aX >= aY && aX >= aZ) ? 0 : (aY >= aZ ? 1 : 2);
+        float   upSign = upAxis == 0 ? upInLocal.x : (upAxis == 1 ? upInLocal.y : upInLocal.z);
+
+        // カールの向きはワールド空間で定義 → InverseTransformVector でスケール込みローカル変換
+        Vector3 bendWorld = _burnCurlPositiveZ ? Vector3.forward : Vector3.back;
 
         foreach (Vector3Int h in _lattice.GetHandles())
         {
             float xNorm = resX > 1 ? (float)h.x / (resX - 1) : 0.5f;
             float yNorm = resY > 1 ? (float)h.y / (resY - 1) : 0.5f;
+            float zNorm = resZ > 1 ? (float)h.z / (resZ - 1) : 0.5f;
 
-            // Z 波打ち：Idle/Burning 共通。常に同じ式なので状態切り替えで値が飛ばない
-            float wave = _deformInIdle
-                       ? Mathf.Sin(t * 1.5f + xNorm * Mathf.PI * 2f) * 0.08f
-                       : 0f;
+            // ハンドルの高さ（0=底辺, 1=上辺）をワールドY軸基準で求める
+            float rawNorm    = upAxis == 0 ? xNorm : (upAxis == 1 ? yNorm : zNorm);
+            float heightNorm = upSign >= 0f ? rawNorm : 1f - rawNorm;
 
-            // カール：Y（持ち上がり）＋ Z（手前/奥への湾曲）を同時にかける
-            // → 底辺が「回転」ではなく「丸まる」ように見える
-            float bottomFactor = (1f - yNorm) * (1f - yNorm);
-            float curlAmount   = bottomFactor * burnT * _burnCurlAmount;
-            float curlY        = curlAmount;
-            float curlZ        = curlAmount * 0.8f * zSign;
-
-            // Z シェイク：burnT が大きいほど揺れる
-            float shake = Mathf.Sin(t * _burnShakeSpeed + h.x * 1.73f + h.y * 2.31f)
-                        * _burnShakeAmount * burnT;
-
-            _lattice.SetHandleOffset(h, new Vector3(0f, curlY, wave + curlZ + shake));
+            _lattice.SetHandleOffset(h, _lattice.transform.InverseTransformVector(
+                ComputeDeformOffset(heightNorm, xNorm, yNorm, burnT, t, bendWorld)));
         }
 
         // 着火直後の位置ジッター（約 1 秒でフェード）
@@ -322,6 +325,120 @@ public class PaperLatticeAnimator : MonoBehaviour
                 );
             }
         }
+    }
+
+    // TMP テキストを紙メッシュと同じ変形式で動かす（LateUpdate で実行）
+    private void LateUpdate()
+    {
+        if (_tmp == null || _lattice == null) return;
+        if (_state == PaperState.Launching) return;
+
+        float burnT = (_burn != null && _burn.IsBurning)
+                    ? Mathf.Clamp01(_burn.BurnProgress)
+                    : 0f;
+        if (_debugBurnTOverride > 0f)
+            burnT = _debugBurnTOverride;
+
+        if (burnT <= 0f && !_deformInIdle) return;
+
+        ApplyDeformToTMP(burnT);
+    }
+
+    private void ApplyDeformToTMP(float burnT)
+    {
+        // ForceMeshUpdate でこのフレームの TMP 頂点をリセットしてから変形を重ねる
+        _tmp.ForceMeshUpdate();
+        var textInfo = _tmp.textInfo;
+        if (textInfo.characterCount == 0) return;
+
+        float t = Time.time;
+
+        // UpdateIdleAndBurn と同じ基準で高さ軸・変形方向を算出
+        Vector3 upInLocal = _lattice.transform.InverseTransformDirection(Vector3.up).normalized;
+        float   aX = Mathf.Abs(upInLocal.x), aY = Mathf.Abs(upInLocal.y), aZ = Mathf.Abs(upInLocal.z);
+        int     upAxis = (aX >= aY && aX >= aZ) ? 0 : (aY >= aZ ? 1 : 2);
+        float   upSign = upAxis == 0 ? upInLocal.x : (upAxis == 1 ? upInLocal.y : upInLocal.z);
+        Vector3 bendWorld = _burnCurlPositiveZ ? Vector3.forward : Vector3.back;
+
+        bool modified = false;
+
+        for (int ci = 0; ci < textInfo.characterCount; ci++)
+        {
+            var charInfo = textInfo.characterInfo[ci];
+            if (!charInfo.isVisible) continue;
+
+            int       matIdx = charInfo.materialReferenceIndex;
+            int       vtxIdx = charInfo.vertexIndex;
+            Vector3[] verts  = textInfo.meshInfo[matIdx].vertices;
+
+            for (int vi = 0; vi < 4; vi++)
+            {
+                // TMP ローカル → ワールドへ変換
+                Vector3 worldVert = _tmp.transform.TransformPoint(verts[vtxIdx + vi]);
+
+                // ラティスローカル座標で高さを計算（UpdateIdleAndBurn と同じ基準）
+                Vector3 lp        = _lattice.transform.InverseTransformPoint(worldVert);
+                float   raw       = upAxis == 0 ? lp.x + 0.5f : (upAxis == 2 ? lp.z + 0.5f : lp.y + 0.5f);
+                float   heightNorm = Mathf.Clamp01(upSign >= 0f ? raw : 1f - raw);
+
+                Vector3 worldOffset = ComputeDeformOffset(
+                    heightNorm,
+                    Mathf.Clamp01(lp.x + 0.5f), Mathf.Clamp01(lp.y + 0.5f),
+                    burnT, t, bendWorld);
+                verts[vtxIdx + vi] = _tmp.transform.InverseTransformPoint(worldVert + worldOffset);
+            }
+            modified = true;
+        }
+
+        if (modified)
+            _tmp.UpdateVertexData(TMP_VertexDataUpdateFlags.Vertices);
+    }
+
+    /// <summary>
+    /// ハンドル／TMP 頂点共通の変形オフセット（ワールド単位）を計算する。
+    /// Perlin ノイズの 2 オクターブ合成（fBm）で有機的な動きを生成する。
+    /// </summary>
+    /// <param name="heightNorm">高さ正規化（0=底辺, 1=上辺）</param>
+    /// <param name="xNorm">ラティスローカル X 位置 0-1</param>
+    /// <param name="yNorm">ラティスローカル Y 位置 0-1</param>
+    private Vector3 ComputeDeformOffset(
+        float heightNorm, float xNorm, float yNorm,
+        float burnT, float t, Vector3 bendWorld)
+    {
+        float nx = xNorm * 1.8f;
+        float ny = yNorm * 1.4f;
+
+        // ── Perlin 2 オクターブ fBm（波の基本ノイズ）──
+        // 全ての波打ち・揺れに共通して使う有機的なベースノイズ
+        float slow = Mathf.PerlinNoise(nx + t * 0.28f, ny + t * 0.19f) - 0.5f;
+        float fast = (Mathf.PerlinNoise(nx * 2.2f + t * 0.62f + 4.1f, ny * 1.9f + t * 0.45f + 8.7f) - 0.5f) * 0.5f;
+        float fbm  = (slow + fast) * (2f / 3f); // 実効値 ≈ [-0.33, 0.33]
+
+        // ── 波打ち量の決定 ──
+        // 燃焼中は常に揺れる。_deformInIdle で浮遊時にも揺れを追加
+        float waveStrength = burnT * 0.30f + (_deformInIdle ? 0.15f : 0f);
+        float waveBend = fbm * waveStrength;       // bend 方向への揺れ
+        float waveUp   = fbm * waveStrength * 0.4f; // 上下方向の揺れ（立体感）
+
+        // ── 燃焼カール（下端ほど強い）──
+        float bottomFactor = (1f - heightNorm) * (1f - heightNorm);
+        float curlAmount   = bottomFactor * burnT * _burnCurlAmount;
+
+        // ── 燃焼下端のさらに激しいフラッター（火炎端のばたつき）──
+        float shakeBend = 0f, shakeUp = 0f;
+        if (burnT > 0f)
+        {
+            float sp = _burnShakeSpeed;
+            float b1 = Mathf.PerlinNoise(nx * 5f + t * sp * 0.45f + 23.9f,
+                                          ny * 4f + t * sp * 0.38f + 17.2f) - 0.5f;
+            // 下端ほど激しく（0.3 + 0.7 * bottomEdge にすると上端も少し揺れる）
+            float edgeFactor = 0.3f + 0.7f * (1f - heightNorm);
+            shakeBend = b1 * edgeFactor * burnT * _burnShakeAmount;
+            shakeUp   = shakeBend * 0.4f;
+        }
+
+        return Vector3.up * (curlAmount + waveUp  + shakeUp)
+             + bendWorld  * (curlAmount * 0.8f + waveBend + shakeBend);
     }
 
     private void UpdateLaunching()
@@ -394,16 +511,17 @@ public class PaperLatticeAnimator : MonoBehaviour
     private void DebugForceBurn()
     {
         if (_lattice == null) { Debug.LogError("_lattice が null", this); return; }
-        AutoWireModifier();
-        int resX = _lattice.Resolution.x;
-        int resY = _lattice.Resolution.y;
+
+        var modifier = GetComponent<LatticeModifier>();
+        int cnt = modifier?.Lattices.Count ?? -1;
+        bool glob = cnt > 0 && modifier.Lattices[0].Global;
+        Debug.Log($"[DebugForceBurn] Lattices.Count={cnt}  Global={glob}  lossyScale={transform.lossyScale}  LatticeLocalScale={_lattice.transform.localScale}", this);
+
+        // 全ハンドルを lossyScale の 30% 分ずらして確実に変形が見えるか確認する
+        float big = transform.lossyScale.y * 0.3f;
         foreach (Vector3Int h in _lattice.GetHandles())
-        {
-            float xNorm    = resX > 1 ? (float)h.x / (resX - 1) : 0.5f;
-            float yNorm    = resY > 1 ? (float)h.y / (resY - 1) : 0.5f;
-            float edgeDist = Mathf.Max(Mathf.Abs(xNorm - 0.5f), Mathf.Abs(yNorm - 0.5f)) * 2f;
-            _lattice.SetHandleOffset(h, new Vector3(0f, 0f, edgeDist * edgeDist * _burnCurlAmount));
-        }
-        Debug.Log("[PaperLatticeAnimator] DebugForceBurn 完了", this);
+            _lattice.SetHandleOffset(h, new Vector3(0f, big, big));
+
+        Debug.Log($"[DebugForceBurn] 全ハンドルに offset Y={big:F3} Z={big:F3} を設定しました", this);
     }
 }
