@@ -371,9 +371,18 @@ public class GameUIManager : MonoBehaviour
         // UFOキャッチャー終了時、GameUIが再表示された瞬間に通常状態が一瞬映ってしまわないよう、
         // 最初からフォーカスモード（UnwashCoin以外を隠した状態）にしておく。
         // 通常表示への復帰は、引き出しの演出が完全に終わった時点で SetRewardFocusMode(false) が呼ばれる。
+        //
+        // ただし、Play2_Canvasで一度もPlayを押さずに（＝有料セッションを一度も開始せずに）UFOモードを
+        // 抜けた場合は、UFOItemGoal側でOpenDrawer()自体がスキップされ引き出しの演出が発生しないため、
+        // SetRewardFocusMode(false) を呼ぶ機会が無い。フォーカスモードに入れっぱなしにならないよう、
+        // その場合は最初からフォーカスモードにしない。
         if (!isPlayingUfo)
         {
-            SetRewardFocusMode(true);
+            bool didStartPlaySession = UFOCameraController.Instance != null && UFOCameraController.Instance.PaymentCount > 0;
+            if (didStartPlaySession)
+            {
+                SetRewardFocusMode(true);
+            }
         }
     }
 

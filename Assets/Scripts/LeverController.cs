@@ -76,27 +76,51 @@ public class LeverController : MonoBehaviour
         }
 
         var mouse = Mouse.current;
-        if (mouse == null) return;
+        var keyboard = Keyboard.current;
 
         // クリック検出
-        if (mouse.leftButton.wasPressedThisFrame && IsMouseOverThis(mouse.position.ReadValue()))
+        if (mouse != null)
         {
-            _isDragging = true;
-            UFOCameraController.Instance?.NotifyControlInputUsed();
+            if (mouse.leftButton.wasPressedThisFrame && IsMouseOverThis(mouse.position.ReadValue()))
+            {
+                _isDragging = true;
+                UFOCameraController.Instance?.NotifyControlInputUsed();
+            }
+            if (mouse.leftButton.wasReleasedThisFrame)
+                _isDragging = false;
         }
-        if (mouse.leftButton.wasReleasedThisFrame)
-            _isDragging = false;
+
+        // キーボード（WASD）入力の検出。マウスでドラッグ中でない間、レバーの見た目も連動して倒す
+        float keyH = 0f; // 左右（A/D）
+        float keyV = 0f; // 前後（W/S）
+        if (keyboard != null && !_isDragging)
+        {
+            if (keyboard.dKey.isPressed) keyH += 1f;
+            if (keyboard.aKey.isPressed) keyH -= 1f;
+            if (keyboard.wKey.isPressed) keyV += 1f;
+            if (keyboard.sKey.isPressed) keyV -= 1f;
+        }
+        bool isKeyboardActive = (keyH != 0f || keyV != 0f);
+
+        float dirH = invertHorizontal ? -1f : 1f;
+        float dirV = invertVertical   ? -1f : 1f;
 
         if (_isDragging)
         {
             Vector2 delta = mouse.delta.ReadValue();
-            float dirH = invertHorizontal ? -1f : 1f;
-            float dirV = invertVertical   ? -1f : 1f;
 
             _targetAngleH += delta.x * dirH * sensitivity * Time.deltaTime;
             _targetAngleV += delta.y * dirV * sensitivity * Time.deltaTime;
             _targetAngleH  = Mathf.Clamp(_targetAngleH, -leverMaxAngle, leverMaxAngle);
             _targetAngleV  = Mathf.Clamp(_targetAngleV, -leverMaxAngle, leverMaxAngle);
+        }
+        else if (isKeyboardActive)
+        {
+            UFOCameraController.Instance?.NotifyControlInputUsed();
+
+            // キーを押している間は最大角度までレバーを倒す（マウスドラッグの最大到達状態と同じ）
+            _targetAngleH = keyH * dirH * leverMaxAngle;
+            _targetAngleV = keyV * dirV * leverMaxAngle;
         }
         else
         {
@@ -106,7 +130,7 @@ public class LeverController : MonoBehaviour
         }
 
         // 常にLerpで追従させることで、手ごたえ（重さ・慣性）を表現
-        float damping = _isDragging ? weightDamping : returnSpeed;
+        float damping = (_isDragging || isKeyboardActive) ? weightDamping : returnSpeed;
         _angleH = Mathf.Lerp(_angleH, _targetAngleH, Time.deltaTime * damping);
         _angleV = Mathf.Lerp(_angleV, _targetAngleV, Time.deltaTime * damping);
 

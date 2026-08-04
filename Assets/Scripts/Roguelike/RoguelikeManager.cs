@@ -204,6 +204,9 @@ public class RoguelikeManager : MonoBehaviour
                 case SkillId.UFO_ItemDropCoin:
                     ApplySkill16Effects();
                     break;
+                case SkillId.UFO_Unlock90Sec:
+                    ApplySkill31Effects();
+                    break;
             }
 
             // UIの更新を行っておく
@@ -289,6 +292,16 @@ public class RoguelikeManager : MonoBehaviour
             ItemSpawner.Instance.SetSpawnCount(SpawnCountType.Count1500);
         else
             Debug.LogWarning("[RoguelikeManager] ApplySkill27Effects: ItemSpawner が見つかりません。");
+    }
+
+    /// <summary>スキルID31取得時：クレーンゲームのプレイ時間90秒を解禁する（Rock_90非表示・TouchPanelの90選択可能に）</summary>
+    private void ApplySkill31Effects()
+    {
+        var touchPanel = FindFirstObjectByType<TouchPanelOutlineController>();
+        if (touchPanel != null)
+            touchPanel.UnlockDuration(90f);
+        else
+            Debug.LogWarning("[RoguelikeManager] ApplySkill31Effects: TouchPanelOutlineController が見つかりません。");
     }
 
     /// <summary>子孫を再帰的に名前検索する</summary>

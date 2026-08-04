@@ -60,6 +60,11 @@ public class UFOCameraController : MonoBehaviour
     [Tooltip("タイマー終了時、ルーレットのコイン降雨(ItemSpawner.IsSpawning)が発生中の場合、それが終わってから消灯・終了処理をするまでの追加待機秒数")]
     [SerializeField] private float postRouletteRainExitDelay = 2f;
 
+    [Header("デバッグ設定")]
+    [Tooltip("ON: 実際にPlayを開始した後（有料セッション中）でも F / Escape キーで強制的に中断・終了できるようにします（テスト用）。\n" +
+             "OFF (本番用): Playを開始した後は通常通り中断できません（Play2_Canvasの選択画面に戻っているだけの間はこの設定に関わらずいつでもキャンセルできます）。")]
+    [SerializeField] private bool debugAllowInterruptDuringPlay = false;
+
     [Header("Audio Settings")]
     [Tooltip("再生用のAudioSource。未設定の場合は自動でGetComponentします")]
     [SerializeField] private AudioSource audioSource;
@@ -1235,6 +1240,7 @@ public class UFOCameraController : MonoBehaviour
             Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             // Play_Canvas2（television の選択画面）を表示中は、UFO自体を終了せず砂嵐を挟んで Play_Canvas へ戻る
+            // （まだ Play を押して支払いを開始していないため、いつでもキャンセル可能）
             if (tvController != null && tvController.IsPlayCanvas2Active)
             {
                 var touchPanel = FindAnyObjectByType<TouchPanelOutlineController>();
@@ -1246,6 +1252,11 @@ public class UFOCameraController : MonoBehaviour
                 {
                     tvController.PlayStaticThenShowCanvas(tvController.PlayCanvas);
                 }
+            }
+            else if (IsPlaySessionActive && !debugAllowInterruptDuringPlay)
+            {
+                // 実際に Play を押して有料セッションが開始された後は、通常は途中で中断できない
+                // （デバッグ用チェックボックスがONの場合のみ強制終了を許可する）
             }
             else
             {

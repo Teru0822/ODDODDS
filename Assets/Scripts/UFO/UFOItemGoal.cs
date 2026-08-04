@@ -317,6 +317,11 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
             return;
         }
 
+        // Play2_Canvas（選択画面）でPlayを一度も押さずに（＝有料セッションを一度も開始せずに）
+        // 抜けた場合は、引き出しを見せる演出（カメラ移動含む）自体を行わない
+        bool didStartPlaySession = UFOCameraController.Instance != null && UFOCameraController.Instance.PaymentCount > 0;
+        if (!didStartPlaySession) return;
+
         // プレイ中に積み上がった引き出しの中身を、そのまま見せる（引き出しを開くだけ）。
         // 所持金への加算（FinalizeSessionRewards）は、カメラが Drawer Camera Viewpoint に
         // 到着したタイミングで UFODrawerRewardDisplay 側から呼ばれる。
