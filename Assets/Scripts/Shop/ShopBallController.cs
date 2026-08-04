@@ -143,17 +143,6 @@ public class ShopBallController : MonoBehaviour
             return;
         }
 
-        // Check if Turn System allows buying balls
-        if (RoundManager.Instance != null && !RoundManager.Instance.CanBuyBalls())
-        {
-            if (_currentLooked != null)
-            {
-                _currentLooked.ApplyHighlight(false, false);
-                _currentLooked = null;
-            }
-            return;
-        }
-
         if (lookCamera == null) lookCamera = Camera.main;
         if (lookCamera == null || _slots == null || _slots.Length == 0) return;
 

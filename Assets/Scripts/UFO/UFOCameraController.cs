@@ -1,4 +1,5 @@
 using System.Collections;
+using UniRx;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -232,6 +233,9 @@ public class UFOCameraController : MonoBehaviour
     }
 
     private int _paymentCount = 0;
+    // MoneyManager のターン（ラウンド）が進むまで再プレイを禁止するためのフラグ。
+    // 旧 RoundManager.CanPlayUfo() の代替。ターンが進むたびに false へリセットされる。
+    private bool _hasPlayedThisRound = false;
     private float _playTimer = 0f;
     private int _triggeredCoinCount = 0;
     private int _completedCoinAnimationCount = 0;
@@ -372,6 +376,15 @@ public class UFOCameraController : MonoBehaviour
         {
             machineHover.OnClicked += OnMachineClicked;
         }
+
+        // ラウンド（MoneyManager のターン）が進むたびに、UFOキャッチャーを再びプレイ可能にする
+        if (MoneyManager.Instance != null)
+        {
+            MoneyManager.Instance.OnCurrentTurnChange
+                .Skip(1)
+                .Subscribe(_ => _hasPlayedThisRound = false)
+                .AddTo(this);
+        }
     }
 
     private void SetupDynamicCameras()
@@ -483,7 +496,7 @@ public class UFOCameraController : MonoBehaviour
 
         if (!IsPlayingUfo)
         {
-            bool canPlayUfo = RoundManager.Instance == null || RoundManager.Instance.CanPlayUfo();
+            bool canPlayUfo = !_hasPlayedThisRound;
 
             // プレイ可能かつ遷移中でない場合のみ、ホバーアウトラインを有効化する
             if (machineHover != null)
@@ -612,6 +625,7 @@ public class UFOCameraController : MonoBehaviour
         playDuration = durationSeconds;
 
         _paymentCount++;
+        _hasPlayedThisRound = true;
         _playTimer = playDuration;
         IsPlaySessionActive = true;
         _hasPlayedLowTimeWarning = false; // 新規セッション開始時に警告音再生フラグをリセット
@@ -889,8 +903,7 @@ public class UFOCameraController : MonoBehaviour
     {
         if (IsPlayingUfo || _isTransitioning) return;
 
-        bool canPlayUfo = RoundManager.Instance == null || RoundManager.Instance.CanPlayUfo();
-        if (!canPlayUfo) return;
+        if (_hasPlayedThisRound) return;
 
         // クリックした瞬間にライトを点灯
         SetPlaySpotlight(true);
@@ -1032,7 +1045,7 @@ public class UFOCameraController : MonoBehaviour
             pickupController.enabled = true;
         }
 
-        bool canPlayUfo = RoundManager.Instance == null || RoundManager.Instance.CanPlayUfo();
+        bool canPlayUfo = !_hasPlayedThisRound;
         if (machineHover != null)
         {
             machineHover.enabled = canPlayUfo;

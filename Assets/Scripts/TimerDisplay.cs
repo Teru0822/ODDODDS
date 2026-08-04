@@ -175,9 +175,9 @@ public class TimerDisplay : MonoBehaviour
         {
             _lastIsPlayingUfo = true;
             _gameComplete     = false;
-            var rm = RoundManager.Instance;
-            _roundAtEntry = rm != null ? rm.currentRound : -1;
-            TransitionTo(rm != null ? DisplayState.RoundDisplay : DisplayState.PlayInfo);
+            var mm = MoneyManager.Instance;
+            _roundAtEntry = mm != null ? mm.CurrentTurnCount : -1;
+            TransitionTo(mm != null ? DisplayState.RoundDisplay : DisplayState.PlayInfo);
         }
 
         // セッション開始 → Countdown
@@ -321,8 +321,8 @@ public class TimerDisplay : MonoBehaviour
 
                 // ゲームクリア判定（最終ラウンド & 全プレイ消費）
                 var ctrl      = UFOCameraController.Instance;
-                var rmF       = RoundManager.Instance;
-                int nowRound  = rmF  != null ? rmF.currentRound    : _roundAtEntry;
+                var mmF       = MoneyManager.Instance;
+                int nowRound  = mmF  != null ? mmF.CurrentTurnCount : _roundAtEntry;
                 int payCount  = ctrl != null ? ctrl.PaymentCount   : 0;
                 int maxPay    = ctrl != null ? ctrl.MaxPlayCount    : 0;
                 bool allPlays = maxPay  > 0 && payCount  >= maxPay;
@@ -335,7 +335,7 @@ public class TimerDisplay : MonoBehaviour
                 }
 
                 // 通常遷移
-                if (rmF != null && nowRound != _roundAtEntry)
+                if (mmF != null && nowRound != _roundAtEntry)
                 {
                     _roundAtEntry = nowRound;
                     TransitionTo(DisplayState.RoundDisplay);
@@ -383,8 +383,8 @@ public class TimerDisplay : MonoBehaviour
 
     void RefreshRoundDisplay()
     {
-        var rm      = RoundManager.Instance;
-        int current = rm != null ? rm.currentRound : 1;
+        var mm      = MoneyManager.Instance;
+        int current = mm != null ? mm.CurrentTurnCount : 1;
         string main = maxRound > 0 ? $" {current} / {maxRound}" : $" {current}";
         SetTexts("ROUND", main);
     }
@@ -452,7 +452,7 @@ public class TimerDisplay : MonoBehaviour
         }
 
         // PaymentCount = UFO セッションをプレイした回数（セッション終了で +1）
-        // ゲームラウンド（RoundManager.currentRound）はUFO+ピンボール両方でしか進まないため
+        // ゲームラウンド（MoneyManager.CurrentTurnCount）はタイプライター使用時にしか進まないため
         // UFO 単体でも変化する PaymentCount でインジケーターを駆動する
         var ctrl    = UFOCameraController.Instance;
         int current = ctrl != null ? ctrl.PaymentCount : 0;

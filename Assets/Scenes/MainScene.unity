@@ -1331,7 +1331,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &262892004
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1780,7 +1780,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &372463201
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1793,12 +1793,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a73163fb97c1077468559edb3d3586e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RoundManager
-  isTurnSystemEnabled: 0
+  isTurnSystemEnabled: 1
   currentRound: 1
   currentPhase: 0
   displaySceneName: MainScene
   worldRoundText: {fileID: 262892005}
   billboardWorldText: 0
+  _hudCanvas: {fileID: 0}
+  _hudRoundText: {fileID: 0}
+  _purchasedBallCountThisRound: 0
 --- !u!4 &372463202
 Transform:
   m_ObjectHideFlags: 0
