@@ -11,6 +11,16 @@ using UnityEngine.UI;
 
 public class GameUIManager : MonoBehaviour
 {
+    public static GameUIManager Instance { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+    }
+
     [Header("ゲーム内のオブジェクト")]
     [SerializeField] private TMP_Text _turnText;
     [SerializeField] private TMP_Text _nextDebtTurnText;
@@ -41,6 +51,20 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] private TMP_Text _silverCoinText;
     [SerializeField] private TMP_Text _goldCoinText;
     [SerializeField] private TMP_Text _blackDiamondText;
+
+    [Header("報酬フォーカス演出（Drawer Camera Viewpoint用）")]
+    [Tooltip("フォーカス中に隠したいUI（お金のテキストなど、UnwashCoin以外の常時表示UI）")]
+    [SerializeField] private List<GameObject> _hudElementsToHideDuringRewardFocus = new List<GameObject>();
+    [Tooltip("UnwashCoinの4つのテキストをまとめている親（レイアウトグループ等）のRectTransform")]
+    [SerializeField] private RectTransform _unwashCoinGroupContainer;
+    [Tooltip("フォーカス中、UnwashCoinグループ全体を何倍の大きさにするか")]
+    [SerializeField] private float _rewardFocusScale = 2.5f;
+    [Tooltip("フォーカス中、UnwashCoinグループ全体を移動させる先の座標（anchoredPosition基準。画面中央など）")]
+    [SerializeField] private Vector2 _unwashCoinGroupFocusPosition;
+
+    private Vector3 _unwashCoinGroupOriginalScale;
+    private Vector2 _unwashCoinGroupOriginalPosition;
+    private bool _isRewardFocusActive = false;
 
 
     [Header("メニュー用のSettings")]
@@ -343,11 +367,51 @@ public class GameUIManager : MonoBehaviour
     private void HandleUfoModeChanged(bool isPlayingUfo)
     {
         gameObject.SetActive(!isPlayingUfo);
+
+        // UFOキャッチャー終了時、GameUIが再表示された瞬間に通常状態が一瞬映ってしまわないよう、
+        // 最初からフォーカスモード（UnwashCoin以外を隠した状態）にしておく。
+        // 通常表示への復帰は、引き出しの演出が完全に終わった時点で SetRewardFocusMode(false) が呼ばれる。
+        if (!isPlayingUfo)
+        {
+            SetRewardFocusMode(true);
+        }
     }
 
     private void HandleTypewriterUIChanged(bool isShowing)
     {
         gameObject.SetActive(!isShowing);
+    }
+
+    /// <summary>
+    /// 報酬演出（Drawer Camera Viewpoint）用のフォーカスモード。
+    /// true: UnwashCoin以外のHUDを隠し、UnwashCoinのテキストを拡大表示する。
+    /// false: 元の表示状態に戻す。
+    /// </summary>
+    public void SetRewardFocusMode(bool enabled)
+    {
+        if (enabled == _isRewardFocusActive) return;
+        _isRewardFocusActive = enabled;
+
+        foreach (var element in _hudElementsToHideDuringRewardFocus)
+        {
+            if (element != null) element.SetActive(!enabled);
+        }
+
+        if (_unwashCoinGroupContainer == null) return;
+
+        if (enabled)
+        {
+            _unwashCoinGroupOriginalScale = _unwashCoinGroupContainer.localScale;
+            _unwashCoinGroupOriginalPosition = _unwashCoinGroupContainer.anchoredPosition;
+
+            _unwashCoinGroupContainer.localScale = _unwashCoinGroupOriginalScale * _rewardFocusScale;
+            _unwashCoinGroupContainer.anchoredPosition = _unwashCoinGroupFocusPosition;
+        }
+        else
+        {
+            _unwashCoinGroupContainer.localScale = _unwashCoinGroupOriginalScale;
+            _unwashCoinGroupContainer.anchoredPosition = _unwashCoinGroupOriginalPosition;
+        }
     }
     /// <summary>
     /// アイテム、エフェクト、お金（訪問者イベントのみ）を取得・消失した際にそれぞれキューに追加する。

@@ -48,6 +48,13 @@ public class ItemSpawner : MonoBehaviour
     [Header("アイテム候補リスト (アンロック用など、5つ以上設定可能)")]
     public System.Collections.Generic.List<ItemSpawnSettings> itemCandidates = new System.Collections.Generic.List<ItemSpawnSettings>();
 
+    [Header("アイテム定義アセット (ItemSpawnData / 1アイテム1アセット管理・任意)")]
+    [Tooltip("設定した場合、上の initialActiveItems の代わりにここからアクティブ枠を構築します（優先されます）")]
+    public System.Collections.Generic.List<ItemSpawnData> initialActiveItemAssets = new System.Collections.Generic.List<ItemSpawnData>();
+
+    [Tooltip("設定した場合、上の itemCandidates の代わりにここから候補リストを構築します（優先されます）")]
+    public System.Collections.Generic.List<ItemSpawnData> itemCandidateAssets = new System.Collections.Generic.List<ItemSpawnData>();
+
     [Header("セルごとのアクティブ5枠出現比率設定 (セル1〜8用)")]
     public System.Collections.Generic.List<CellWeightConfig> cellWeights = new System.Collections.Generic.List<CellWeightConfig>();
 
@@ -91,6 +98,25 @@ public class ItemSpawner : MonoBehaviour
     void Awake()
     {
         Instance = this;
+
+        // ItemSpawnData アセットが設定されていれば、そちらを優先してリストを構築する
+        if (initialActiveItemAssets != null && initialActiveItemAssets.Count > 0)
+        {
+            initialActiveItems = new System.Collections.Generic.List<ItemSpawnSettings>();
+            foreach (var asset in initialActiveItemAssets)
+            {
+                if (asset != null) initialActiveItems.Add(asset.ToRuntimeSettings());
+            }
+        }
+
+        if (itemCandidateAssets != null && itemCandidateAssets.Count > 0)
+        {
+            itemCandidates = new System.Collections.Generic.List<ItemSpawnSettings>();
+            foreach (var asset in itemCandidateAssets)
+            {
+                if (asset != null) itemCandidates.Add(asset.ToRuntimeSettings());
+            }
+        }
 
         // 既存のプレハブ変数を元にした互換初期化（initialActiveItemsが空の場合）
         if (initialActiveItems == null || initialActiveItems.Count == 0)

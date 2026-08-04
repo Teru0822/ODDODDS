@@ -82,11 +82,34 @@ public class TypewriterPaperOutput : MonoBehaviour
     [Tooltip("発射フェーズの長さ (秒)。終了後に紙を破棄")]
     public float launchUpDuration = 1.2f;
 
+    [Header("ローンチ効果音")]
+    [Tooltip("発射フェーズ開始時の whoosh 音")]
+    [SerializeField] private AudioClip _launchWhooshClip;
+    [SerializeField, Range(0f, 2f)] private float _launchWhooshVolume = 1f;
+    [Tooltip("音声再生用 AudioSource。null なら自動生成")]
+    [SerializeField] private AudioSource _launchAudioSource;
+
+    [Header("燃焼演出（ローンチの代替）")]
+    [Tooltip("true にするとローンチ演出の代わりに紙が燃える。paperPrefab に RealisticPaperBurn が必要")]
+    [SerializeField] private bool _burnOnEnd = false;
+
     private GameObject _currentPaper;
     private TMP_Text _currentText;
     private Vector3 _baseLocalPos;
     private Quaternion _baseLocalRot;
     private float _bobPhase;
+
+    private void Awake()
+    {
+        if (_launchAudioSource == null)
+        {
+            _launchAudioSource = GetComponent<AudioSource>();
+            if (_launchAudioSource == null)
+                _launchAudioSource = gameObject.AddComponent<AudioSource>();
+            _launchAudioSource.playOnAwake = false;
+            _launchAudioSource.spatialBlend = 0f;
+        }
+    }
 
     public bool HasActivePaper => _currentPaper != null;
 
@@ -132,18 +155,34 @@ public class TypewriterPaperOutput : MonoBehaviour
         _currentText.text += c;
     }
 
-    /// <summary>打鍵完了。enableLaunch=true ならローンチ演出を開始する (紙はその後破棄される)。</summary>
+    /// <summary>打鍵完了。_burnOnEnd=true なら燃焼、enableLaunch=true ならローンチ演出を開始する。</summary>
     public void EndPaper()
     {
         if (_currentPaper == null) return;
-        if (!enableLaunch) return;
 
-        // 浮遊 Update から手放してローンチ専用に
         var paper = _currentPaper;
         _currentPaper = null;
         _currentText = null;
-        // spawnPoint から切り離してワールド空間で動かす
         paper.transform.SetParent(null, true);
+
+        if (_burnOnEnd)
+        {
+            var burn = paper.GetComponent<RealisticPaperBurn>();
+            if (burn != null)
+            {
+                // 燃え尽きたら自動で紙を破棄
+                burn.onBurnComplete.AddListener(() => Destroy(paper));
+                burn.StartBurning();
+            }
+            else
+            {
+                Debug.LogWarning("[TypewriterPaperOutput] _burnOnEnd=true だが RealisticPaperBurn が見つかりません", paper);
+                Destroy(paper, 3f);
+            }
+            return;
+        }
+
+        if (!enableLaunch) return;
         StartCoroutine(LaunchSequence(paper));
     }
 
@@ -179,6 +218,8 @@ public class TypewriterPaperOutput : MonoBehaviour
         }
 
         // Phase 3: ワールド +Y へぶっ飛ぶ (加速しながら)
+        if (_launchWhooshClip != null)
+            _launchAudioSource.PlayOneShot(_launchWhooshClip, _launchWhooshVolume);
         float launchElapsed = 0f;
         float currentSpeed = launchUpInitialSpeed;
         while (launchElapsed < launchUpDuration && paper != null)
