@@ -51,6 +51,9 @@ public enum SkillId
     // Typewriter
     Typewriter_ExpandChoice1 = 29,  // 2択 → 3択
     Typewriter_ExpandChoice2 = 30,  // 3択 → 4択
+
+    // UFOcatcher (追加分)
+    UFO_Unlock90Sec = 31,  // プレイ時間90秒をアンロック
 }
 
 public class RoguelikeData

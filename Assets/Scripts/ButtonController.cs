@@ -64,54 +64,71 @@ public class ButtonController : MonoBehaviour
         }
 
         var mouse = Mouse.current;
-        if (mouse == null) return;
-
-        // クリック開始：マウスがこのオブジェクト上にあるとき
-        if (mouse.leftButton.wasPressedThisFrame)
+        if (mouse != null)
         {
-            if (IsMouseOverThis(mouse.position.ReadValue()))
+            // クリック開始：マウスがこのオブジェクト上にあるとき
+            if (mouse.leftButton.wasPressedThisFrame && IsMouseOverThis(mouse.position.ReadValue()))
             {
-                _isPressed = true;
-                UFOCameraController.Instance?.NotifyControlInputUsed();
-
-                // クリック効果音の再生
-                PlaySound(clickSound);
-                
-                if (armController != null)
-                {
-                    if (buttonType == ButtonType.StartDescent)
-                    {
-                        armController.StartDescentCycle();
-                    }
-                    else if (buttonType == ButtonType.ToggleClaw)
-                    {
-                        armController.ToggleClaw();
-                    }
-                    else if (buttonType == ButtonType.FeverTime)
-                    {
-                        UFOItemGoal goal = FindAnyObjectByType<UFOItemGoal>();
-                        if (goal != null)
-                        {
-                            goal.StartFeverTime();
-                        }
-                        else
-                        {
-                            Debug.LogError("[ButtonController] UFOItemGoal がシーン内に見つかりません。");
-                        }
-                    }
-                }
+                TriggerPress();
             }
-        }
 
-        // クリック終了
-        if (mouse.leftButton.wasReleasedThisFrame)
-            _isPressed = false;
+            // クリック終了
+            if (mouse.leftButton.wasReleasedThisFrame)
+                TriggerRelease();
+        }
 
         // 押し込み演出
         float   targetY = _isPressed ? _originalLocalPos.y - pressDepth : _originalLocalPos.y;
         Vector3 pos     = transform.localPosition;
         pos.y                 = Mathf.Lerp(pos.y, targetY, Time.deltaTime * pressSpeed);
         transform.localPosition = pos;
+    }
+
+    /// <summary>
+    /// このボタンを押した状態にする（押し込み演出・効果音・対応する動作の実行）。
+    /// マウスクリックからも、UFOKeyboardController（キーボードショートカット）からも、
+    /// 同じ見た目・音・挙動になるようこのメソッドに一本化している。
+    /// </summary>
+    public void TriggerPress()
+    {
+        // UFOプレイ中かつアクティブなプレイセッション中のみ操作を許可する
+        if (!UFOCameraController.IsPlayingUfo || !UFOCameraController.IsControlActive) return;
+
+        _isPressed = true;
+        UFOCameraController.Instance?.NotifyControlInputUsed();
+
+        // クリック効果音の再生
+        PlaySound(clickSound);
+
+        if (armController != null)
+        {
+            if (buttonType == ButtonType.StartDescent)
+            {
+                armController.StartDescentCycle();
+            }
+            else if (buttonType == ButtonType.ToggleClaw)
+            {
+                armController.ToggleClaw();
+            }
+            else if (buttonType == ButtonType.FeverTime)
+            {
+                UFOItemGoal goal = FindAnyObjectByType<UFOItemGoal>();
+                if (goal != null)
+                {
+                    goal.StartFeverTime();
+                }
+                else
+                {
+                    Debug.LogError("[ButtonController] UFOItemGoal がシーン内に見つかりません。");
+                }
+            }
+        }
+    }
+
+    /// <summary>押し込み演出を解除する（見た目を元の高さへ戻す）。動作の実行は伴わない。</summary>
+    public void TriggerRelease()
+    {
+        _isPressed = false;
     }
 
     /// <summary>マウス座標がこのオブジェクトのCollider上にあるか判定</summary>

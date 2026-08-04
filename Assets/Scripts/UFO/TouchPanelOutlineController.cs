@@ -1,4 +1,5 @@
 using System.Collections;
+using UniRx;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -198,6 +199,31 @@ public class TouchPanelOutlineController : MonoBehaviour
         SetActiveGroup(isPlay: true);
     }
 
+    private void Start()
+    {
+        // ラウンド2（MoneyManager のターン2）に到達したら、60秒を自動解禁する（90秒解禁と同じ UnlockDuration を使用）。
+        // MoneyManager は加法ロードされる別サブシーン側にいるため、MultiSceneLoader の非同期ロードが
+        // 終わるまで Instance が null の可能性がある。Instance が現れるまで毎フレーム待ってから購読する。
+        Observable.EveryUpdate()
+            .Select(_ => MoneyManager.Instance)
+            .Where(mm => mm != null)
+            .First()
+            .Subscribe(mm =>
+            {
+                // 現在のターン数、および以降のターン変化の両方をチェックする（Skip(1)はしない）
+                mm.OnCurrentTurnChange
+                    .Subscribe(turn =>
+                    {
+                        if (turn >= 2)
+                        {
+                            UnlockDuration(60f);
+                        }
+                    })
+                    .AddTo(this);
+            })
+            .AddTo(this);
+    }
+
     private void EnsureAudioSource()
     {
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
@@ -326,6 +352,13 @@ public class TouchPanelOutlineController : MonoBehaviour
                     HandlePlay2PlayClicked();
                 }
             }
+        }
+
+        // Play_Canvas2 表示中は、Enter キーでもマウスクリックと同じ Play を実行できるようにする
+        if (canSelectPlay2 && Keyboard.current != null &&
+            (Keyboard.current.enterKey.wasPressedThisFrame || Keyboard.current.numpadEnterKey.wasPressedThisFrame))
+        {
+            HandlePlay2PlayClicked();
         }
     }
 
