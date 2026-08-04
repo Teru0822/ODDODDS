@@ -218,6 +218,7 @@ public class TypewriterPaperOutput : MonoBehaviour
         }
 
         // Phase 3: ワールド +Y へぶっ飛ぶ (加速しながら)
+        paper.GetComponent<PaperLatticeAnimator>()?.StartLaunch();
         if (_launchWhooshClip != null)
             _launchAudioSource.PlayOneShot(_launchWhooshClip, _launchWhooshVolume);
         float launchElapsed = 0f;

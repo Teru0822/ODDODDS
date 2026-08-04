@@ -15,6 +15,8 @@ public class RealisticPaperBurn : MonoBehaviour
     [Header("Burn Settings")]
     [Range(1f, 10f)]
     public float burnDuration = 3.0f;
+    [Tooltip("false にすると TMP テキストへの燃焼シェーダー適用をスキップする（TMP が消える場合に使用）")]
+    public bool burnTMP = true;
 
     [Header("Sound")]
     [Tooltip("燃焼中にループ再生するサウンドクリップ")]
@@ -33,6 +35,9 @@ public class RealisticPaperBurn : MonoBehaviour
     [Header("Events")]
     public UnityEvent onBurnComplete;
 
+    public bool IsBurning => _burning;
+    public float BurnProgress => _progress;
+
     private Material    _mat;
     private Material    _tmpMat;
     private Renderer    _tmpRenderer;
@@ -49,8 +54,15 @@ public class RealisticPaperBurn : MonoBehaviour
 
     void Start()
     {
+        if (paperRenderer == null)
+            paperRenderer = GetComponent<Renderer>();
+
         if (paperRenderer != null)
+        {
             _mat = paperRenderer.material;
+            if (!_mat.HasProperty("_BurnProgress"))
+                Debug.LogWarning($"[RealisticPaperBurn] マテリアル '{_mat.name}' に _BurnProgress プロパティがありません。Custom/PaperBurn シェーダーを使用してください。", this);
+        }
 
         _audio              = gameObject.AddComponent<AudioSource>();
         _audio.clip         = burnSound;
@@ -95,7 +107,7 @@ public class RealisticPaperBurn : MonoBehaviour
 
         // タイプ完了後に呼ばれるので、ここで TMP マテリアルを差し替える
         // （Start() で設定するとタイプ中に TMP がメッシュ再生成して上書きされるため）
-        SetupTMPBurnMaterial();
+        if (burnTMP) SetupTMPBurnMaterial();
         _tmpMat?.SetMatrix("_PaperW2L", transform.worldToLocalMatrix);
 
         _burning  = true;
