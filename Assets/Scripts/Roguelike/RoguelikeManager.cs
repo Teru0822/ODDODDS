@@ -195,6 +195,15 @@ public class RoguelikeManager : MonoBehaviour
                 case SkillId.UFO_ReduceSway3:
                     ApplySwayEffects();
                     break;
+                case SkillId.UFO_ExpandItems1:
+                    ApplySkill26Effects();
+                    break;
+                case SkillId.UFO_ExpandItems2:
+                    ApplySkill27Effects();
+                    break;
+                case SkillId.UFO_ItemDropCoin:
+                    ApplySkill16Effects();
+                    break;
             }
 
             // UIの更新を行っておく
@@ -247,6 +256,39 @@ public class RoguelikeManager : MonoBehaviour
             UFOArmManager.Instance.SetArmLevel(3);
         else
             Debug.LogWarning("[RoguelikeManager] ApplySkill9Effects: UFOArmManager が見つかりません。");
+    }
+
+    /// <summary>スキルID16取得時：クレーンゲームにルーレット機能（Devil_Eye）を解放する</summary>
+    private void ApplySkill16Effects()
+    {
+        // RouletteController は Devil_Eye と一緒に非アクティブな状態からスタートする構成のため、
+        // Awake() が未実行で Instance が null のことがある。その場合は非アクティブ含みで検索する。
+        var roulette = RouletteController.Instance;
+        if (roulette == null)
+            roulette = FindFirstObjectByType<RouletteController>(FindObjectsInactive.Include);
+
+        if (roulette != null)
+            roulette.Unlock();
+        else
+            Debug.LogWarning("[RoguelikeManager] ApplySkill16Effects: RouletteController が見つかりません。");
+    }
+
+    /// <summary>スキルID26取得時：UFOキャッチャーの中身（降らせる枚数）を1000枚に増やす</summary>
+    private void ApplySkill26Effects()
+    {
+        if (ItemSpawner.Instance != null)
+            ItemSpawner.Instance.SetSpawnCount(SpawnCountType.Count1000);
+        else
+            Debug.LogWarning("[RoguelikeManager] ApplySkill26Effects: ItemSpawner が見つかりません。");
+    }
+
+    /// <summary>スキルID27取得時：UFOキャッチャーの中身（降らせる枚数）を1500枚に増やす</summary>
+    private void ApplySkill27Effects()
+    {
+        if (ItemSpawner.Instance != null)
+            ItemSpawner.Instance.SetSpawnCount(SpawnCountType.Count1500);
+        else
+            Debug.LogWarning("[RoguelikeManager] ApplySkill27Effects: ItemSpawner が見つかりません。");
     }
 
     /// <summary>子孫を再帰的に名前検索する</summary>

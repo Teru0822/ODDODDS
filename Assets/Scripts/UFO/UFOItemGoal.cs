@@ -1,3 +1,4 @@
+using UniRx;
 using UnityEngine;
 using TMPro; // 画面の文字（UI）を操作するために追加
 
@@ -251,12 +252,20 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
             rouletteController.OnSpinComplete.AddListener(HandleRouletteSpinComplete);
         }
 
-        // UnwashedMoneyManagerの初期値との同期、および変更イベントの購読
-        if (UnwashedMoneyManager.Instance != null)
-        {
-            unwashedMoney = UnwashedMoneyManager.Instance.CurrentAmount;
-            UnwashedMoneyManager.Instance.OnAmountChanged += HandleUnwashedMoneyChanged;
-        }
+        // UnwashedMoneyManagerの初期値との同期、および変更イベントの購読。
+        // UnwashedMoneyManager は加法ロードされる別サブシーン側にいるため、MultiSceneLoader の非同期ロードが
+        // 終わるまで Instance が null の可能性がある。Start() で直接 null チェックすると購読自体が
+        // 永久にスキップされてしまうため、Instance が現れるまで毎フレーム待ってから購読する。
+        Observable.EveryUpdate()
+            .Select(_ => UnwashedMoneyManager.Instance)
+            .Where(mgr => mgr != null)
+            .First()
+            .Subscribe(mgr =>
+            {
+                unwashedMoney = mgr.CurrentAmount;
+                mgr.OnAmountChanged += HandleUnwashedMoneyChanged;
+            })
+            .AddTo(this);
 
         // UFOカメラのプレイ開始・終了イベントを購読
         UFOCameraController.OnUfoModeChanged += HandleUfoModeChanged;

@@ -15,9 +15,25 @@ using UnityEngine.InputSystem;
 /// </summary>
 public class RouletteController : MonoBehaviour
 {
+    public static RouletteController Instance { get; private set; }
+
     // -----------------------------------------------------------------------
     // Inspector フィールド
     // -----------------------------------------------------------------------
+
+    [Header("解放状態（タイプライター id16「クレーンゲームにルーレット機能を追加する」で解放）")]
+    [Tooltip("Devil_Eye本体の見た目（3Dモデル）。未解放時は非表示にし、解放されたらアクティブ化する。" +
+             "未設定の場合、親階層から「Devil_Eye」という名前の子オブジェクトを自動検索する")]
+    [SerializeField] private GameObject devilEyeVisual;
+
+    [SerializeField] private bool isUnlocked = false;
+
+    [Header("デバッグ設定")]
+    [Tooltip("ON: id16スキルを取得していなくても、常にDevil_Eyeを表示しルーレットアイテムも降らせます（テスト用）")]
+    [SerializeField] private bool debugForceUnlock = false;
+
+    /// <summary>ルーレット機能が解放されているか（本解放 or デバッグ強制のいずれか）</summary>
+    public bool IsRouletteUnlocked => isUnlocked || debugForceUnlock;
 
     [Header("スロット設定")]
     [Tooltip("5スロット分のエントリー。slotTransform に Spin1〜Spin5 を、weight に相対確率を設定する")]
@@ -102,6 +118,36 @@ public class RouletteController : MonoBehaviour
     public bool IsSpinning => _isSpinning;
 
     /// <summary>
+    /// ローグライクスキル「クレーンゲームにルーレット機能を追加する」(id16) 取得時に呼ばれる。
+    /// Devil_Eyeを表示状態にする。
+    /// </summary>
+    public void Unlock()
+    {
+        if (isUnlocked) return;
+
+        // Roulette本体（このGameObject自身）がDevil_Eyeと一緒に非アクティブな状態からスタートする構成のため、
+        // Awake() がまだ実行されておらず Instance 登録も済んでいないことがある。
+        // 解放時にまず自分自身をアクティブ化することで、Awake() を確実に走らせる。
+        if (!gameObject.activeSelf)
+        {
+            gameObject.SetActive(true);
+        }
+
+        isUnlocked = true;
+        ApplyUnlockVisibility();
+        Debug.Log("[RouletteController] ルーレット機能（Devil_Eye）が解放されました。");
+    }
+
+    /// <summary>現在の解放状態（本解放 or デバッグ強制）に応じて Devil_Eye の表示/非表示を切り替える</summary>
+    private void ApplyUnlockVisibility()
+    {
+        if (devilEyeVisual != null)
+        {
+            devilEyeVisual.SetActive(IsRouletteUnlocked);
+        }
+    }
+
+    /// <summary>
     /// スピンを開始する。スピン中に呼ばれた場合は無視する。
     /// 当選スロットは weight による重み付きランダムで決定する。
     /// </summary>
@@ -166,6 +212,24 @@ public class RouletteController : MonoBehaviour
 
     private void Awake()
     {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else if (Instance != this)
+        {
+            Debug.LogWarning("[RouletteController] 既に別のインスタンスが存在するため、こちらは Instance に登録しません。");
+        }
+
+        // Devil_Eyeの見た目が未設定の場合、親階層から「Devil_Eye」という名前の子オブジェクトを自動検索する
+        if (devilEyeVisual == null && transform.parent != null)
+        {
+            var found = transform.parent.Find("Devil_Eye");
+            if (found != null) devilEyeVisual = found.gameObject;
+        }
+
+        ApplyUnlockVisibility();
+
         if (reelTransform == null)
             Debug.LogWarning("[RouletteController] reelTransform が未設定です。Inspector で Reel を割り当ててください。");
 
@@ -203,6 +267,22 @@ public class RouletteController : MonoBehaviour
 
         SyncCurrentAngle();
     }
+
+    private void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
+    }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        // Play中にdebugForceUnlockのチェックを付け外しした際、即座にDevil_Eyeの表示へ反映する
+        if (Application.isPlaying)
+        {
+            ApplyUnlockVisibility();
+        }
+    }
+#endif
 
     private void Update()
     {

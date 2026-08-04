@@ -1,4 +1,5 @@
 using System.Collections;
+using UniRx;
 using UnityEngine;
 
 public class ItemSpawner : MonoBehaviour
@@ -41,6 +42,11 @@ public class ItemSpawner : MonoBehaviour
     [Header("新規生成設定")]
     [Tooltip("降らせる枚数のドロップダウン設定")]
     public SpawnCountType spawnCount = SpawnCountType.Count500;
+
+    [Header("デバッグ設定")]
+    [Tooltip("ON: 上の spawnCount (500/1000/1500) を Inspector で自由に設定してテストできます。\n" +
+             "OFF (本番用): 常に500枚からスタートし、ローグライクスキル「UFOキャッチャーの中身を1000/1500に増やす」(id26/id27) を獲得したときだけ自動で増加します。")]
+    public bool debugMode = false;
 
     [Header("初期アクティブアイテム枠 (必ず5つ設定してください)")]
     public System.Collections.Generic.List<ItemSpawnSettings> initialActiveItems = new System.Collections.Generic.List<ItemSpawnSettings>();
@@ -94,6 +100,11 @@ public class ItemSpawner : MonoBehaviour
     private int _activeAreaMask = 0;
     private SpawnRatePattern[] _activeRates; // 割り当てられたパターン (サイズは 4 または 9)
     private System.Collections.Generic.List<ItemSpawnSettings> _activeItems = new System.Collections.Generic.List<ItemSpawnSettings>();
+    private Coroutine _spawnCoroutine;
+
+    // RespawnAll() で確実に消去できるよう、parentFolder の設定に依存せず生成した実体を直接追跡する
+    // （実機の UFOキャッチャー prefab では parentFolder が未設定のケースがあるため）
+    private readonly System.Collections.Generic.List<GameObject> _spawnedInstances = new System.Collections.Generic.List<GameObject>();
 
     void Awake()
     {
@@ -174,6 +185,13 @@ public class ItemSpawner : MonoBehaviour
 
     void Start()
     {
+        // デバッグモードでない場合は、Inspectorの手動設定を無視して必ず500枚からスタートする
+        // （1000/1500への増加はローグライクスキル id26/id27 の獲得によってのみ行われる）
+        if (!debugMode)
+        {
+            spawnCount = SpawnCountType.Count500;
+        }
+
         // アクティブ枠を初期化
         _activeItems.Clear();
         foreach (var item in initialActiveItems)
@@ -186,7 +204,29 @@ public class ItemSpawner : MonoBehaviour
             }
         }
         
-        StartCoroutine(SpawnRoutine());
+        _spawnCoroutine = StartCoroutine(SpawnRoutine());
+
+        // ローディング画面で隠れているこのタイミングのうちに、まだ一度も生成したことがない特殊アイテム
+        // （ルーレット等、解放されるまで排出率0のもの）のシェーダーを事前コンパイルさせておく。
+        // これをしないと、実際に解放されて初めて画面上に現れた瞬間にシェーダーコンパイルが走り、一瞬カクつく。
+        StartCoroutine(PrewarmSpecialPrefabsRoutine());
+
+        // ラウンド（MoneyManager のターン）が進むたびに、マシン内に残っているアイテムを消して降らせ直す。
+        // MoneyManager は加法ロードされる別サブシーン側にいるため、MultiSceneLoader の非同期ロードが
+        // 終わるまで Instance が null の可能性がある。Start() で直接 null チェックすると購読自体が
+        // スキップされてしまうため、EffectManager と同様に Instance が現れるまで毎フレーム待ってから購読する。
+        Observable.EveryUpdate()
+            .Select(_ => MoneyManager.Instance)
+            .Where(mm => mm != null)
+            .First()
+            .Subscribe(mm =>
+            {
+                mm.OnCurrentTurnChange
+                    .Skip(1)
+                    .Subscribe(_ => RespawnAll())
+                    .AddTo(this);
+            })
+            .AddTo(this);
     }
 
     void Update()
@@ -197,7 +237,7 @@ public class ItemSpawner : MonoBehaviour
             if (!IsSpawning)
             {
                 Debug.Log("[ItemSpawner] Pキーが押されました。デバッグ用のスポーンを開始します。");
-                StartCoroutine(SpawnRoutine());
+                _spawnCoroutine = StartCoroutine(SpawnRoutine());
             }
             else
             {
@@ -245,6 +285,148 @@ public class ItemSpawner : MonoBehaviour
 
         yield return new WaitForSeconds(3.0f);
         IsInitialSpawning = false;
+    }
+
+    /// <summary>
+    /// ラウンドが変わった際に呼ばれる。マシン内に残っている（未回収の）アイテムを全て消し、
+    /// 新しいウェーブ設定で降らせ直す。
+    /// </summary>
+    public void RespawnAll()
+    {
+        if (_spawnCoroutine != null)
+        {
+            StopCoroutine(_spawnCoroutine);
+            _spawnCoroutine = null;
+        }
+        IsSpawning = false;
+        IsInitialSpawning = false;
+
+        _spawnCoroutine = StartCoroutine(RespawnAllRoutine());
+    }
+
+    /// <summary>
+    /// RespawnAll() の実処理。最大1500個のRigidbody付きオブジェクトを1フレームでまとめて
+    /// Destroy() すると物理エンジン側の後片付けで一瞬固まって見えるため、複数フレームに分散して消去する。
+    /// </summary>
+    private IEnumerator RespawnAllRoutine()
+    {
+        const int destroyPerFrame = 150; // 1フレームあたりに消去する上限数（負荷分散のため）
+
+        // parentFolder の子として消すのではなく、自分で生成したオブジェクトを直接追跡したリストから消す。
+        // （実機の UFOキャッチャー prefab では parentFolder が未設定(null)になっており、
+        //   parentFolder 経由の消去では何も消えないケースがあったため）
+        int destroyedCount = 0;
+        int sinceYield = 0;
+        foreach (var obj in _spawnedInstances)
+        {
+            if (obj != null)
+            {
+                Destroy(obj);
+                destroyedCount++;
+                sinceYield++;
+
+                if (sinceYield >= destroyPerFrame)
+                {
+                    sinceYield = 0;
+                    yield return null;
+                }
+            }
+        }
+        _spawnedInstances.Clear();
+
+        // 念のため、parentFolder が設定されている構成でも取りこぼしが無いように子要素も消しておく
+        if (parentFolder != null)
+        {
+            sinceYield = 0;
+            for (int i = parentFolder.childCount - 1; i >= 0; i--)
+            {
+                Destroy(parentFolder.GetChild(i).gameObject);
+                sinceYield++;
+
+                if (sinceYield >= destroyPerFrame)
+                {
+                    sinceYield = 0;
+                    yield return null;
+                }
+            }
+        }
+
+        Debug.Log($"[ItemSpawner] ラウンド変更を検知。残っているアイテム{destroyedCount}個を消去し、再度降らせ直します。");
+        _spawnCoroutine = StartCoroutine(SpawnRoutine());
+    }
+
+    /// <summary>
+    /// 解放されるまで排出率0の特殊アイテム（ルーレット等）を、起動直後のローディング画面の裏で
+    /// 一度だけ生成→即破棄し、シェーダーコンパイルのコストを前倒しさせる。
+    /// </summary>
+    private IEnumerator PrewarmSpecialPrefabsRoutine()
+    {
+        yield return PrewarmOnePrefab(rouletteItemPrefab);
+        yield return PrewarmOnePrefab(hourglassPrefab);
+        yield return PrewarmOnePrefab(blackDiamondPrefab);
+    }
+
+    private IEnumerator PrewarmOnePrefab(GameObject prefab)
+    {
+        if (prefab == null) yield break;
+
+        Vector3 pos = (armRoot != null ? armRoot.position : transform.position) + Vector3.up * spawnYOffset;
+        GameObject instance = Instantiate(prefab, pos, Quaternion.identity, parentFolder);
+
+        // 他の落下中アイテムと干渉させないよう、その場に固定して衝突判定も切っておく
+        var rb = instance.GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.isKinematic = true;
+            rb.useGravity = false;
+        }
+        foreach (var col in instance.GetComponentsInChildren<Collider>())
+        {
+            col.enabled = false;
+        }
+
+        // 実際に数フレーム描画させてシェーダーコンパイルを発生させてから破棄する
+        yield return null;
+        yield return null;
+
+        Destroy(instance);
+    }
+
+    /// <summary>
+    /// ローグライクスキル「UFOキャッチャーの中身を1000/1500に増やす」(id26/id27) 獲得時に呼ばれる。
+    /// 即座には反映せず、次にアイテムが降る（RespawnAll → SpawnRoutine が呼ばれる）ラウンドから枚数が増える。
+    /// 現在値より少ない枚数を指定された場合は無視する（減少はしない）。
+    /// </summary>
+    public void SetSpawnCount(SpawnCountType count)
+    {
+        if ((int)count <= (int)spawnCount)
+        {
+            Debug.Log($"[ItemSpawner] SetSpawnCount({count}) は現在の設定({spawnCount})以下のため変更しません。");
+            return;
+        }
+
+        spawnCount = count;
+        Debug.Log($"[ItemSpawner] スポーン枚数を {count} に変更しました。次のラウンドから反映されます。");
+    }
+
+    /// <summary>
+    /// Instantiate は Pivot（原点）を指定座標に置くだけなので、Pivotが見た目の中心からズレているモデル
+    /// （例: 時計）だと変な位置に浮いて見える／めり込んで見える。
+    /// 描画上の Bounds（見た目の中心）を計算し、その中心が targetPosition に来るよう位置を補正する。
+    /// </summary>
+    private void CorrectPivotOffset(GameObject obj, Vector3 targetPosition)
+    {
+        var renderers = obj.GetComponentsInChildren<Renderer>();
+        if (renderers.Length == 0) return;
+
+        Bounds bounds = renderers[0].bounds;
+        for (int i = 1; i < renderers.Length; i++)
+        {
+            bounds.Encapsulate(renderers[i].bounds);
+        }
+
+        Vector3 centerOffset = targetPosition - bounds.center;
+        obj.transform.position += centerOffset;
     }
 
     private void PrepareWaveSettings()
@@ -413,7 +595,10 @@ public class ItemSpawner : MonoBehaviour
         }
 
         // 2. 固定枠の確率を取得
-        float jpRate = rouletteItemRate;
+        // ルーレットアイテムは、タイプライター id16「クレーンゲームにルーレット機能を追加する」で
+        // 解放されるまでは絶対に排出しない（RouletteController側のデバッグ強制も考慮する）
+        bool rouletteUnlocked = RouletteController.Instance != null && RouletteController.Instance.IsRouletteUnlocked;
+        float jpRate = rouletteUnlocked ? rouletteItemRate : 0f;
         float hgRate = hourglassRate;
         float bdRate = blackDiamondRate;
 
@@ -520,6 +705,10 @@ public class ItemSpawner : MonoBehaviour
 
         // 生成
         GameObject spawnedObj = Instantiate(prefabToSpawn, randomPos, Random.rotation, parentFolder);
+        _spawnedInstances.Add(spawnedObj);
+
+        // Pivot（原点）が見た目の中心からズレているモデル（例: 時計）でも、狙った位置に見た目が来るよう補正する
+        CorrectPivotOffset(spawnedObj, randomPos);
 
         // プレハブのisKinematicがtrueになっていても必ず落下するよう強制解除する
         Rigidbody spawnedRb = spawnedObj.GetComponent<Rigidbody>();
@@ -737,6 +926,10 @@ public class ItemSpawner : MonoBehaviour
         );
 
         GameObject spawnedObj = Instantiate(coinPrefab, randomPos, Random.rotation, parentFolder);
+        _spawnedInstances.Add(spawnedObj);
+
+        // Pivot（原点）が見た目の中心からズレているモデル（例: 時計）でも、狙った位置に見た目が来るよう補正する
+        CorrectPivotOffset(spawnedObj, randomPos);
 
         // プレハブのisKinematicがtrueになっていても必ず落下するよう強制解除する
         Rigidbody spawnedRb = spawnedObj.GetComponent<Rigidbody>();

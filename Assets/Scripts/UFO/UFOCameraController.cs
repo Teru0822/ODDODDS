@@ -377,14 +377,22 @@ public class UFOCameraController : MonoBehaviour
             machineHover.OnClicked += OnMachineClicked;
         }
 
-        // ラウンド（MoneyManager のターン）が進むたびに、UFOキャッチャーを再びプレイ可能にする
-        if (MoneyManager.Instance != null)
-        {
-            MoneyManager.Instance.OnCurrentTurnChange
-                .Skip(1)
-                .Subscribe(_ => _hasPlayedThisRound = false)
-                .AddTo(this);
-        }
+        // ラウンド（MoneyManager のターン）が進むたびに、UFOキャッチャーを再びプレイ可能にする。
+        // MoneyManager は加法ロードされる別サブシーン側にいるため、MultiSceneLoader の非同期ロードが
+        // 終わるまで Instance が null の可能性がある。Start() で直接 null チェックすると購読自体が
+        // スキップされてしまうため、EffectManager と同様に Instance が現れるまで毎フレーム待ってから購読する。
+        Observable.EveryUpdate()
+            .Select(_ => MoneyManager.Instance)
+            .Where(mm => mm != null)
+            .First()
+            .Subscribe(mm =>
+            {
+                mm.OnCurrentTurnChange
+                    .Skip(1)
+                    .Subscribe(_ => _hasPlayedThisRound = false)
+                    .AddTo(this);
+            })
+            .AddTo(this);
     }
 
     private void SetupDynamicCameras()
