@@ -32,6 +32,7 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
     ReactiveProperty<int> _currentTurnCount = new ReactiveProperty<int>(1);
     ReactiveProperty<int> _nextDebtCollectionTurnCount = new ReactiveProperty<int>(0);
     public int CurrentTurnCount { get { return _currentTurnCount.Value; } }
+    public int NextDebtCollectionTurnCount { get { return _nextDebtCollectionTurnCount.Value; } }
     public IObservable<int> OnCurrentTurnChange { get { return _currentTurnCount; } }
     public IObservable<int> OnNextDebtCollectionTurnChange { get { return _nextDebtCollectionTurnCount; } }
 
@@ -112,6 +113,11 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
             Debug.Log("試しにターンを経過させます。");
         }
 #endif
+    }
+
+    public void IncreaseTurn(int num = 1)
+    {
+        _currentTurnCount.Value += num;
     }
 
     private void OnDestroy()

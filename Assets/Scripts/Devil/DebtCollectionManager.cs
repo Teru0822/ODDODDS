@@ -1,9 +1,11 @@
 using DG.Tweening;
 using Newtonsoft.Json;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -189,12 +191,9 @@ public class DebtCollectionManager : MonoBehaviour
         return null;
     }
 
-    /// <summary>
-    /// 数字のカウントアニメーションを定義、実行させる関数
-    /// </summary>
-    private IEnumerator CountAnimation()
+    private int GetConversationTypeNum(ConversationType type)
     {
-        yield return null;
+        return _conversations.Count(pair => pair.Value.conversationType == type);
     }
 
     /// <summary>
@@ -202,7 +201,7 @@ public class DebtCollectionManager : MonoBehaviour
     /// </summary>
     /// <param name="key">会話のキー</param>
     /// <returns>会話コルーチン</returns>
-    private IEnumerator ShowConversation(string key)
+    public IEnumerator ShowConversation(string key = "")
     {
         bool isSuccess = true;//取り立てに耐えたか否か
 
@@ -216,6 +215,13 @@ public class DebtCollectionManager : MonoBehaviour
                         _panel.SetActive(true);
                     });
             });
+
+        //特にKeyが指定されていない場合はランダムなキーを指定
+        if(key == "")
+        {
+            int random = UnityEngine.Random.RandomRange(1, GetConversationTypeNum(ConversationType.Conversation) + 1);//1~2
+            key = "Conversation_" + random.ToString("00");
+        }
 
         //シナリオに設定された文字を表示させていく
         yield return new WaitForSeconds(1.5f);
@@ -259,7 +265,7 @@ public class DebtCollectionManager : MonoBehaviour
             {
                 //ランダムで失敗演出を設定
                 isSuccess = false;
-                int random = Random.RandomRange(1, 3);//1~2
+                int random = UnityEngine.Random.RandomRange(1, GetConversationTypeNum(ConversationType.Fail) + 1);//1~2
                 string failKey = "fail_" + random.ToString("00");
 
                 //必要なオブジェクトをアクティブ
@@ -271,12 +277,12 @@ public class DebtCollectionManager : MonoBehaviour
 
                 //ゲームオーバー処理
                 MoneyManager.Instance.CheckGameOver();
-                StartCoroutine(_resultUIManager.GameOverAnimation());
+                yield return StartCoroutine(_resultUIManager.GameOverAnimation());
             }
             else//成功用
             {
                 //ランダムで成功演出を設定
-                int random = Random.RandomRange(1, 3);//1~2
+                int random = UnityEngine.Random.RandomRange(1, GetConversationTypeNum(ConversationType.Success) + 1);//1~2
                 string successKey = "success_" + random.ToString("00");
 
                 //必要なオブジェクトをアクティブ
@@ -304,6 +310,8 @@ public class DebtCollectionManager : MonoBehaviour
                     _audioSource.Stop();
                     _audioSource.volume = 0.2f;
                 });
+
+                MoneyManager.Instance.IncreaseTurn();
             }        
 
             _reduceMoneyCounter.DOFade(endValue: 0f, duration: 1f);
@@ -312,6 +320,7 @@ public class DebtCollectionManager : MonoBehaviour
             _myMoneyCounter.DOFade(endValue: 0f, duration: 1f);
             _myMoneyCounter.rectTransform.DOAnchorPos(new Vector2(540, 180), 1.0f).SetEase(Ease.OutQuart);
 
+            MoneyManager.Instance.IncreaseTurn();
             yield return new WaitUntil(() => _background.color.a <= 0);
         }
 

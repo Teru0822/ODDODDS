@@ -11,6 +11,13 @@ public enum DevilExpression
     Angry = 5,//怒っている
 }
 
+public enum ConversationType
+{
+    Conversation,
+    Success,
+    Fail
+}
+
 [Serializable]
 public class DevilConversationData
 {
@@ -19,6 +26,7 @@ public class DevilConversationData
     public string[] lines;// デビルとの会話で登場するテキスト
     public DevilExpression[] devilExpressions;//デビルの表情
     public string bgmKey;//BGMのキー
+    public ConversationType conversationType;
 }
 
 
