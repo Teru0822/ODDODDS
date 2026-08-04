@@ -27,10 +27,10 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
     [Header("ターン管理")]//TODO: 今後、ターン管理を担うスクリプトを作成してそちらに譲渡
     [SerializeField] private float _exponentialRate = 2.0f;
     [SerializeField] private float _initialDecreaseAmount = 100f;
-    [SerializeField] private int _debtCollectionFrequency = 10;
+    [SerializeField] private int _debtCollectionFrequency = 1;
 
     ReactiveProperty<int> _currentTurnCount = new ReactiveProperty<int>(1);
-    ReactiveProperty<int> _nextDebtCollectionTurnCount = new ReactiveProperty<int>(0);
+    ReactiveProperty<int> _nextDebtCollectionTurnCount = new ReactiveProperty<int>(4);
     public int CurrentTurnCount { get { return _currentTurnCount.Value; } }
     public int NextDebtCollectionTurnCount { get { return _nextDebtCollectionTurnCount.Value; } }
     public IObservable<int> OnCurrentTurnChange { get { return _currentTurnCount; } }
@@ -99,6 +99,7 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
                 //0以下になれば、リセット
                 if(_nextDebtCollectionTurnCount.Value <= 0)
                     _nextDebtCollectionTurnCount.Value = _debtCollectionFrequency;
+                    
             }).AddTo(gameObject);
 
         _nextDebtCollectionTurnCount.Value = _debtCollectionFrequency;
@@ -113,11 +114,6 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
             Debug.Log("試しにターンを経過させます。");
         }
 #endif
-    }
-
-    public void IncreaseTurn(int num = 1)
-    {
-        _currentTurnCount.Value += num;
     }
 
     private void OnDestroy()
@@ -167,9 +163,9 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
     }
 
     /// <summary>ターンを1進める。</summary>
-    public void AdvanceTurn()
+    public void AdvanceTurn(int num = 1)
     {
-        _currentTurnCount.Value++;
+        _currentTurnCount.Value+= num;
     }
 
     /// <summary>
