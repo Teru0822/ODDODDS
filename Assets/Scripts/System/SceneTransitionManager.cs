@@ -175,6 +175,41 @@ namespace MiniGames.Transitions
         }
 
         /// <summary>
+        /// シーン遷移やターン遷移の演出が進行中か。
+        /// 導入ツアーなど「ロードが明けてから始めたい処理」が完了待ちに使います。
+        /// </summary>
+        public bool IsTransitioning => _isTransitioning;
+
+        /// <summary>
+        /// モヤだけを閉じる（画面が隠れる）。ロード画面は挟みません。
+        /// </summary>
+        /// <param name="duration">秒数。0以下ならインスペクタの _fadeDuration を使用</param>
+        public IEnumerator FadeOutRoutine(float duration = -1f)
+        {
+            if (_fadeCanvasGroup == null) yield break;
+
+            float d = duration > 0f ? duration : _fadeDuration;
+            _fadeCanvasGroup.DOKill();
+            _fadeCanvasGroup.gameObject.SetActive(true);
+            yield return _fadeCanvasGroup.DOFade(1f, d).WaitForCompletion();
+        }
+
+        /// <summary>
+        /// モヤだけを晴らす（画面が現れる）。ロード画面は挟みません。
+        /// </summary>
+        /// <param name="duration">秒数。0以下ならインスペクタの _fadeDuration を使用</param>
+        public IEnumerator FadeInRoutine(float duration = -1f)
+        {
+            if (_fadeCanvasGroup == null) yield break;
+
+            float d = duration > 0f ? duration : _fadeDuration;
+            _fadeCanvasGroup.DOKill();
+            yield return _fadeCanvasGroup.DOFade(0f, d).WaitForCompletion();
+            _fadeCanvasGroup.alpha = 0f;
+            _fadeCanvasGroup.gameObject.SetActive(false);
+        }
+
+        /// <summary>
         /// 指定したシーンへモヤフェードと専用ロード画面を挟んで非同期遷移します。
         /// </summary>
         public void TransitionToScene(string sceneName, Action onTransitionComplete = null)
