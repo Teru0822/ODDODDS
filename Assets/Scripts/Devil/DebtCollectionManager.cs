@@ -68,7 +68,7 @@ public class DebtCollectionManager : MonoBehaviour
     private void Update()
     {
 #if UNITY_EDITOR
-        if (Keyboard.current.iKey.wasPressedThisFrame)
+        if (Keyboard.current.qKey.wasPressedThisFrame)
         {
             MoneyManager.Instance.ReduceMoney(9999);
             StartCoroutine(ShowConversation("Conversation_00"));
@@ -311,7 +311,7 @@ public class DebtCollectionManager : MonoBehaviour
                     _audioSource.volume = 0.2f;
                 });
 
-                MoneyManager.Instance.IncreaseTurn();
+                MoneyManager.Instance.AdvanceTurn();
             }        
 
             _reduceMoneyCounter.DOFade(endValue: 0f, duration: 1f);
@@ -320,7 +320,6 @@ public class DebtCollectionManager : MonoBehaviour
             _myMoneyCounter.DOFade(endValue: 0f, duration: 1f);
             _myMoneyCounter.rectTransform.DOAnchorPos(new Vector2(540, 180), 1.0f).SetEase(Ease.OutQuart);
 
-            MoneyManager.Instance.IncreaseTurn();
             yield return new WaitUntil(() => _background.color.a <= 0);
         }
 

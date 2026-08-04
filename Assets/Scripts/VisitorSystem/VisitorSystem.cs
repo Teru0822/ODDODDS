@@ -47,8 +47,7 @@ public class VisitorInstance
 public class VisitorSystem : MonoBehaviour,IsaveDataProvider
 {
     [SerializeField] private VisitorDataBase _visitorDataBase;
-    [SerializeField] private List<GameObject> _visitorPrefabs;
-    [SerializeField] private GameObject _visitorSpawnPoint;
+    [SerializeField] private SerializeDictionary<int, GameObject> _visitorPrefabs;
     private GameObject _visitor;
     private List<VisitorInstance> _visitorInstances = new List<VisitorInstance>();
     private ReactiveProperty<VisitorInstance> _nowSelectedVisitorInstance = new ReactiveProperty<VisitorInstance>(null);
@@ -66,7 +65,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
             VisitorLottery();
             if(_nowSelectedVisitorInstance.Value != null)
             {
-                //TODO:抽選されたアバタを_visitorSpawnPointまでテレポートさせる
+                _visitorPrefabs.GetDictionary[_nowSelectedVisitorInstance.Value.Id].SetActive(true);
                 _icController.UpdateState(IntercomController.IntercomState.Calling);
             }
         })
@@ -160,8 +159,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
         foreach(var visitorInstance in _visitorInstances)
         {
             //キーが無い/中身が空のマスターデータでも落ちないようにする
-            bool hasFirstConversation = visitorInstance.Conversations.TryGetValue("Conversation1", out VisitorConversationContainer[] conversations)
-                                        && conversations != null && conversations.Length > 0;
+            bool hasFirstConversation = visitorInstance.Conversations.TryGetValue("Conversation1", out VisitorConversationContainer[] conversations) && conversations != null && conversations.Length > 0;
             string firstLine = hasFirstConversation ? conversations[0].lineJp : "(Conversation1が未設定)";
             Debug.Log($"{visitorInstance.VisitorName}\n{visitorInstance.eventProgress}\n{hasFirstConversation}\n{firstLine}");
         }
@@ -492,7 +490,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
         
 
         Debug.Log("訪問者システム終了");
-
+        _visitorPrefabs.GetDictionary[_nowSelectedVisitorInstance.Value.Id].SetActive(false);
         //終了時の処理
         _conversationText.text = "";
         _nowSelectIndexInTradeContent = -1;

@@ -216,6 +216,7 @@ public class TypewriterInteractable : InteractableHighlight
         if (paper != null)
             yield return new WaitUntil(() => !paper.IsLaunching);
 
+/*
         var stm = SceneTransitionManager.Instance;
         if (stm != null)
         {
@@ -227,13 +228,14 @@ public class TypewriterInteractable : InteractableHighlight
             );
             yield return new WaitUntil(() => done);
         }
-
+*/
         _busy = false;
         ApplyHighlight(true);
 
         //もし、このターンが取り立てのターンの場合は、悪魔の取り立てアニメーションを開始する
-        if(MoneyManager.Instance.NextDebtCollectionTurnCount == 0)
+        if(MoneyManager.Instance.NextDebtCollectionTurnCount - 1 == 0)
         {
+            yield return new WaitForSeconds(3.0f);//少し待つ
             //最初に取得
             if(_debtCollectionManager == null)
             {
@@ -243,7 +245,24 @@ public class TypewriterInteractable : InteractableHighlight
             //アニメーション再生
             if(_debtCollectionManager != null)
             {
-                StartCoroutine(_debtCollectionManager.ShowConversation("Conversation_00"));
+                yield return StartCoroutine(_debtCollectionManager.ShowConversation("Conversation_00"));
+            }
+            else
+                Debug.LogError("見つかってないぞ");
+        }
+        else
+        {
+            //取り立てのターンじゃない場合はローディング画面に遷移
+            var stm = SceneTransitionManager.Instance;
+            if (stm != null)
+            {
+                bool done = false;
+                stm.ShowTurnTransition(
+                    _turnTransitionDuration,
+                    onDuringLoading: () => MoneyManager.Instance?.AdvanceTurn(),
+                    onComplete:      () => done = true
+                );
+                yield return new WaitUntil(() => done);
             }
         }
     }
