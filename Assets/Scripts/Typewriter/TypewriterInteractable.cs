@@ -37,6 +37,8 @@ public class TypewriterInteractable : InteractableHighlight
     private bool _lookedAt;
     private bool _keyboardSubscribed;
 
+    private DebtCollectionManager _debtCollectionManager;
+
     protected override void Awake()
     {
         base.Awake();
@@ -215,7 +217,7 @@ public class TypewriterInteractable : InteractableHighlight
             yield return new WaitUntil(() => !paper.IsLaunching);
 
         var stm = SceneTransitionManager.Instance;
-if (stm != null)
+        if (stm != null)
         {
             bool done = false;
             stm.ShowTurnTransition(
@@ -228,5 +230,21 @@ if (stm != null)
 
         _busy = false;
         ApplyHighlight(true);
+
+        //もし、このターンが取り立てのターンの場合は、悪魔の取り立てアニメーションを開始する
+        if(MoneyManager.Instance.NextDebtCollectionTurnCount == 0)
+        {
+            //最初に取得
+            if(_debtCollectionManager == null)
+            {
+                _debtCollectionManager = FindFirstObjectByType<DebtCollectionManager>();
+            }
+
+            //アニメーション再生
+            if(_debtCollectionManager != null)
+            {
+                StartCoroutine(_debtCollectionManager.ShowConversation("Conversation_00"));
+            }
+        }
     }
 }
