@@ -33,6 +33,11 @@ public class RoguelikePanelManager : MonoBehaviour
             Destroy(this.gameObject);
 
         _initEvent.Subscribe(manager => _roguelikeManager = manager);
+
+        // GameUIが非アクティブ状態でシーンが開始した場合（introツアー等）、
+        // RoguelikeManager.Start()からのOnInitEvent.OnNextが来ないため自前で取得する
+        if (_roguelikeManager == null)
+            _roguelikeManager = FindFirstObjectByType<RoguelikeManager>();
     }
 
     private void Start()
@@ -85,6 +90,13 @@ public class RoguelikePanelManager : MonoBehaviour
     /// <param name="type">表示させたいスキルの種類</param>
     public void UpdateUI(SkillType type = SkillType.None)
     {
+        if (_roguelikeManager == null)
+            _roguelikeManager = FindFirstObjectByType<RoguelikeManager>();
+        if (_roguelikeManager == null)
+        {
+            Debug.LogWarning("[RoguelikePanelManager] RoguelikeManager 未設定のため UpdateUI をスキップします", this);
+            return;
+        }
         var roguelikeDic = _roguelikeManager.GetUnlockSkillDictionary;
         if (type != SkillType.None)
         {

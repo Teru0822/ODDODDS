@@ -220,7 +220,11 @@ namespace MiniGames.Transitions
         /// <summary>シーン遷移なし。ローディング画面を挟んでターン処理を実行しフェードインで戻る。</summary>
         public void ShowTurnTransition(float minimumDuration, Action onDuringLoading, Action onComplete = null)
         {
-            if (_isTransitioning) return;
+            if (_isTransitioning)
+            {
+                Debug.LogWarning("[SceneTransitionManager] ShowTurnTransition: 既にトランジション中のためスキップしました。_isTransitioning が true のままスタックしている可能性があります。");
+                return;
+            }
             StartCoroutine(TurnTransitionRoutine(minimumDuration, onDuringLoading, onComplete));
         }
 
@@ -536,11 +540,15 @@ namespace MiniGames.Transitions
             if (ItemSpawner.IsSpawning)
             {
                 Debug.Log("[SceneTransitionManager] ItemSpawnerがスポーン中のため、完了を待機します。");
-                while (ItemSpawner.IsSpawning)
+                float spawnWaitTimeout = 0f;
+                while (ItemSpawner.IsSpawning && spawnWaitTimeout < 60f)
                 {
                     yield return null;
+                    spawnWaitTimeout += Time.deltaTime;
                 }
-                
+                if (spawnWaitTimeout >= 60f)
+                    Debug.LogWarning("[SceneTransitionManager] ItemSpawner待機がタイムアウトしました。強制続行します。");
+
                 Debug.Log($"[SceneTransitionManager] スポーンが完了しました。追加待機({_postSpawnWaitTime}秒)を開始します。");
                 // コインがすべて生成された後、床に落ちて物理演算が落ち着くまでの追加待機
                 if (_postSpawnWaitTime > 0f)

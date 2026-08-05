@@ -188,8 +188,6 @@ public class TypewriterInteractable : InteractableHighlight
 
     private void OnRewardSelected(RoguelikeData chosen)
     {
-        Debug.Log($"[TypewriterInteractable] OnRewardSelected: \"{chosen}\"", this);
-
         var mgr = FindFirstObjectByType<RoguelikeManager>();
         if (mgr != null)
             mgr.UnlockSkill(chosen);
@@ -208,53 +206,39 @@ public class TypewriterInteractable : InteractableHighlight
 
     private IEnumerator TypeAndUnblock(string text)
     {
-        Debug.Log($"[TypewriterInteractable] TypeText 開始: \"{text}\"", this);
         var c = controller.TypeText(text);
         if (c != null) yield return c;
-        Debug.Log("[TypewriterInteractable] TypeText 完了", this);
 
-        // 紙のローンチアニメーション（飛んでいく演出）が終わるまで待つ
+        // 紙のローンチアニメーション（飛んでいく演出）が終わるまで待つ（最大10秒）
         var paper = controller.paperOutput;
         if (paper != null)
-            yield return new WaitUntil(() => !paper.IsLaunching);
-
-/*
-        var stm = SceneTransitionManager.Instance;
-        if (stm != null)
         {
-            bool done = false;
-            stm.ShowTurnTransition(
-                _turnTransitionDuration,
-                onDuringLoading: () => MoneyManager.Instance?.AdvanceTurn(),
-                onComplete:      () => done = true
-            );
-            yield return new WaitUntil(() => done);
+            float launchWait = 0f;
+            while (paper.IsLaunching && launchWait < 10f)
+            {
+                launchWait += Time.deltaTime;
+                yield return null;
+            }
+            if (launchWait >= 10f)
+                Debug.LogWarning("[TypewriterInteractable] IsLaunching タイムアウト: 強制続行します", this);
         }
-*/
+
         _busy = false;
         ApplyHighlight(true);
 
-        //もし、このターンが取り立てのターンの場合は、悪魔の取り立てアニメーションを開始する
         if(MoneyManager.Instance.NextDebtCollectionTurnCount - 1 == 0)
         {
-            yield return new WaitForSeconds(3.0f);//少し待つ
-            //最初に取得
+            yield return new WaitForSeconds(3.0f);
             if(_debtCollectionManager == null)
-            {
                 _debtCollectionManager = FindFirstObjectByType<DebtCollectionManager>();
-            }
 
-            //アニメーション再生
             if(_debtCollectionManager != null)
-            {
                 yield return StartCoroutine(_debtCollectionManager.ShowConversation("Conversation_00"));
-            }
             else
-                Debug.LogError("見つかってないぞ");
+                Debug.LogError("[TypewriterInteractable] DebtCollectionManager が見つかりません", this);
         }
         else
         {
-            //取り立てのターンじゃない場合はローディング画面に遷移
             if(_fpsController == null)
                 _fpsController = FindFirstObjectByType<FirstPersonController>();
 
@@ -262,14 +246,22 @@ public class TypewriterInteractable : InteractableHighlight
             if (stm != null)
             {
                 bool done = false;
-                _fpsController.enabled = false;
+                if (_fpsController != null) _fpsController.enabled = false;
                 stm.ShowTurnTransition(
                     _turnTransitionDuration,
                     onDuringLoading: () => MoneyManager.Instance?.AdvanceTurn(),
-                    onComplete:      () => done = true
+                    onComplete:      () => { done = true; }
                 );
-                yield return new WaitUntil(() => done);
-                _fpsController.enabled = true;
+                // ShowTurnTransition が完了しない場合に備えてタイムアウト（最大60秒）
+                float elapsed = 0f;
+                while (!done && elapsed < 60f)
+                {
+                    elapsed += Time.deltaTime;
+                    yield return null;
+                }
+                if (!done)
+                    Debug.LogWarning("[TypewriterInteractable] ShowTurnTransition タイムアウト: 強制続行します", this);
+                if (_fpsController != null) _fpsController.enabled = true;
             }
         }
     }
