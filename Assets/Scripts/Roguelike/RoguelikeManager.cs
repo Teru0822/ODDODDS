@@ -207,6 +207,9 @@ public class RoguelikeManager : MonoBehaviour
                 case SkillId.UFO_Unlock90Sec:
                     ApplySkill31Effects();
                     break;
+                case SkillId.UFO_ShowDescentLaser:
+                    ApplySkill32Effects();
+                    break;
             }
 
             // UIの更新を行っておく
@@ -302,6 +305,16 @@ public class RoguelikeManager : MonoBehaviour
             touchPanel.UnlockDuration(90f);
         else
             Debug.LogWarning("[RoguelikeManager] ApplySkill31Effects: TouchPanelOutlineController が見つかりません。");
+    }
+
+    /// <summary>スキルID32取得時：アーム移動中に降下地点を示す赤いレーザーを解禁する</summary>
+    private void ApplySkill32Effects()
+    {
+        var armController = FindFirstObjectByType<UFOArmController>();
+        if (armController != null)
+            armController.UnlockDescentLaser();
+        else
+            Debug.LogWarning("[RoguelikeManager] ApplySkill32Effects: UFOArmController が見つかりません。");
     }
 
     /// <summary>子孫を再帰的に名前検索する</summary>
