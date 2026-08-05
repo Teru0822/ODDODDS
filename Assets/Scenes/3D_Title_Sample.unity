@@ -1843,6 +1843,19 @@ MonoBehaviour:
   rotationAxis: {x: 0, y: 0, z: 1}
   randomPhase: 1
   speedMultiplier: 1
+--- !u!114 &346580166
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 346580154}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb8f0f455f631db4884677a2560acd46, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TitleQuitButton
+  hoverOutline: {fileID: 0}
 --- !u!4 &362613910 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 8e46e7ce3bc65744daff56b894819e32, type: 3}
@@ -5808,6 +5821,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: eb4f933e955020e449ad3265b366ebc7, type: 3}
       insertIndex: -1
       addedObject: {fileID: 346580160}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: eb4f933e955020e449ad3265b366ebc7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 346580166}
   m_SourcePrefab: {fileID: 100100000, guid: eb4f933e955020e449ad3265b366ebc7, type: 3}
 --- !u!1001 &1363721185
 PrefabInstance:

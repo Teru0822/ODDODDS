@@ -231,7 +231,12 @@ public class MouseHoverOutline : MonoBehaviour
             return;
         }
 
-        if(_isOpenUI) return;//別のUIが表示されている間はUpdate処理を停止
+        if(_isOpenUI)
+        {
+            Debug.LogWarning("_isOpenUIがtrueなので、更新しない");
+            return;//別のUIが表示されている間はUpdate処理を停止
+        }
+
 
         Vector2 mousePos = Mouse.current.position.ReadValue();
         Ray ray = hoverCamera.ScreenPointToRay(mousePos);
