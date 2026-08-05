@@ -18,6 +18,10 @@ public enum ItemType
     /// 恒常アイテム
     /// </summary>
     Permanent,
+    /// <summary>
+    /// クレーンゲーム（UFOキャッチャー）アイテム
+    /// </summary>
+    CraneItem,
 }
 
 public enum ItemCategory
