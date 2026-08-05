@@ -152,6 +152,23 @@ public class RouletteFloater : MonoBehaviour
     {
         if (Time.deltaTime <= 0f) return;
 
+        // 演出シーケンス中（Devil_Eyeのイントロ/スピン/アウトロ）は、コルーチンが
+        // BaseLocalPosition 経由で書き込んだ _basePosition に浮遊揺れだけを加算して反映する。
+        // 回避力の物理演算・カメラ追従回転は _basePosition や回転そのものを奪い合う原因になるため
+        // 引き続き止めるが、浮遊揺れは見た目だけの加算オフセットで _basePosition 自体は変更しないため、
+        // 演出中に動かしても競合しない。
+        // （_basePosition → transform.position の反映自体は、コルーチン側は行わずこのUpdate()に
+        //   任せる設計になっているため、丸ごと止めると逆に一切動かなくなる点に注意）
+        if (IsSequenceActive)
+        {
+            Vector3 seqPos = _basePosition + CalcFloatOffset();
+            if (!float.IsNaN(seqPos.x) && !float.IsNaN(seqPos.y) && !float.IsNaN(seqPos.z))
+            {
+                transform.position = seqPos;
+            }
+            return;
+        }
+
         if (float.IsNaN(_basePosition.x) || float.IsNaN(_basePosition.y) || float.IsNaN(_basePosition.z))
         {
             _basePosition = transform.position;
@@ -180,12 +197,7 @@ public class RouletteFloater : MonoBehaviour
         ApplyContactClamp();
 
         // ---- 浮遊アニメーション ----------------------------------------
-        float time    = Time.time;
-        float floatY  = Mathf.Sin(time * floatFrequency + _timeOffset) * floatAmplitude;
-        float wobbleX = Mathf.Sin(time * wobbleFrequency + _timeOffset + 1f) * wobbleAmplitude;
-        float wobbleZ = Mathf.Cos(time * wobbleFrequency * 0.9f + _timeOffset) * wobbleAmplitude;
-
-        Vector3 nextPos = _basePosition + new Vector3(wobbleX, floatY, wobbleZ);
+        Vector3 nextPos = _basePosition + CalcFloatOffset();
         if (!float.IsNaN(nextPos.x) && !float.IsNaN(nextPos.y) && !float.IsNaN(nextPos.z))
         {
             transform.position = nextPos;
@@ -193,6 +205,19 @@ public class RouletteFloater : MonoBehaviour
 
         // ---- カメラ追従 ------------------------------------------------
         if (enableCameraFacing) ApplyCameraFacing();
+    }
+
+    /// <summary>
+    /// 上下・左右にふわふわ揺れる浮遊オフセットを計算する（見た目だけの加算値。_basePosition 自体は変更しない）。
+    /// 演出シーケンス中（IsSequenceActive）でも、_basePosition を奪い合わない安全な処理のため引き続き使用する。
+    /// </summary>
+    private Vector3 CalcFloatOffset()
+    {
+        float time    = Time.time;
+        float floatY  = Mathf.Sin(time * floatFrequency + _timeOffset) * floatAmplitude;
+        float wobbleX = Mathf.Sin(time * wobbleFrequency + _timeOffset + 1f) * wobbleAmplitude;
+        float wobbleZ = Mathf.Cos(time * wobbleFrequency * 0.9f + _timeOffset) * wobbleAmplitude;
+        return new Vector3(wobbleX, floatY, wobbleZ);
     }
 
     // -----------------------------------------------------------------------

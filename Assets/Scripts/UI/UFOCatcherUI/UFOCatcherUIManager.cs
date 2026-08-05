@@ -10,6 +10,8 @@ public struct PriceCoinSpawnData
     public Sprite coinSprite;
     [Tooltip("コインのテキスト (値段など)")]
     public string coinText;
+    [Tooltip("ON: ルーレット機能（Devil_Eye）が解放されるまで、この項目を price_table に表示しません")]
+    public bool requiresRouletteUnlock;
 }
 
 [System.Serializable]
@@ -145,8 +147,20 @@ public class UFOCatcherUIManager : MonoBehaviour
 
         int spawnCount = 0;
 
+        // ルーレット未解放の間は requiresRouletteUnlock な項目を除外する（レイアウトのスケール計算にも反映するため先に絞り込む）
+        bool rouletteUnlocked = RouletteController.Instance != null && RouletteController.Instance.IsRouletteUnlocked;
+        List<PriceCoinSpawnData> visiblePriceCoinDatas = new List<PriceCoinSpawnData>();
+        if (_priceCoinDatas != null)
+        {
+            foreach (var coinData in _priceCoinDatas)
+            {
+                if (coinData.requiresRouletteUnlock && !rouletteUnlocked) continue;
+                visiblePriceCoinDatas.Add(coinData);
+            }
+        }
+
         int totalCount = 0;
-        if (_priceCoinDatas != null) totalCount += _priceCoinDatas.Count;
+        totalCount += visiblePriceCoinDatas.Count;
         if (_listItemDatas != null) totalCount += _listItemDatas.Count;
 
         // 生成総数に応じてスケールを決定する (10個以上で最小 of 1.0f、6個以下で最大の1.8f)
@@ -199,10 +213,10 @@ public class UFOCatcherUIManager : MonoBehaviour
             offsetScale = 1.0f;
         }
 
-        // 1. price_coin の生成と配置
-        if (_priceCoinPrefab != null && _priceCoinDatas != null)
+        // 1. price_coin の生成と配置（ルーレット未解放の項目は除外済みの visiblePriceCoinDatas を使う）
+        if (_priceCoinPrefab != null)
         {
-            foreach (var coinData in _priceCoinDatas)
+            foreach (var coinData in visiblePriceCoinDatas)
             {
                 GameObject coinObj = Instantiate(_priceCoinPrefab, canvasTransform);
                 
