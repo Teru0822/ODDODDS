@@ -512,8 +512,10 @@ namespace MiniGames.Transitions
                 yield return null;
             }
 
-            Debug.Log("[SceneTransitionManager] MultiSceneLoaderのロードが完了しました。ItemSpawnerの待機へ移行します。");
+            //すべてのサブシーンの読み込みが終わったため、プレイヤー情報を読み込む
+            RoguelikeSaveManager.Load();
 
+            Debug.Log("[SceneTransitionManager] MultiSceneLoaderのロードが完了しました。ItemSpawnerの待機へ移行します。");
             // サブシーンロード完了後、UFOキャッチャーの ItemSpawner 等が Start() を呼ぶための猶予
             yield return new WaitForSeconds(0.5f);
 
@@ -797,6 +799,11 @@ namespace MiniGames.Transitions
                 float waitTime = UnityEngine.Random.Range(1.0f, 2.5f);
                 yield return new WaitForSeconds(waitTime);
             }
+        }
+
+        private void OnApplicationQuit()
+        {
+            RoguelikeSaveManager.Save();
         }
     }
 }

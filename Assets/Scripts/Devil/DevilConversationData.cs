@@ -15,7 +15,8 @@ public enum ConversationType
 {
     Conversation,
     Success,
-    Fail
+    Fail,
+    Other
 }
 
 [Serializable]

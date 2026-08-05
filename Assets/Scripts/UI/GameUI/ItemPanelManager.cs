@@ -217,6 +217,8 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
                 Debug.LogWarning("[ConsumeItem] Item is null");
             }
         }
+
+        UpdateUI();
     }
 
 

@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using App.Player;
 using MiniGames.Transitions;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -38,7 +40,7 @@ public class TypewriterInteractable : InteractableHighlight
     private bool _keyboardSubscribed;
 
     private DebtCollectionManager _debtCollectionManager;
-
+    private FirstPersonController _fpsController;
     protected override void Awake()
     {
         base.Awake();
@@ -253,16 +255,21 @@ public class TypewriterInteractable : InteractableHighlight
         else
         {
             //取り立てのターンじゃない場合はローディング画面に遷移
+            if(_fpsController == null)
+                _fpsController = FindFirstObjectByType<FirstPersonController>();
+
             var stm = SceneTransitionManager.Instance;
             if (stm != null)
             {
                 bool done = false;
+                _fpsController.enabled = false;
                 stm.ShowTurnTransition(
                     _turnTransitionDuration,
                     onDuringLoading: () => MoneyManager.Instance?.AdvanceTurn(),
                     onComplete:      () => done = true
                 );
                 yield return new WaitUntil(() => done);
+                _fpsController.enabled = true;
             }
         }
     }
