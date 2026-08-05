@@ -17,9 +17,9 @@ public class UFOItemPickupDisplay : MonoBehaviour
 {
     public static UFOItemPickupDisplay Instance { get; private set; }
 
-    [Header("アイテム定義データベース（拾ったオブジェクトの名前でItemSpawnDataを検索します）")]
-    [Tooltip("ItemSpawnData アセットを登録してください。prefab名で一致判定します。")]
-    [SerializeField] private List<ItemSpawnData> itemDatabase = new List<ItemSpawnData>();
+    [Header("アイテム定義データベース（拾ったオブジェクトの名前でItemDataを検索します）")]
+    [Tooltip("ItemData アセットを登録してください。prefab名で一致判定します。")]
+    [SerializeField] private List<ItemData> itemDatabase = new List<ItemData>();
 
     [Header("表示先")]
     [Tooltip("3DモデルをRenderTexture経由で映すRawImage。表示/非表示はこのコンポーネント単体で切り替えます" +
@@ -75,27 +75,27 @@ public class UFOItemPickupDisplay : MonoBehaviour
     }
 
     /// <summary>
-    /// 拾ったアイテムのGameObject（プレハブのClone）を渡すと、名前で ItemSpawnData を検索して表示を切り替える。
+    /// 拾ったアイテムのGameObject（プレハブのClone）を渡すと、名前で ItemData を検索して表示を切り替える。
     /// </summary>
     public void ShowPickedItem(GameObject pickedObject)
     {
         if (pickedObject == null) return;
 
         string itemName = pickedObject.name.Replace("(Clone)", "").Trim();
-        ItemSpawnData data = itemDatabase.Find(d => d != null && d.prefab != null && d.prefab.name == itemName);
+        ItemData data = itemDatabase.Find(d => d != null && d.prefabData != null && d.prefabData.name == itemName);
 
-        if (data == null || data.prefab == null)
+        if (data == null || data.prefabData == null)
         {
-            Debug.LogWarning($"[UFOItemPickupDisplay] '{itemName}' に対応するItemSpawnDataがitemDatabaseに見つからないため、ポップアップ表示をスキップします。");
+            Debug.LogWarning($"[UFOItemPickupDisplay] '{itemName}' に対応するItemDataがitemDatabaseに見つからないため、ポップアップ表示をスキップします。");
             return;
         }
 
-        ShowModel(data.prefab, string.IsNullOrEmpty(data.itemName) ? data.prefab.name : data.itemName);
+        ShowModel(data.prefabData, string.IsNullOrEmpty(data.itemName) ? data.prefabData.name : data.itemName);
     }
 
     /// <summary>
-    /// ItemSpawnData を経由せず、表示するプレハブを直接指定する場合に使う
-    /// （例: candy/pinballの特別演出など、ItemSpawnData化していないアイテム用）。
+    /// ItemData を経由せず、表示するプレハブを直接指定する場合に使う
+    /// （例: candy/pinballの特別演出など、ItemData化していないアイテム用）。
     /// displayName を省略した場合はプレハブ名がそのまま表示されます。
     /// </summary>
     public void ShowItemPrefabDirect(GameObject prefab, string displayName = null)

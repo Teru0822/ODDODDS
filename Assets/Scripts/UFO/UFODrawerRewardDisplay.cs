@@ -22,7 +22,7 @@ public class UFODrawerRewardDisplay : MonoBehaviour
     private class RewardSlot
     {
         [Tooltip("このアイテムの定義（Prefabを使います）")]
-        public ItemSpawnData itemData;
+        public ItemData itemData;
         [Tooltip("実物が湧いて出てくる基準位置（1箇所）。ここから積み上がっていきます")]
         public Transform slotTransform;
         [Tooltip("1個ごとに積み上げるオフセット（XYZ指定）。例: (0, 0.02, 0) なら真上に積む")]
@@ -113,7 +113,7 @@ public class UFODrawerRewardDisplay : MonoBehaviour
 
         slot.count++;
 
-        if (slot.slotTransform != null && slot.itemData != null && slot.itemData.prefab != null
+        if (slot.slotTransform != null && slot.itemData != null && slot.itemData.prefabData != null
             && slot.spawnedInstances.Count < maxVisualCount)
         {
             int index = slot.spawnedInstances.Count;
@@ -131,7 +131,7 @@ public class UFODrawerRewardDisplay : MonoBehaviour
                 rotation = Quaternion.Euler(slot.itemRotationEuler.x, Random.Range(0f, 360f), slot.itemRotationEuler.z);
             }
 
-            GameObject instance = Instantiate(slot.itemData.prefab, spawnPos, rotation, slot.slotTransform);
+            GameObject instance = Instantiate(slot.itemData.prefabData, spawnPos, rotation, slot.slotTransform);
             instance.transform.localScale *= pileItemScale;
 
             // 見た目だけの演出なので、物理・当たり判定は不要

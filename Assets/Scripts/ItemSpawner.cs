@@ -54,12 +54,12 @@ public class ItemSpawner : MonoBehaviour
     [Header("アイテム候補リスト (アンロック用など、5つ以上設定可能)")]
     public System.Collections.Generic.List<ItemSpawnSettings> itemCandidates = new System.Collections.Generic.List<ItemSpawnSettings>();
 
-    [Header("アイテム定義アセット (ItemSpawnData / 1アイテム1アセット管理・任意)")]
+    [Header("アイテム定義アセット (ItemData / 1アイテム1アセット管理・任意)")]
     [Tooltip("設定した場合、上の initialActiveItems の代わりにここからアクティブ枠を構築します（優先されます）")]
-    public System.Collections.Generic.List<ItemSpawnData> initialActiveItemAssets = new System.Collections.Generic.List<ItemSpawnData>();
+    public System.Collections.Generic.List<ItemData> initialActiveItemAssets = new System.Collections.Generic.List<ItemData>();
 
     [Tooltip("設定した場合、上の itemCandidates の代わりにここから候補リストを構築します（優先されます）")]
-    public System.Collections.Generic.List<ItemSpawnData> itemCandidateAssets = new System.Collections.Generic.List<ItemSpawnData>();
+    public System.Collections.Generic.List<ItemData> itemCandidateAssets = new System.Collections.Generic.List<ItemData>();
 
     [Header("セルごとのアクティブ5枠出現比率設定 (セル1〜8用)")]
     public System.Collections.Generic.List<CellWeightConfig> cellWeights = new System.Collections.Generic.List<CellWeightConfig>();
@@ -110,7 +110,7 @@ public class ItemSpawner : MonoBehaviour
     {
         Instance = this;
 
-        // ItemSpawnData アセットが設定されていれば、そちらを優先してリストを構築する
+        // ItemData アセットが設定されていれば、そちらを優先してリストを構築する
         if (initialActiveItemAssets != null && initialActiveItemAssets.Count > 0)
         {
             initialActiveItems = new System.Collections.Generic.List<ItemSpawnSettings>();
