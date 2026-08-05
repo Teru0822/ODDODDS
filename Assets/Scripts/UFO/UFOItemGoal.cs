@@ -285,6 +285,12 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
     }
 
     private Coroutine _lampCoroutine;
+
+    // ルーレットアイテムが連続で投入された場合の演出（青ランプ点滅→Devil_Eyeアニメーション）待ち行列。
+    // 前の演出が完全に終わる（RouletteController.IsSpinning が false になる）まで、次の演出を開始しない。
+    private int _pendingRouletteCount = 0;
+    private bool _rouletteQueueRunning = false;
+
     private System.Collections.Generic.Dictionary<Light, Color> _originalColors = new System.Collections.Generic.Dictionary<Light, Color>();
     private System.Collections.Generic.Dictionary<Light, bool> _originalEnabled = new System.Collections.Generic.Dictionary<Light, bool>();
     private System.Collections.Generic.Dictionary<Renderer, Color> _originalEmissionColors = new System.Collections.Generic.Dictionary<Renderer, Color>();
@@ -412,12 +418,9 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
     {
         Debug.Log($"[UFOItemGoal] HandleRouletteSpinComplete: 当選結果インデックス = {winningIndex}");
 
-        // 1. 時間の一時停止を解除する
-        if (UFOCameraController.Instance != null)
-        {
-            UFOCameraController.Instance.IsRouletteTimePaused = false;
-            Debug.Log("[UFOItemGoal] ルーレット完了につき時間の一時停止を解除しました。");
-        }
+        // 時間の一時停止解除は、このイベント（スピン結果確定）ではなく、Devil_Eyeのアニメーション一連の
+        // 流れが完全に終わった時点（ProcessRouletteQueueRoutine側）で行う。
+        // （連続投入時の待ち行列処理と整合させるため）
 
         // 2. 特別演出スロット（Element2 / Roulette03）の場合は、通常の降雨処理をスキップして専用演出を行う
         if (winningIndex == specialDropSlotIndex)
@@ -824,7 +827,7 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
     /// </summary>
     public void TriggerRouletteItemGoalEffect(float finalValue = 1000f)
     {
-        // メインのお金（MoneyManager）ではなく、未洗浄メダルとして別に貯める
+        // メインのお金（MoneyManager）ではなく、未洗浄メダルとして別に貯める（演出の順番待ちとは無関係に即時加算）
         if (UnwashedMoneyManager.Instance != null)
         {
             UnwashedMoneyManager.Instance.Add(finalValue);
@@ -834,37 +837,68 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
             unwashedMoney += finalValue;
         }
         Debug.Log($"[獲得] RouletteItem (トリガー実行)！ (未洗浄メダル総額: {unwashedMoney}円)");
-        
+
         // コイン獲得音の再生
         PlaySound(coinGetSound);
 
-        // ランプを金（ゴールド）に点滅させる
-        TriggerLampFlash(rouletteFlashColor, true);
+        if (rouletteController == null)
+        {
+            Debug.LogError("[UFOItemGoal] rouletteController がアタッチされていません！インスペクターで RouletteController を必ずアタッチしてください。");
+            return;
+        }
 
-        // 時間の一時停止を開始する
+        // ランプ点滅→Devil_Eyeアニメーションの演出を待ち行列に追加する。
+        // 連続で投入された場合でも、前の演出が完全に終わるまで次の演出は開始しない
+        // （RouletteController.IsSpinning が true の間は二重にアニメーションが走らないようにする）。
+        _pendingRouletteCount++;
+        if (!_rouletteQueueRunning)
+        {
+            StartCoroutine(ProcessRouletteQueueRoutine());
+        }
+    }
+
+    /// <summary>
+    /// ルーレットアイテム投入の演出（青ランプ点滅→Devil_Eyeアニメーション一連）を、待ち行列にある分だけ
+    /// 1件ずつ順番に実行する。1件の演出が完全に終わってから（RouletteController.IsSpinning が false に
+    /// なってから）次の演出を開始することで、連続投入時にアニメーションが二重に走って壊れるのを防ぐ。
+    /// </summary>
+    private System.Collections.IEnumerator ProcessRouletteQueueRoutine()
+    {
+        _rouletteQueueRunning = true;
+
+        // 待ち行列を処理している間は、UFOの残り時間を一括で一時停止しておく
         if (UFOCameraController.Instance != null)
         {
             UFOCameraController.Instance.IsRouletteTimePaused = true;
             Debug.Log("[UFOItemGoal] ルーレットアイテム投入につき、UFO残り時間の減少を一時停止しました。");
         }
 
-        // ルーレットを回転させる
-        if (rouletteController != null)
+        while (_pendingRouletteCount > 0)
         {
+            _pendingRouletteCount--;
+
+            // このアイテム分のランプ点滅（青）
+            TriggerLampFlash(rouletteFlashColor, true);
+
             // リスナーの多重登録を防ぎつつ、イベントを購読
             rouletteController.OnSpinComplete.RemoveListener(HandleRouletteSpinComplete);
             rouletteController.OnSpinComplete.AddListener(HandleRouletteSpinComplete);
-            
+
             rouletteController.Spin();
+
+            // Spin() がコルーチンを開始し IsSpinning が true になるのを1フレーム待つ
+            yield return null;
+            // Devil_Eyeのアニメーション一連の流れ（イントロ→スピン→保持→アウトロ）が完全に終わるまで待つ
+            yield return new WaitUntil(() => !rouletteController.IsSpinning);
         }
-        else
+
+        if (UFOCameraController.Instance != null)
         {
-            Debug.LogError("[UFOItemGoal] rouletteController がアタッチされていません！インスペクターで RouletteController を必ずアタッチしてください。時間停止を解除します。");
-            if (UFOCameraController.Instance != null)
-            {
-                UFOCameraController.Instance.IsRouletteTimePaused = false;
-            }
+            UFOCameraController.Instance.IsRouletteTimePaused = false;
+            Debug.Log("[UFOItemGoal] ルーレット演出が全て完了したため、時間の一時停止を解除しました。");
         }
+
+        _rouletteQueueRunning = false;
     }
 
     private System.Collections.IEnumerator FlashLampsCoroutine(Color color, bool isBlink)

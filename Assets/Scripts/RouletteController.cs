@@ -171,8 +171,18 @@ public class RouletteController : MonoBehaviour
             SyncCurrentAngle();
             int winningIndex = SelectWinningSlot();
             float targetAngle = ComputeTargetAngle(winningIndex);
-            StartCoroutine(SpinCoroutine(targetAngle, winningIndex));
+            StartCoroutine(SpinStandaloneRoutine(targetAngle, winningIndex));
         }
+    }
+
+    /// <summary>
+    /// Devil_Eyeの演出シーケーションを使わない単独スピン用のラッパー。
+    /// SpinCoroutine() 自体はもう _isSpinning を false に戻さないため、ここで完了を待ってから戻す。
+    /// </summary>
+    private IEnumerator SpinStandaloneRoutine(float targetAngle, int winningIndex)
+    {
+        yield return StartCoroutine(SpinCoroutine(targetAngle, winningIndex));
+        _isSpinning = false;
     }
 
     /// <summary>
@@ -203,7 +213,7 @@ public class RouletteController : MonoBehaviour
         _isSpinning = true;
         SyncCurrentAngle();
         float targetAngle = ComputeTargetAngle(slotIndex);
-        StartCoroutine(SpinCoroutine(targetAngle, slotIndex));
+        StartCoroutine(SpinStandaloneRoutine(targetAngle, slotIndex));
     }
 
     // -----------------------------------------------------------------------
@@ -400,7 +410,9 @@ public class RouletteController : MonoBehaviour
         reelTransform.localEulerAngles = new Vector3(0f, 0f, targetAngle);
         _currentReelAngle = targetAngle;
 
-        _isSpinning = false;
+        // _isSpinning は「絵柄の回転」だけでなく「Devil_Eyeの一連の演出全体」が完全に終わったことを表す
+        // フラグとして外部（待ち行列処理等）から参照されるため、ここでは false にしない。
+        // ExecuteEyeSequenceAndSpinRoutine() の finally、または非シーケンス経路のラッパーで false にする。
 
         string label = (slots != null && winningIndex < slots.Length && !string.IsNullOrEmpty(slots[winningIndex].label))
             ? slots[winningIndex].label
