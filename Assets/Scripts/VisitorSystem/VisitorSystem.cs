@@ -412,6 +412,11 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
                 if (_fpController != null)
                     _fpController.enabled = false;
 
+                if(_mainCamera == null)
+                {
+                    _mainCamera = Camera.main;
+                }
+
                 GameObject itemObj = null;
                 _tradeAnimSequence = DOTween.Sequence();
                 _tradeAnimSequence
