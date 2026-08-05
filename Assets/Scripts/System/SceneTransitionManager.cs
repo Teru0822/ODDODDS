@@ -514,6 +514,16 @@ namespace MiniGames.Transitions
 
             //すべてのサブシーンの読み込みが終わったため、プレイヤー情報を読み込む
             RoguelikeSaveManager.Load();
+            try
+            {
+                if(SettingUIManager.Instance != null) SettingUIManager.Instance.Init();
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError(e);
+                Debug.LogError("SettingUIManagerの初期化に失敗しました");
+            }
+            
 
             Debug.Log("[SceneTransitionManager] MultiSceneLoaderのロードが完了しました。ItemSpawnerの待機へ移行します。");
             // サブシーンロード完了後、UFOキャッチャーの ItemSpawner 等が Start() を呼ぶための猶予
@@ -803,7 +813,8 @@ namespace MiniGames.Transitions
 
         private void OnApplicationQuit()
         {
-            RoguelikeSaveManager.Save();
+            if(SceneManager.GetActiveScene().buildIndex != 0)//タイトルシーン以外の時にセーブ処理を行う
+                RoguelikeSaveManager.Save();
         }
     }
 }

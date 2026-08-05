@@ -129,6 +129,11 @@ public class MouseHoverOutline : MonoBehaviour
 
     /// <summary>現在マウスカーソルが乗っているか (TitlePlayButton 等がクリック判定で参照する)</summary>
     public bool IsHovered => _hovered;
+    private bool _isOpenUI = false;
+
+    /// <summary>現在UIが表示されているか（GameUIやSettingUIを開いているときは、Update処理を停止させる）</summary>
+    public bool IsOpenUI {get{return _isOpenUI;} set{_isOpenUI = value;}}
+    
 
     private void Awake()
     {
@@ -232,6 +237,8 @@ public class MouseHoverOutline : MonoBehaviour
                 Debug.LogWarning($"[MouseHoverOutline] '{name}': Collider が見つかりません。Mesh Collider 等を付けてください", this);
             return;
         }
+
+        if(_isOpenUI) return;//別のUIが表示されている間はUpdate処理を停止
 
         Vector2 mousePos = Mouse.current.position.ReadValue();
         Ray ray = hoverCamera.ScreenPointToRay(mousePos);
