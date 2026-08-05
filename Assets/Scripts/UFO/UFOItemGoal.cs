@@ -25,6 +25,11 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
     [SerializeField] private int _sessionGoldCoins = 0;
     [SerializeField] private int _sessionBlackDiamonds = 0;
 
+    [Header("ブラックダイヤの磨き段階別ItemData（0:ブラックダイヤ 1:蝕まれたダイヤ 2:汚れたダイヤ 3:ダイヤモンド）")]
+    [Tooltip("RoguelikeManagerの同名リストと同じ4つのItemDataを、同じ順番で設定してください。" +
+             "ブラックダイヤを1個獲得するたびに、その時点の磨き段階に対応するItemDataがItemPanelManagerに1個加算されます")]
+    [SerializeField] private ItemData[] diamondStageItems = new ItemData[4];
+
     /// <summary>
     /// ランプの獲得演出が実行中かどうかを示します。
     /// UFOCameraController や PatoLampController から参照されます。
@@ -352,6 +357,25 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
         _sessionSilverCoins = 0;
         _sessionGoldCoins = 0;
         _sessionBlackDiamonds = 0;
+    }
+
+    /// <summary>
+    /// ブラックダイヤを1個獲得した瞬間の磨き段階（RoguelikeManager側のUFO_PolishDiamond1〜3の解放数）に
+    /// 対応するItemDataを1個、ItemPanelManagerの所持数に加算する
+    /// </summary>
+    private void AddDiamondToInventoryByCurrentStage()
+    {
+        if (diamondStageItems == null || diamondStageItems.Length != 4) return;
+        if (ItemPanelManager.Instance == null) return;
+
+        var roguelikeManager = FindFirstObjectByType<RoguelikeManager>();
+        if (roguelikeManager == null) return;
+
+        int stage = Mathf.Clamp(roguelikeManager.GetDiamondPolishStage(), 0, diamondStageItems.Length - 1);
+        ItemData target = diamondStageItems[stage];
+        if (target == null) return;
+
+        ItemPanelManager.Instance.AddItem(target.id, ItemType.CraneItem);
     }
 
     /// <summary>
@@ -776,6 +800,7 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
                     Debug.Log($"[獲得] BlackDiamond！ (今回セッション累計: 黒{_sessionBlackDiamonds})");
                     PlaySound(blackDiamondGetSound != null ? blackDiamondGetSound : coinGetSound);
                     UFODrawerRewardDisplay.Instance?.AddItem(UFODrawerRewardDisplay.RewardItemType.BlackDiamond);
+                    AddDiamondToInventoryByCurrentStage();
 
                     // ランプを紫に光らせる（常灯）
                     TriggerLampFlash(blackDiamondFlashColor, false);

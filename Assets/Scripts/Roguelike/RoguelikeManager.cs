@@ -12,6 +12,10 @@ public class RoguelikeManager : MonoBehaviour
     private Dictionary<SkillId, RoguelikeData> _roguelikeDictionary = new Dictionary<SkillId, RoguelikeData>();//SkillId: ID, RoguelikeData:ローグライク用のスキルに関するデータ
     [SerializeField] private string _jsonFilePath = "Assets/Resources/Roguelike/RoguelikeData.json";
 
+    [Header("ブラックダイヤの磨き段階別ItemData（0:ブラックダイヤ 1:蝕まれたダイヤ 2:汚れたダイヤ 3:ダイヤモンド）")]
+    [Tooltip("UFOItemGoalの同名リストと同じ4つのItemDataを、同じ順番で設定してください")]
+    [SerializeField] private ItemData[] diamondStageItems = new ItemData[4];
+
 
     /// <summary>
     /// 現在アンロックされているスキルのみを集めたDictionaryを返す
@@ -373,6 +377,45 @@ public class RoguelikeManager : MonoBehaviour
                 polisher.PolishDiamond();
             }
         }
+
+        ConvertOwnedDiamondsToNextStage();
+    }
+
+    /// <summary>
+    /// 現在アンロックされているUFO_PolishDiamondスキルの数（0〜3）を、ブラックダイヤの磨き段階として返す。
+    /// DiamondPolisherの見た目段階と、UFOItemGoalが捕獲時に渡すItemDataの段階を揃えるために共通で使う。
+    /// </summary>
+    public int GetDiamondPolishStage()
+    {
+        int count = 0;
+        if (_roguelikeDictionary.TryGetValue(SkillId.UFO_PolishDiamond1, out var s1) && s1.isGet) count++;
+        if (_roguelikeDictionary.TryGetValue(SkillId.UFO_PolishDiamond2, out var s2) && s2.isGet) count++;
+        if (_roguelikeDictionary.TryGetValue(SkillId.UFO_PolishDiamond3, out var s3) && s3.isGet) count++;
+        return count;
+    }
+
+    /// <summary>
+    /// 磨き段階が1つ進んだ瞬間、そのとき所持している「1つ前の段階のダイヤ」を全て
+    /// 「新しい段階のダイヤ」に変換する（例: ブラックダイヤ3個所持中に磨くと、蝕まれたダイヤ3個になる）。
+    /// </summary>
+    private void ConvertOwnedDiamondsToNextStage()
+    {
+        if (diamondStageItems == null || diamondStageItems.Length != 4) return;
+        if (ItemPanelManager.Instance == null) return;
+
+        int newStage = GetDiamondPolishStage();
+        int oldStage = newStage - 1;
+        if (oldStage < 0 || newStage > 3) return;
+
+        ItemData oldItem = diamondStageItems[oldStage];
+        ItemData newItem = diamondStageItems[newStage];
+        if (oldItem == null || newItem == null) return;
+
+        int ownedCount = ItemPanelManager.Instance.GetOwnedCount(oldItem.id, ItemType.CraneItem);
+        if (ownedCount <= 0) return;
+
+        ItemPanelManager.Instance.RemoveItem(oldItem.id, ItemType.CraneItem, ownedCount);
+        ItemPanelManager.Instance.AddItem(newItem.id, ItemType.CraneItem, ownedCount);
     }
 
     /// <summary>スキルID22, 23取得時にアームの速度パラメータを変更する</summary>
