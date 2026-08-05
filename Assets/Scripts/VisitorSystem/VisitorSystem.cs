@@ -88,17 +88,15 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
         try
         {
             _patchObject = GameObject.Find("door_hatch");
-            _mainCamera = Camera.main;
             _fpController = FindAnyObjectByType<App.Player.FirstPersonController>();
 
             _itemPanelManager = FindAnyObjectByType<ItemPanelManager>();
             _effectManager = FindAnyObjectByType<EffectManager>();
             _gameUIManager = FindFirstObjectByType<GameUIManager>();
+            //_mainCamera = Camera.main;
         }
         catch (System.Exception)
         {
-            
-            throw;
         }
     }
 
