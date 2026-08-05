@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using App.Intro;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
@@ -13,12 +14,14 @@ public class GameUIManager : MonoBehaviour
 {
     public static GameUIManager Instance { get; private set; }
 
+    [Header("表示制御")]
+    [Tooltip("GameUI全体の表示切り替えに使用するCanvasGroup。未設定なら自動取得")]
+    [SerializeField] private CanvasGroup _canvasGroup;
+
     private void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-        }
+        if (Instance == null) Instance = this;
+        if (_canvasGroup == null) _canvasGroup = GetComponent<CanvasGroup>();
     }
 
     [Header("ゲーム内のオブジェクト")]
@@ -297,10 +300,16 @@ public class GameUIManager : MonoBehaviour
             })
             .AddTo(this);
 
-        // UFOキャッチャーのモード切り替えイベントを購読
         UFOCameraController.OnUfoModeChanged += HandleUfoModeChanged;
-        // タイプライター報酬選択UIの表示切り替えイベントを購読
         RewardSelectionUI.OnTypewriterUIChanged += HandleTypewriterUIChanged;
+
+        // IntroTourDirectorが存在するならOnTourFinished後に表示、なければ即表示
+        // IsRunningはWaitUntilSceneReady後に立つため、ここで確認しても常にfalseになる点に注意
+        var tourDirector = FindFirstObjectByType<IntroTourDirector>();
+        if (tourDirector != null)
+            tourDirector.OnTourFinished += () => SetGameUIVisible(true);
+        else
+            SetGameUIVisible(true);
     }
 
     private void Update()
@@ -380,7 +389,7 @@ public class GameUIManager : MonoBehaviour
 
     private void HandleUfoModeChanged(bool isPlayingUfo)
     {
-        gameObject.SetActive(!isPlayingUfo);
+        SetGameUIVisible(!isPlayingUfo);
 
         // UFOキャッチャー終了時、GameUIが再表示された瞬間に通常状態が一瞬映ってしまわないよう、
         // 最初からフォーカスモード（UnwashCoin以外を隠した状態）にしておく。
@@ -393,16 +402,21 @@ public class GameUIManager : MonoBehaviour
         if (!isPlayingUfo)
         {
             bool didStartPlaySession = UFOCameraController.Instance != null && UFOCameraController.Instance.PaymentCount > 0;
-            if (didStartPlaySession)
-            {
-                SetRewardFocusMode(true);
-            }
+            if (didStartPlaySession) SetRewardFocusMode(true);
         }
     }
 
     private void HandleTypewriterUIChanged(bool isShowing)
     {
-        gameObject.SetActive(!isShowing);
+        SetGameUIVisible(!isShowing);
+    }
+
+    private void SetGameUIVisible(bool visible)
+    {
+        if (_canvasGroup == null) return;
+        _canvasGroup.alpha = visible ? 1f : 0f;
+        _canvasGroup.interactable = visible;
+        _canvasGroup.blocksRaycasts = visible;
     }
 
     /// <summary>
