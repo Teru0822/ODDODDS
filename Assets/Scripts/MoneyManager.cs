@@ -85,7 +85,7 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
 
     private void Start()
     {
-        RoguelikeSaveManager.Load();
+        //RoguelikeSaveManager.Load();
         UpdateMoneyUI();
 
         _currentTurnCount

@@ -117,6 +117,8 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
 
     public void ReadSaveData(RoguelikeSaveData saveData)
     {
+        Debug.LogError("visitor_system_readSaveData");
+        
         _visitorInstances.Clear();
         if (saveData.visitorSaveDatas != null && saveData.visitorSaveDatas.Count > 0)
         {

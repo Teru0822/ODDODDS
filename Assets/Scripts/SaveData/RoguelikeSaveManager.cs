@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Overlays;
 using UnityEngine;
@@ -65,6 +66,7 @@ public static class RoguelikeSaveManager
             File.WriteAllBytes(newPath, newEncryptedBytes);
 
             Debug.Log($"新規セーブデータ作成完了: {newPath}");
+            Load();
             return;
         }
 
@@ -97,6 +99,7 @@ public static class RoguelikeSaveManager
         {
             Debug.Log("セーブデータが見つかりません。新規データを作成します。");
             Save(true);//新規データを作成
+            return;
         }
 
         try
@@ -130,6 +133,8 @@ public static class RoguelikeSaveManager
                 Debug.LogException(e);
             }
         }
+
+        Debug.LogError("ロード完了");
     }
 
     /// <summary>
@@ -142,6 +147,44 @@ public static class RoguelikeSaveManager
         {
             File.Delete(path);
             Debug.Log($"セーブデータを削除しました: {path}");
+        }
+    }
+
+    /// <summary>
+    /// ゲームオーバー時に特定のデータを削除する関数
+    /// </summary>
+    public static void DeleteDataInGameOver()
+    {
+        string path = GetSaveFilePath();
+        RoguelikeSaveData saveData = new RoguelikeSaveData();
+        try
+        {
+            byte[] encryptedBytes = File.ReadAllBytes(path);
+            string json = DecodeBytes(encryptedBytes);
+            saveData = JsonUtility.FromJson<RoguelikeSaveData>(json);
+
+            //一部データを消してセーブしなおす
+            saveData.money = 0;
+            saveData.unwashedMoney = 0;
+            saveData.bronzeCoin = 0;
+            saveData.silverCoin = 0;
+            saveData.goldCoin = 0;
+            saveData.blackDiamond = 0;
+            saveData.ownedConsumeItems = new List<ItemSaveData>();
+            saveData.ownedEffects = new List<EffectSaveData>();
+            saveData.visitorSaveDatas = new List<VisitorSaveData>();
+            
+            //セーブ処理
+            json = JsonUtility.ToJson(saveData);
+            encryptedBytes = EncodeText(json);
+            File.WriteAllBytes(path, encryptedBytes);
+            
+            Debug.Log($"ゲームオーバー時のセーブ完了: {path}");
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError(e);
+            return;
         }
     }
 

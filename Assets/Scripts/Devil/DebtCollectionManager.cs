@@ -1,3 +1,4 @@
+using App.Player;
 using DG.Tweening;
 using Newtonsoft.Json;
 using System;
@@ -52,6 +53,9 @@ public class DebtCollectionManager : MonoBehaviour
     [Header("ゲームオーバー用")]
     [SerializeField] private ResultUIManager _resultUIManager;
 
+
+    private FirstPersonController _fpController;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -68,7 +72,7 @@ public class DebtCollectionManager : MonoBehaviour
     private void Update()
     {
 #if UNITY_EDITOR
-        if (Keyboard.current.qKey.wasPressedThisFrame)
+        if (Keyboard.current.zKey.wasPressedThisFrame)
         {
             MoneyManager.Instance.ReduceMoney(9999);
             StartCoroutine(ShowConversation("Conversation_00"));
@@ -204,6 +208,11 @@ public class DebtCollectionManager : MonoBehaviour
     public IEnumerator ShowConversation(string key = "")
     {
         bool isSuccess = true;//取り立てに耐えたか否か
+        if(_fpController == null)//必要なコンポーネントが無かった場合は取得
+        {
+            _fpController = FindFirstObjectByType<FirstPersonController>();
+        }
+        _fpController.enabled = false;//イベント終了まで動けないようにする
 
         //画面を暗転させる
         _background.DOFade(endValue: 1f, duration: 1f)
@@ -273,11 +282,20 @@ public class DebtCollectionManager : MonoBehaviour
                 yield return StartCoroutine(TextSystem(failKey));
 
                 //TODO:アイテムでゲームオーバーを回避する
-
-
-                //ゲームオーバー処理
-                MoneyManager.Instance.CheckGameOver();
-                yield return StartCoroutine(_resultUIManager.GameOverAnimation());
+                yield return new WaitForSeconds(1.0f);
+                ItemPanelManager itemManager = FindFirstObjectByType<ItemPanelManager>();
+                if(itemManager != null && itemManager.isHasItem(9,1))//聖職者のアンクを持っている場合
+                {
+                    isSuccess = true;
+                    yield return StartCoroutine(TextSystem("Revive"));
+                }
+                else
+                {
+                    //ゲームオーバー処理
+                    MoneyManager.Instance.CheckGameOver();
+                    yield return StartCoroutine(_resultUIManager.GameOverAnimation());
+                    RoguelikeSaveManager.DeleteDataInGameOver();
+                }
             }
             else//成功用
             {
@@ -288,7 +306,6 @@ public class DebtCollectionManager : MonoBehaviour
                 //必要なオブジェクトをアクティブ
                 _panel.SetActive(true);
                 yield return StartCoroutine(TextSystem(successKey));
-                Debug.Log("aa");
             }
 
             yield return new WaitUntil(() => _clickReference.action.WasPressedThisFrame());
@@ -319,7 +336,7 @@ public class DebtCollectionManager : MonoBehaviour
 
             _myMoneyCounter.DOFade(endValue: 0f, duration: 1f);
             _myMoneyCounter.rectTransform.DOAnchorPos(new Vector2(540, 180), 1.0f).SetEase(Ease.OutQuart);
-
+            _fpController.enabled = true;//イベント終了まで動けないようにする
             yield return new WaitUntil(() => _background.color.a <= 0);
         }
 

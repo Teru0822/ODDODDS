@@ -105,7 +105,13 @@ public class DebugTool : EditorWindow
                 _isCreateDebugSaveData = EditorGUILayout.Toggle("デバッグ用のセーブデータを作成する", _isCreateDebugSaveData);
                 if (_isCreateDebugSaveData)
                 {
-                    _tmpSaveData.virtuePoints = EditorGUILayout.IntField("徳ポイントの数値", _tmpSaveData.virtuePoints);
+                    _tmpSaveData.money = Mathf.Max(0, EditorGUILayout.IntField("所持金の数値", _tmpSaveData.money));
+                    _tmpSaveData.unwashedMoney = Mathf.Max(0, EditorGUILayout.IntField("未洗浄金の数値", _tmpSaveData.unwashedMoney));
+                    _tmpSaveData.bronzeCoin = Mathf.Max(0, EditorGUILayout.IntField("ブロンズコインの数値", _tmpSaveData.bronzeCoin));
+                    _tmpSaveData.silverCoin = Mathf.Max(0, EditorGUILayout.IntField("シルバーコインの数値", _tmpSaveData.silverCoin));
+                    _tmpSaveData.goldCoin = Mathf.Max(0, EditorGUILayout.IntField("ゴールドコインの数値", _tmpSaveData.goldCoin));
+                    _tmpSaveData.blackDiamond = Mathf.Max(0, EditorGUILayout.IntField("ブラックダイヤモンドの数値", _tmpSaveData.blackDiamond));
+                    _tmpSaveData.virtuePoints = Mathf.Max(0, EditorGUILayout.IntField("徳ポイントの数値", _tmpSaveData.virtuePoints));
                     _tmpSaveData.isUnlockPinball = EditorGUILayout.Toggle("ピンボール機能を解放", _tmpSaveData.isUnlockPinball);
                     _tmpSaveData.isUnlockTypewriter = EditorGUILayout.Toggle("タイプライター機能を解放", _tmpSaveData.isUnlockTypewriter);
                     _tmpSaveData.isUnlockMinigame = EditorGUILayout.Toggle("ミニゲーム機能を解放", _tmpSaveData.isUnlockMinigame);
@@ -200,7 +206,7 @@ public class DebugTool : EditorWindow
                             "所持数:",
                             GUILayout.Width(50));
 
-                        _tmpOwnItems[i].count = EditorGUILayout.IntField(_tmpOwnItems[i].count, GUILayout.Width(60));
+                        _tmpOwnItems[i].count = Mathf.Max(0, EditorGUILayout.IntField(_tmpOwnItems[i].count, GUILayout.Width(60)));
 
                         if (GUILayout.Button("削除", GUILayout.Width(50)))
                         {
@@ -266,7 +272,7 @@ public class DebugTool : EditorWindow
                             "所持数:",
                             GUILayout.Width(50));
 
-                        _tmpOwnConsumeItems[i].count = EditorGUILayout.IntField(_tmpOwnConsumeItems[i].count, GUILayout.Width(60));
+                        _tmpOwnConsumeItems[i].count = Mathf.Max(0, EditorGUILayout.IntField(_tmpOwnConsumeItems[i].count, GUILayout.Width(60)));
 
                         if (GUILayout.Button("削除", GUILayout.Width(50)))
                         {

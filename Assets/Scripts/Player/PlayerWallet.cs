@@ -8,7 +8,7 @@ using UniRx;
 /// シングルプレイ時は唯一の Player にこれを 1 個アタッチし、PlayerWallet.Local で全コードから参照可能。
 /// </summary>
 [DisallowMultipleComponent]
-public class PlayerWallet : MonoBehaviour
+public class PlayerWallet : MonoBehaviour, IsaveDataProvider
 {
     [Header("初期値")]
     [SerializeField, Tooltip("未洗浄金の初期残高の設定")]
@@ -177,6 +177,28 @@ public class PlayerWallet : MonoBehaviour
     }
 
     public bool CanAffordWashed(float cost) => cost <= 0f || _washedMoneyAmount.Value >= cost;
+
+    public void ReadSaveData(RoguelikeSaveData saveData)
+    {
+        _washedMoneyAmount.Value = saveData.money;
+        _unwashedMoneyAmount.Value = saveData.unwashedMoney;
+        _virtuePointAmount.Value = saveData.virtuePoints;
+        _bronzeCoins.Value = saveData.bronzeCoin;
+        _silverCoins.Value = saveData.silverCoin;
+        _goldCoins.Value = saveData.goldCoin;
+        _blackDiamonds.Value = saveData.blackDiamond;
+    } 
+
+    public void WriteSaveData(RoguelikeSaveData saveData)
+    {
+        saveData.money         = (int)_washedMoneyAmount.Value;
+        saveData.unwashedMoney = (int)_unwashedMoneyAmount.Value;
+        saveData.virtuePoints  = (int)_virtuePointAmount.Value;
+        saveData.bronzeCoin    = (int)_bronzeCoins.Value;
+        saveData.silverCoin    = (int)_silverCoins.Value;
+        saveData.goldCoin      = (int)_goldCoins.Value;
+        saveData.blackDiamond  = (int)_blackDiamonds.Value;
+    }
 
     // ----- ローカルプレイヤー取得 -----
 
