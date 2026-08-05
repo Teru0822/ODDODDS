@@ -54,6 +54,7 @@ public enum SkillId
 
     // UFOcatcher (追加分)
     UFO_Unlock90Sec = 31,  // プレイ時間90秒をアンロック
+    UFO_ShowDescentLaser = 32,  // アームの降下地点をわかるようにする
 }
 
 public class RoguelikeData

@@ -34,6 +34,29 @@ public class UFOArmController : MonoBehaviour
     public Vector2 playAreaSize   = new Vector2(9f, 9f);
 
     // ─────────────────────────────────────
+    [Header("強化要素: 降下地点マーカー（タイプライター id32「アームの降下地点をわかるようにする」で解放）")]
+    [Tooltip("ON: アーム移動中（Moving状態）に、爪の真下の降下予定地点に薄い円盤マーカーを表示する")]
+    public bool descentLaserUnlocked = false;
+
+    [Tooltip("降下予定地点に表示するマーカー（円盤）。未設定の場合は自動生成する")]
+    public Transform descentLaserMarker;
+
+    [Tooltip("マーカーが当たる対象のレイヤー（床・アイテムなど）")]
+    public LayerMask descentLaserLayerMask = ~0;
+
+    [Tooltip("マーカーの半径（m）")]
+    public float descentLaserMarkerRadius = 0.3f;
+
+    [Tooltip("マーカーの厚み（m）。薄い円盤として表示するための高さ")]
+    public float descentLaserMarkerThickness = 0.01f;
+
+    [Tooltip("マーカーの色。Sprites/Defaultシェーダーを使うため、アルファ値を下げると実際に半透明になります")]
+    public Color descentLaserColor = new Color(1f, 0.4f, 0.4f, 0.5f);
+
+    [Tooltip("Raycastの最大距離（m）")]
+    public float descentLaserMaxDistance = 20f;
+
+    // ─────────────────────────────────────
     [Header("爪（finger）設定")]
     [Tooltip("finger.001〜.004 を配列に設定してください")]
     public Transform[] fingerParts;
@@ -335,6 +358,8 @@ public class UFOArmController : MonoBehaviour
         // 初期化時にスキルによる速度等のパラメータ適用を行う
         UpdateArmSpeedBySkills();
         UpdateSwayBySkills();
+
+        InitializeDescentLaser();
     }
 
     /// <summary>
@@ -517,6 +542,7 @@ public class UFOArmController : MonoBehaviour
         UpdateStateMachine();
         UpdateMagnet();
         WakeUpNearbyCoins();
+        UpdateDescentLaser();
     }
 
     /// <summary>
@@ -573,6 +599,99 @@ public class UFOArmController : MonoBehaviour
             {
                 rb.WakeUp();
             }
+        }
+    }
+
+    /// <summary>
+    /// ローグライクスキル「アームの降下地点をわかるようにする」(id32) 取得時に呼ばれる。
+    /// </summary>
+    public void UnlockDescentLaser()
+    {
+        descentLaserUnlocked = true;
+    }
+
+    /// <summary>降下地点マーカー（薄い円盤）を準備する。未設定なら自動生成する。</summary>
+    void InitializeDescentLaser()
+    {
+        if (descentLaserMarker == null)
+        {
+            // 円柱を薄く潰すことで円盤に見せる（平面メッシュだと裏面カリングで見えない角度が
+            // 出てしまうため、あえて立体の円柱を使い、どの角度からでも確実に見えるようにする）
+            GameObject markerObj = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            markerObj.name = "DescentLaserMarker";
+            markerObj.transform.SetParent(transform, false);
+
+            // 見た目だけのマーカーなので、物理的な当たり判定は不要（Raycastの邪魔にもなる）
+            Collider col = markerObj.GetComponent<Collider>();
+            if (col != null) Destroy(col);
+
+            MeshRenderer mr = markerObj.GetComponent<MeshRenderer>();
+            // Sprites/Default はアルファ値をそのまま半透明として扱ってくれるため、薄さの調整に向いている
+            Shader markerShader = Shader.Find("Sprites/Default") ?? Shader.Find("Universal Render Pipeline/Unlit");
+            mr.sharedMaterial = new Material(markerShader);
+            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            mr.receiveShadows = false;
+
+            descentLaserMarker = markerObj.transform;
+        }
+
+        descentLaserMarker.localScale = new Vector3(descentLaserMarkerRadius * 2f, descentLaserMarkerThickness, descentLaserMarkerRadius * 2f);
+
+        var renderer = descentLaserMarker.GetComponent<MeshRenderer>();
+        if (renderer != null && renderer.sharedMaterial != null)
+        {
+            renderer.sharedMaterial.color = descentLaserColor;
+        }
+
+        descentLaserMarker.gameObject.SetActive(false);
+    }
+
+    /// <summary>
+    /// 強化要素が解放されていて、かつアーム移動中（Moving）のときだけ、爪の真下の降下予定地点に
+    /// 薄い円盤マーカーを表示する。レーザービーム自体は表示しない。それ以外の状態
+    /// （降下中・掴み中など）では非表示にする。
+    /// </summary>
+    void UpdateDescentLaser()
+    {
+        if (descentLaserMarker == null) return;
+
+        bool shouldShow = descentLaserUnlocked && _state == ArmState.Moving
+            && fingerParts != null && fingerParts.Length > 0 && fingerParts[0] != null;
+
+        if (!shouldShow)
+        {
+            if (descentLaserMarker.gameObject.activeSelf) descentLaserMarker.gameObject.SetActive(false);
+            return;
+        }
+
+        // WakeUpNearbyCoins() とは異なり、こちらは見た目のマーカーなのでアームの物理的な揺れに
+        // そのまま追従させたい。fingerParts[0].parent（安定用フォルダ）は揺れを反映せず中心からも
+        // ズレていたため、実際に描画されている指メッシュ自体の位置を使う。4本の指の平均（重心）を
+        // 取ることで、爪の中心かつ実際の揺れをそのまま反映した位置になる。
+        Vector3 origin = Vector3.zero;
+        int fingerCount = 0;
+        foreach (var finger in fingerParts)
+        {
+            if (finger == null) continue;
+            origin += finger.position;
+            fingerCount++;
+        }
+        origin = (fingerCount > 0) ? origin / fingerCount : ((armRoot != null) ? armRoot.position : transform.position);
+
+        // 実際の降下はワールド座標でまっすぐ下に落ちる動きなので、Raycastの向きは単純に真下でよい
+        // （揺れの傾きに沿わせると、実際の降下地点とズレたマーカー位置になってしまう）。
+        // 揺れの反映は「原点（爪の現在位置）」の方だけで十分。
+        if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, descentLaserMaxDistance, descentLaserLayerMask, QueryTriggerInteraction.Ignore))
+        {
+            descentLaserMarker.gameObject.SetActive(true);
+            // 地面に埋まらないよう、法線方向にわずかに浮かせる
+            descentLaserMarker.position = hit.point + hit.normal * (descentLaserMarkerThickness * 0.5f);
+            // 円柱のローカルY軸（上面・底面の向き）を、当たった面の法線に合わせる
+            descentLaserMarker.rotation = Quaternion.FromToRotation(Vector3.up, hit.normal);
+        }
+        else
+        {
+            descentLaserMarker.gameObject.SetActive(false);
         }
     }
 

@@ -655,6 +655,10 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
     /// </summary>
     public void HandleItemDrop(Collider other)
     {
+        // UFOキャッチャーをプレイしていない間（ラウンド開始時のスポーン落下・物理的な転がり込みなど）に
+        // 何か入っても、獲得金額・枚数などの加算は一切行わない
+        if (!UFOCameraController.IsPlayingUfo) return;
+
         // ぶつかった相手が UFOItem コンポーネントを持っているか確認
         // （複数パーツ構成のモデルで、Colliderと UFOItem が別オブジェクトの場合にも対応するため、
         //   親方向も辿って検索する）
