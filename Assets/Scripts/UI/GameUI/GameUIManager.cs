@@ -70,6 +70,7 @@ public class GameUIManager : MonoBehaviour
     [Header("メニュー用のSettings")]
     [SerializeField] private InputActionReference _openMenuReference;//Tabキーを押したらメニュー表示
     [SerializeField] private SerializeDictionary<int, GameObject> _menuTitle = new SerializeDictionary<int, GameObject>();
+    private MouseHoverOutline[] _mouseHoverOutlines;
     private bool _isOpenMenu = false;
     private int _index = 0;
 
@@ -315,12 +316,25 @@ public class GameUIManager : MonoBehaviour
             {
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
+
+                _mouseHoverOutlines = FindObjectsByType<MouseHoverOutline>(FindObjectsSortMode.InstanceID);
+                if(_mouseHoverOutlines.Length != 0)
+                {
+                    foreach(var item in _mouseHoverOutlines)
+                        item.IsOpenUI = true;
+                }
             }
             else
             {
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible = false;
                 _index = 0;
+
+                if(_mouseHoverOutlines.Length != 0)
+                {
+                    foreach(var item in _mouseHoverOutlines)
+                        item.IsOpenUI = false;
+                }
             }
         }
     }

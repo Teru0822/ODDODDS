@@ -59,7 +59,9 @@ public static class RoguelikeSaveManager
 #endif
         if (isNewData)//セーブデータを新規で作る場合
         {
-            string newJson = JsonUtility.ToJson(new RoguelikeSaveData());
+            var newSaveData = new RoguelikeSaveData();
+            newSaveData.money = 10000;
+            string newJson = JsonUtility.ToJson(newSaveData);
             byte[] newEncryptedBytes = EncodeText(newJson);
 
             string newPath = GetSaveFilePath();
@@ -70,6 +72,13 @@ public static class RoguelikeSaveManager
             return;
         }
 
+        if (!File.Exists(GetSaveFilePath()))
+        {
+            Debug.LogError("セーブデータが見つからないので、セーブできません");
+            return;
+        }
+
+
         //以前のセーブデータと差別点がある項目のみを検出（個別でセーブしやすくできる）
         var saveData = new RoguelikeSaveData();
         var providers = InterfaceFinder.FindAllByInterface<IsaveDataProvider>();
@@ -78,9 +87,41 @@ public static class RoguelikeSaveManager
             provider.WriteSaveData(saveData);
         }
 
-        string json = JsonUtility.ToJson(saveData);
-        byte[] encryptedBytes = EncodeText(json);
+        Debug.LogError(
+        $@"===== RoguelikeSaveData Result=====
 
+        money : {saveData.money}
+        unwashedMoney : {saveData.unwashedMoney}
+        bronzeCoin : {saveData.bronzeCoin}
+        silverCoin : {saveData.silverCoin}
+        goldCoin : {saveData.goldCoin}
+        blackDiamond : {saveData.blackDiamond}
+        virtuePoints : {saveData.virtuePoints}
+
+        isUnlockPinball : {saveData.isUnlockPinball}
+        isUnlockTypewriter : {saveData.isUnlockTypewriter}
+        isUnlockMinigame : {saveData.isUnlockMinigame}
+        isUnlockVisitor : {saveData.isUnlockVisitor}
+
+        isUfoCatcherUnlocked : {saveData.isUfoCatcherUnlocked}
+        isFallBallUnlocked : {saveData.isFallBallUnlocked}
+        isPinballUnlocked : {saveData.isPinballUnlocked}
+
+        isRouletteCandyObtained : {saveData.isRouletteCandyObtained}
+        isRoulettePinballObtained : {saveData.isRoulettePinballObtained}
+
+        ownedPermanentItems : {(saveData.ownedPermanentItems == null ? "null" : saveData.ownedPermanentItems.Count.ToString())}
+        ownedConsumeItems   : {(saveData.ownedConsumeItems == null ? "null" : saveData.ownedConsumeItems.Count.ToString())}
+        ownedEffects        : {(saveData.ownedEffects == null ? "null" : saveData.ownedEffects.Count.ToString())}
+        visitorSaveDatas    : {(saveData.visitorSaveDatas == null ? "null" : saveData.visitorSaveDatas.Count.ToString())}
+
+        ============================");
+        string json = JsonUtility.ToJson(saveData);
+        //string path = GetSaveFilePath();
+        //File.WriteAllText(path, json);
+
+        
+        byte[] encryptedBytes = EncodeText(json);
         string path = GetSaveFilePath();
         File.WriteAllBytes(path, encryptedBytes);
         
@@ -92,9 +133,7 @@ public static class RoguelikeSaveManager
     /// </summary>
     public static void Load()
     {
-        string path = GetSaveFilePath();
-
-        RoguelikeSaveData saveData = new RoguelikeSaveData();
+        string path = GetSaveFilePath();        
         if (!File.Exists(path))
         {
             Debug.Log("セーブデータが見つかりません。新規データを作成します。");
@@ -102,6 +141,7 @@ public static class RoguelikeSaveManager
             return;
         }
 
+        RoguelikeSaveData saveData = new RoguelikeSaveData();
         try
         {
             byte[] encryptedBytes = File.ReadAllBytes(path);
@@ -116,8 +156,38 @@ public static class RoguelikeSaveManager
             Debug.LogError($"セーブデータのロードに失敗しました: {e.Message}");
             Debug.LogError("新規データを作成し直します");
             Save(true);//新規データを作成
+            return;
         }
 
+        Debug.LogError(
+        $@"===== RoguelikeSaveData Load Result=====
+
+        money : {saveData.money}
+        unwashedMoney : {saveData.unwashedMoney}
+        bronzeCoin : {saveData.bronzeCoin}
+        silverCoin : {saveData.silverCoin}
+        goldCoin : {saveData.goldCoin}
+        blackDiamond : {saveData.blackDiamond}
+        virtuePoints : {saveData.virtuePoints}
+
+        isUnlockPinball : {saveData.isUnlockPinball}
+        isUnlockTypewriter : {saveData.isUnlockTypewriter}
+        isUnlockMinigame : {saveData.isUnlockMinigame}
+        isUnlockVisitor : {saveData.isUnlockVisitor}
+
+        isUfoCatcherUnlocked : {saveData.isUfoCatcherUnlocked}
+        isFallBallUnlocked : {saveData.isFallBallUnlocked}
+        isPinballUnlocked : {saveData.isPinballUnlocked}
+
+        isRouletteCandyObtained : {saveData.isRouletteCandyObtained}
+        isRoulettePinballObtained : {saveData.isRoulettePinballObtained}
+
+        ownedPermanentItems : {(saveData.ownedPermanentItems == null ? "null" : saveData.ownedPermanentItems.Count.ToString())}
+        ownedConsumeItems   : {(saveData.ownedConsumeItems == null ? "null" : saveData.ownedConsumeItems.Count.ToString())}
+        ownedEffects        : {(saveData.ownedEffects == null ? "null" : saveData.ownedEffects.Count.ToString())}
+        visitorSaveDatas    : {(saveData.visitorSaveDatas == null ? "null" : saveData.visitorSaveDatas.Count.ToString())}
+
+        ============================");
         //すべてのデータが必要なスクリプトに欲しいデータを送る
         var providers = InterfaceFinder.FindAllByInterface<IsaveDataProvider>();
         foreach (var provider in providers)

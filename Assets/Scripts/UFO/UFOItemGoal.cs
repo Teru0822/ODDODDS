@@ -234,7 +234,7 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
             }
         }
 
-        RoguelikeSaveManager.Save();
+        //RoguelikeSaveManager.Save();
         Debug.Log("[UFOItemGoal] candy/pinball の入手状況をリセットしました。次のラウンドで再び抽選対象になります。");
     }
 
