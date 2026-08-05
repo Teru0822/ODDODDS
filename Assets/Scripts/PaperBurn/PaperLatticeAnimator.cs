@@ -237,10 +237,6 @@ public class PaperLatticeAnimator : MonoBehaviour
         if (_debugBurnTOverride > 0f)
             burnT = _debugBurnTOverride;
 
-        // 燃焼状態のデバッグ（Console に毎秒1回出力）
-        if (Time.frameCount % 60 == 0)
-            Debug.Log($"[PaperLatticeAnimator] burnT={burnT:F3}  IsBurning={_burn?.IsBurning}  BurnProgress={_burn?.BurnProgress:F3}  _burn={(object)_burn ?? "NULL"}", this);
-
         // 着火を初めて検出したときだけジッター開始位置を記録
         if (burnT > 0f && !_burnJitterActive)
         {
@@ -467,6 +463,7 @@ public class PaperLatticeAnimator : MonoBehaviour
 
     private void ResetOffsets()
     {
+        if (_lattice == null) return;
         foreach (Vector3Int h in _lattice.GetHandles())
             _lattice.SetHandleOffset(h, Vector3.zero);
     }
