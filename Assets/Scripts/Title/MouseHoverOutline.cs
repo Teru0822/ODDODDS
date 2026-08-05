@@ -216,6 +216,13 @@ public class MouseHoverOutline : MonoBehaviour
 
     private void Update()
     {
+        if (App.Input.GameInputGate.IsBlocked)
+        {
+            if (_hovered) { _hovered = false; Apply(false); }
+            _pressedOnThis = false;
+            return;
+        }
+
         if (hoverCamera == null) hoverCamera = Camera.main;
         if (hoverCamera == null)
         {
