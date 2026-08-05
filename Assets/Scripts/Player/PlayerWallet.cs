@@ -22,11 +22,11 @@ public class PlayerWallet : MonoBehaviour, IsaveDataProvider
 
     [Header("初期コイン枚数 (デバッグ用)")]
     [SerializeField, Tooltip("金貨の初期枚数")]
-    private int _initialGoldCoins = 10;
+    private int _initialGoldCoins = 0;
     [SerializeField, Tooltip("銀貨の初期枚数")]
-    private int _initialSilverCoins = 20;
+    private int _initialSilverCoins = 0;
     [SerializeField, Tooltip("銅貨の初期枚数")]
-    private int _initialBronzeCoins = 30;
+    private int _initialBronzeCoins = 0;
 
     //お金関連の変数
     private ReactiveProperty<float> _washedMoneyAmount = new ReactiveProperty<float>();
@@ -180,6 +180,7 @@ public class PlayerWallet : MonoBehaviour, IsaveDataProvider
 
     public void ReadSaveData(RoguelikeSaveData saveData)
     {
+        Debug.LogError("PlayerWalletの読み込み開始");
         _washedMoneyAmount.Value = saveData.money;
         _unwashedMoneyAmount.Value = saveData.unwashedMoney;
         _virtuePointAmount.Value = saveData.virtuePoints;
@@ -187,6 +188,7 @@ public class PlayerWallet : MonoBehaviour, IsaveDataProvider
         _silverCoins.Value = saveData.silverCoin;
         _goldCoins.Value = saveData.goldCoin;
         _blackDiamonds.Value = saveData.blackDiamond;
+        Debug.LogError("PlayerWalletの読み込み終了\n" + _washedMoneyAmount.Value + "\n" + _unwashedMoneyAmount.Value + "\n" + _bronzeCoins.Value + "\n" + _silverCoins.Value + "\n" + _goldCoins.Value + "\n" + _blackDiamonds.Value + "\n");
     } 
 
     public void WriteSaveData(RoguelikeSaveData saveData)
@@ -221,6 +223,7 @@ public class PlayerWallet : MonoBehaviour, IsaveDataProvider
 
     private void Awake()
     {
+        /*
         _washedMoneyAmount.Value = _washedAmount;
         _unwashedMoneyAmount.Value = _unwashedAmount;
         _virtuePointAmount.Value = _virtuePoints;
@@ -228,6 +231,7 @@ public class PlayerWallet : MonoBehaviour, IsaveDataProvider
         _silverCoins.Value = _initialSilverCoins;
         _goldCoins.Value = _initialGoldCoins;
         _blackDiamonds.Value = 0;
+        */
     }
     private void OnDestroy()
     {
