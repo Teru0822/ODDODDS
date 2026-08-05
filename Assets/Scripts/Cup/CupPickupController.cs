@@ -78,7 +78,7 @@ public class CupPickupController : MonoBehaviour
 
     private void Update()
     {
-        if (UFOCameraController.IsPlayingUfo)
+        if (App.Input.GameInputGate.IsBlocked || UFOCameraController.IsPlayingUfo)
         {
             SetCurrentLooked(null);
             return;

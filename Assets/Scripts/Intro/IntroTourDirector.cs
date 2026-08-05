@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using MiniGames.Transitions;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
 namespace App.Intro
@@ -63,6 +64,13 @@ namespace App.Intro
 
         [Tooltip("テロップが無い場合に、このカットを表示し続ける時間(秒)")]
         public float durationWithoutTelop = 4f;
+
+        [Header("カットイベント")]
+        [Tooltip("このカットが始まった瞬間に呼ばれる。ドアの開閉など、カット固有の演出に使う")]
+        public UnityEvent onShotEnter;
+
+        [Tooltip("このカットが終わった瞬間に呼ばれる")]
+        public UnityEvent onShotExit;
     }
 
     /// <summary>
@@ -101,6 +109,10 @@ namespace App.Intro
         [Tooltip("最初のカットに移ってから再生を始めるまでの待ち時間(秒)。モヤが晴れる間を取ります")]
         [SerializeField] private float _startDelay = 0.5f;
 
+        [Header("取引口")]
+        [Tooltip("取引口を開くカットの番号（0始まり。Shot 08 なら 7）")]
+        [SerializeField] private int _doorHatchShotIndex = 7;
+
         [Header("終了時の霧")]
         [Tooltip("モヤでフェードアウト/フェードインする時間(秒)")]
         [SerializeField] private float _fogFadeDuration = 1.5f;
@@ -132,6 +144,7 @@ namespace App.Intro
         private App.Player.FirstPersonController _fpController;
         private bool _playerWasEnabled = true;
         private readonly List<Canvas> _hiddenCanvases = new List<Canvas>();
+        private DoorHatchController _doorHatch;
 
         private void Awake()
         {
@@ -141,6 +154,8 @@ namespace App.Intro
                 enabled = false;
                 return;
             }
+
+            if (_playOnStart) App.Input.GameInputGate.Lock();
 
             // AudioListener が2つあると Unity が警告を出し続けるため、ツアー用カメラ側を無効化する
             var listener = _tourCamera.GetComponent<AudioListener>();
@@ -230,6 +245,9 @@ namespace App.Intro
 
             if (_logEvents) Debug.Log($"[IntroTourDirector] ツアー開始 (全{_shots.Count}カット)", this);
 
+            var hatchGo = GameObject.Find("door_hatch");
+            _doorHatch = hatchGo != null ? hatchGo.GetComponent<DoorHatchController>() : null;
+
             LockPlayer();
             HideGameplayCanvases();
 
@@ -239,7 +257,7 @@ namespace App.Intro
                 if (shot == null) continue;
 
                 if (_logEvents) Debug.Log($"[IntroTourDirector] カット{i + 1}: {shot.label}", this);
-                yield return PlayShot(shot);
+                yield return PlayShot(shot, i);
             }
 
             _sequenceRoutine = null;
@@ -250,9 +268,13 @@ namespace App.Intro
         /// 1カットを再生する。カメラの動きは並行して走らせ、テロップを送り終えた時点でカットを終える
         /// （テロップが無いカットは durationWithoutTelop だけ表示する）。
         /// </summary>
-        private IEnumerator PlayShot(IntroTourShot shot)
+        private IEnumerator PlayShot(IntroTourShot shot, int shotIndex)
         {
             ApplyShotStart(shot);
+            shot.onShotEnter?.Invoke();
+
+            if (_doorHatch != null && shotIndex == _doorHatchShotIndex)
+                _doorHatch.Open();
 
             StopMotion();
             _motionRoutine = StartCoroutine(AnimateCamera(shot));
@@ -268,6 +290,10 @@ namespace App.Intro
             }
 
             StopMotion();
+            shot.onShotExit?.Invoke();
+
+            if (_doorHatch != null && shotIndex == _doorHatchShotIndex)
+                _doorHatch.Close();
         }
 
         /// <summary>カットのカメラを時間に沿って動かす。動き切ったらその姿勢のまま終了する。</summary>
@@ -421,6 +447,8 @@ namespace App.Intro
         /// </summary>
         private void LockPlayer()
         {
+            App.Input.GameInputGate.Lock();
+
             _fpController = FindAnyObjectByType<App.Player.FirstPersonController>();
             if (_fpController != null)
             {
@@ -438,6 +466,8 @@ namespace App.Intro
 
         private void UnlockPlayer()
         {
+            App.Input.GameInputGate.Unlock();
+
             if (_fpController != null) _fpController.enabled = _playerWasEnabled;
 
             Cursor.lockState = CursorLockMode.Locked;
@@ -597,18 +627,34 @@ namespace App.Intro
             return go.transform;
         }
 
-        /// <summary>選択中に、各カットのカメラ位置と注視先をSceneビューで確認できるようにする。</summary>
+        /// <summary>選択中に、各カットのカメラ視錐台・位置・注視先をSceneビューで確認できるようにする。</summary>
         private void OnDrawGizmosSelected()
         {
             if (_shots == null) return;
+
+            Matrix4x4 origMatrix = Gizmos.matrix;
+            const float frustumRange = 6f;
+            const float aspect = 16f / 9f;
 
             foreach (var shot in _shots)
             {
                 if (shot?.startPose == null) continue;
 
+                // startPose の視錐台（シアン半透明）
+                Gizmos.color = new Color(0f, 1f, 1f, 0.25f);
+                Gizmos.matrix = Matrix4x4.TRS(shot.startPose.position, shot.startPose.rotation, Vector3.one);
+                Gizmos.DrawFrustum(Vector3.zero, shot.startFov, frustumRange, 0.1f, aspect);
+                Gizmos.matrix = origMatrix;
+
+                // startPose マーカー
                 Gizmos.color = Color.cyan;
                 Gizmos.DrawWireSphere(shot.startPose.position, 0.15f);
                 Gizmos.DrawRay(shot.startPose.position, shot.startPose.forward * 0.6f);
+
+                // ラベル
+                UnityEditor.Handles.Label(
+                    shot.startPose.position + Vector3.up * 0.3f,
+                    shot.label ?? "");
 
                 if (shot.motion == IntroTourMotion.Orbit && shot.orbitPivot != null)
                 {
@@ -618,11 +664,19 @@ namespace App.Intro
                 }
                 else if (shot.motion == IntroTourMotion.PoseToPose && shot.endPose != null)
                 {
+                    // endPose の視錐台（緑半透明）
+                    Gizmos.color = new Color(0f, 1f, 0f, 0.15f);
+                    Gizmos.matrix = Matrix4x4.TRS(shot.endPose.position, shot.endPose.rotation, Vector3.one);
+                    Gizmos.DrawFrustum(Vector3.zero, shot.endFov, frustumRange, 0.1f, aspect);
+                    Gizmos.matrix = origMatrix;
+
                     Gizmos.color = Color.green;
                     Gizmos.DrawWireSphere(shot.endPose.position, 0.15f);
                     Gizmos.DrawLine(shot.startPose.position, shot.endPose.position);
                 }
             }
+
+            Gizmos.matrix = origMatrix;
         }
 #endif
     }
