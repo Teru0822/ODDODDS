@@ -5,6 +5,7 @@ using MiniGames.Transitions;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 namespace App.Intro
 {
@@ -109,6 +110,13 @@ namespace App.Intro
         [Tooltip("最初のカットに移ってから再生を始めるまでの待ち時間(秒)。モヤが晴れる間を取ります")]
         [SerializeField] private float _startDelay = 0.5f;
 
+        [Header("UFOキャッチャー演出")]
+        [Tooltip("UFOキャッチャーのライトを点灯させるカット番号（0始まり。Shot 02 なら 1）")]
+        [SerializeField] private int _ufoSpotlightOnShotIndex = 1;
+
+        [Tooltip("UFOキャッチャーのライトを消灯させるカット番号（0始まり。Shot 03 が終わったら消す場合は 2）")]
+        [SerializeField] private int _ufoSpotlightOffShotIndex = 2;
+
         [Header("取引口")]
         [Tooltip("取引口を開くカットの番号（0始まり。Shot 08 なら 7）")]
         [SerializeField] private int _doorHatchShotIndex = 7;
@@ -123,6 +131,10 @@ namespace App.Intro
         [Header("ツアー中の表示制御")]
         [Tooltip("ツアー中はゲーム側の Canvas(HUD等)を隠す。テロップとモヤは対象外です")]
         [SerializeField] private bool _hideOtherCanvasesDuringTour = true;
+
+        [Header("ツアー終了後に有効化する GameObject")]
+        [Tooltip("ツアー終了時に SetActive(true) する GO 名のリスト。非アクティブでも検索できます")]
+        [SerializeField] private string[] _activateOnTourEnd = { "GameUI" };
 
         [Header("スキップ")]
         [Tooltip("Escキーでツアー全体を飛ばせるようにする。開発中の確認用")]
@@ -201,6 +213,14 @@ namespace App.Intro
                 return;
             }
 
+            // コルーチン開始（1フレーム後）を待たず、同一フレームで即座に隠す
+            IsRunning = true;
+            _isFinishing = false;
+            var hatchGo = GameObject.Find("door_hatch");
+            _doorHatch = hatchGo != null ? hatchGo.GetComponent<DoorHatchController>() : null;
+            LockPlayer();
+            HideGameplayCanvases();
+
             _sequenceRoutine = StartCoroutine(RunTour());
         }
 
@@ -240,16 +260,7 @@ namespace App.Intro
 
         private IEnumerator RunTour()
         {
-            IsRunning = true;
-            _isFinishing = false;
-
             if (_logEvents) Debug.Log($"[IntroTourDirector] ツアー開始 (全{_shots.Count}カット)", this);
-
-            var hatchGo = GameObject.Find("door_hatch");
-            _doorHatch = hatchGo != null ? hatchGo.GetComponent<DoorHatchController>() : null;
-
-            LockPlayer();
-            HideGameplayCanvases();
 
             for (int i = 0; i < _shots.Count; i++)
             {
@@ -273,6 +284,9 @@ namespace App.Intro
             ApplyShotStart(shot);
             shot.onShotEnter?.Invoke();
 
+            if (shotIndex == _ufoSpotlightOnShotIndex)
+                UFOCameraController.Instance?.SetPlaySpotlight(true, playSound: true);
+
             if (_doorHatch != null && shotIndex == _doorHatchShotIndex)
                 _doorHatch.Open();
 
@@ -291,6 +305,9 @@ namespace App.Intro
 
             StopMotion();
             shot.onShotExit?.Invoke();
+
+            if (shotIndex == _ufoSpotlightOffShotIndex)
+                UFOCameraController.Instance?.SetPlaySpotlight(false, playSound: true);
 
             if (_doorHatch != null && shotIndex == _doorHatchShotIndex)
                 _doorHatch.Close();
@@ -393,6 +410,17 @@ namespace App.Intro
             // 3. 霧が晴れてプレイヤー操作へ
             yield return FadeFog(false);
 
+            // 4. ツアー中は非アクティブにしておいた UI を有効化する
+            if (_activateOnTourEnd != null)
+            {
+                foreach (var goName in _activateOnTourEnd)
+                {
+                    var go = FindInAllScenes(goName);
+                    if (go != null) go.SetActive(true);
+                    else if (_logEvents) Debug.LogWarning($"[IntroTourDirector] ActivateOnTourEnd: '{goName}' が見つかりません", this);
+                }
+            }
+
             IsRunning = false;
             _isFinishing = false;
             _sequenceRoutine = null;
@@ -472,6 +500,33 @@ namespace App.Intro
 
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
+        }
+
+        /// <summary>非アクティブな GO を含め全ロードシーンを走査して名前で検索する。</summary>
+        private static GameObject FindInAllScenes(string goName)
+        {
+            for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCount; i++)
+            {
+                var scene = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
+                if (!scene.isLoaded) continue;
+                foreach (var root in scene.GetRootGameObjects())
+                {
+                    var found = FindInHierarchy(root.transform, goName);
+                    if (found != null) return found.gameObject;
+                }
+            }
+            return null;
+        }
+
+        private static Transform FindInHierarchy(Transform parent, string targetName)
+        {
+            if (parent.name == targetName) return parent;
+            foreach (Transform child in parent)
+            {
+                var found = FindInHierarchy(child, targetName);
+                if (found != null) return found;
+            }
+            return null;
         }
 
         /// <summary>ツアー中だけゲーム側の Canvas を伏せる。テロップとモヤは対象外。</summary>
