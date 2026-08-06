@@ -359,10 +359,9 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
         else
         {
             Debug.LogError(_nowSelectedItem.ItemName + "使用");
-            EffectManager.Instance.AddEffect(effectId);             
+            EffectManager.Instance.AddEffect(effectId);
+            RemoveItem(_nowSelectedItem.Id,_nowSelectedItem.ItemType);            
         }
-
-        RemoveItem(_nowSelectedItem.Id,_nowSelectedItem.ItemType);
     }
 
     /// <summary>

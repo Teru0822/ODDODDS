@@ -254,6 +254,11 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider
         return _effectDataBase.effectDataBase.Find(effect => effect.id == id);
     }
 
+    /// <summary>
+    /// 指定IDのエフェクトを持っているか確認する関数
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     public bool IsHasEffect(int id)
     {
         if(_ownedEffects.Count == 0 || id == -1) return false;
@@ -263,6 +268,7 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider
             if(effect.Id == id)
                 return true;
         }
+
         return false;
     }
 
@@ -328,7 +334,7 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider
             if (effect != null && effect.Id == id)
             {
                 _ownedEffects.Remove(effect);
-                _gameUIManager.AddPopupQueue(true,effect.master);
+                _gameUIManager.AddPopupQueue(false,effect.master);
                 UpdateUI();
                 break;
             }
