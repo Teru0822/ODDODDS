@@ -115,7 +115,7 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider
             .First()
             .Subscribe(moneyManager =>
             {
-                moneyManager.OnCurrentTurnChange.Subscribe(_ => ReduceEffectLeftTurn()).AddTo(this);
+                moneyManager.OnCurrentTurnChange.Skip(1).Subscribe(_ => ReduceEffectLeftTurn()).AddTo(this);
             })
             .AddTo(this);
     }
@@ -340,6 +340,7 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider
     /// </summary>
     public void ReduceEffectLeftTurn()
     {
+        Debug.LogWarning("エフェクトのターンを減少する");
         for (int i = _ownedEffects.Count - 1; i >= 0; i--)
         {
             if(_ownedEffects[i].IsInfinity)

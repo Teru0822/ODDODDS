@@ -9656,6 +9656,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2107196397162315229, guid: 613ddb3aa382d0549b41c4cb655d409a, type: 3}
+      propertyPath: _canvasGroup
+      value: 
+      objectReference: {fileID: 2821728039331258564}
+    - target: {fileID: 2107196397162315229, guid: 613ddb3aa382d0549b41c4cb655d409a, type: 3}
       propertyPath: _goldCoinText
       value: 
       objectReference: {fileID: 1956467984}
@@ -10197,8 +10201,25 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 5829856083685826182, guid: 613ddb3aa382d0549b41c4cb655d409a, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1505236687}
+      addedObject: {fileID: 1505236687
   m_SourcePrefab: {fileID: 100100000, guid: 613ddb3aa382d0549b41c4cb655d409a, type: 3}
+--- !u!1 &2821728039331258563 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5829856083685826182, guid: 613ddb3aa382d0549b41c4cb655d409a, type: 3}
+  m_PrefabInstance: {fileID: 2821728039331258562}
+  m_PrefabAsset: {fileID: 0}
+--- !u!225 &2821728039331258564
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2821728039331258563}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1001 &2838122684108357249
 PrefabInstance:
   m_ObjectHideFlags: 0
