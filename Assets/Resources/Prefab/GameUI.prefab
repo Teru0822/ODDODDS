@@ -17087,6 +17087,7 @@ GameObject:
   - component: {fileID: 9169381386357976581}
   - component: {fileID: 8700082454369437050}
   - component: {fileID: 115945063344399768}
+  - component: {fileID: 1780165896084475474}
   m_Layer: 5
   m_Name: GameUI
   m_TagString: Untagged
@@ -17197,6 +17198,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5cf9ee0207612f44e8544bfc81a854cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameUIManager
+  _canvasGroup: {fileID: 1780165896084475474}
   _turnText: {fileID: 2997505083800652491}
   _nextDebtTurnText: {fileID: 362569135905988764}
   _moneyText: {fileID: 1771371657904447186}
@@ -17218,10 +17220,13 @@ MonoBehaviour:
   _silverCoinText: {fileID: 1815353188484871697}
   _goldCoinText: {fileID: 7907535096393889495}
   _blackDiamondText: {fileID: 4198330744502288175}
-  _hudElementsToHideDuringRewardFocus: []
-  _unwashCoinGroupContainer: {fileID: 0}
-  _rewardFocusScale: 2.5
-  _unwashCoinGroupFocusPosition: {x: 0, y: 0}
+  _hudElementsToHideDuringRewardFocus:
+  - {fileID: 5732188314401267476}
+  - {fileID: 7124093294592840305}
+  - {fileID: 1706431490397632674}
+  _unwashCoinGroupContainer: {fileID: 2474361816044113538}
+  _rewardFocusScale: 1.5
+  _unwashCoinGroupFocusPosition: {x: 50, y: 30}
   _openMenuReference: {fileID: 7607634772641906678, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   _menuTitle:
     _dicElements:
@@ -17344,6 +17349,18 @@ MonoBehaviour:
   _effectNameText: {fileID: 479568843661995841}
   _effectTurnText: {fileID: 193835473789123465}
   _effectExplainText: {fileID: 8417048737998228359}
+--- !u!225 &1780165896084475474
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5829856083685826182}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &5928896150438143195
 GameObject:
   m_ObjectHideFlags: 0
