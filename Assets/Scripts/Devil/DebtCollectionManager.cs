@@ -239,7 +239,7 @@ public class DebtCollectionManager : MonoBehaviour
 
         //取り立て開始
         {
-            previousDecreaseValue = (int)MoneyManager.Instance.PreviousDecreaseAmount;
+            previousDecreaseValue = MoneyManager.Instance.GetQuotaThisTime();
             previousMoneyValue = (int)MoneyManager.Instance.CurrentMoney;
 
             //ゲームオブジェクトの表示・非表示

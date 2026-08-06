@@ -3,6 +3,7 @@ using UniRx;
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.ComponentModel;
 
 /// <summary>
 /// ゲーム内のお金（洗浄金）操作 API を提供するシングルトン。
@@ -148,7 +149,21 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
     public void AddMoney(float amount, float multiplier = 1.0f)
     {
         if (amount <= 0 || Wallet == null) return;
-        float finalAmount = amount * multiplier;
+
+        bool hasBellBuff = EffectManager.Instance.IsHasEffect(0);
+        bool hasGargantuaDebuff = EffectManager.Instance.IsHasEffect(2);
+
+        float bellBuff = hasBellBuff ? 2f : 1f;
+        float gargantuaDebuff = hasGargantuaDebuff ? 0.5f : 1f;
+
+        if (hasBellBuff)
+            Debug.Log("ベルの加護で獲得料金が2倍");
+
+        if (hasGargantuaDebuff)
+            Debug.Log("ガルガンチュアのデバフで獲得料金が半分");
+
+        float finalAmount = amount * multiplier * bellBuff * gargantuaDebuff;
+
         Wallet.AddWashed(finalAmount);
         Debug.Log($"お金が増加しました: +{finalAmount} (現在: {Wallet.WashedAmount})");
     }
@@ -178,14 +193,21 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
     public void ApplyTurnDecrease()
     {
         //借金の返済処理
-        ReduceMoney(_quotaAmount.Value);
+        ReduceMoney(GetQuotaThisTime());
         _leftDebtAmount.Value -= _quotaAmount.Value;
 
         // 次回の減少額を指数関数的に増加させて記憶
         _quotaAmount.Value *= _exponentialRate;
-
-
     }
+
+    public int GetQuotaThisTime()
+    {
+        float GargantuaDebuff = EffectManager.Instance.IsHasEffect(1) ? 1.5f : 1.0f;
+        float candyBuff = EffectManager.Instance.IsHasEffect(6) ? 0.9500f : 1.0f;
+
+        return (int)(_quotaAmount.Value * GargantuaDebuff * candyBuff);
+    }
+    
 
     /// <summary>
     /// 経過ターン数に応じて獲得できる徳ポイントを算出し、加算する
@@ -277,6 +299,8 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
         else //耐えた時
         {
             _debtClearTimes++;
+            if(EffectManager.Instance.IsHasEffect(1))//ガルガンチュアのデバフを持っている場合は削除
+                EffectManager.Instance.RemoveEffect(1);
             return false;
         }
     }
