@@ -92,8 +92,6 @@ public class IntercomController : MonoBehaviour
         {
             HandleClick();
         }
-        else
-            Debug.LogError("マウスクリックによるボタン操作できない");
 
         // 着信中のランプ点滅
         if (currentState.Value == IntercomState.Calling)
@@ -130,10 +128,6 @@ public class IntercomController : MonoBehaviour
             {
                 btn.OnClick();
                 return; 
-            }
-            else
-            {
-                Debug.LogError("IntercomButton見つかんねえぞ!");
             }
         }
     }

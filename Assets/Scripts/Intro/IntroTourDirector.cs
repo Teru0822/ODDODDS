@@ -84,7 +84,7 @@ namespace App.Intro
     /// このオブジェクトの子として作る（コンテキストメニューの「9カットの雛形を作成」で一括生成可）。
     /// </summary>
     [DisallowMultipleComponent]
-    public class IntroTourDirector : MonoBehaviour
+    public class IntroTourDirector : MonoBehaviour, IsaveDataProvider
     {
         [Header("カメラ")]
         [Tooltip("ツアー専用カメラ。AudioListener は付けないでください（付いていれば自動で無効化します）")]
@@ -143,6 +143,9 @@ namespace App.Intro
         [Header("デバッグ")]
         [SerializeField] private bool _logEvents = true;
 
+        private bool _isWatchTour = false;//既に一度このセーブデータでツアーを見ているか否か
+        private bool _isLoadComplete = false;//ロードが終わったか否か
+
         /// <summary>ツアーが終わってプレイヤー操作が解禁された時に呼ばれる。</summary>
         public event Action OnTourFinished;
 
@@ -188,7 +191,46 @@ namespace App.Intro
             if (!_playOnStart) yield break;
 
             yield return WaitUntilSceneReady();
-            StartTour();
+            yield return new WaitUntil(() => _isLoadComplete == true);
+
+            if(!_isWatchTour)//一度も見たことが無い時のみツアー開始
+                StartTour();
+            else
+            {
+                _isFinishing = true;
+
+                StopMotion();
+                if (_telop != null) _telop.HideImmediate();
+
+                // 1. 霧でフェードアウト
+                yield return FadeFog(true);
+
+                // 2. モヤに隠れている間にプレイヤーカメラへ戻す
+                if (_tourCamera != null) _tourCamera.enabled = false;
+                RestoreCanvases();
+                UnlockPlayer();
+
+                // 3. 霧が晴れてプレイヤー操作へ
+                yield return FadeFog(false);
+
+                // 4. ツアー中は非アクティブにしておいた UI を有効化する
+                if (_activateOnTourEnd != null)
+                {
+                    foreach (var goName in _activateOnTourEnd)
+                    {
+                        var go = FindInAllScenes(goName);
+                        if (go != null) go.SetActive(true);
+                        else if (_logEvents) Debug.LogWarning($"[IntroTourDirector] ActivateOnTourEnd: '{goName}' が見つかりません", this);
+                    }
+                }
+
+                IsRunning = false;
+                _isFinishing = false;
+                _sequenceRoutine = null;
+
+                if (_logEvents) Debug.Log("[IntroTourDirector] ツアー終了。プレイヤー操作を解禁しました", this);
+                OnTourFinished?.Invoke();
+            }
         }
 
         private void Update()
@@ -200,6 +242,17 @@ namespace App.Intro
                 if (_logEvents) Debug.Log("[IntroTourDirector] Escでツアー全体をスキップします", this);
                 SkipAll();
             }
+        }
+
+        public void WriteSaveData(RoguelikeSaveData data)
+        {
+            data.isWatchTour = true;
+        }
+        
+        public void ReadSaveData(RoguelikeSaveData data)
+        {
+            _isWatchTour = data.isWatchTour;
+            _isLoadComplete = true;
         }
 
         /// <summary>ツアーを開始する。_playOnStart をオフにして任意のタイミングで呼ぶこともできる。</summary>
@@ -261,7 +314,7 @@ namespace App.Intro
         private IEnumerator RunTour()
         {
             if (_logEvents) Debug.Log($"[IntroTourDirector] ツアー開始 (全{_shots.Count}カット)", this);
-
+            yield return new WaitUntil(() => GameUIManager.Instance.IsGameUIVisible == false);
             for (int i = 0; i < _shots.Count; i++)
             {
                 var shot = _shots[i];

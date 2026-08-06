@@ -226,14 +226,16 @@ public class TypewriterInteractable : InteractableHighlight
         _busy = false;
         ApplyHighlight(true);
 
-        if(MoneyManager.Instance.NextDebtCollectionTurnCount - 1 == 0)
+        if(MoneyManager.Instance.NextDebtCollectionTurnCount == 0)
         {
             yield return new WaitForSeconds(3.0f);
             if(_debtCollectionManager == null)
                 _debtCollectionManager = FindFirstObjectByType<DebtCollectionManager>();
 
-            if(_debtCollectionManager != null)
+            if(_debtCollectionManager != null && MoneyManager.Instance.DebtClearTimes == 0)
                 yield return StartCoroutine(_debtCollectionManager.ShowConversation("Conversation_00"));
+            else if(_debtCollectionManager != null && MoneyManager.Instance.DebtClearTimes != 0)
+                yield return StartCoroutine(_debtCollectionManager.ShowConversation());
             else
                 Debug.LogError("[TypewriterInteractable] DebtCollectionManager が見つかりません", this);
         }
@@ -242,6 +244,7 @@ public class TypewriterInteractable : InteractableHighlight
             if(_fpsController == null)
                 _fpsController = FindFirstObjectByType<FirstPersonController>();
 
+            yield return new WaitForSeconds(3.0f);
             var stm = SceneTransitionManager.Instance;
             if (stm != null)
             {
@@ -249,8 +252,8 @@ public class TypewriterInteractable : InteractableHighlight
                 if (_fpsController != null) _fpsController.enabled = false;
                 stm.ShowTurnTransition(
                     _turnTransitionDuration,
-                    onDuringLoading: () => MoneyManager.Instance?.AdvanceTurn(),
-                    onComplete:      () => { done = true; }
+                    onDuringLoading: () => Debug.Log("Now Loading"),
+                    onComplete:      () => { done = true; MoneyManager.Instance?.AdvanceTurn();}
                 );
                 // ShowTurnTransition が完了しない場合に備えてタイムアウト（最大60秒）
                 float elapsed = 0f;

@@ -294,6 +294,8 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
     {
         //最初に会話を行う
         yield return StartCoroutine(TextSystem(visitor));
+        if(_itemPanelManager == null) _itemPanelManager = FindFirstObjectByType<ItemPanelManager>();
+        if(_effectManager == null) _effectManager = FindFirstObjectByType<EffectManager>();
 
         //取引ができるか判定・主人公のセリフで伝える
         if(isClearRequest(visitor))
@@ -316,8 +318,9 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
                 Reward reward = visitor.Rewards[visitor.eventProgress - 1].Clone();
 
                 //選択肢が存在する取引相手の場合,取引内容を決定するまで待機
-                if(visitor.VisitorName == "Faust" || (visitor.VisitorName == "Gargantua"/*&& visitor.eventProgress < 3*/))//ガルガンチュアはイベント3回目までは確定してるので無視
+                if((visitor.VisitorName == "Faust" && visitor.eventProgress != 1) || (visitor.VisitorName == "Gargantua"&& visitor.eventProgress >= 3 && visitor.eventProgress != 5))//ファウストは一回目、ガルガンチュアはイベント1,2,5は確定してるので無視
                 {
+                    //選択肢を出現させる（UIのセットアップも兼ねる）
                     _visitorUI.SetActive(true);
                     Cursor.lockState = CursorLockMode.None;
                     Cursor.visible = true;
@@ -328,12 +331,45 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
                     _select1.GetComponentInChildren<VisitorSelectionHover>().Init(reward.RewardElements[0].content, _conversationText);
                     _select2.GetComponentInChildren<VisitorSelectionHover>().Init(reward.RewardElements[1].content, _conversationText);
 
+                    //選択されるまで待機、選択後にUIを非表示にする
                     yield return new WaitUntil(() => _nowSelectIndexInTradeContent != -1);
                     _select1.gameObject.SetActive(false);
                     _select2.gameObject.SetActive(false);
                     _visitorUI.SetActive(false);
                     Cursor.lockState = CursorLockMode.Locked;
                     Cursor.visible = false;
+
+                    //選択していない方の報酬を削除
+                    if(_nowSelectIndexInTradeContent != -1)
+                    {
+                        if(_nowSelectIndexInTradeContent == 0)
+                        {
+                            reward.RewardElements.RemoveAt(1);
+                        }
+                        else if(_nowSelectIndexInTradeContent == 1)
+                            reward.RewardElements.RemoveAt(0);
+                    }
+                }
+                else if(visitor.VisitorName == "Faust" && visitor.eventProgress == 1)//ファウスト限定の強制イベント処理
+                {
+                    //TODO: ノルマ金額のランダム化処理を実装
+                }
+                else if(visitor.VisitorName == "Gargantua" && (visitor.eventProgress < 3 || visitor.eventProgress == 5))//ガルガンチュア限定の強制イベント処理
+                {
+                    switch(visitor.eventProgress)
+                    {
+                        case 1: 
+                            reward.RewardElements.RemoveAt(1);
+                            break;
+                        case 2: 
+                            reward.RewardElements.RemoveAt(0);
+                            break;
+                        case 5: 
+                            Debug.Log("両方の効果が付与されます");
+                            break;
+                        default: Debug.LogError("ガルガンチュアにとって想定外の数値です");
+                            break;
+                    }
                 }
 
                 if(visitor.VisitorName == "Lucas")
@@ -370,17 +406,6 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
                 }
 
                 //報酬の獲得
-                if(visitor.VisitorName == "Faust" || visitor.VisitorName == "Gargantua")
-                {
-                    //選択していない方の報酬を削除
-                    if(_nowSelectIndexInTradeContent != -1)
-                    {
-                        if(_nowSelectIndexInTradeContent == 0)
-                            reward.RewardElements.RemoveAt(1);
-                        else if(_nowSelectIndexInTradeContent == 1)
-                            reward.RewardElements.RemoveAt(0);
-                    }
-                }
                 foreach(var element in reward.RewardElements)
                 {
                     if (element.content is ItemData itemData)
@@ -415,13 +440,14 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
                     _mainCamera = Camera.main;
                 }
 
+                Transform returnCameraPos = _mainCamera.gameObject.transform;
                 GameObject itemObj = null;
                 _tradeAnimSequence = DOTween.Sequence();
                 _tradeAnimSequence
-                .Append(_mainCamera.transform.DOMove(_cameraPosition.position, 1.0f))
+                .Append(_mainCamera.transform.DOMove(_cameraPosition.position, 1.0f).SetEase(Ease.InSine))
+                .Join(_mainCamera.transform.DORotate(new Vector3(0,180,0), 1.0f))
                 .OnStart(() =>
                 {
-                    _mainCamera.transform.eulerAngles = new Vector3(0,180,0);
                     _itemLight.SetActive(true);
                 })
                 .AppendInterval(1.0f)
@@ -453,7 +479,9 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
                 })
                 .AppendInterval(1.0f)
                 .Append(_patchObject.transform.DOLocalMoveZ(0.0016f, 1.0f))
-                .AppendInterval(1.5f);
+                .AppendInterval(1.5f)
+                .Append(_mainCamera.transform.DOMove(returnCameraPos.position, 1.0f).SetEase(Ease.InSine))
+                .Join(_mainCamera.transform.DORotate(returnCameraPos.eulerAngles, 1.0f));
 
                 //SEを追加してから再生
                 _tradeAnimSequence.InsertCallback(2.0f, () =>

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 [Serializable]
 public class RoguelikeSaveData
 {
+    //基本情報
     public int money;
     public int unwashedMoney;
     public int bronzeCoin;
@@ -11,6 +12,15 @@ public class RoguelikeSaveData
     public int goldCoin;
     public int blackDiamond;
     public int virtuePoints;
+
+    //ターン数など
+    public int nowTurn;//現在のターン
+    public int nextDebtTurn;//次の取り立てターン
+    public int nextDebtPrice;//次の取り立てられる金額
+    public int leftDebtAmount;//残りの借金の金額
+    public int debtClearTimes;//借金の取り立てに何回耐えきったか
+    public bool isWatchTour;//ツアーを一回みたか
+
     //恒久ポイントを活用したローグライク要素
     public bool isUnlockPinball    = false; // ピンボール機能を解放
     public bool isUnlockTypewriter = false; // タイプライター機能を解放
@@ -28,6 +38,7 @@ public class RoguelikeSaveData
     public List<VisitorSaveData> visitorSaveDatas;//訪問者の進行状況をセーブするリスト
 
     // 今後ここに追加のメタプログレッション要素（スキル解放状態など）を記載
+    public List<RoguelikeSaveClass> roguelikeSaveDatas;
 
     //ーーー各遊技のローグライク要素をここに記述していくーーーー
     //UFOキャッチャー

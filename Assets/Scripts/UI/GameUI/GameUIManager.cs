@@ -17,7 +17,8 @@ public class GameUIManager : MonoBehaviour
     [Header("表示制御")]
     [Tooltip("GameUI全体の表示切り替えに使用するCanvasGroup。未設定なら自動取得")]
     [SerializeField] private CanvasGroup _canvasGroup;
-
+    private bool _isGameUIVisible = true;
+    public bool IsGameUIVisible => _isGameUIVisible;
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -307,7 +308,10 @@ public class GameUIManager : MonoBehaviour
         // IsRunningはWaitUntilSceneReady後に立つため、ここで確認しても常にfalseになる点に注意
         var tourDirector = FindFirstObjectByType<IntroTourDirector>();
         if (tourDirector != null)
+        {
+            SetGameUIVisible(false);
             tourDirector.OnTourFinished += () => SetGameUIVisible(true);
+        }
         else
             SetGameUIVisible(true);
     }
@@ -417,6 +421,8 @@ public class GameUIManager : MonoBehaviour
         _canvasGroup.alpha = visible ? 1f : 0f;
         _canvasGroup.interactable = visible;
         _canvasGroup.blocksRaycasts = visible;
+
+        _isGameUIVisible = visible;
     }
 
     /// <summary>
