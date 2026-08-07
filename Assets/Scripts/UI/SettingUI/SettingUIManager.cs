@@ -53,6 +53,8 @@ public class SettingUIManager : MonoBehaviour
         BackTitle,
     }
     public static SettingUIManager Instance;
+    [SerializeField] private CanvasGroup _canvasGroup;
+
     [Header("キーバインド")]
     [SerializeField] private InputActionReference _openMenuReference;//escapeキーを押したらメニュー表示
     bool _isOpenMenu = false;
@@ -68,6 +70,9 @@ public class SettingUIManager : MonoBehaviour
     [SerializeField] private TMP_Text _warningText;
     [SerializeField] private Button _yesButton;
     [SerializeField] private Button _noButton;
+    private bool _isCantSettingUI = false;//SettingUIの表示・非表示ができない状態に設定するためのbool
+    public bool IsCantSettingUI{private get{return _isCantSettingUI;} set{_isCantSettingUI = value;}}
+
     private int _settingIndex = 0;
     private int _checkActionIndex = -1;//-1:未選択, 0:はい, 1:いいえ
 
@@ -266,7 +271,7 @@ public class SettingUIManager : MonoBehaviour
     private void Update()
     {
         //escapeキーを押したときにメニュー切り替え
-        if (_openMenuReference.action.WasPressedThisFrame() && !isNowRebinding)
+        if (_openMenuReference.action.WasPressedThisFrame() && !isNowRebinding && !_isCantSettingUI && SceneManager.GetActiveScene().buildIndex != 0)
         {
             _isOpenMenu = !_isOpenMenu;
             _settingPanel.SetActive(_isOpenMenu);
@@ -324,6 +329,12 @@ public class SettingUIManager : MonoBehaviour
     /// </summary>
     public void OpenSettingMenu()
     {
+        if(_isCantSettingUI)
+        {
+            Debug.LogError("現在、SettingUIの表示・非表示を変更できません");
+            return;
+        } 
+
         _settingPanel.SetActive(true);
         _isOpenMenu = true;
         Cursor.lockState = CursorLockMode.None;
@@ -344,6 +355,12 @@ public class SettingUIManager : MonoBehaviour
     /// </summary>
     public void CloseSettingMenu()
     {
+        if(_isCantSettingUI && SceneManager.GetActiveScene().buildIndex != 0)
+        {
+            Debug.LogError("現在、SettingUIの表示・非表示を変更できません");
+            return;
+        } 
+
         _settingPanel.SetActive(false);
         _isOpenMenu = false;
         if(_fpsController != null) _fpsController.enabled = true;
@@ -427,6 +444,7 @@ public class SettingUIManager : MonoBehaviour
 
     private IEnumerator CheckActionView(CheckActionMode mode)
     {
+        _isCantSettingUI = true;
         _checkActionPanel.SetActive(true);
         Sequence sequence = DOTween.Sequence();
         sequence.Append(_checkActionPanel.transform.DOLocalMoveY(-100,0.3f).SetEase(Ease.OutQuint))
@@ -444,26 +462,44 @@ public class SettingUIManager : MonoBehaviour
         .Join(_checkActionPanel.GetComponent<CanvasGroup>().DOFade(endValue: 0f, duration: 0.1f));
         yield return sequence.WaitForCompletion();
         _checkActionPanel.SetActive(false);
-
+        _isCantSettingUI = false;
         //選択に応じて処理を分岐
         if(mode == CheckActionMode.Reset && _checkActionIndex == 0)
         {
             ResetSetting();
         }
-        // else if(mode == CheckActionMode.BackTitle && _checkActionIndex == 0)
-        // {
-        //     _checkActionIndex = -1;
-        //     //タイトル画面へ遷移する機能
-        //     try
-        //     {
-        //         RoguelikeSaveManager.Save();
-        //     }
-        //     catch (System.Exception)
-        //     {
-        //         Debug.LogError("セーブできませんでした。");
-        //     }
-        //     if(SceneManager.GetActiveScene().buildIndex != 0) SceneManager.LoadScene(0);
-        // }
+        else if(mode == CheckActionMode.BackTitle && _checkActionIndex == 0)
+        {
+            _checkActionIndex = -1;
+            if(_canvasGroup == null)  TryGetComponent<CanvasGroup>(out _canvasGroup);
+
+            //タイトル画面へ遷移する機能
+            try
+            {
+                RoguelikeSaveManager.Save();
+            }
+            catch (System.Exception)
+            {
+                Debug.LogError("セーブできませんでした。");
+            }
+
+            if(SceneManager.GetActiveScene().buildIndex != 0)
+            {
+                //設定UIが透明になるまで待つ（セーブ処理を待つ時間を稼ぐ演出）
+                yield return _canvasGroup.DOFade(0, 1.0f).OnComplete(() => 
+                {
+                    CloseSettingMenu();
+                    _canvasGroup.alpha = 1;//透明になっていたのを戻す
+                }).WaitForCompletion();
+                MiniGames.Transitions.SceneTransitionManager.Instance.TransitionToScene("3D_Title_Sample" , () => 
+                {
+                    Cursor.lockState = CursorLockMode.None;
+                    Cursor.visible = true;
+                    //MiniGames.Transitions.SceneTransitionManager.Instance.TransitionCanvas.worldCamera = Camera.main;
+                });
+            }
+            
+        }
 
 
         _checkActionIndex = -1;
