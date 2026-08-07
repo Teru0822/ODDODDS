@@ -20,6 +20,7 @@ public class RoguelikeSaveData
     public int leftDebtAmount;//残りの借金の金額
     public int debtClearTimes;//借金の取り立てに何回耐えきったか
     public bool isWatchTour;//ツアーを一回みたか
+    public bool isFinishUfoCatcherInRound;//ラウンド内で、UFOキャッチャーをプレイし終わっているか
 
     //恒久ポイントを活用したローグライク要素
     public bool isUnlockPinball    = false; // ピンボール機能を解放
