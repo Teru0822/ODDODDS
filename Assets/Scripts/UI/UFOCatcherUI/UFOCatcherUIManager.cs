@@ -12,6 +12,11 @@ public struct PriceCoinSpawnData
     public string coinText;
     [Tooltip("ON: ルーレット機能（Devil_Eye）が解放されるまで、この項目を price_table に表示しません")]
     public bool requiresRouletteUnlock;
+
+    [Tooltip("ON: coinSpriteの代わりに、ブラックダイヤの磨き段階(0〜3)に応じてdiamondStageSpritesから選んだ画像を使う")]
+    public bool useDiamondStageSprite;
+    [Tooltip("磨き段階0〜3に対応する画像。useDiamondStageSpriteがONの項目でのみ使用")]
+    public Sprite[] diamondStageSprites;
 }
 
 [System.Serializable]
@@ -241,9 +246,23 @@ public class UFOCatcherUIManager : MonoBehaviour
                 PriceCoinUI coinUI = coinObj.GetComponent<PriceCoinUI>();
                 if (coinUI != null)
                 {
-                    if (coinData.coinSprite != null)
+                    Sprite spriteToUse = coinData.coinSprite;
+
+                    // ブラックダイヤ用の項目は、磨き段階に応じて画像を差し替える
+                    if (coinData.useDiamondStageSprite && coinData.diamondStageSprites != null && coinData.diamondStageSprites.Length > 0)
                     {
-                        coinUI.SetImage(coinData.coinSprite);
+                        var roguelikeManager = FindFirstObjectByType<RoguelikeManager>();
+                        if (roguelikeManager != null)
+                        {
+                            int stage = Mathf.Clamp(roguelikeManager.GetDiamondPolishStage(), 0, coinData.diamondStageSprites.Length - 1);
+                            if (coinData.diamondStageSprites[stage] != null)
+                                spriteToUse = coinData.diamondStageSprites[stage];
+                        }
+                    }
+
+                    if (spriteToUse != null)
+                    {
+                        coinUI.SetImage(spriteToUse);
                     }
                     coinUI.SetText(coinData.coinText);
                 }

@@ -133,19 +133,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1253917590715540325, guid: dc644b8eff261da47997a8bcbf239a9b, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6292158694580414241, guid: dc644b8eff261da47997a8bcbf239a9b, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.03508788
+      value: 0.031
       objectReference: {fileID: 0}
     - target: {fileID: 6292158694580414241, guid: dc644b8eff261da47997a8bcbf239a9b, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.03508789
+      value: 0.031
       objectReference: {fileID: 0}
     - target: {fileID: 6292158694580414241, guid: dc644b8eff261da47997a8bcbf239a9b, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.03508788
+      value: 0.031
       objectReference: {fileID: 0}
     - target: {fileID: 6292158694580414241, guid: dc644b8eff261da47997a8bcbf239a9b, type: 3}
       propertyPath: m_LocalPosition.x
@@ -153,7 +153,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6292158694580414241, guid: dc644b8eff261da47997a8bcbf239a9b, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.000005674145
+      value: -0.016
       objectReference: {fileID: 0}
     - target: {fileID: 6292158694580414241, guid: dc644b8eff261da47997a8bcbf239a9b, type: 3}
       propertyPath: m_LocalPosition.z
@@ -443,7 +443,7 @@ MonoBehaviour:
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
+  m_RenderPostProcessing: 1
   m_Antialiasing: 0
   m_AntialiasingQuality: 2
   m_StopNaN: 0
@@ -718,7 +718,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1253917590715540325, guid: dc644b8eff261da47997a8bcbf239a9b, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1671206944214456896, guid: dc644b8eff261da47997a8bcbf239a9b, type: 3}
       propertyPath: m_Layer
@@ -1076,6 +1076,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 184c013c8d54242749b374afac27dd90, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RouletteController
+  devilEyeVisual: {fileID: 0}
+  isUnlocked: 0
+  debugForceUnlock: 0
   slots:
   - slotTransform: {fileID: 595496441}
     weight: 5
@@ -1511,6 +1514,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1384866236}
     m_Modifications:
+    - target: {fileID: -6192713545308441055, guid: 1f41703613a872146a28d24ab80a660f, type: 3}
+      propertyPath: m_UseGravity
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5191096911840990342, guid: 1f41703613a872146a28d24ab80a660f, type: 3}
+      propertyPath: 'polishLevels.Array.data[0]'
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6934674859883359455, guid: 1f41703613a872146a28d24ab80a660f, type: 3}
       propertyPath: m_Name
       value: blackdiamond
@@ -1690,7 +1701,7 @@ Transform:
   m_GameObject: {fileID: 1377979205}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.114, y: 0.257, z: -0.243}
+  m_LocalPosition: {x: -0.4, y: 0.401, z: -0.243}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

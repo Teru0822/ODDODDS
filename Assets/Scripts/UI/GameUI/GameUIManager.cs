@@ -54,7 +54,9 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] private TMP_Text _bronzeCoinText;
     [SerializeField] private TMP_Text _silverCoinText;
     [SerializeField] private TMP_Text _goldCoinText;
-    [SerializeField] private TMP_Text _blackDiamondText;
+
+    [Tooltip("UnwashCoin内の黒ダイヤ行(磨き段階0:呪われた〜3:ゴッドの順)。磨き段階に応じて1つだけ表示し、他は非表示にします")]
+    [SerializeField] private GameObject[] _blackDiamondStageObjects;
 
     [Header("報酬フォーカス演出（Drawer Camera Viewpoint用）")]
     [Tooltip("フォーカス中に隠したいUI（お金のテキストなど、UnwashCoin以外の常時表示UI）")]
@@ -256,26 +258,20 @@ public class GameUIManager : MonoBehaviour
                 {
                     _previousBlackDiamondValue = x;
                     isBlackDiamondInitialized = true;
-                    if (_blackDiamondText != null)
-                    {
-                        _blackDiamondText.text = "x" + x.ToString("N0");
-                        _blackDiamondText_info.text = "x" + x.ToString("N0");
-                    }                   
+                    SetBlackDiamondCountText(x);
+                    if (_blackDiamondText_info != null) _blackDiamondText_info.text = "x" + x.ToString("N0");
                     return;
                 }
 
-                if (_blackDiamondText != null)
+                DOTween.To(() => _previousBlackDiamondValue,
+                    num => _previousBlackDiamondValue = num,
+                    x,
+                    1.0f
+                ).OnUpdate(() =>
                 {
-                    DOTween.To(() => _previousBlackDiamondValue,
-                        num => _previousBlackDiamondValue = num,
-                        x,
-                        1.0f
-                    ).OnUpdate(() =>
-                    {
-                        _blackDiamondText.text = "x" + _previousBlackDiamondValue.ToString("N0");
-                        _blackDiamondText_info.text = "x" + _previousBlackDiamondValue.ToString("N0");
-                    });
-                }
+                    SetBlackDiamondCountText(_previousBlackDiamondValue);
+                    if (_blackDiamondText_info != null) _blackDiamondText_info.text = "x" + _previousBlackDiamondValue.ToString("N0");
+                });
             }).AddTo(this);
 
         MoneyManager.Instance.OnCurrentTurnChange.Subscribe(turnNum => _turnText.text = turnNum.ToString("000")).AddTo(this);
@@ -303,6 +299,11 @@ public class GameUIManager : MonoBehaviour
 
         UFOCameraController.OnUfoModeChanged += HandleUfoModeChanged;
         RewardSelectionUI.OnTypewriterUIChanged += HandleTypewriterUIChanged;
+        RoguelikeManager.OnDiamondPolishStageChanged += SetBlackDiamondStage;
+
+        // イベントは磨き段階が「変わった」時にしか飛ばないため、起動時点の段階をここで一度反映しておく
+        var roguelikeManager = FindFirstObjectByType<RoguelikeManager>();
+        if (roguelikeManager != null) SetBlackDiamondStage(roguelikeManager.GetDiamondPolishStage());
 
         // IntroTourDirectorが存在するならOnTourFinished後に表示、なければ即表示
         // IsRunningはWaitUntilSceneReady後に立つため、ここで確認しても常にfalseになる点に注意
@@ -389,6 +390,51 @@ public class GameUIManager : MonoBehaviour
     {
         UFOCameraController.OnUfoModeChanged -= HandleUfoModeChanged;
         RewardSelectionUI.OnTypewriterUIChanged -= HandleTypewriterUIChanged;
+        RoguelikeManager.OnDiamondPolishStageChanged -= SetBlackDiamondStage;
+    }
+
+    /// <summary>
+    /// UnwashCoin内の黒ダイヤ行を、磨き段階に対応する1つだけ表示し、他は非表示にする
+    /// </summary>
+    private void SetBlackDiamondStage(int stage)
+    {
+        if (_blackDiamondStageObjects == null || _blackDiamondStageObjects.Length == 0) return;
+
+        stage = Mathf.Clamp(stage, 0, _blackDiamondStageObjects.Length - 1);
+        for (int i = 0; i < _blackDiamondStageObjects.Length; i++)
+        {
+            var go = _blackDiamondStageObjects[i];
+            if (go == null) continue;
+
+            bool isCurrent = (i == stage);
+            go.SetActive(isCurrent);
+
+            // 親のアクティブ状態の継承だけに頼らず、子(Image/Text)自身のアクティブ状態も
+            // 明示的に揃える（子だけ個別のアクティブ状態を持っていて食い違うのを防ぐため）
+            foreach (Transform child in go.transform)
+                child.gameObject.SetActive(isCurrent);
+        }
+
+        // 表示切り替え直後も個数表示がズレないよう、今の所持数を反映しておく
+        SetBlackDiamondCountText(Mathf.RoundToInt(_previousBlackDiamondValue));
+    }
+
+    /// <summary>
+    /// UnwashCoin内の黒ダイヤ行(4つとも)の個数テキストを更新する。
+    /// 4行それぞれが独立したTMP_Textを持つため、非表示中の行も含めて全て更新しておく
+    /// （表示切り替えの前後関係に関わらず、表示された瞬間に必ず正しい数値になるようにするため）
+    /// </summary>
+    private void SetBlackDiamondCountText(int count)
+    {
+        if (_blackDiamondStageObjects == null) return;
+
+        string text = "x" + count.ToString("N0");
+        foreach (var go in _blackDiamondStageObjects)
+        {
+            if (go == null) continue;
+            var t = go.GetComponentInChildren<TMP_Text>(true);
+            if (t != null) t.text = text;
+        }
     }
 
     private void HandleUfoModeChanged(bool isPlayingUfo)

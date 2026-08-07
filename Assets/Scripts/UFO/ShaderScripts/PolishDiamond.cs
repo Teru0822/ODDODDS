@@ -22,15 +22,7 @@ public class DiamondPolisher : MonoBehaviour
         var manager = FindFirstObjectByType<RoguelikeManager>();
         if (manager != null)
         {
-            int unlockedPolishSkills = 0;
-            var skills = manager.GetUnlockSkillDictionary;
-            if (skills != null)
-            {
-                if (skills.ContainsKey(SkillId.UFO_PolishDiamond1)) unlockedPolishSkills++;
-                if (skills.ContainsKey(SkillId.UFO_PolishDiamond2)) unlockedPolishSkills++;
-                if (skills.ContainsKey(SkillId.UFO_PolishDiamond3)) unlockedPolishSkills++;
-            }
-            currentStage = Mathf.Clamp(unlockedPolishSkills, 0, polishLevels.Length - 1);
+            currentStage = Mathf.Clamp(manager.GetDiamondPolishStage(), 0, polishLevels.Length - 1);
         }
 
         // ゲーム開始時に、このダイヤ専用のマテリアルインスタンスを生成してキャッシュ

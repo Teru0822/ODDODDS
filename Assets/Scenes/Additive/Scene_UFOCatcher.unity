@@ -2782,6 +2782,10 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: d6dd0721d5d3d8b478c0e48c82a6722f, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: b53caa2fd9f5e974595f6e4e9dca88f1, type: 2}
     - target: {fileID: 919132149155446097, guid: d6dd0721d5d3d8b478c0e48c82a6722f, type: 3}
       propertyPath: m_Name
       value: television
@@ -6343,6 +6347,10 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 14
       objectReference: {fileID: 0}
+    - target: {fileID: 1995868394668917846, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: _blackDiamondItem
+      value: 
+      objectReference: {fileID: 11400000, guid: 2874668e1e6a02741ad69048e43045cc, type: 2}
     - target: {fileID: 2053462230025035080, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: m_Layer
       value: 14
@@ -6503,6 +6511,14 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 14
       objectReference: {fileID: 0}
+    - target: {fileID: 7032559352881890362, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7032559352881890362, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -2.7
+      objectReference: {fileID: 0}
     - target: {fileID: 7381280736474704578, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: m_Layer
       value: 14
@@ -6580,9 +6596,33 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: _priceCoinDatas.Array.data[3].useDiamondStageSprite
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: _priceCoinDatas.Array.data[4].requiresRouletteUnlock
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: _priceCoinDatas.Array.data[3].diamondStageSprites.Array.size
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: '_priceCoinDatas.Array.data[3].diamondStageSprites.Array.data[0]'
+      value: 
+      objectReference: {fileID: 21300000, guid: ef53ff64f08d76844979c4c186c55b0a, type: 3}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: '_priceCoinDatas.Array.data[3].diamondStageSprites.Array.data[1]'
+      value: 
+      objectReference: {fileID: 21300000, guid: 9f4dfd734c3b6174b9d6c6acba94b1f0, type: 3}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: '_priceCoinDatas.Array.data[3].diamondStageSprites.Array.data[2]'
+      value: 
+      objectReference: {fileID: 21300000, guid: e03d32fde7ce3ac40acaf1f2dbb9e994, type: 3}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: '_priceCoinDatas.Array.data[3].diamondStageSprites.Array.data[3]'
+      value: 
+      objectReference: {fileID: 21300000, guid: a98ffd1c2901ea6448468fe6ba581628, type: 3}
     - target: {fileID: 8058010506096278309, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: m_Layer
       value: 14
