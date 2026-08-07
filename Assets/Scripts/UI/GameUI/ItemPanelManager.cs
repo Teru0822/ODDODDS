@@ -44,6 +44,8 @@ public enum ItemCategory
 /// </summary>
 public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
 {
+    public static ItemPanelManager Instance { get; private set; }
+
     /// <summary>AddItem でアイテムが追加されたときに発火。引数はアイテムID。</summary>
     public static event System.Action<int> OnItemObtained;
 
@@ -73,6 +75,8 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
 
     private void Awake()
     {
+        Instance = this;
+
         _ownedItems
             .ObserveAdd()
             .Subscribe(index =>
@@ -409,7 +413,7 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
             if (item.Id == id)
             {
                 exists = true;
-                if(type == ItemType.Consume) item.Count+=num;//消費アイテムの場合、アイテムの所持数を増加
+                if(type == ItemType.Consume || type == ItemType.CraneItem) item.Count+=num;//消費・クレーンアイテムの場合、アイテムの所持数を増加
                 _gameUIManager.AddPopupQueue(true,item.master);
                 break;
             }
@@ -448,7 +452,7 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
         {
             if (item != null && item.Id == id)
             {
-                if(type == ItemType.Consume) item.Count = Mathf.Max(item.Count - num, 0);//消費アイテムの場合、アイテムの所持数を減少
+                if(type == ItemType.Consume || type == ItemType.CraneItem) item.Count = Mathf.Max(item.Count - num, 0);//消費・クレーンアイテムの場合、アイテムの所持数を減少
                 UpdateUI();
                 _gameUIManager.AddPopupQueue(false,item.master);
                 break;

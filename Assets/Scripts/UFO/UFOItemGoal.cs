@@ -25,6 +25,10 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
     [SerializeField] private int _sessionGoldCoins = 0;
     [SerializeField] private int _sessionBlackDiamonds = 0;
 
+    [Header("ブラックダイヤ")]
+    [Tooltip("捕獲のたびにItemPanelManagerへ加算する、唯一のブラックダイヤItemData(磨き段階に応じて名前が変わります)")]
+    [SerializeField] private ItemData _blackDiamondItem;
+
     /// <summary>
     /// ランプの獲得演出が実行中かどうかを示します。
     /// UFOCameraController や PatoLampController から参照されます。
@@ -776,6 +780,9 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
                     Debug.Log($"[獲得] BlackDiamond！ (今回セッション累計: 黒{_sessionBlackDiamonds})");
                     PlaySound(blackDiamondGetSound != null ? blackDiamondGetSound : coinGetSound);
                     UFODrawerRewardDisplay.Instance?.AddItem(UFODrawerRewardDisplay.RewardItemType.BlackDiamond);
+
+                    if (_blackDiamondItem != null && ItemPanelManager.Instance != null)
+                        ItemPanelManager.Instance.AddItem(_blackDiamondItem.id, ItemType.CraneItem);
 
                     // ランプを紫に光らせる（常灯）
                     TriggerLampFlash(blackDiamondFlashColor, false);

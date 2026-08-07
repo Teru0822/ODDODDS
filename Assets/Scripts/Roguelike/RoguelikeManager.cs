@@ -21,6 +21,18 @@ public class RoguelikeManager : MonoBehaviour, IsaveDataProvider
     [SerializeField] private string _jsonFilePath = "Assets/Resources/Roguelike/RoguelikeData.json";
     private bool isFinishLoadJson = false;
 
+    [Header("ブラックダイヤの磨き段階")]
+    [Tooltip("磨き段階に応じて表示名を書き換える、唯一のブラックダイヤItemData")]
+    [SerializeField] private ItemData _blackDiamondItem;
+    [Tooltip("磨き段階0〜3に対応する表示名")]
+    [SerializeField] private string[] _diamondStageNames =
+    {
+        "呪われたダイヤモンド",
+        "封印されしダイヤモンド",
+        "解放されそうなダイヤモンド",
+        "ゴッドダイヤモンド",
+    };
+
 
     /// <summary>
     /// 現在アンロックされているスキルのみを集めたDictionaryを返す
@@ -53,6 +65,9 @@ public class RoguelikeManager : MonoBehaviour, IsaveDataProvider
 
     private Subject<RoguelikeData> _unlockSkillEvent = new Subject<RoguelikeData>();//スキルがアンロックされた際のイベント（intにはidが入る）
     public IObservable<RoguelikeData> OnUnlockSkillEvent { get { return _unlockSkillEvent; } }
+
+    /// <summary>ブラックダイヤの磨き段階が変わった（決まった）ときに発火。引数は0〜3の段階</summary>
+    public static event Action<int> OnDiamondPolishStageChanged;
 
     private void Awake()
     {
@@ -428,6 +443,34 @@ public class RoguelikeManager : MonoBehaviour, IsaveDataProvider
                 polisher.PolishDiamond();
             }
         }
+
+        UpdateDiamondItemName();
+    }
+
+    /// <summary>
+    /// 現在アンロックされているUFO_PolishDiamondスキルの数（0〜3）を、ブラックダイヤの磨き段階として返す。
+    /// DiamondPolisherの見た目段階と、表示名の書き換えを揃えるために共通で使う。
+    /// </summary>
+    public int GetDiamondPolishStage()
+    {
+        int count = 0;
+        if (_roguelikeDictionary.TryGetValue(SkillId.UFO_PolishDiamond1, out var s1) && s1.isGet) count++;
+        if (_roguelikeDictionary.TryGetValue(SkillId.UFO_PolishDiamond2, out var s2) && s2.isGet) count++;
+        if (_roguelikeDictionary.TryGetValue(SkillId.UFO_PolishDiamond3, out var s3) && s3.isGet) count++;
+        return count;
+    }
+
+    /// <summary>
+    /// ブラックダイヤは4種類に分かれた別々のアイテムではなく、1つの実体が磨き段階に応じて
+    /// 名前(と見た目)を変えていくアイテムのため、唯一のItemDataのitemNameを直接書き換える。
+    /// </summary>
+    private void UpdateDiamondItemName()
+    {
+        if (_blackDiamondItem == null || _diamondStageNames == null || _diamondStageNames.Length == 0) return;
+
+        int stage = Mathf.Clamp(GetDiamondPolishStage(), 0, _diamondStageNames.Length - 1);
+        _blackDiamondItem.itemName = _diamondStageNames[stage];
+        OnDiamondPolishStageChanged?.Invoke(stage);
     }
 
     /// <summary>スキルID22, 23取得時にアームの速度パラメータを変更する</summary>
