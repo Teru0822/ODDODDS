@@ -718,7 +718,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1253917590715540325, guid: dc644b8eff261da47997a8bcbf239a9b, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1671206944214456896, guid: dc644b8eff261da47997a8bcbf239a9b, type: 3}
       propertyPath: m_Layer
@@ -1076,6 +1076,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 184c013c8d54242749b374afac27dd90, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RouletteController
+  devilEyeVisual: {fileID: 0}
+  isUnlocked: 0
+  debugForceUnlock: 0
   slots:
   - slotTransform: {fileID: 595496441}
     weight: 5
@@ -1517,7 +1520,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6934674859883359455, guid: 1f41703613a872146a28d24ab80a660f, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7743722576217486949, guid: 1f41703613a872146a28d24ab80a660f, type: 3}
       propertyPath: m_LocalPosition.x
