@@ -3,6 +3,7 @@ using UniRx;
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.ComponentModel;
 
 /// <summary>
 /// ゲーム内のお金（洗浄金）操作 API を提供するシングルトン。
@@ -28,12 +29,14 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
     [SerializeField] private float _exponentialRate = 2.0f;
     [SerializeField] private float _initialDecreaseAmount = 100f;
     [SerializeField] private int _debtCollectionFrequency = 1;
+    private int _debtClearTimes = 0;
+    public int DebtClearTimes => _debtClearTimes;
 
     ReactiveProperty<int> _currentTurnCount = new ReactiveProperty<int>(1);
     ReactiveProperty<int> _nextDebtCollectionTurnCount = new ReactiveProperty<int>(4);
     public int CurrentTurnCount { get { return _currentTurnCount.Value; } }
     public int NextDebtCollectionTurnCount { get { return _nextDebtCollectionTurnCount.Value; } }
-    public IObservable<int> OnCurrentTurnChange { get { return _currentTurnCount; } }
+    public IObservable<int> OnCurrentTurnChange { get { return _currentTurnCount; } }//最初に変数の作成、Loadで2回更新が発生するため、必要に応じてSkip(2)を追加してください
     public IObservable<int> OnNextDebtCollectionTurnChange { get { return _nextDebtCollectionTurnCount; } }
 
     [Header("ローグライク要素（徳ポイント）")]
@@ -88,17 +91,19 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
         //RoguelikeSaveManager.Load();
         UpdateMoneyUI();
 
+        //ターン処理を開始
         _currentTurnCount
             .Pairwise()
             .Subscribe(x =>
             {
+                Debug.LogError("呼ばれたよー");
                 //経過ターンに応じて、次回の取り立てターンを計算
                 var diff = x.Current - x.Previous;
                 _nextDebtCollectionTurnCount.Value-= diff;
 
-                //0以下になれば、リセット
-                if(_nextDebtCollectionTurnCount.Value <= 0)
-                    _nextDebtCollectionTurnCount.Value = _debtCollectionFrequency;
+                //0未満になれば、リセット
+                if(_nextDebtCollectionTurnCount.Value < 0)
+                    _nextDebtCollectionTurnCount.Value = _debtCollectionFrequency - 1;
                     
             }).AddTo(gameObject);
 
@@ -144,7 +149,21 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
     public void AddMoney(float amount, float multiplier = 1.0f)
     {
         if (amount <= 0 || Wallet == null) return;
-        float finalAmount = amount * multiplier;
+
+        bool hasBellBuff = EffectManager.Instance.IsHasEffect(0);
+        bool hasGargantuaDebuff = EffectManager.Instance.IsHasEffect(2);
+
+        float bellBuff = hasBellBuff ? 2f : 1f;
+        float gargantuaDebuff = hasGargantuaDebuff ? 0.5f : 1f;
+
+        if (hasBellBuff)
+            Debug.Log("ベルの加護で獲得料金が2倍");
+
+        if (hasGargantuaDebuff)
+            Debug.Log("ガルガンチュアのデバフで獲得料金が半分");
+
+        float finalAmount = amount * multiplier * bellBuff * gargantuaDebuff;
+
         Wallet.AddWashed(finalAmount);
         Debug.Log($"お金が増加しました: +{finalAmount} (現在: {Wallet.WashedAmount})");
     }
@@ -174,14 +193,21 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
     public void ApplyTurnDecrease()
     {
         //借金の返済処理
-        ReduceMoney(_quotaAmount.Value);
+        ReduceMoney(GetQuotaThisTime());
         _leftDebtAmount.Value -= _quotaAmount.Value;
 
         // 次回の減少額を指数関数的に増加させて記憶
         _quotaAmount.Value *= _exponentialRate;
-
-
     }
+
+    public int GetQuotaThisTime()
+    {
+        float GargantuaDebuff = EffectManager.Instance.IsHasEffect(1) ? 1.5f : 1.0f;
+        float candyBuff = EffectManager.Instance.IsHasEffect(6) ? 0.9500f : 1.0f;
+
+        return (int)(_quotaAmount.Value * GargantuaDebuff * candyBuff);
+    }
+    
 
     /// <summary>
     /// 経過ターン数に応じて獲得できる徳ポイントを算出し、加算する
@@ -198,22 +224,67 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
 
     public void WriteSaveData(RoguelikeSaveData saveData)
     {
+        //徳ポイントとターン関連の情報をセーブ
         saveData.virtuePoints = Wallet.VirtuePoints;
+        saveData.nowTurn = _currentTurnCount.Value;
+        saveData.nextDebtTurn = _nextDebtCollectionTurnCount.Value;
+        saveData.nextDebtPrice = (int)_quotaAmount.Value;
+        saveData.leftDebtAmount = (int)_leftDebtAmount.Value;
+        saveData.debtClearTimes = _debtClearTimes;
     }
-
     public void ReadSaveData(RoguelikeSaveData saveData)
     {
         if (Wallet == null) return;
         Wallet.VirtuePoints = saveData.virtuePoints;
+
+        //現在のターンを初期化
+        if(saveData.nowTurn == 0)
+            _currentTurnCount.Value = 1;
+        else
+            _currentTurnCount.Value = saveData.nowTurn; 
+        
+        //次の取り立てターンを初期化(nextDebtTurnが0の時も十分にあるので現在のターンを参照する)
+        if(saveData.nowTurn == 0 && saveData.nextDebtTurn == 0)
+            _nextDebtCollectionTurnCount.Value = _debtCollectionFrequency - 1;
+        else
+            _nextDebtCollectionTurnCount.Value = saveData.nextDebtTurn;
+
+        //次の取り立てる金額を初期化
+        if(saveData.nextDebtPrice == 0)
+            _quotaAmount.Value = _initialDecreaseAmount;
+        else
+            _quotaAmount.Value = saveData.nextDebtPrice;
+
+        //残りの借金の金額を初期化
+        if(saveData.leftDebtAmount == 0)
+            _leftDebtAmount.Value = 10000000000;
+        else
+            _leftDebtAmount.Value = saveData.leftDebtAmount;
+
+        //借金の取り立てを耐えた回数を初期化
+        _debtClearTimes = saveData.debtClearTimes;
+
+        Debug.LogError(
+        $@"===== MoneyManager Load Result=====
+
+        Turn : {_currentTurnCount.Value}
+        nextTurn : {_nextDebtCollectionTurnCount.Value}
+        nextDebtPrice : {_quotaAmount.Value}
+        leftDebtAmount : {_leftDebtAmount.Value}
+        debtClearTimes : {_debtClearTimes}
+
+        ============================");
         Debug.Log($"セーブデータをロードしました。現在の徳ポイント: {Wallet.VirtuePoints}");
     }
 
     /// <summary>
     /// 所持金が0以下になった場合にゲームオーバーを告知する
     /// </summary>
-    public void CheckGameOver()
+    /// <returns>true: ゲームオーバー, false: クリア</returns>
+    public bool CheckGameOver()
     {
-        if (Wallet == null) return;
+        if (Wallet == null) return false;
+
         if (Wallet.WashedAmount <= 0f)
         {
             Wallet.WashedAmount = 0f;
@@ -223,6 +294,14 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
             CalculateAndAddVirtuePoints();
 
             //TODO:ここに詳細なゲームオーバー時の処理を実装
+            return true;
+        }
+        else //耐えた時
+        {
+            _debtClearTimes++;
+            if(EffectManager.Instance.IsHasEffect(1))//ガルガンチュアのデバフを持っている場合は削除
+                EffectManager.Instance.RemoveEffect(1);
+            return false;
         }
     }
 }

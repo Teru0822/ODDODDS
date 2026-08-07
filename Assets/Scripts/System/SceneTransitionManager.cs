@@ -85,6 +85,8 @@ namespace MiniGames.Transitions
         private Color _titleAmbientEquatorColor;
         private Color _titleAmbientGroundColor;
 
+        private GameObject _transitionCanvas;//ロード画面として使うCanvasのゲームオブジェクト
+
         private void Awake()
         {
             if (Instance == null)
@@ -102,6 +104,29 @@ namespace MiniGames.Transitions
             }
             else
             {
+                //インスタンス化できないオブジェクトが破壊される前に、インスタンス化されている方の初期化を行う
+                //目的としては、ゲームシーンからタイトルシーンに遷移する際に、SerializeFieldで設定しているオブジェクトの情報を再設定するため
+                var canvases = FindObjectsByType<Canvas>(FindObjectsInactive.Include,FindObjectsSortMode.None);
+                Canvas deleteCanvas = null;
+                foreach (var canvas in canvases)
+                {
+                    if(canvas.gameObject.name != "TransitionCanvas")
+                    {
+                        continue;
+                    }
+                    if (canvas.gameObject.scene.name == "DontDestroyOnLoad")
+                    {
+                        //ここに初期化関連の事項を書き連ねる
+                        //例：SceneTransitionManager.Instance._lightsToTurnOff[0] = this._lightsToTurnOff[0];
+                        // //ただ、これは実際にはできない。_lightsToTurnOffがPrivateとして設定されているから。publicにするか、書き換えるメソッドを作成しよう
+                        continue;
+                    }
+
+                    //名前がTransitionCanvasかつ3D_Title_Sampleシーンにあるオブジェクトを指定
+                    deleteCanvas = canvas;
+                }
+
+                Destroy(deleteCanvas.gameObject);//同じシーンにTransitionCanvasは2つもいらない
                 Destroy(gameObject);
             }
         }
@@ -220,7 +245,11 @@ namespace MiniGames.Transitions
         /// <summary>シーン遷移なし。ローディング画面を挟んでターン処理を実行しフェードインで戻る。</summary>
         public void ShowTurnTransition(float minimumDuration, Action onDuringLoading, Action onComplete = null)
         {
-            if (_isTransitioning) return;
+            if (_isTransitioning)
+            {
+                Debug.LogWarning("[SceneTransitionManager] ShowTurnTransition: 既にトランジション中のためスキップしました。_isTransitioning が true のままスタックしている可能性があります。");
+                return;
+            }
             StartCoroutine(TurnTransitionRoutine(minimumDuration, onDuringLoading, onComplete));
         }
 
@@ -391,6 +420,7 @@ namespace MiniGames.Transitions
                 if (_fadeCanvasGroup != null)
                 {
                     Transform canvasRoot = _fadeCanvasGroup.transform.root;
+                    _transitionCanvas = canvasRoot.gameObject;
                     DontDestroyOnLoad(canvasRoot.gameObject);
                     Debug.Log($"[STM-DEBUG] TransitionCanvas '{canvasRoot.name}' をDontDestroyOnLoadに追加");
                 }
@@ -514,6 +544,16 @@ namespace MiniGames.Transitions
 
             //すべてのサブシーンの読み込みが終わったため、プレイヤー情報を読み込む
             RoguelikeSaveManager.Load();
+            try
+            {
+                if(SettingUIManager.Instance != null) SettingUIManager.Instance.Init();
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError(e);
+                Debug.LogError("SettingUIManagerの初期化に失敗しました");
+            }
+            
 
             Debug.Log("[SceneTransitionManager] MultiSceneLoaderのロードが完了しました。ItemSpawnerの待機へ移行します。");
             // サブシーンロード完了後、UFOキャッチャーの ItemSpawner 等が Start() を呼ぶための猶予
@@ -526,11 +566,15 @@ namespace MiniGames.Transitions
             if (ItemSpawner.IsSpawning)
             {
                 Debug.Log("[SceneTransitionManager] ItemSpawnerがスポーン中のため、完了を待機します。");
-                while (ItemSpawner.IsSpawning)
+                float spawnWaitTimeout = 0f;
+                while (ItemSpawner.IsSpawning && spawnWaitTimeout < 60f)
                 {
                     yield return null;
+                    spawnWaitTimeout += Time.deltaTime;
                 }
-                
+                if (spawnWaitTimeout >= 60f)
+                    Debug.LogWarning("[SceneTransitionManager] ItemSpawner待機がタイムアウトしました。強制続行します。");
+
                 Debug.Log($"[SceneTransitionManager] スポーンが完了しました。追加待機({_postSpawnWaitTime}秒)を開始します。");
                 // コインがすべて生成された後、床に落ちて物理演算が落ち着くまでの追加待機
                 if (_postSpawnWaitTime > 0f)
@@ -803,7 +847,8 @@ namespace MiniGames.Transitions
 
         private void OnApplicationQuit()
         {
-            RoguelikeSaveManager.Save();
+            if(SceneManager.GetActiveScene().buildIndex != 0)//タイトルシーン以外の時にセーブ処理を行う
+                RoguelikeSaveManager.Save();
         }
     }
 }

@@ -74,6 +74,9 @@ namespace App.Intro
         private void Awake()
         {
             if (_audioSource == null) _audioSource = GetComponent<AudioSource>();
+            if (_audioSource == null) _audioSource = gameObject.AddComponent<AudioSource>();
+            _audioSource.playOnAwake = false;
+            _audioSource.spatialBlend = 0f;
             if (_text != null && _fontAsset != null) _text.font = _fontAsset;
             HideImmediate();
         }
@@ -138,6 +141,7 @@ namespace App.Intro
 
             _canvasGroup.DOKill();
             yield return _canvasGroup.DOFade(0f, _fadeOutDuration).WaitForCompletion();
+            if (_text != null) _text.text = "";
             _canvasGroup.gameObject.SetActive(false);
             _visible = false;
         }

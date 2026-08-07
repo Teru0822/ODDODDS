@@ -931,7 +931,7 @@ namespace App.ATM
                 wallet.UnwashedAmount = 0f;
                 // ここでは即時追加ではなく、後ほどカウントアップ演出で加算するためキャッシュだけする
                 _visualWashedAmount = wallet.WashedAmount;
-                wallet.AddWashed(washedAmount);
+                MoneyManager.Instance.AddMoney(washedAmount);
             }
 
             successAmountTextValue = washedAmount;
@@ -987,7 +987,7 @@ namespace App.ATM
                 wallet.GoldCoins -= _goldSellQty;
                 
                 float startCash = wallet.WashedAmount;
-                wallet.AddWashed(gained);
+                MoneyManager.Instance.AddMoney(gained);
                 float endCash = wallet.WashedAmount;
 
                 _goldSellQty = 0;
@@ -1005,7 +1005,7 @@ namespace App.ATM
                 wallet.SilverCoins -= _silverSellQty;
                 
                 float startCash = wallet.WashedAmount;
-                wallet.AddWashed(gained);
+                MoneyManager.Instance.AddMoney(gained);
                 float endCash = wallet.WashedAmount;
 
                 _silverSellQty = 0;
@@ -1023,7 +1023,7 @@ namespace App.ATM
                 wallet.BronzeCoins -= _bronzeSellQty;
                 
                 float startCash = wallet.WashedAmount;
-                wallet.AddWashed(gained);
+                MoneyManager.Instance.AddMoney(gained);
                 float endCash = wallet.WashedAmount;
 
                 _bronzeSellQty = 0;

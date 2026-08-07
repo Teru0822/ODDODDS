@@ -195,6 +195,8 @@ public class ShopBallController : MonoBehaviour
 
     private bool CanAfford(float price)
     {
+        if(EffectManager.Instance.IsHasEffect(7)) return true;
+
         return UnwashedMoneyManager.Instance != null
             && UnwashedMoneyManager.Instance.CanAfford(price);
     }
@@ -207,12 +209,22 @@ public class ShopBallController : MonoBehaviour
             Debug.LogWarning("[ShopBallController] UnwashedMoneyManager がシーンに存在しません。");
             return;
         }
-        if (!UnwashedMoneyManager.Instance.TrySpend(slot.Price))
-        {
-            Debug.LogWarning($"[ShopBallController] 残高不足で購入失敗: price={slot.Price}");
-            return;
-        }
 
+        if(EffectManager.Instance.IsHasEffect(7))//古びたピンボール玉を使用している場合
+        {
+            EffectManager.Instance.RemoveEffect(7);
+            Debug.Log("無料でピンボールを遊べます");
+        }
+        else
+        {
+            //支払いを済ませる。お金が足りない場合は無効
+            if (!UnwashedMoneyManager.Instance.TrySpend(slot.Price))
+            {
+                Debug.LogWarning($"[ShopBallController] 残高不足で購入失敗: price={slot.Price}");
+                return;
+            }
+        }
+        
         Vector3 pos = ballSpawnPoint != null ? ballSpawnPoint.position : slot.transform.position;
         Quaternion rot = ballSpawnPoint != null ? ballSpawnPoint.rotation : Quaternion.identity;
         Transform parent = spawnParent != null ? spawnParent : ballSpawnPoint;

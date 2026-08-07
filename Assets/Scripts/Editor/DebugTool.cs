@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -12,6 +13,7 @@ public class DebugTool : EditorWindow
 {
     private bool _isUseDebugData = false;
     private bool _isCreateDebugSaveData = false;
+    private string _lastSaveMessage = string.Empty;
     
 
     //private ReactiveProperty<int> _debugHealth = new ReactiveProperty<int>(100);
@@ -105,6 +107,8 @@ public class DebugTool : EditorWindow
                 _isCreateDebugSaveData = EditorGUILayout.Toggle("デバッグ用のセーブデータを作成する", _isCreateDebugSaveData);
                 if (_isCreateDebugSaveData)
                 {
+                    // --- 基本情報・所持金 ---
+                    EditorGUILayout.LabelField("【基本情報・所持金】", EditorStyles.boldLabel);
                     _tmpSaveData.money = Mathf.Max(0, EditorGUILayout.IntField("所持金の数値", _tmpSaveData.money));
                     _tmpSaveData.unwashedMoney = Mathf.Max(0, EditorGUILayout.IntField("未洗浄金の数値", _tmpSaveData.unwashedMoney));
                     _tmpSaveData.bronzeCoin = Mathf.Max(0, EditorGUILayout.IntField("ブロンズコインの数値", _tmpSaveData.bronzeCoin));
@@ -112,6 +116,22 @@ public class DebugTool : EditorWindow
                     _tmpSaveData.goldCoin = Mathf.Max(0, EditorGUILayout.IntField("ゴールドコインの数値", _tmpSaveData.goldCoin));
                     _tmpSaveData.blackDiamond = Mathf.Max(0, EditorGUILayout.IntField("ブラックダイヤモンドの数値", _tmpSaveData.blackDiamond));
                     _tmpSaveData.virtuePoints = Mathf.Max(0, EditorGUILayout.IntField("徳ポイントの数値", _tmpSaveData.virtuePoints));
+
+                    EditorGUILayout.Space(5);
+
+                    // --- ターン数・借金関連 ---
+                    EditorGUILayout.LabelField("【ターン数・借金情報】", EditorStyles.boldLabel);
+                    _tmpSaveData.nowTurn = Mathf.Max(0, EditorGUILayout.IntField("現在のターン数", _tmpSaveData.nowTurn));
+                    _tmpSaveData.nextDebtTurn = Mathf.Max(0, EditorGUILayout.IntField("次の取り立てターン", _tmpSaveData.nextDebtTurn));
+                    _tmpSaveData.nextDebtPrice = Mathf.Max(0, EditorGUILayout.IntField("次の取り立て金額", _tmpSaveData.nextDebtPrice));
+                    _tmpSaveData.leftDebtAmount = Mathf.Max(0, EditorGUILayout.IntField("残りの借金金額", _tmpSaveData.leftDebtAmount));
+                    _tmpSaveData.debtClearTimes = Mathf.Max(0, EditorGUILayout.IntField("借金クリア回数", _tmpSaveData.debtClearTimes));
+                    _tmpSaveData.isWatchTour = EditorGUILayout.Toggle("ツアーを一回見たか", _tmpSaveData.isWatchTour);
+
+                    EditorGUILayout.Space(5);
+
+                    // --- 機能解放・演出フラグ ---
+                    EditorGUILayout.LabelField("【機能解放・演出フラグ】", EditorStyles.boldLabel);
                     _tmpSaveData.isUnlockPinball = EditorGUILayout.Toggle("ピンボール機能を解放", _tmpSaveData.isUnlockPinball);
                     _tmpSaveData.isUnlockTypewriter = EditorGUILayout.Toggle("タイプライター機能を解放", _tmpSaveData.isUnlockTypewriter);
                     _tmpSaveData.isUnlockMinigame = EditorGUILayout.Toggle("ミニゲーム機能を解放", _tmpSaveData.isUnlockMinigame);
@@ -332,6 +352,14 @@ public class DebugTool : EditorWindow
                         _tmpSaveData.ownedPermanentItems = _tmpOwnItems;
                         _tmpSaveData.ownedConsumeItems = _tmpOwnConsumeItems;
                         CreateDebugSaveData(_tmpSaveData);
+
+                        _lastSaveMessage = $"セーブデータを作成しました ({DateTime.Now:yyyy/MM/dd HH:mm:ss})";
+                    }
+
+                    if (!string.IsNullOrEmpty(_lastSaveMessage))
+                    {
+                        EditorGUILayout.Space(5);
+                        EditorGUILayout.HelpBox(_lastSaveMessage, MessageType.Info);
                     }
                 }
             }

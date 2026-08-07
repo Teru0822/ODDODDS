@@ -3,7 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using MiniGames.Transitions;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 namespace App.Intro
 {
@@ -63,6 +65,13 @@ namespace App.Intro
 
         [Tooltip("テロップが無い場合に、このカットを表示し続ける時間(秒)")]
         public float durationWithoutTelop = 4f;
+
+        [Header("カットイベント")]
+        [Tooltip("このカットが始まった瞬間に呼ばれる。ドアの開閉など、カット固有の演出に使う")]
+        public UnityEvent onShotEnter;
+
+        [Tooltip("このカットが終わった瞬間に呼ばれる")]
+        public UnityEvent onShotExit;
     }
 
     /// <summary>
@@ -75,7 +84,7 @@ namespace App.Intro
     /// このオブジェクトの子として作る（コンテキストメニューの「9カットの雛形を作成」で一括生成可）。
     /// </summary>
     [DisallowMultipleComponent]
-    public class IntroTourDirector : MonoBehaviour
+    public class IntroTourDirector : MonoBehaviour, IsaveDataProvider
     {
         [Header("カメラ")]
         [Tooltip("ツアー専用カメラ。AudioListener は付けないでください（付いていれば自動で無効化します）")]
@@ -101,6 +110,17 @@ namespace App.Intro
         [Tooltip("最初のカットに移ってから再生を始めるまでの待ち時間(秒)。モヤが晴れる間を取ります")]
         [SerializeField] private float _startDelay = 0.5f;
 
+        [Header("UFOキャッチャー演出")]
+        [Tooltip("UFOキャッチャーのライトを点灯させるカット番号（0始まり。Shot 02 なら 1）")]
+        [SerializeField] private int _ufoSpotlightOnShotIndex = 1;
+
+        [Tooltip("UFOキャッチャーのライトを消灯させるカット番号（0始まり。Shot 03 が終わったら消す場合は 2）")]
+        [SerializeField] private int _ufoSpotlightOffShotIndex = 2;
+
+        [Header("取引口")]
+        [Tooltip("取引口を開くカットの番号（0始まり。Shot 08 なら 7）")]
+        [SerializeField] private int _doorHatchShotIndex = 7;
+
         [Header("終了時の霧")]
         [Tooltip("モヤでフェードアウト/フェードインする時間(秒)")]
         [SerializeField] private float _fogFadeDuration = 1.5f;
@@ -112,12 +132,19 @@ namespace App.Intro
         [Tooltip("ツアー中はゲーム側の Canvas(HUD等)を隠す。テロップとモヤは対象外です")]
         [SerializeField] private bool _hideOtherCanvasesDuringTour = true;
 
+        [Header("ツアー終了後に有効化する GameObject")]
+        [Tooltip("ツアー終了時に SetActive(true) する GO 名のリスト。非アクティブでも検索できます")]
+        [SerializeField] private string[] _activateOnTourEnd = { "GameUI" };
+
         [Header("スキップ")]
         [Tooltip("Escキーでツアー全体を飛ばせるようにする。開発中の確認用")]
         [SerializeField] private bool _allowSkipAll = true;
 
         [Header("デバッグ")]
         [SerializeField] private bool _logEvents = true;
+
+        private bool _isWatchTour = false;//既に一度このセーブデータでツアーを見ているか否か
+        private bool _isLoadComplete = false;//ロードが終わったか否か
 
         /// <summary>ツアーが終わってプレイヤー操作が解禁された時に呼ばれる。</summary>
         public event Action OnTourFinished;
@@ -132,6 +159,7 @@ namespace App.Intro
         private App.Player.FirstPersonController _fpController;
         private bool _playerWasEnabled = true;
         private readonly List<Canvas> _hiddenCanvases = new List<Canvas>();
+        private DoorHatchController _doorHatch;
 
         private void Awake()
         {
@@ -141,6 +169,8 @@ namespace App.Intro
                 enabled = false;
                 return;
             }
+
+            if (_playOnStart) App.Input.GameInputGate.Lock();
 
             // AudioListener が2つあると Unity が警告を出し続けるため、ツアー用カメラ側を無効化する
             var listener = _tourCamera.GetComponent<AudioListener>();
@@ -161,7 +191,46 @@ namespace App.Intro
             if (!_playOnStart) yield break;
 
             yield return WaitUntilSceneReady();
-            StartTour();
+            yield return new WaitUntil(() => _isLoadComplete == true);
+
+            if(!_isWatchTour)//一度も見たことが無い時のみツアー開始
+                StartTour();
+            else
+            {
+                _isFinishing = true;
+
+                StopMotion();
+                if (_telop != null) _telop.HideImmediate();
+
+                // 1. 霧でフェードアウト
+                yield return FadeFog(true);
+
+                // 2. モヤに隠れている間にプレイヤーカメラへ戻す
+                if (_tourCamera != null) _tourCamera.enabled = false;
+                RestoreCanvases();
+                UnlockPlayer();
+
+                // 3. 霧が晴れてプレイヤー操作へ
+                yield return FadeFog(false);
+
+                // 4. ツアー中は非アクティブにしておいた UI を有効化する
+                if (_activateOnTourEnd != null)
+                {
+                    foreach (var goName in _activateOnTourEnd)
+                    {
+                        var go = FindInAllScenes(goName);
+                        if (go != null) go.SetActive(true);
+                        else if (_logEvents) Debug.LogWarning($"[IntroTourDirector] ActivateOnTourEnd: '{goName}' が見つかりません", this);
+                    }
+                }
+
+                IsRunning = false;
+                _isFinishing = false;
+                _sequenceRoutine = null;
+
+                if (_logEvents) Debug.Log("[IntroTourDirector] ツアー終了。プレイヤー操作を解禁しました", this);
+                OnTourFinished?.Invoke();
+            }
         }
 
         private void Update()
@@ -175,6 +244,17 @@ namespace App.Intro
             }
         }
 
+        public void WriteSaveData(RoguelikeSaveData data)
+        {
+            data.isWatchTour = true;
+        }
+        
+        public void ReadSaveData(RoguelikeSaveData data)
+        {
+            _isWatchTour = data.isWatchTour;
+            _isLoadComplete = true;
+        }
+
         /// <summary>ツアーを開始する。_playOnStart をオフにして任意のタイミングで呼ぶこともできる。</summary>
         public void StartTour()
         {
@@ -185,6 +265,14 @@ namespace App.Intro
                 StartCoroutine(FinishRoutine());
                 return;
             }
+
+            // コルーチン開始（1フレーム後）を待たず、同一フレームで即座に隠す
+            IsRunning = true;
+            _isFinishing = false;
+            var hatchGo = GameObject.Find("door_hatch");
+            _doorHatch = hatchGo != null ? hatchGo.GetComponent<DoorHatchController>() : null;
+            LockPlayer();
+            HideGameplayCanvases();
 
             _sequenceRoutine = StartCoroutine(RunTour());
         }
@@ -225,21 +313,15 @@ namespace App.Intro
 
         private IEnumerator RunTour()
         {
-            IsRunning = true;
-            _isFinishing = false;
-
             if (_logEvents) Debug.Log($"[IntroTourDirector] ツアー開始 (全{_shots.Count}カット)", this);
-
-            LockPlayer();
-            HideGameplayCanvases();
-
+            yield return new WaitUntil(() => GameUIManager.Instance.IsGameUIVisible == false);
             for (int i = 0; i < _shots.Count; i++)
             {
                 var shot = _shots[i];
                 if (shot == null) continue;
 
                 if (_logEvents) Debug.Log($"[IntroTourDirector] カット{i + 1}: {shot.label}", this);
-                yield return PlayShot(shot);
+                yield return PlayShot(shot, i);
             }
 
             _sequenceRoutine = null;
@@ -250,9 +332,16 @@ namespace App.Intro
         /// 1カットを再生する。カメラの動きは並行して走らせ、テロップを送り終えた時点でカットを終える
         /// （テロップが無いカットは durationWithoutTelop だけ表示する）。
         /// </summary>
-        private IEnumerator PlayShot(IntroTourShot shot)
+        private IEnumerator PlayShot(IntroTourShot shot, int shotIndex)
         {
             ApplyShotStart(shot);
+            shot.onShotEnter?.Invoke();
+
+            if (shotIndex == _ufoSpotlightOnShotIndex)
+                UFOCameraController.Instance?.SetPlaySpotlight(true, playSound: true);
+
+            if (_doorHatch != null && shotIndex == _doorHatchShotIndex)
+                _doorHatch.Open();
 
             StopMotion();
             _motionRoutine = StartCoroutine(AnimateCamera(shot));
@@ -268,6 +357,13 @@ namespace App.Intro
             }
 
             StopMotion();
+            shot.onShotExit?.Invoke();
+
+            if (shotIndex == _ufoSpotlightOffShotIndex)
+                UFOCameraController.Instance?.SetPlaySpotlight(false, playSound: true);
+
+            if (_doorHatch != null && shotIndex == _doorHatchShotIndex)
+                _doorHatch.Close();
         }
 
         /// <summary>カットのカメラを時間に沿って動かす。動き切ったらその姿勢のまま終了する。</summary>
@@ -367,6 +463,17 @@ namespace App.Intro
             // 3. 霧が晴れてプレイヤー操作へ
             yield return FadeFog(false);
 
+            // 4. ツアー中は非アクティブにしておいた UI を有効化する
+            if (_activateOnTourEnd != null)
+            {
+                foreach (var goName in _activateOnTourEnd)
+                {
+                    var go = FindInAllScenes(goName);
+                    if (go != null) go.SetActive(true);
+                    else if (_logEvents) Debug.LogWarning($"[IntroTourDirector] ActivateOnTourEnd: '{goName}' が見つかりません", this);
+                }
+            }
+
             IsRunning = false;
             _isFinishing = false;
             _sequenceRoutine = null;
@@ -421,6 +528,8 @@ namespace App.Intro
         /// </summary>
         private void LockPlayer()
         {
+            App.Input.GameInputGate.Lock();
+
             _fpController = FindAnyObjectByType<App.Player.FirstPersonController>();
             if (_fpController != null)
             {
@@ -438,10 +547,39 @@ namespace App.Intro
 
         private void UnlockPlayer()
         {
+            App.Input.GameInputGate.Unlock();
+
             if (_fpController != null) _fpController.enabled = _playerWasEnabled;
 
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
+        }
+
+        /// <summary>非アクティブな GO を含め全ロードシーンを走査して名前で検索する。</summary>
+        private static GameObject FindInAllScenes(string goName)
+        {
+            for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCount; i++)
+            {
+                var scene = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
+                if (!scene.isLoaded) continue;
+                foreach (var root in scene.GetRootGameObjects())
+                {
+                    var found = FindInHierarchy(root.transform, goName);
+                    if (found != null) return found.gameObject;
+                }
+            }
+            return null;
+        }
+
+        private static Transform FindInHierarchy(Transform parent, string targetName)
+        {
+            if (parent.name == targetName) return parent;
+            foreach (Transform child in parent)
+            {
+                var found = FindInHierarchy(child, targetName);
+                if (found != null) return found;
+            }
+            return null;
         }
 
         /// <summary>ツアー中だけゲーム側の Canvas を伏せる。テロップとモヤは対象外。</summary>
@@ -597,18 +735,34 @@ namespace App.Intro
             return go.transform;
         }
 
-        /// <summary>選択中に、各カットのカメラ位置と注視先をSceneビューで確認できるようにする。</summary>
+        /// <summary>選択中に、各カットのカメラ視錐台・位置・注視先をSceneビューで確認できるようにする。</summary>
         private void OnDrawGizmosSelected()
         {
             if (_shots == null) return;
+
+            Matrix4x4 origMatrix = Gizmos.matrix;
+            const float frustumRange = 6f;
+            const float aspect = 16f / 9f;
 
             foreach (var shot in _shots)
             {
                 if (shot?.startPose == null) continue;
 
+                // startPose の視錐台（シアン半透明）
+                Gizmos.color = new Color(0f, 1f, 1f, 0.25f);
+                Gizmos.matrix = Matrix4x4.TRS(shot.startPose.position, shot.startPose.rotation, Vector3.one);
+                Gizmos.DrawFrustum(Vector3.zero, shot.startFov, frustumRange, 0.1f, aspect);
+                Gizmos.matrix = origMatrix;
+
+                // startPose マーカー
                 Gizmos.color = Color.cyan;
                 Gizmos.DrawWireSphere(shot.startPose.position, 0.15f);
                 Gizmos.DrawRay(shot.startPose.position, shot.startPose.forward * 0.6f);
+
+                // ラベル
+                UnityEditor.Handles.Label(
+                    shot.startPose.position + Vector3.up * 0.3f,
+                    shot.label ?? "");
 
                 if (shot.motion == IntroTourMotion.Orbit && shot.orbitPivot != null)
                 {
@@ -618,11 +772,19 @@ namespace App.Intro
                 }
                 else if (shot.motion == IntroTourMotion.PoseToPose && shot.endPose != null)
                 {
+                    // endPose の視錐台（緑半透明）
+                    Gizmos.color = new Color(0f, 1f, 0f, 0.15f);
+                    Gizmos.matrix = Matrix4x4.TRS(shot.endPose.position, shot.endPose.rotation, Vector3.one);
+                    Gizmos.DrawFrustum(Vector3.zero, shot.endFov, frustumRange, 0.1f, aspect);
+                    Gizmos.matrix = origMatrix;
+
                     Gizmos.color = Color.green;
                     Gizmos.DrawWireSphere(shot.endPose.position, 0.15f);
                     Gizmos.DrawLine(shot.startPose.position, shot.endPose.position);
                 }
             }
+
+            Gizmos.matrix = origMatrix;
         }
 #endif
     }

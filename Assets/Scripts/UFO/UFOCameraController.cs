@@ -6,7 +6,7 @@ using UnityEngine.InputSystem;
 /// <summary>
 /// Class to manage UFO Catcher camera switching and keyboard control modes.
 /// </summary>
-public class UFOCameraController : MonoBehaviour
+public class UFOCameraController : MonoBehaviour, IsaveDataProvider
 {
     public static UFOCameraController Instance { get; private set; }
     public static bool IsPlayingUfo { get; private set; } = false;
@@ -1450,5 +1450,14 @@ public class UFOCameraController : MonoBehaviour
                 }
             }
         }
+    }
+
+    public void WriteSaveData(RoguelikeSaveData saveData)
+    {
+        saveData.isFinishUfoCatcherInRound = _hasPlayedThisRound;
+    }
+    public void ReadSaveData(RoguelikeSaveData saveData)
+    {
+        _hasPlayedThisRound = saveData.isFinishUfoCatcherInRound;
     }
 }

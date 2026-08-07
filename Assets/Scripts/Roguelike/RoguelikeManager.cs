@@ -7,10 +7,19 @@ using UnityEngine.InputSystem;
 using System.Linq;
 using UniRx;
 
-public class RoguelikeManager : MonoBehaviour
+[Serializable]
+public class RoguelikeSaveClass
+{
+    public SkillId id;
+    public bool isActive = true;//スキルを有効化するか否か
+    public bool isGet = false;//スキルが取得されているか否か
+}
+
+public class RoguelikeManager : MonoBehaviour, IsaveDataProvider
 {
     private Dictionary<SkillId, RoguelikeData> _roguelikeDictionary = new Dictionary<SkillId, RoguelikeData>();//SkillId: ID, RoguelikeData:ローグライク用のスキルに関するデータ
     [SerializeField] private string _jsonFilePath = "Assets/Resources/Roguelike/RoguelikeData.json";
+    private bool isFinishLoadJson = false;
 
     [Header("ブラックダイヤの磨き段階別ItemData（0:ブラックダイヤ 1:蝕まれたダイヤ 2:汚れたダイヤ 3:ダイヤモンド）")]
     [Tooltip("UFOItemGoalの同名リストと同じ4つのItemDataを、同じ順番で設定してください")]
@@ -85,6 +94,52 @@ public class RoguelikeManager : MonoBehaviour
             }
         }
 #endif
+    }
+
+    public void WriteSaveData(RoguelikeSaveData data)
+    {
+        List<RoguelikeSaveClass> datas = new List<RoguelikeSaveClass>();
+        foreach(var roguelikeData in _roguelikeDictionary)
+        {
+            RoguelikeSaveClass tmp = new RoguelikeSaveClass();
+            tmp.id = roguelikeData.Value.id;
+            tmp.isGet = roguelikeData.Value.isGet;
+            tmp.isActive = roguelikeData.Value.isActive;
+            datas.Add(tmp);
+        }
+
+        data.roguelikeSaveDatas = datas;
+    }
+
+    public void ReadSaveData(RoguelikeSaveData data)
+    {
+        if(!isFinishLoadJson)
+        {
+            Debug.LogError("ローグライクについて、Jsonファイルが読み込まれていない");
+            return;
+        }
+
+        if(data.roguelikeSaveDatas.Count == 0)
+        {
+            Debug.LogError("新規データのため、roguelikeSaveDatasの要素がありません");
+            return;
+        }
+
+        //読み込む処理を開始する。
+        foreach(var roguelikeData in _roguelikeDictionary)
+        {
+            RoguelikeSaveClass tmp = data.roguelikeSaveDatas.FirstOrDefault(savedata => savedata.id == roguelikeData.Value.id);
+            roguelikeData.Value.isGet = tmp.isGet;
+            roguelikeData.Value.isActive = tmp.isActive;
+
+            //取得済みのスキルであれば、アンロック処理をもう一度行っておく
+            if(roguelikeData.Value.isGet)
+                UnlockSkill(roguelikeData.Value);
+
+            Debug.LogWarning(roguelikeData.Value.skillName + "\n" + roguelikeData.Value.isGet + "\n" + roguelikeData.Value.isActive);
+        }
+
+        RoguelikePanelManager.Instance.UpdateUI();
     }
 
     /// <summary>
@@ -458,7 +513,7 @@ public class RoguelikeManager : MonoBehaviour
 
 
     /// <summary>
-    /// 指定されたパスのJSONファイルから会話データを読み込み、Dictionaryに格納
+    /// 指定されたパスのJSONファイルからローグライクに関するデータを読み込み、Dictionaryに格納
     /// </summary>
     private void LoadRoguelikeData()
     {
@@ -504,5 +559,8 @@ public class RoguelikeManager : MonoBehaviour
         {
             Debug.LogError($"ローグライク用データファイルが見つかりません。パス: {fullPath}");
         }
+
+        //Jsonの読み込みが終わったことを知らせる
+        isFinishLoadJson = true;
     }
 }

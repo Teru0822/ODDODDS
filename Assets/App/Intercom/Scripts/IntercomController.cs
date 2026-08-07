@@ -82,14 +82,13 @@ public class IntercomController : MonoBehaviour
 
     private void Update()
     {
-        // U キーで着信開始
-        if (Keyboard.current != null && Keyboard.current.uKey.wasPressedThisFrame)
+        if (Mouse.current == null)
         {
-            if (currentState.Value == IntercomState.Idle) UpdateState(IntercomState.Calling);
+            Debug.LogError("マウスがありません。");
+            return;
         }
 
-        // マウスクリックによるボタン操作
-        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+        if (Mouse.current.leftButton.wasPressedThisFrame)
         {
             HandleClick();
         }
@@ -103,7 +102,9 @@ public class IntercomController : MonoBehaviour
     }
 
     private void HandleClick()
-    {
+    {   
+        if(clickCamera == null) clickCamera = Camera.main;
+
         Camera targetCam = clickCamera;
         if (targetCam == null)
         {

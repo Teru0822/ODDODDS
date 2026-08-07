@@ -1,13 +1,16 @@
-﻿using DG.Tweening;
+﻿using App.Player;
+using DG.Tweening;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
+using UniRx;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using static UnityEngine.InputSystem.InputActionRebindingExtensions;
 
@@ -43,6 +46,15 @@ public class KeyBindItem
 
 public class SettingUIManager : MonoBehaviour
 {
+    private enum CheckActionMode
+    {
+        None,
+        Reset,
+        BackTitle,
+    }
+    public static SettingUIManager Instance;
+    [SerializeField] private CanvasGroup _canvasGroup;
+
     [Header("キーバインド")]
     [SerializeField] private InputActionReference _openMenuReference;//escapeキーを押したらメニュー表示
     bool _isOpenMenu = false;
@@ -52,7 +64,17 @@ public class SettingUIManager : MonoBehaviour
     [SerializeField] private Button _closeButton;
     [SerializeField] private List<GameObject> _settingContents = new List<GameObject>();
     [SerializeField] private GameObject _settingPanel;
+    [SerializeField] private Button _resetButton;
+    [SerializeField] private Button _backTitleButton;
+    [SerializeField] private GameObject _checkActionPanel;
+    [SerializeField] private TMP_Text _warningText;
+    [SerializeField] private Button _yesButton;
+    [SerializeField] private Button _noButton;
+    private bool _isCantSettingUI = false;//SettingUIの表示・非表示ができない状態に設定するためのbool
+    public bool IsCantSettingUI{private get{return _isCantSettingUI;} set{_isCantSettingUI = value;}}
+
     private int _settingIndex = 0;
+    private int _checkActionIndex = -1;//-1:未選択, 0:はい, 1:いいえ
 
     [Header("UIのオブジェクト(Graphic)")]
     [SerializeField] private Toggle _windowModeToggle;
@@ -81,15 +103,39 @@ public class SettingUIManager : MonoBehaviour
     [SerializeField] private AudioClip _tryBGM;
     [SerializeField] private AudioClip _trySe;
     [SerializeField] private AudioClip _tryVoice;
+    [SerializeField] private Toggle _soundPitchOnToggle;
+    [SerializeField] private Toggle _soundPitchOffToggle;
 
     [Header("UIのオブジェクト(KeyBind)")]
     [SerializeField] private List<KeyBindItem> _keybindItems;
     [SerializeField] private bool isDoLoad = true;
     private bool isNowRebinding = false;
     private PlayerInput _myPlayerInput;
+    private FirstPersonController _fpsController;
     private InputActionRebindingExtensions.RebindingOperation _rebindingOperation;
 
-    private void Start()
+
+    private MouseHoverOutline[] _mouseHoverOutlines;
+
+    void Awake()
+    {
+        //シングルトン設定
+        if(Instance == null)
+        {
+            Instance = this;
+            Init();
+            DontDestroyOnLoad(this.gameObject);
+        }
+        else
+        {
+            Destroy(this.gameObject);
+        }
+    }
+
+    /// <summary>
+    /// 初期化処理をおこなう
+    /// </summary>
+    public void Init()
     {
         _settingButtons[0].Select();
         PushSettingButton(0);
@@ -104,7 +150,16 @@ public class SettingUIManager : MonoBehaviour
         _mainCamera = Camera.main;
         _cameraData = _mainCamera.GetUniversalAdditionalCameraData();
 
-        _myPlayerInput = FindFirstObjectByType<PlayerInput>();//TODO:ネットワーク対応
+        try
+        {
+            _myPlayerInput = FindFirstObjectByType<PlayerInput>();//TODO:ネットワーク対応
+            _fpsController = FindFirstObjectByType<FirstPersonController>();
+        }
+        catch (System.Exception)
+        {
+            Debug.LogError("このシーンにはプレイヤーがいない");
+        }
+
         Debug.Log(_myPlayerInput.gameObject.name);
 
         //すでにリバインディングしたことがある場合はシーン読み込み時に変更。
@@ -128,6 +183,21 @@ public class SettingUIManager : MonoBehaviour
 
     public void OnEnable()
     {
+        //コモン
+        _resetButton.onClick.AddListener(() =>
+        {
+            _warningText.text = "設定を初期化しますか？";
+            StartCoroutine(CheckActionView(CheckActionMode.Reset));
+        });
+        _backTitleButton.onClick.AddListener(() =>
+        {
+            _warningText.text = "タイトルに戻りますか？";
+            StartCoroutine(CheckActionView(CheckActionMode.BackTitle)); 
+        });
+
+        _yesButton.onClick.AddListener(() => _checkActionIndex = 0);
+        _noButton.onClick.AddListener(() => _checkActionIndex = 1);
+
         //グラフィック項目のリスナー追加
         _windowModeToggle.onValueChanged.AddListener(value => { if (value) Screen.fullScreen = false; Debug.Log("_windowModeToggle:" + value); });
         _fullScreenModeToggle.onValueChanged.AddListener(value => { if (value) Screen.fullScreen = true; Debug.Log("_fullScreenModeToggle:" + value); });
@@ -164,6 +234,10 @@ public class SettingUIManager : MonoBehaviour
 
     private void OnDisable()
     {
+        //コモンのリスナー削除
+        _resetButton.onClick.RemoveAllListeners();
+        _backTitleButton.onClick.RemoveAllListeners();
+
         //グラフィック項目のリスナー削除
         _windowModeToggle.onValueChanged.RemoveAllListeners();
         _fullScreenModeToggle.onValueChanged.RemoveAllListeners();
@@ -197,7 +271,7 @@ public class SettingUIManager : MonoBehaviour
     private void Update()
     {
         //escapeキーを押したときにメニュー切り替え
-        if (_openMenuReference.action.WasPressedThisFrame() && !isNowRebinding)
+        if (_openMenuReference.action.WasPressedThisFrame() && !isNowRebinding && !_isCantSettingUI && SceneManager.GetActiveScene().buildIndex != 0)
         {
             _isOpenMenu = !_isOpenMenu;
             _settingPanel.SetActive(_isOpenMenu);
@@ -206,14 +280,35 @@ public class SettingUIManager : MonoBehaviour
             {
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
+                if(_fpsController != null) _fpsController.enabled = false;
                 SettingButtonAnimation(_settingIndex, -1);
+
+                _mouseHoverOutlines = FindObjectsByType<MouseHoverOutline>(FindObjectsSortMode.InstanceID);
+                if(_mouseHoverOutlines.Length != 0)
+                {
+                    foreach(var item in _mouseHoverOutlines)
+                        item.IsOpenUI = true;
+                }
             }
             else
             {
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible = false;
+                if(_fpsController != null) _fpsController.enabled = true;
                 SettingButtonAnimation(-1, _settingIndex);
                 _settingIndex = 0;
+
+                if(_mouseHoverOutlines.Length != 0)
+                {
+                    foreach(var item in _mouseHoverOutlines)
+                        item.IsOpenUI = false;
+                }
+            }
+
+            if(SceneManager.GetActiveScene().buildIndex == 0)//タイトルシーンのみ
+            {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
             }
         }
     }
@@ -230,16 +325,60 @@ public class SettingUIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 設定用のUIを閉じる
+    /// 設定用のUIを開ける(ボタン専用)
+    /// </summary>
+    public void OpenSettingMenu()
+    {
+        if(_isCantSettingUI)
+        {
+            Debug.LogError("現在、SettingUIの表示・非表示を変更できません");
+            return;
+        } 
+
+        _settingPanel.SetActive(true);
+        _isOpenMenu = true;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+        if(_fpsController != null) _fpsController.enabled = false;
+        SettingButtonAnimation(_settingIndex, -1);
+
+        _mouseHoverOutlines = FindObjectsByType<MouseHoverOutline>(FindObjectsSortMode.InstanceID);
+        if(_mouseHoverOutlines.Length != 0)
+        {
+            foreach(var item in _mouseHoverOutlines)
+                item.IsOpenUI = true;
+        }
+    }
+
+    /// <summary>
+    /// 設定用のUIを閉じる(ボタン専用)
     /// </summary>
     public void CloseSettingMenu()
     {
+        if(_isCantSettingUI && SceneManager.GetActiveScene().buildIndex != 0)
+        {
+            Debug.LogError("現在、SettingUIの表示・非表示を変更できません");
+            return;
+        } 
+
         _settingPanel.SetActive(false);
         _isOpenMenu = false;
+        if(_fpsController != null) _fpsController.enabled = true;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         SettingButtonAnimation(-1, _settingIndex);
         _settingIndex = 0;
+
+        if(_mouseHoverOutlines.Length != 0)
+        {
+            foreach(var item in _mouseHoverOutlines)
+                item.IsOpenUI = false;
+        }
+        if(SceneManager.GetActiveScene().buildIndex == 0)//タイトルシーンのみ
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
     }
 
     /// <summary>
@@ -290,12 +429,81 @@ public class SettingUIManager : MonoBehaviour
         //TODO:実装してね
     }
 
-    /// <summary>
-    /// 適応ボタン押したときにセーブ&適応
-    /// </summary>
-    private void SaveChanged()
+    private void ResetSetting()
     {
-        //TODO:実装してね
+        AutoSetting();
+
+        //デバイスに関係ない項目をもとに戻す
+        _lightSlider.value = 0.5f;
+        _bgmSlider.value = 0.5f;
+        _seSlider.value = 0.5f;
+        _voiceSlider.value = 0.5f;
+        _soundPitchOnToggle.isOn = true;
+        _soundPitchOffToggle.isOn = false;
+    }
+
+    private IEnumerator CheckActionView(CheckActionMode mode)
+    {
+        _isCantSettingUI = true;
+        _checkActionPanel.SetActive(true);
+        Sequence sequence = DOTween.Sequence();
+        sequence.Append(_checkActionPanel.transform.DOLocalMoveY(-100,0.3f).SetEase(Ease.OutQuint))
+        .Join(_checkActionPanel.GetComponent<CanvasGroup>().DOFade(endValue: 1f, duration: 0.1f));
+
+        //最初にアニメーションを流す（ポップアップ出現）
+        yield return sequence.WaitForCompletion();
+
+        //プレイヤーが「はい」「いいえ」を選択するまで待機
+        yield return new WaitUntil(() => _checkActionIndex != -1);
+
+        //ポップアップを消す
+        sequence = DOTween.Sequence();
+        sequence.Append(_checkActionPanel.transform.DOLocalMoveY(-150,0.3f).SetEase(Ease.OutQuint))
+        .Join(_checkActionPanel.GetComponent<CanvasGroup>().DOFade(endValue: 0f, duration: 0.1f));
+        yield return sequence.WaitForCompletion();
+        _checkActionPanel.SetActive(false);
+        _isCantSettingUI = false;
+        //選択に応じて処理を分岐
+        if(mode == CheckActionMode.Reset && _checkActionIndex == 0)
+        {
+            ResetSetting();
+        }
+        else if(mode == CheckActionMode.BackTitle && _checkActionIndex == 0)
+        {
+            _checkActionIndex = -1;
+            if(_canvasGroup == null)  TryGetComponent<CanvasGroup>(out _canvasGroup);
+
+            //タイトル画面へ遷移する機能
+            try
+            {
+                RoguelikeSaveManager.Save();
+            }
+            catch (System.Exception)
+            {
+                Debug.LogError("セーブできませんでした。");
+            }
+
+            if(SceneManager.GetActiveScene().buildIndex != 0)
+            {
+                //設定UIが透明になるまで待つ（セーブ処理を待つ時間を稼ぐ演出）
+                yield return _canvasGroup.DOFade(0, 1.0f).OnComplete(() => 
+                {
+                    CloseSettingMenu();
+                    _canvasGroup.alpha = 1;//透明になっていたのを戻す
+                }).WaitForCompletion();
+                MiniGames.Transitions.SceneTransitionManager.Instance.TransitionToScene("3D_Title_Sample" , () => 
+                {
+                    Cursor.lockState = CursorLockMode.None;
+                    Cursor.visible = true;
+                    //MiniGames.Transitions.SceneTransitionManager.Instance.TransitionCanvas.worldCamera = Camera.main;
+                });
+            }
+            
+        }
+
+
+        _checkActionIndex = -1;
+        yield return null;
     }
 
 

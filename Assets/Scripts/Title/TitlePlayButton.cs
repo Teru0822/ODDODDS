@@ -1,4 +1,5 @@
 using System.Collections;
+using MiniGames.Transitions;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -119,6 +120,8 @@ public class TitlePlayButton : MonoBehaviour
     {
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
+            SettingUIManager.Instance.CloseSettingMenu();
+            SettingUIManager.Instance.IsCantSettingUI = false;
             if (logEvents) Debug.Log("[TitlePlayButton] ESC pressed, restarting scene.", this);
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
             return;
@@ -186,6 +189,7 @@ public class TitlePlayButton : MonoBehaviour
     private void OnConversationComplete()
     {
         if (logEvents) Debug.Log("[TitlePlayButton] 悪魔の会話が完了。モヤ暗転とロードを開始します。", this);
+        if(sceneTransitionManager == null) sceneTransitionManager = FindFirstObjectByType<SceneTransitionManager>();//ゲームシーンからタイトルシーンに戻った際に無くなるため
 
         if (sceneTransitionManager != null)
         {

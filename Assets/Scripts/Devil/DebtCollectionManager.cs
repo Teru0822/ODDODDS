@@ -228,7 +228,8 @@ public class DebtCollectionManager : MonoBehaviour
         //特にKeyが指定されていない場合はランダムなキーを指定
         if(key == "")
         {
-            int random = UnityEngine.Random.RandomRange(1, GetConversationTypeNum(ConversationType.Conversation) + 1);//1~2
+            int random = UnityEngine.Random.RandomRange(1, GetConversationTypeNum(ConversationType.Conversation));
+            Debug.LogError("シナリオ数：" + GetConversationTypeNum(ConversationType.Conversation) + "\n抽選されたシナリオ：" + random);
             key = "Conversation_" + random.ToString("00");
         }
 
@@ -238,7 +239,7 @@ public class DebtCollectionManager : MonoBehaviour
 
         //取り立て開始
         {
-            previousDecreaseValue = (int)MoneyManager.Instance.PreviousDecreaseAmount;
+            previousDecreaseValue = MoneyManager.Instance.GetQuotaThisTime();
             previousMoneyValue = (int)MoneyManager.Instance.CurrentMoney;
 
             //ゲームオブジェクトの表示・非表示
@@ -270,11 +271,12 @@ public class DebtCollectionManager : MonoBehaviour
             yield return countAnimSequence.WaitForCompletion();//アニメーションが終わるまで待つ
 
             //取り立て成功か否かで処理を分ける
-            if (MoneyManager.Instance.CurrentMoney <= 0)//失敗用
+            if (MoneyManager.Instance.CheckGameOver())//失敗用
             {
                 //ランダムで失敗演出を設定
                 isSuccess = false;
-                int random = UnityEngine.Random.RandomRange(1, GetConversationTypeNum(ConversationType.Fail) + 1);//1~2
+                int random = UnityEngine.Random.RandomRange(0, GetConversationTypeNum(ConversationType.Fail) + 1);
+                Debug.LogError("シナリオ数：" + GetConversationTypeNum(ConversationType.Fail) + "\n抽選されたシナリオ：" + random);
                 string failKey = "fail_" + random.ToString("00");
 
                 //必要なオブジェクトをアクティブ
@@ -292,7 +294,6 @@ public class DebtCollectionManager : MonoBehaviour
                 else
                 {
                     //ゲームオーバー処理
-                    MoneyManager.Instance.CheckGameOver();
                     yield return StartCoroutine(_resultUIManager.GameOverAnimation());
                     RoguelikeSaveManager.DeleteDataInGameOver();
                 }
@@ -300,7 +301,8 @@ public class DebtCollectionManager : MonoBehaviour
             else//成功用
             {
                 //ランダムで成功演出を設定
-                int random = UnityEngine.Random.RandomRange(1, GetConversationTypeNum(ConversationType.Success) + 1);//1~2
+                int random = UnityEngine.Random.RandomRange(0, GetConversationTypeNum(ConversationType.Success) + 1);
+                Debug.LogError("シナリオ数：" + GetConversationTypeNum(ConversationType.Success) + "\n抽選されたシナリオ：" + random);
                 string successKey = "success_" + random.ToString("00");
 
                 //必要なオブジェクトをアクティブ
