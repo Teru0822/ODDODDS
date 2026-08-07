@@ -307,6 +307,13 @@ namespace App.Intro
                     yield return null;
                 }
             }
+            else
+            {
+                // 通常はタイトル側のSceneTransitionManagerがRoguelikeSaveManager.Load()を呼び、
+                // それが_isLoadCompleteをtrueにする(ReadSaveData経由)。タイトルを経由していないと
+                // 誰もLoad()を呼ばないため、下のWaitUntilが永久に解消されない。ここで自分で読み込む。
+                RoguelikeSaveManager.Load();
+            }
 
             if (_startDelay > 0f) yield return new WaitForSeconds(_startDelay);
         }
