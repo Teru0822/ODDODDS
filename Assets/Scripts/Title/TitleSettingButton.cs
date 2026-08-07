@@ -8,7 +8,7 @@ public class TitleSettingButton : MonoBehaviour
     [Header("ホバー (クリック判定に使用)")]
     [Tooltip("クリック判定に使う MouseHoverOutline。null なら自身に付いているものを自動取得")]
     public MouseHoverOutline hoverOutline;
-    [SerializeField] private SettingUIManager _settingUIManager;
+    private SettingUIManager _settingUIManager;
 
     private void Awake()
     {
@@ -31,6 +31,7 @@ public class TitleSettingButton : MonoBehaviour
 
     private void HandleSettingButtonClicked()
     {
+        if(_settingUIManager == null) _settingUIManager = FindFirstObjectByType<SettingUIManager>();
         _settingUIManager.OpenSettingMenu();
     }
 
