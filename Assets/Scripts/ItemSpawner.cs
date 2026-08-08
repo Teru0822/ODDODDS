@@ -1126,7 +1126,10 @@ public enum SpawnCountType
 {
     Count500 = 500,
     Count1000 = 1000,
-    Count1500 = 1500
+    Count1500 = 1500,
+    Count2000 = 2000,
+    Count3000 = 3000,
+    Count5000 = 5000
 }
 
 [System.Serializable]

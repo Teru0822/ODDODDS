@@ -10,15 +10,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 56e57c7d97183c848a6a05742082ad0d, type: 3}
       propertyPath: m_LocalScale.x
-      value: 15
+      value: 22.5
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 56e57c7d97183c848a6a05742082ad0d, type: 3}
       propertyPath: m_LocalScale.y
-      value: 15
+      value: 22.5
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 56e57c7d97183c848a6a05742082ad0d, type: 3}
       propertyPath: m_LocalScale.z
-      value: 15
+      value: 22.5
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 56e57c7d97183c848a6a05742082ad0d, type: 3}
       propertyPath: m_LocalPosition.x
@@ -60,6 +60,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 56e57c7d97183c848a6a05742082ad0d, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 56e57c7d97183c848a6a05742082ad0d, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -88,6 +92,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 56e57c7d97183c848a6a05742082ad0d, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5191096911840990342}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 56e57c7d97183c848a6a05742082ad0d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3168852916036570604}
   m_SourcePrefab: {fileID: 100100000, guid: 56e57c7d97183c848a6a05742082ad0d, type: 3}
 --- !u!1 &6934674859883359455 stripped
 GameObject:
@@ -178,3 +185,20 @@ MonoBehaviour:
   - 0.3
   - 0.5
   - 1
+--- !u!114 &3168852916036570604
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6934674859883359455}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41815de3609d09e42aa8da97f26aba64, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CoinOptimizer
+  useSphereColliderAutoReplacement: 0
+  individualFreezeDelay: 2
+  sleepVelocity: 0.01
+  chainWakeRadius: 0.01
+  forceFreezeTimeout: 8

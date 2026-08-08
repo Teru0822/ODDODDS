@@ -10,15 +10,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 500651574e474084d949d9db429d2c9c, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.5
+      value: 0.75
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 500651574e474084d949d9db429d2c9c, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.5
+      value: 0.75
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 500651574e474084d949d9db429d2c9c, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.5
+      value: 0.75
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 500651574e474084d949d9db429d2c9c, type: 3}
       propertyPath: m_LocalPosition.x
@@ -60,6 +60,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 500651574e474084d949d9db429d2c9c, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 500651574e474084d949d9db429d2c9c, type: 3}
       propertyPath: m_Name
       value: ufo_RibbonBox
@@ -81,6 +85,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 500651574e474084d949d9db429d2c9c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1197287773280982558}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 500651574e474084d949d9db429d2c9c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2380887790077746614}
   m_SourcePrefab: {fileID: 100100000, guid: 500651574e474084d949d9db429d2c9c, type: 3}
 --- !u!1 &7790757733134005695 stripped
 GameObject:
@@ -154,3 +161,20 @@ MonoBehaviour:
   minVelocityThreshold: 0.5
   soundVolume: 0.8
   pitchRange: {x: 0.85, y: 1.15}
+--- !u!114 &2380887790077746614
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7790757733134005695}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41815de3609d09e42aa8da97f26aba64, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CoinOptimizer
+  useSphereColliderAutoReplacement: 0
+  individualFreezeDelay: 2
+  sleepVelocity: 0.01
+  chainWakeRadius: 0.01
+  forceFreezeTimeout: 8

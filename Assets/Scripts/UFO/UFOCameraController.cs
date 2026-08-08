@@ -21,8 +21,9 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider
     [Tooltip("Player's first-person camera")]
     [SerializeField] private Camera playerCamera;
 
-    [Tooltip("UFO Catcher front view camera (autodetected if null)")]
-    [SerializeField] private Camera frontCamera;
+    [Tooltip("UFOキャッチャー正面視点の位置・向きを示すマーカー（Transformのみ、Cameraコンポーネントは不要）。" +
+             "UFOプレイ中はplayerCameraをこの位置までSlerpで動かして正面視点として使います")]
+    [SerializeField] private Transform frontCameraPos;
 
     [Tooltip("Left view camera")]
     [SerializeField] private Camera leftCamera;
@@ -323,9 +324,10 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider
     }
 
     /// <summary>
-    /// 正面カメラ (frontCamera) を返します。
+    /// 正面視点として使うカメラを返します。専用のCameraコンポーネントは持たず、常にplayerCameraを返します
+    /// （UFOプレイ中はplayerCamera自体がfrontCameraPosへSlerpで移動して正面視点になります）。
     /// </summary>
-    public Camera FrontCamera => frontCamera != null ? frontCamera : (playerCamera != null ? playerCamera : Camera.main);
+    public Camera FrontCamera => playerCamera != null ? playerCamera : Camera.main;
 
     private void Start()
     {
@@ -402,25 +404,11 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider
 
     private void SetupDynamicCameras()
     {
-        if (frontCamera == null)
+        if (playerCamera == null)
         {
-            frontCamera = transform.Find("Ufo_camera")?.GetComponent<Camera>();
-            if (frontCamera == null)
-            {
-                // 子オブジェクトからカメラを検索
-                frontCamera = GetComponentInChildren<Camera>(true);
-            }
-        }
-
-        if (frontCamera == null)
-        {
-            Debug.LogWarning("[UFOCameraController] 正面カメラ (frontCamera) が見つかりません。自動生成用カメラをベースにできません。");
+            Debug.LogWarning("[UFOCameraController] playerCameraが見つからないため、自動生成用カメラをベースにできません。");
             return;
         }
-
-        // オーディオマネージャー等の警告対策として、UFO側のカメラのAudioListenerは無効化しておく
-        var listener = frontCamera.GetComponent<AudioListener>();
-        if (listener != null) listener.enabled = false;
 
         // 左側カメラの自動生成
         if (leftCamera == null)
@@ -457,20 +445,20 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider
         GameObject go = new GameObject(name);
         Camera newCam = go.AddComponent<Camera>();
 
-        // 正面カメラの設定を複製
-        newCam.fieldOfView = frontCamera.fieldOfView;
-        newCam.nearClipPlane = frontCamera.nearClipPlane;
-        newCam.farClipPlane = frontCamera.farClipPlane;
-        newCam.cullingMask = frontCamera.cullingMask;
-        newCam.clearFlags = frontCamera.clearFlags;
-        newCam.backgroundColor = frontCamera.backgroundColor;
-        newCam.depth = frontCamera.depth - 1; // プレイヤーカメラの下にするため低めに設定
-        newCam.targetDisplay = frontCamera.targetDisplay; // Display2など使用中のDisplayに合わせる
+        // プレイヤーカメラの設定を複製
+        newCam.fieldOfView = playerCamera.fieldOfView;
+        newCam.nearClipPlane = playerCamera.nearClipPlane;
+        newCam.farClipPlane = playerCamera.farClipPlane;
+        newCam.cullingMask = playerCamera.cullingMask;
+        newCam.clearFlags = playerCamera.clearFlags;
+        newCam.backgroundColor = playerCamera.backgroundColor;
+        newCam.depth = playerCamera.depth - 1; // プレイヤーカメラの下にするため低めに設定
+        newCam.targetDisplay = playerCamera.targetDisplay; // Display2など使用中のDisplayに合わせる
         newCam.enabled = false;
-        go.tag = frontCamera.tag; // タグ（MainCamera等）を引き継ぐ
+        go.tag = playerCamera.tag; // タグ（MainCamera等）を引き継ぐ
 
         // URP対応：UniversalAdditionalCameraData のコピー
-        var srcData = frontCamera.GetComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
+        var srcData = playerCamera.GetComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
         if (srcData != null)
         {
             var destData = go.AddComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
@@ -950,12 +938,12 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider
             _originalPlayerCamRot = playerCamera.transform.rotation;
         }
 
-        if (playerCamera != null && frontCamera != null)
+        if (playerCamera != null && frontCameraPos != null)
         {
             Vector3 startPos = playerCamera.transform.position;
             Quaternion startRot = playerCamera.transform.rotation;
-            Vector3 targetPos = frontCamera.transform.position;
-            Quaternion targetRot = frontCamera.transform.rotation;
+            Vector3 targetPos = frontCameraPos.position;
+            Quaternion targetRot = frontCameraPos.rotation;
 
             float t = 0f;
             while (t < 1f)
@@ -1009,16 +997,9 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider
 
         if (playerCamera != null)
         {
-            Camera activeCam = _activeCamera != null ? _activeCamera : frontCamera;
-            if (activeCam != null)
-            {
-                playerCamera.transform.position = activeCam.transform.position;
-                playerCamera.transform.rotation = activeCam.transform.rotation;
-            }
             playerCamera.enabled = true;
         }
 
-        if (frontCamera != null) frontCamera.enabled = false;
         if (leftCamera != null) leftCamera.enabled = false;
         if (rightCamera != null) rightCamera.enabled = false;
         if (backCamera != null) backCamera.enabled = false;
@@ -1077,18 +1058,15 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider
         _timerStarted = false;
 
         SetUfoMode(true);
-        Debug.Log($"[UFOCameraController] EnterUfoMode: frontCamera={( frontCamera != null ? frontCamera.name + " display=" + frontCamera.targetDisplay : "NULL")}");
+        Debug.Log($"[UFOCameraController] EnterUfoMode: frontCameraPos={(frontCameraPos != null ? frontCameraPos.name : "NULL")}");
         Debug.Log($"[UFOCameraController] EnterUfoMode: leftCamera={(  leftCamera  != null ? leftCamera.name  : "NULL")}");
         Debug.Log($"[UFOCameraController] EnterUfoMode: rightCamera={( rightCamera != null ? rightCamera.name : "NULL")}");
         Debug.Log($"[UFOCameraController] EnterUfoMode: backCamera={(  backCamera  != null ? backCamera.name  : "NULL")}");
-        
-        if (frontCamera != null)
-        {
-            if (!frontCamera.gameObject.activeInHierarchy) frontCamera.gameObject.SetActive(true);
-            frontCamera.enabled = true;
-            _activeCamera = frontCamera;
-        }
-        
+
+        // playerCamera は TransitionToUfoCamera() で既に frontCameraPos までSlerpで移動済みなので、
+        // 別カメラへの切り替えは行わず、そのままplayerCameraをアクティブカメラとして使う
+        _activeCamera = playerCamera;
+
         // 開始時はBackカメラをアクティブに設定
         SetSubCameraState(UfoSubCameraState.Back);
     }
@@ -1160,10 +1138,10 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider
             pickupController.enabled = !active;
         }
 
-        // プレイヤーカメラとUFO UIの有効化/無効化
+        // UFO UIの有効化/無効化。playerCameraは正面視点も兼ねる唯一のカメラのため常に有効のままにする
         if (playerCamera != null)
         {
-            playerCamera.enabled = !active;
+            playerCamera.enabled = true;
         }
 
         if (ufoUiCanvas != null)
@@ -1182,8 +1160,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
 
-            // 全てのUFOカメラを無効にする（描画負荷削減）
-            if (frontCamera != null) frontCamera.enabled = false;
+            // サブカメラ（左右背面）を無効にする（描画負荷削減）。正面視点はplayerCamera自体なのでここでは無効化しない
             if (leftCamera  != null) leftCamera.enabled  = false;
             if (rightCamera != null) rightCamera.enabled = false;
             if (backCamera  != null) backCamera.enabled  = false;
