@@ -265,6 +265,14 @@ public class SettingUIManager : MonoBehaviour
 
     private void Update()
     {
+        // ATM等にカメラをフォーカス中は、Escapeがそのフォーカス解除に使われるので設定を開かない。
+        // (メニューを開いている間は、閉じる操作を受け付けるため素通りさせる)
+        if (!_isOpenMenu)
+        {
+            App.Input.GameInputGate.PurgeDestroyedEscapeOwners();
+            if (App.Input.GameInputGate.IsEscapeCaptured) return;
+        }
+
         //escapeキーを押したときにメニュー切り替え
         if (_openMenuReference.action.WasPressedThisFrame() && !isNowRebinding)
         {

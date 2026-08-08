@@ -292,6 +292,8 @@ namespace App.ATM
             }
             // 対象マテリアルは共有アセットのため、破棄/プレイ停止時にEmissionを確実に消灯へ戻す
             SetEmission(false);
+            // フォーカス中に破棄されても Escape が握られたままにならないようにする
+            App.Input.GameInputGate.ReleaseEscape(this);
             if (Instance == this) Instance = null;
         }
 
@@ -380,6 +382,8 @@ namespace App.ATM
         {
             _currentState = ATMState.TransitioningToATM;
             IsInteracting = true;
+            // フォーカス中の Escape は ATM 退出に使うため、設定画面側に渡さない
+            App.Input.GameInputGate.CaptureEscape(this);
 
             if (hoverOutline != null) hoverOutline.enabled = false;
 
@@ -486,9 +490,29 @@ namespace App.ATM
 
             _currentState = ATMState.Off;
             IsInteracting = false;
+            // プレイヤー視点へ戻り切ってから解放する。これより早く解放すると、
+            // 退出のために押した Escape が同じフレームで設定画面を開いてしまう
+            App.Input.GameInputGate.ReleaseEscape(this);
 
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+            yield return RestorePlayerCursor();
+        }
+
+        /// <summary>
+        /// プレイヤー操作用のカーソル状態（ロック＋非表示）へ戻す。
+        /// Unity は Escape が押されると CursorLockMode.Locked を自動解除するため、
+        /// 1フレームだけの代入では退出直後に解除が後追いで効いてカーソルが残ることがある。
+        /// そのため数フレームにわたって再適用する。
+        /// </summary>
+        private IEnumerator RestorePlayerCursor()
+        {
+            const int reapplyFrames = 5;
+
+            for (int i = 0; i < reapplyFrames; i++)
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+                yield return null;
+            }
         }
 
         private void SetATMState(bool active)
