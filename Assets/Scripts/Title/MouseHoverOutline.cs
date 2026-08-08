@@ -131,8 +131,25 @@ public class MouseHoverOutline : MonoBehaviour
     public bool IsHovered => _hovered;
     private bool _isOpenUI = false;
 
-    /// <summary>現在UIが表示されているか（GameUIやSettingUIを開いているときは、Update処理を停止させる）</summary>
+    /// <summary>
+    /// 現在UIが表示されているか。
+    /// 以前はこのフラグだけでホバー判定を止めていたが、外部から押し込む方式のため
+    /// 解除し忘れると全オブジェクトのホバーが永久に死ぬ事故が起きた。
+    /// 現在の抑止判定は <see cref="IsAnyBlockingUIOpen"/> が毎フレーム問い合わせる方式に変更してあり、
+    /// このプロパティは互換のために残している（手動で立てても抑止条件には使われない）。
+    /// </summary>
     public bool IsOpenUI {get{return _isOpenUI;} set{_isOpenUI = value;}}
+
+    /// <summary>
+    /// ホバー判定を止めるべきUIが開いているか。
+    /// 状態を持たず毎フレーム各UIへ問い合わせるので、解除漏れで固まることがない。
+    /// </summary>
+    private static bool IsAnyBlockingUIOpen()
+    {
+        return GameUIManager.IsMenuOpen
+            || SettingUIManager.IsMenuOpen
+            || RewardSelectionUI.IsTypewriterUIShowing;
+    }
     
 
     private void Awake()
@@ -238,10 +255,13 @@ public class MouseHoverOutline : MonoBehaviour
             return;
         }
 
-        if(_isOpenUI)
+        // 別のUIが表示されている間はホバー判定を止める。
+        // 出したままのアウトラインが残らないよう、抜ける前にホバー状態を解除しておく
+        if (IsAnyBlockingUIOpen())
         {
-            Debug.LogWarning("_isOpenUIがtrueなので、更新しない");
-            return;//別のUIが表示されている間はUpdate処理を停止
+            if (_hovered) { _hovered = false; Apply(false); }
+            _pressedOnThis = false;
+            return;
         }
 
 

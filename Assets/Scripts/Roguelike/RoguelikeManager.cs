@@ -517,18 +517,12 @@ public class RoguelikeManager : MonoBehaviour, IsaveDataProvider
     /// </summary>
     private void LoadRoguelikeData()
     {
-        // プロジェクトルート相対パスに対応するため、絶対パスを構築
-        string fullPath = _jsonFilePath;
-        if (!Path.IsPathRooted(fullPath))
-        {
-            fullPath = Path.Combine(Application.dataPath, "..", _jsonFilePath);
-        }
+        string json = LoadJsonText(_jsonFilePath, out string fullPath);
 
-        if (File.Exists(fullPath))
+        if (!string.IsNullOrEmpty(json))
         {
             try
             {
-                string json = File.ReadAllText(fullPath);
                 RoguelikeDataContainer container = JsonConvert.DeserializeObject<RoguelikeDataContainer>(json);
 
                 _roguelikeDictionary.Clear();
@@ -557,10 +551,68 @@ public class RoguelikeManager : MonoBehaviour, IsaveDataProvider
         }
         else
         {
-            Debug.LogError($"ローグライク用データファイルが見つかりません。パス: {fullPath}");
+            Debug.LogError($"ローグライク用データファイルが見つかりません。パス: {_jsonFilePath}");
         }
 
         //Jsonの読み込みが終わったことを知らせる
         isFinishLoadJson = true;
+    }
+
+    /// <summary>
+    /// JSONテキストを取得する。
+    /// エディタではプロジェクト内のファイルを直接読むため、JSONを編集すれば即反映される。
+    /// ビルドされたプレイヤーには Assets/ 以下が存在しないので、Resources から読み込む
+    /// （このためデータファイルは Assets/.../Resources/ 配下に置いておく必要がある）。
+    /// </summary>
+    /// <param name="projectRelativePath">プロジェクトルート相対のパス</param>
+    /// <param name="source">実際に読み込んだ場所。ログ用</param>
+    private static string LoadJsonText(string projectRelativePath, out string source)
+    {
+        source = projectRelativePath;
+        if (string.IsNullOrEmpty(projectRelativePath)) return null;
+
+        // 1. ファイルとして読める場合はそちらを優先（エディタ実行時・絶対パス指定時）
+        string fullPath = projectRelativePath;
+        if (!Path.IsPathRooted(fullPath))
+        {
+            fullPath = Path.Combine(Application.dataPath, "..", projectRelativePath);
+        }
+
+        if (File.Exists(fullPath))
+        {
+            source = fullPath;
+            return File.ReadAllText(fullPath);
+        }
+
+        // 2. ビルド時は Resources から読む
+        string key = ToResourcesKey(projectRelativePath);
+        if (!string.IsNullOrEmpty(key))
+        {
+            var asset = Resources.Load<TextAsset>(key);
+            if (asset != null)
+            {
+                source = $"Resources/{key}";
+                return asset.text;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// "Assets/Resources/Roguelike/RoguelikeData.json" を Resources.Load 用のキー
+    /// "Roguelike/RoguelikeData" に変換する。Resources 配下でなければ null。
+    /// </summary>
+    private static string ToResourcesKey(string path)
+    {
+        const string marker = "Resources/";
+
+        string normalized = path.Replace('\\', '/');
+        int index = normalized.LastIndexOf(marker, System.StringComparison.OrdinalIgnoreCase);
+        if (index < 0) return null;
+
+        string key = normalized.Substring(index + marker.Length);
+        int dot = key.LastIndexOf('.');
+        return dot >= 0 ? key.Substring(0, dot) : key;
     }
 }

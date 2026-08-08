@@ -59,6 +59,9 @@ public class SettingUIManager : MonoBehaviour
     [SerializeField] private InputActionReference _openMenuReference;//escapeキーを押したらメニュー表示
     bool _isOpenMenu = false;
 
+    /// <summary>設定メニューが開いているか。ホバー判定などの抑止条件として参照される。</summary>
+    public static bool IsMenuOpen => Instance != null && Instance._isOpenMenu;
+
     [Header("UIのオブジェクト(Common)")]
     [SerializeField] private List<Button> _settingButtons = new List<Button>();
     [SerializeField] private Button _closeButton;

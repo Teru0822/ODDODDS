@@ -1,9 +1,12 @@
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
-using UnityEditor;
-using UnityEditor.Overlays;
 using UnityEngine;
+// UnityEditor はプレイヤービルドに含まれないため、エディタ限定で参照する。
+// ガードを外すと Build 時に CS0234 でコンパイルが落ちる
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 /// <summary>
 /// ローグライク要素のセーブ・ロードを管理するクラス（XOR難読化付き）
