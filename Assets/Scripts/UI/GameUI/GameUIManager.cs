@@ -78,6 +78,9 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] private SerializeDictionary<int, GameObject> _menuTitle = new SerializeDictionary<int, GameObject>();
     private MouseHoverOutline[] _mouseHoverOutlines;
     private bool _isOpenMenu = false;
+
+    /// <summary>Tabメニューが開いているか。ホバー判定などの抑止条件として参照される。</summary>
+    public static bool IsMenuOpen => Instance != null && Instance._isOpenMenu;
     private int _index = 0;
 
     [Header("アイテム取得・消失用UI")]
