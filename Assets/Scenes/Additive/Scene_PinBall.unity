@@ -181,18 +181,18 @@ MonoBehaviour:
   raycastLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  hoverEnterClip: {fileID: 8300000, guid: 0d47aa5ef60e1224abda0e0568dd694b, type: 3}
+  hoverEnterClip: {fileID: 8300000, guid: 8c7ca4fee86484e448bad63e3f4f84c0, type: 3}
   audioSource: {fileID: 0}
-  hoverVolume: 0.1
+  hoverVolume: 0.5
   hoverPitchRange: {x: 1, y: 1}
-  hoverEnterStartOffset: 0.18
+  hoverEnterStartOffset: 0
   pressDownClip: {fileID: 8300000, guid: 94826d03cfc2c8148be7e49800e98929, type: 3}
   pressDownPitchRange: {x: 1, y: 1}
   pressDownStartOffset: 0
   releaseClip: {fileID: 8300000, guid: 112381306147a854d98aeea2714b9cff, type: 3}
   releasePitchRange: {x: 1, y: 1}
   releaseStartOffset: 0
-  clickVolume: 1
+  clickVolume: 0.5
   pressMoveEnabled: 1
   pressMoveTarget: {fileID: 0}
   pressMoveLocalX: -0.1
@@ -202,7 +202,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   audioSpatialBlend: 0
-  logEvents: 1
+  logEvents: 0
 --- !u!1 &205640031
 GameObject:
   m_ObjectHideFlags: 0
@@ -1334,7 +1334,7 @@ MonoBehaviour:
   cupRotateDuration: 1
   drainTimeout: 15
   dispenseTimeout: 20
-  logEvents: 1
+  logEvents: 0
 --- !u!1001 &7396899447293769217
 PrefabInstance:
   m_ObjectHideFlags: 0
