@@ -1594,17 +1594,6 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!114 &288025979 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 679719245507707015, guid: 6224e868d680f31418ba79d4f3838f52, type: 3}
-  m_PrefabInstance: {fileID: 1572629037}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a109d514f8e4914448265d2b0d24c4fc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SettingUIManager
 --- !u!1 &318497136
 GameObject:
   m_ObjectHideFlags: 0
@@ -1713,6 +1702,65 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 318497136}
   m_CullTransparentMesh: 1
+--- !u!1 &334996993
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 334996995}
+  - component: {fileID: 334996994}
+  m_Layer: 0
+  m_Name: LogoIntro
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &334996994
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 334996993}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7d4b5e4d4cc0714893edb6d3412aa7b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StudioLogoIntro
+  _logo: {fileID: 2800000, guid: 5201fbad2f9b0664d9c821d3ce3f8783, type: 3}
+  _logoWidthRatio: 0.301
+  _backgroundColor: {r: 0, g: 0, b: 0, a: 1}
+  _startupSound: {fileID: 8300000, guid: 93f50a0bfd2227d478a60cff090fe6ac, type: 3}
+  _volume: 0.519
+  _initialDelay: 0.4
+  _logoFadeIn: 1.2
+  _logoHold: 1.5
+  _logoFadeOut: 1
+  _gapBeforeTitle: 0.4
+  _titleFadeIn: 2
+  _activateAfterIntro: []
+  _allowSkip: 1
+  _playOnlyOncePerLaunch: 1
+  _logEvents: 0
+--- !u!4 &334996995
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 334996993}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.49932, y: -0.45993, z: -2.62661}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &339712921
 GameObject:
   m_ObjectHideFlags: 0
@@ -3073,7 +3121,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TitleSettingButton
   hoverOutline: {fileID: 0}
-  _settingUIManager: {fileID: 288025979}
 --- !u!1 &810625979
 GameObject:
   m_ObjectHideFlags: 0
@@ -9861,3 +9908,4 @@ SceneRoots:
   - {fileID: 1572629037}
   - {fileID: 179917061}
   - {fileID: 2101219490}
+  - {fileID: 334996995}
