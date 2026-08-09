@@ -9108,6 +9108,145 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1814764661}
   m_CullTransparentMesh: 1
+--- !u!1 &1888433022
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1888433023}
+  - component: {fileID: 1888433024}
+  m_Layer: 0
+  m_Name: SEManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1888433023
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1888433022}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 15.3986, y: 9.45529, z: -23.33698}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1888433024
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1888433022}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7445f01fa18148f40b98dca8e7d87ae5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AmbientSoundscape
+  _masterVolume: 0.078
+  _play: 1
+  _waitForItemsToSettle: 1
+  _settleDelay: 3
+  _spawnStartTimeout: 8
+  _layers:
+  - label: "\u30BF\u30A4\u30D7\u30E9\u30A4\u30BF\u30FC"
+    enabled: 1
+    clips:
+    - {fileID: 8300000, guid: 802e2d41a7954c749944acd59fb2a820, type: 3}
+    - {fileID: 8300000, guid: 353631b1ef7c3a44a9563fa37c4a2dc6, type: 3}
+    - {fileID: 8300000, guid: 84c24cd333ec7fb4ab0681b8470256a4, type: 3}
+    loop: 0
+    intervalRange: {x: 8, y: 25}
+    startDelayRange: {x: 0, y: 5}
+    volumeRange: {x: 0.4, y: 0.7}
+    pitchRange: {x: 0.95, y: 1.05}
+    spatialBlend: 0
+    anchor: {fileID: 0}
+    minDistance: 1
+    maxDistance: 25
+  - label: "\u6A5F\u68B0\u97F3"
+    enabled: 1
+    clips:
+    - {fileID: 8300000, guid: 06004c8355f2de04cb81d672356d38f2, type: 3}
+    loop: 0
+    intervalRange: {x: 8, y: 25}
+    startDelayRange: {x: 0, y: 5}
+    volumeRange: {x: 0.4, y: 0.7}
+    pitchRange: {x: 0.95, y: 1.05}
+    spatialBlend: 0
+    anchor: {fileID: 0}
+    minDistance: 1
+    maxDistance: 25
+  - label: "\u6642\u8A08"
+    enabled: 1
+    clips:
+    - {fileID: 8300000, guid: bd726fb871e65b041b96022fadd42c2e, type: 3}
+    loop: 0
+    intervalRange: {x: 8, y: 25}
+    startDelayRange: {x: 0, y: 5}
+    volumeRange: {x: 0.4, y: 0.7}
+    pitchRange: {x: 0.95, y: 1.05}
+    spatialBlend: 0
+    anchor: {fileID: 0}
+    minDistance: 1
+    maxDistance: 25
+  - label: "\u74B0\u5883"
+    enabled: 1
+    clips:
+    - {fileID: 8300000, guid: 085d03ab8a20c444b8a9869186f60e47, type: 3}
+    - {fileID: 8300000, guid: 68196c643decf5744b35d7b17dd5c18c, type: 3}
+    loop: 0
+    intervalRange: {x: 8, y: 25}
+    startDelayRange: {x: 0, y: 5}
+    volumeRange: {x: 0.4, y: 0.7}
+    pitchRange: {x: 0.95, y: 1.05}
+    spatialBlend: 0
+    anchor: {fileID: 0}
+    minDistance: 1
+    maxDistance: 25
+  - label: "\u8A2A\u554F\u8005"
+    enabled: 1
+    clips:
+    - {fileID: 8300000, guid: 088c3852d3618464a8a0ea01cc59f60e, type: 3}
+    - {fileID: 8300000, guid: 1d5b9e54d489a5241a9df2d48baa7cac, type: 3}
+    - {fileID: 8300000, guid: 4eeb541f2695b4641b4a9d8ed108a59d, type: 3}
+    - {fileID: 8300000, guid: d1ad41bfd0eb78e4a80fd561c7b476d5, type: 3}
+    - {fileID: 8300000, guid: 8544c2c00626b5f4db157be53c581d35, type: 3}
+    - {fileID: 8300000, guid: ce87613b9708d844dba63a3a104725ea, type: 3}
+    - {fileID: 8300000, guid: ff59576450911594fbe34b8c35e4836b, type: 3}
+    - {fileID: 8300000, guid: 9b7c20d81a114e549884efd7f6320e63, type: 3}
+    loop: 0
+    intervalRange: {x: 8, y: 25}
+    startDelayRange: {x: 0, y: 5}
+    volumeRange: {x: 0.4, y: 0.7}
+    pitchRange: {x: 0.95, y: 1.05}
+    spatialBlend: 0
+    anchor: {fileID: 0}
+    minDistance: 1
+    maxDistance: 25
+  - label: "\u672C\u5F53\u306B\u305F\u307E\u306B\u518D\u751F\u3059\u308B\u5974"
+    enabled: 1
+    clips:
+    - {fileID: 8300000, guid: 86e93b3f00a30c74a98f11df6e07529e, type: 3}
+    loop: 0
+    intervalRange: {x: 60, y: 180}
+    startDelayRange: {x: 0, y: 5}
+    volumeRange: {x: 0.4, y: 0.7}
+    pitchRange: {x: 0.95, y: 1.05}
+    spatialBlend: 0
+    anchor: {fileID: 0}
+    minDistance: 1
+    maxDistance: 25
+  _logEvents: 0
 --- !u!1 &1923848635
 GameObject:
   m_ObjectHideFlags: 0
@@ -10559,3 +10698,4 @@ SceneRoots:
   - {fileID: 1289819785}
   - {fileID: 262936690}
   - {fileID: 1673540079}
+  - {fileID: 1888433023}

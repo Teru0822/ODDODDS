@@ -138,6 +138,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 830376054}
     m_Modifications:
+    - target: {fileID: 1407084910806003907, guid: 98c5ce036f68d8941922e7541fb70887, type: 3}
+      propertyPath: m_Volume
+      value: 0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 1407084910806003907, guid: 98c5ce036f68d8941922e7541fb70887, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8295591563862043288, guid: 98c5ce036f68d8941922e7541fb70887, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.05069517
@@ -332,6 +340,10 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1407084910806003907, guid: 98c5ce036f68d8941922e7541fb70887, type: 3}
+      propertyPath: m_Volume
+      value: 0.05
+      objectReference: {fileID: 0}
     - target: {fileID: 1932411756463893127, guid: 98c5ce036f68d8941922e7541fb70887, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 0
@@ -437,6 +449,10 @@ PrefabInstance:
     - target: {fileID: 519550835277708759, guid: 98c5ce036f68d8941922e7541fb70887, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1407084910806003907, guid: 98c5ce036f68d8941922e7541fb70887, type: 3}
+      propertyPath: m_Volume
+      value: 0.05
       objectReference: {fileID: 0}
     - target: {fileID: 1932411756463893127, guid: 98c5ce036f68d8941922e7541fb70887, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -907,6 +923,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1298792588}
     m_Modifications:
+    - target: {fileID: 1407084910806003907, guid: 98c5ce036f68d8941922e7541fb70887, type: 3}
+      propertyPath: m_Volume
+      value: 0.05
+      objectReference: {fileID: 0}
     - target: {fileID: 8295591563862043288, guid: 98c5ce036f68d8941922e7541fb70887, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.05069517
@@ -1006,18 +1026,18 @@ MonoBehaviour:
   raycastLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  hoverEnterClip: {fileID: 8300000, guid: 0d47aa5ef60e1224abda0e0568dd694b, type: 3}
+  hoverEnterClip: {fileID: 8300000, guid: 8c7ca4fee86484e448bad63e3f4f84c0, type: 3}
   audioSource: {fileID: 0}
-  hoverVolume: 0.1
+  hoverVolume: 0.5
   hoverPitchRange: {x: 1, y: 1}
-  hoverEnterStartOffset: 0.1
+  hoverEnterStartOffset: 0
   pressDownClip: {fileID: 8300000, guid: 94826d03cfc2c8148be7e49800e98929, type: 3}
   pressDownPitchRange: {x: 1, y: 1}
   pressDownStartOffset: 0
   releaseClip: {fileID: 8300000, guid: 112381306147a854d98aeea2714b9cff, type: 3}
   releasePitchRange: {x: 1, y: 1}
   releaseStartOffset: 0
-  clickVolume: 1
+  clickVolume: 0.5
   pressMoveEnabled: 0
   pressMoveTarget: {fileID: 0}
   pressMoveLocalX: -0.1
@@ -1703,6 +1723,22 @@ PrefabInstance:
     - target: {fileID: 600064740956642035, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
       propertyPath: m_HorizontalAlignment
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 940061069932365547, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      propertyPath: m_Volume
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 940061069932365547, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1940021831655556651, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      propertyPath: m_Volume
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1940021831655556651, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6061382097804974434, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
       propertyPath: m_StaticEditorFlags

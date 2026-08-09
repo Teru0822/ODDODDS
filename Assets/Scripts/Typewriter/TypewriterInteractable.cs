@@ -27,6 +27,11 @@ public class TypewriterInteractable : InteractableHighlight
     [Tooltip("このタイプライターに照準している間、物理キーボード入力で対応キーを打鍵させる")]
     public bool linkPhysicalKeyboard = true;
 
+    // 物理キーボードでの打鍵は一旦無効化中。
+    // シーンに保存済みの linkPhysicalKeyboard が true でも、ここが false なら購読しない。
+    // 機能を戻すときは true にするだけでよい（const にすると到達不能コード警告が出るため static readonly）
+    private static readonly bool EnablePhysicalKeyboardTyping = false;
+
     [Header("ターン遷移")]
     [Tooltip("スキル取得後のローディング画面最低表示時間（秒）")]
     [SerializeField] private float _turnTransitionDuration = 2f;
@@ -92,6 +97,7 @@ public class TypewriterInteractable : InteractableHighlight
 
     private void SubscribeKeyboard()
     {
+        if (!EnablePhysicalKeyboardTyping) return;   // 一旦無効化中
         if (!linkPhysicalKeyboard || _keyboardSubscribed) return;
         if (Keyboard.current == null) return;
         Keyboard.current.onTextInput += OnPhysicalTextInput;

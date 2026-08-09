@@ -9,6 +9,9 @@ public class PatoLampController : MonoBehaviour
     [Tooltip("回転速度 (度/秒)")]
     [SerializeField] private float rotationSpeed = 360f;
 
+    [Tooltip("状態確認用のログを出力する。常時オンにすると負荷になるので、調査時だけ有効にしてください")]
+    [SerializeField] private bool _showDebugLogs = false;
+
     private Transform _patoinTransform;
     private Light[] _lights;
     private bool _isActive = false;
@@ -37,7 +40,8 @@ public class PatoLampController : MonoBehaviour
         bool shouldBeActive = false;
 
         // 【デバッグ用】どの条件で止まっているか特定するための一時ログ（0.5秒間隔で出力）
-        if (Time.frameCount % 30 == 0)
+        // 既定でオフ。常時出力すると Debug.Log のコストでフレームレートが落ちる
+        if (_showDebugLogs && Time.frameCount % 30 == 0)
         {
             Debug.Log($"[PatoLampController] DEBUG: Instance={(UFOCameraController.Instance != null)}, " +
                       $"IsPlaySessionActive={UFOCameraController.IsPlaySessionActive}, " +

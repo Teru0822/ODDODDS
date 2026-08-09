@@ -9,6 +9,9 @@ public class UFOClawCollisionDetector : MonoBehaviour
     [Tooltip("司令塔であるUFOArmController (3番) をセットしてください")]
     public UFOArmController armController;
 
+    [Tooltip("衝突判定のログを出力する。毎フレーム大量に呼ばれるため、既定はオフ。調査時だけ有効にしてください")]
+    public bool showDebugLogs = false;
+
     private void Start()
     {
         if (armController == null)
@@ -33,7 +36,7 @@ public class UFOClawCollisionDetector : MonoBehaviour
             detector.armController = this.armController;
         }
 
-        Debug.Log($"[UFOClawCollisionDetector] Initialized on {gameObject.name}. Auto-attached to {autoAttachedCount} child colliders. armController references: {(armController != null ? armController.name : "NULL")}");
+        if (showDebugLogs) Debug.Log($"[UFOClawCollisionDetector] Initialized on {gameObject.name}. Auto-attached to {autoAttachedCount} child colliders. armController references: {(armController != null ? armController.name : "NULL")}");
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -41,7 +44,7 @@ public class UFOClawCollisionDetector : MonoBehaviour
         if (armController == null) return;
 
         // 【最優先デバッグログ】接触した瞬間に必ず出力
-        Debug.Log($"[UFOClawCollisionDetector] OnCollisionEnter called on {gameObject.name}: other={collision.gameObject.name} (Parent: {collision.transform.parent?.name})");
+        if (showDebugLogs) Debug.Log($"[UFOClawCollisionDetector] OnCollisionEnter called on {gameObject.name}: other={collision.gameObject.name} (Parent: {collision.transform.parent?.name})");
 
         // 爪同士やUFOキャッチャー本体との衝突は無視する
         if (collision.transform.IsChildOf(armController.transform.root))
@@ -52,7 +55,7 @@ public class UFOClawCollisionDetector : MonoBehaviour
 
             if (!isRiseOrZone)
             {
-                Debug.Log($"[UFOClawCollisionDetector] Ignored OnCollisionEnter with {collision.gameObject.name} because it is part of the arm structure.");
+                if (showDebugLogs) Debug.Log($"[UFOClawCollisionDetector] Ignored OnCollisionEnter with {collision.gameObject.name} because it is part of the arm structure.");
                 return;
             }
         }
@@ -67,7 +70,7 @@ public class UFOClawCollisionDetector : MonoBehaviour
                                collision.collider.GetComponent<CoinOptimizer>() != null ||
                                collision.collider.GetComponentInParent<CoinOptimizer>() != null;
 
-            Debug.Log($"[UFOClawCollisionDetector] OnCollisionEnter with {collision.gameObject.name} -> isCoinOrItem: {isCoinOrItem}, immediateGrabArea is {armController.immediateGrabArea.name}");
+            if (showDebugLogs) Debug.Log($"[UFOClawCollisionDetector] OnCollisionEnter with {collision.gameObject.name} -> isCoinOrItem: {isCoinOrItem}, immediateGrabArea is {armController.immediateGrabArea.name}");
 
             if (!isCoinOrItem)
             {
@@ -75,7 +78,7 @@ public class UFOClawCollisionDetector : MonoBehaviour
                 bool matchesGO = collision.gameObject == armController.immediateGrabArea.gameObject;
                 bool isChild = collision.transform.IsChildOf(armController.immediateGrabArea.transform);
 
-                Debug.Log($"[UFOClawCollisionDetector] Matches: matchesCollider={matchesCollider}, matchesGO={matchesGO}, isChild={isChild}");
+                if (showDebugLogs) Debug.Log($"[UFOClawCollisionDetector] Matches: matchesCollider={matchesCollider}, matchesGO={matchesGO}, isChild={isChild}");
 
                 if (matchesCollider || matchesGO || isChild)
                 {
@@ -131,7 +134,7 @@ public class UFOClawCollisionDetector : MonoBehaviour
 
         if (isImmediateArea || isClawRiseContact)
         {
-            Debug.Log($"[UFOClawCollisionDetector] Collided with grab trigger (immediateArea={isImmediateArea}, clawRiseContact={isClawRiseContact}): {collision.gameObject.name}");
+            if (showDebugLogs) Debug.Log($"[UFOClawCollisionDetector] Collided with grab trigger (immediateArea={isImmediateArea}, clawRiseContact={isClawRiseContact}): {collision.gameObject.name}");
             armController.OnClawCollided(collision.collider); 
         }
     }
@@ -142,7 +145,7 @@ public class UFOClawCollisionDetector : MonoBehaviour
         if (armController == null) return;
 
         // 【最優先デバッグログ】接触した瞬間に必ず出力
-        Debug.Log($"[UFOClawCollisionDetector] OnTriggerEnter called on {gameObject.name}: other={other.gameObject.name} (Parent: {other.transform.parent?.name})");
+        if (showDebugLogs) Debug.Log($"[UFOClawCollisionDetector] OnTriggerEnter called on {gameObject.name}: other={other.gameObject.name} (Parent: {other.transform.parent?.name})");
 
         // 爪同士やUFOキャッチャー本体との衝突は無視する
         if (other.transform.IsChildOf(armController.transform.root))
@@ -153,7 +156,7 @@ public class UFOClawCollisionDetector : MonoBehaviour
 
             if (!isRiseOrZone)
             {
-                Debug.Log($"[UFOClawCollisionDetector] Ignored OnTriggerEnter with {other.gameObject.name} because it is part of the arm structure.");
+                if (showDebugLogs) Debug.Log($"[UFOClawCollisionDetector] Ignored OnTriggerEnter with {other.gameObject.name} because it is part of the arm structure.");
                 return;
             }
         }
@@ -168,7 +171,7 @@ public class UFOClawCollisionDetector : MonoBehaviour
                                other.GetComponent<CoinOptimizer>() != null ||
                                other.GetComponentInParent<CoinOptimizer>() != null;
 
-            Debug.Log($"[UFOClawCollisionDetector] OnTriggerEnter with {other.gameObject.name} -> isCoinOrItem: {isCoinOrItem}, immediateGrabArea is {armController.immediateGrabArea.name}");
+            if (showDebugLogs) Debug.Log($"[UFOClawCollisionDetector] OnTriggerEnter with {other.gameObject.name} -> isCoinOrItem: {isCoinOrItem}, immediateGrabArea is {armController.immediateGrabArea.name}");
 
             if (!isCoinOrItem)
             {
@@ -176,7 +179,7 @@ public class UFOClawCollisionDetector : MonoBehaviour
                 bool matchesGO = other.gameObject == armController.immediateGrabArea.gameObject;
                 bool isChild = other.transform.IsChildOf(armController.immediateGrabArea.transform);
 
-                Debug.Log($"[UFOClawCollisionDetector] Matches: matchesCollider={matchesCollider}, matchesGO={matchesGO}, isChild={isChild}");
+                if (showDebugLogs) Debug.Log($"[UFOClawCollisionDetector] Matches: matchesCollider={matchesCollider}, matchesGO={matchesGO}, isChild={isChild}");
 
                 if (matchesCollider || matchesGO || isChild)
                 {
@@ -232,7 +235,7 @@ public class UFOClawCollisionDetector : MonoBehaviour
 
         if (isImmediateArea || isClawRiseContact)
         {
-            Debug.Log($"[UFOClawCollisionDetector] Triggered with grab trigger (immediateArea={isImmediateArea}, clawRiseContact={isClawRiseContact}): {other.gameObject.name}");
+            if (showDebugLogs) Debug.Log($"[UFOClawCollisionDetector] Triggered with grab trigger (immediateArea={isImmediateArea}, clawRiseContact={isClawRiseContact}): {other.gameObject.name}");
             armController.OnClawCollided(other); 
         }
     }
