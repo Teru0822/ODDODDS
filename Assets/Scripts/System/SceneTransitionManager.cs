@@ -527,7 +527,18 @@ namespace MiniGames.Transitions
             // 新しいシーンでの開始処理を少し待つ（AwakeやStartが呼ばれる猶予）
             yield return new WaitForSeconds(0.5f);
 
-            // --- Mainシーンの環境光がロゴを暗くするのを防ぐため、タイトルシーンの環境光を一時復元 ---
+            // --- 遷移先シーン本来の環境光を控えておく ---
+            // この時点でアクティブシーンは遷移先なので、RenderSettings は遷移先の値になっている。
+            // 直後にタイトルの値で上書きするが、SetActiveScene では戻せない
+            // （既にアクティブなシーンを指定しても再適用されない）ため、ここで保持しておく。
+            var targetAmbientMode         = RenderSettings.ambientMode;
+            var targetAmbientLight        = RenderSettings.ambientLight;
+            var targetAmbientIntensity    = RenderSettings.ambientIntensity;
+            var targetAmbientSkyColor     = RenderSettings.ambientSkyColor;
+            var targetAmbientEquatorColor = RenderSettings.ambientEquatorColor;
+            var targetAmbientGroundColor  = RenderSettings.ambientGroundColor;
+
+            // --- Mainシーンの環境光がロゴを暗くするのを防ぐため、タイトルシーンの環境光を一時適用 ---
             RenderSettings.ambientMode = savedAmbientMode;
             RenderSettings.ambientLight = savedAmbientLight;
             RenderSettings.ambientIntensity = savedAmbientIntensity;
@@ -617,6 +628,16 @@ namespace MiniGames.Transitions
             
             StopLoadingAnimation();
 
+            // --- 遷移先シーン本来の環境光へ戻す ---
+            // モヤが晴れた後に戻すと、正しい明るさへ切り替わる瞬間が見えてしまう。
+            // 画面がまだ隠れているこのタイミングで適用しておく
+            RenderSettings.ambientMode         = targetAmbientMode;
+            RenderSettings.ambientLight        = targetAmbientLight;
+            RenderSettings.ambientIntensity    = targetAmbientIntensity;
+            RenderSettings.ambientSkyColor     = targetAmbientSkyColor;
+            RenderSettings.ambientEquatorColor = targetAmbientEquatorColor;
+            RenderSettings.ambientGroundColor  = targetAmbientGroundColor;
+
             // 5. フェードイン（モヤが晴れる）
             // モヤが晴れ始めるタイミングでBGMの再生を解禁する
             AudioListener.pause = false;
@@ -668,9 +689,9 @@ namespace MiniGames.Transitions
                 _preservedTitleCamera = null;
             }
 
-            // --- Mainシーン本来の環境光に戻す ---
-            // ロード中はタイトルシーンの環境光を維持していたため、
-            // フェードアウト完了後にMainシーンのLighting設定を再適用する
+            // アクティブシーンを遷移先に確定させる。
+            // 環境光の復元自体はフェードイン前に済ませてある（SetActiveScene は
+            // 既にアクティブなシーンを指定しても Lighting を再適用しないため頼れない）
             SceneManager.SetActiveScene(SceneManager.GetSceneByName(sceneName));
 
             RestoreOtherCanvases();
