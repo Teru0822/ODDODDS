@@ -323,7 +323,7 @@ public class GameUIManager : MonoBehaviour
     private void Update()
     {
         //Tabキーを押したときにメニュー切り替え
-        if (_openMenuReference.action.WasPressedThisFrame())
+        if (_openMenuReference.action.WasPressedThisFrame() && _canvasGroup.alpha == 1)
         {
             _isOpenMenu = !_isOpenMenu;
             if(_menuTitle.TryGetValue(_index, out var value))

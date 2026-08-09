@@ -1,19 +1,22 @@
 using App.Player;
 using DG.Tweening;
 using Newtonsoft.Json;
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using MiniGames.Transitions;
 
 public class DebtCollectionManager : MonoBehaviour
 {
+    public static DebtCollectionManager Instance;
+    private bool _isStartDebtCollection = false;//現在、悪魔の取り立てが行われているか
+    public bool IsStartDebtCollection => _isStartDebtCollection;
+
     [Header("会話用データパス")] 
     [SerializeField] private Language _language = Language.JP;
     [SerializeField] private string _jsonFilePathJP = "Assets/Resources/Conversations/DevilConversations_JP.json";
@@ -23,8 +26,6 @@ public class DebtCollectionManager : MonoBehaviour
 
     [Header("会話用オブジェクト")]
     [SerializeField] private Image _background;
-    [SerializeField] private Image _devil;
-    [SerializeField] private Sprite[] _devilExpressions;
     [SerializeField] private GameObject _panel;
     [SerializeField] private TMP_Text _name;
     [SerializeField] private TMP_Text _mainSentence;
@@ -53,8 +54,22 @@ public class DebtCollectionManager : MonoBehaviour
     [Header("ゲームオーバー用")]
     [SerializeField] private ResultUIManager _resultUIManager;
 
-
+    [Header("取り立て場面への遷移用")]
+    [SerializeField] private GameObject _cameraPosition;
+    [SerializeField] private float _turnTransitionDuration = 2f;
+    [SerializeField] private GameObject _gameUI;
+    private Vector3 _originPosition;
+    private Vector3 _originRotation;
     private FirstPersonController _fpController;
+    private Camera _camera;
+
+    void Awake()
+    {
+        if(Instance == null)
+            Instance = this;
+        else
+            Destroy(this.gameObject);
+    }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -208,22 +223,37 @@ public class DebtCollectionManager : MonoBehaviour
     public IEnumerator ShowConversation(string key = "")
     {
         bool isSuccess = true;//取り立てに耐えたか否か
+        bool isFinishFade = false;
+
+        _isStartDebtCollection = true;
         if(_fpController == null)//必要なコンポーネントが無かった場合は取得
         {
             _fpController = FindFirstObjectByType<FirstPersonController>();
         }
-        _fpController.enabled = false;//イベント終了まで動けないようにする
+        if(_camera == null)
+        {
+            _camera = Camera.main;
+        }
+        if(_cameraPosition == null)
+        {
+            _cameraPosition = GameObject.Find("DebtCameraPosition");
+        }
 
-        //画面を暗転させる
-        _background.DOFade(endValue: 1f, duration: 1f)
-            .OnComplete(() =>
-            {
-                _devil.DOFade(endValue: 1f, duration: 1f)
-                    .OnComplete(() =>
-                    {
-                        _panel.SetActive(true);
-                    });
-            });
+        _fpController.enabled = false;//イベント終了まで動けないようにする
+        _originPosition = _camera.transform.position;
+        _originRotation = _camera.transform.eulerAngles;
+
+        SceneTransitionManager.Instance.ShowTurnTransition(
+            _turnTransitionDuration,
+            onDuringLoading: () => Debug.Log("Now Loading"),
+            onComplete:      () => {isFinishFade = true;_panel.SetActive(true);});
+
+        yield return new WaitForSeconds(1.0f);//大体Loading画面になったであろう時間まで待機
+        _camera.transform.position = _cameraPosition.transform.position;
+        _camera.transform.eulerAngles = new Vector3(0,180,0);
+        _gameUI.GetComponent<CanvasGroup>().alpha = 0;//見えないようにする
+
+        yield return new WaitUntil(() => isFinishFade == true);
 
         //特にKeyが指定されていない場合はランダムなキーを指定
         if(key == "")
@@ -234,11 +264,11 @@ public class DebtCollectionManager : MonoBehaviour
         }
 
         //シナリオに設定された文字を表示させていく
-        yield return new WaitForSeconds(1.5f);
         yield return StartCoroutine(TextSystem(key));
 
         //取り立て開始
         {
+            //今回の取り立て金額に関する情報を取得
             previousDecreaseValue = MoneyManager.Instance.GetQuotaThisTime();
             previousMoneyValue = (int)MoneyManager.Instance.CurrentMoney;
 
@@ -294,6 +324,7 @@ public class DebtCollectionManager : MonoBehaviour
                 else
                 {
                     //ゲームオーバー処理
+                    _isStartDebtCollection = false;
                     yield return StartCoroutine(_resultUIManager.GameOverAnimation());
                     RoguelikeSaveManager.DeleteDataInGameOver();
                 }
@@ -318,9 +349,19 @@ public class DebtCollectionManager : MonoBehaviour
         //これで会話が終了の場合
         {
             //暗転を解除させる
-            _background.DOFade(endValue: 0f, duration: 2f);
-            _devil.DOFade(endValue: 0f, duration: 2f);
             _panel.SetActive(false);
+            _isStartDebtCollection = false;
+            
+            SceneTransitionManager.Instance.ShowTurnTransition(
+            _turnTransitionDuration,
+            onDuringLoading: () => Debug.Log("Now Loading"),
+            onComplete:      () => {isFinishFade = false; _fpController.enabled = true; MoneyManager.Instance?.AdvanceTurn();});
+
+            yield return new WaitForSeconds(1.0f);//大体Loading画面になったであろう時間まで待機
+            _gameUI.GetComponent<CanvasGroup>().alpha = 1;//見えるようにする
+            _camera.transform.position = _originPosition;
+            _camera.transform.eulerAngles = _originRotation;
+            
 
             if (isSuccess)//取り立てに耐えられたらBGMは消す
             {
@@ -330,16 +371,14 @@ public class DebtCollectionManager : MonoBehaviour
                     _audioSource.volume = 0.2f;
                 });
 
-                MoneyManager.Instance.AdvanceTurn();
-            }        
+                
+            }
 
             _reduceMoneyCounter.DOFade(endValue: 0f, duration: 1f);
             _reduceMoneyCounter.rectTransform.DOAnchorPos(new Vector2(-540, 180), 1.0f).SetEase(Ease.OutQuart);
 
             _myMoneyCounter.DOFade(endValue: 0f, duration: 1f);
             _myMoneyCounter.rectTransform.DOAnchorPos(new Vector2(540, 180), 1.0f).SetEase(Ease.OutQuart);
-            _fpController.enabled = true;//イベント終了まで動けないようにする
-            yield return new WaitUntil(() => _background.color.a <= 0);
         }
 
         Debug.Log("イベント無事終了");
@@ -392,21 +431,26 @@ public class DebtCollectionManager : MonoBehaviour
             _mainSentence.text = "";//テキストを消去
             string sentence = AjustDownArrow(_conversations[key].lines[i]);
 
-            //アクマの表情を変化させる
-            _devil.sprite = _devilExpressions[(int)_conversations[key].devilExpressions[i]];
+            //アクマのアニメーションを遷移させる（任意）
+            //_devil.sprite = _devilExpressions[(int)_conversations[key].devilExpressions[i]];
 
             //テキストを一文字ずつ描画
+            int charCount = 0;
             foreach (char c in sentence)
             {
-                //途中でトリガーボタンを押すとテキストを全て出力
-                if (_clickReference.action.IsPressed())
+                //途中でトリガーボタンを押すとテキストを全て出力(設定を開いているときは反応しない)
+                if (charCount >= 3 && _clickReference.action.IsPressed() && !SettingUIManager.IsMenuOpen)
                 {
                     _mainSentence.text = sentence;
                     break;
                 }
                 else
+                {
+                    yield return new WaitUntil(() => SettingUIManager.IsMenuOpen == false);//設定画面が閉じられるまで待つ
                     _mainSentence.text += c;
+                }
 
+                charCount++;
                 yield return new WaitForSeconds(_characterSpeed);
             }
 
