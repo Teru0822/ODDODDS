@@ -305,7 +305,7 @@ public class SettingUIManager : MonoBehaviour
             {
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible = false;
-                if(_fpsController != null) _fpsController.enabled = true;
+                if(_fpsController != null &&  DebtCollectionManager.Instance.IsStartDebtCollection == false) _fpsController.enabled = true;
                 SettingButtonAnimation(-1, _settingIndex);
                 _settingIndex = 0;
 
@@ -353,12 +353,14 @@ public class SettingUIManager : MonoBehaviour
         if(_fpsController != null) _fpsController.enabled = false;
         SettingButtonAnimation(_settingIndex, -1);
 
+        /*
         _mouseHoverOutlines = FindObjectsByType<MouseHoverOutline>(FindObjectsSortMode.InstanceID);
         if(_mouseHoverOutlines.Length != 0)
         {
             foreach(var item in _mouseHoverOutlines)
                 item.IsOpenUI = true;
         }
+        */
     }
 
     /// <summary>
@@ -374,17 +376,19 @@ public class SettingUIManager : MonoBehaviour
 
         _settingPanel.SetActive(false);
         _isOpenMenu = false;
-        if(_fpsController != null) _fpsController.enabled = true;
+        if(_fpsController != null &&  DebtCollectionManager.Instance.IsStartDebtCollection == false) _fpsController.enabled = true;//悪魔の取り立て中は体の自由は聞かないまま
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         SettingButtonAnimation(-1, _settingIndex);
         _settingIndex = 0;
 
+        /*
         if(_mouseHoverOutlines.Length != 0)
         {
             foreach(var item in _mouseHoverOutlines)
                 item.IsOpenUI = false;
         }
+        */
         if(SceneManager.GetActiveScene().buildIndex == 0)//タイトルシーンのみ
         {
             Cursor.lockState = CursorLockMode.None;

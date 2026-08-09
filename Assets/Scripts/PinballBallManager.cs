@@ -639,6 +639,7 @@ public class PinballBallManager : MonoBehaviour
         SceneManager.LoadScene(active.buildIndex);
     }
 
+/*
     void OnGUI()
     {
         if (_config == null || !_config.showMoneyLabel) return;
@@ -696,6 +697,7 @@ public class PinballBallManager : MonoBehaviour
 
         GUI.matrix = prevMatrix;
     }
+*/
 
     void SpawnChildrenAndDestroy(int index)
     {
