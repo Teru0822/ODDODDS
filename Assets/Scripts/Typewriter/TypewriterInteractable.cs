@@ -54,6 +54,17 @@ public class TypewriterInteractable : InteractableHighlight
     private bool _lookedAt;
     private bool _keyboardSubscribed;
 
+    /// <summary>いずれかのタイプライターが占有中か（UI 表示・アニメーション含む）。MouseHoverOutline のブロック判定に使用。</summary>
+    private static int _globalBusyCount = 0;
+    public static bool IsAnyBusy => _globalBusyCount > 0;
+
+    private void SetBusy(bool value)
+    {
+        if (_busy == value) return;
+        _busy = value;
+        _globalBusyCount = Mathf.Max(0, _globalBusyCount + (value ? 1 : -1));
+    }
+
     private DebtCollectionManager _debtCollectionManager;
     private FirstPersonController _fpsController;
     protected override void Awake()
@@ -68,12 +79,13 @@ public class TypewriterInteractable : InteractableHighlight
     private void OnDestroy()
     {
         RewardSelectionUI.OnTypewriterUICancelled -= OnSelectionCancelled;
+        if (_busy) SetBusy(false);
     }
 
     private void OnSelectionCancelled()
     {
         if (!_busy) return;
-        _busy = false;
+        SetBusy(false);
         ApplyHighlight(true);
     }
 
@@ -179,7 +191,7 @@ public class TypewriterInteractable : InteractableHighlight
             }
         }
 
-        _busy = true;
+        SetBusy(true);
         ApplyHighlight(false);
         try
         {
@@ -188,7 +200,7 @@ public class TypewriterInteractable : InteractableHighlight
         catch (System.Exception e)
         {
             Debug.LogError($"[TypewriterInteractable] RewardSelectionUI.Show() で例外が発生しました: {e}", this);
-            _busy = false;
+            SetBusy(false);
             ApplyHighlight(true);
             return;
         }
@@ -196,7 +208,7 @@ public class TypewriterInteractable : InteractableHighlight
         // Show() が UI を開けなかった場合（Prefab 未設定など）は即座に解放
         if (!selectionUI.IsActive)
         {
-            _busy = false;
+            SetBusy(false);
             ApplyHighlight(true);
             Debug.LogWarning("[TypewriterInteractable] RewardSelectionUI の表示に失敗しました。Inspector で _scrollContentPrefab または optionButtons を設定してください", this);
         }
@@ -215,7 +227,7 @@ public class TypewriterInteractable : InteractableHighlight
         if (controller == null)
         {
             Debug.LogWarning("[TypewriterInteractable] TypewriterController が未設定 - 打鍵をスキップ", this);
-            _busy = false;
+            SetBusy(false);
             return;
         }
 
@@ -274,8 +286,7 @@ public class TypewriterInteractable : InteractableHighlight
                 Debug.LogWarning("[TypewriterInteractable] IsLaunching タイムアウト: 強制続行します", this);
         }
 
-        _busy = false;
-        ApplyHighlight(true);
+        yield return new WaitForSeconds(0.5f);
 
         if(MoneyManager.Instance.NextDebtCollectionTurnCount == 0)
         {
@@ -318,6 +329,11 @@ public class TypewriterInteractable : InteractableHighlight
                 if (_fpsController != null) _fpsController.enabled = true;
             }
         }
+
+        // ターン遷移か会話が完全に終わってから占有を解放する。
+        // シーンリロードで先に OnDestroy が呼ばれた場合は OnDestroy 側でクリアされる。
+        SetBusy(false);
+        ApplyHighlight(true);
     }
 }
 
