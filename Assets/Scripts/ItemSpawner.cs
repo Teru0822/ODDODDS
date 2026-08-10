@@ -11,7 +11,10 @@ public class ItemSpawner : MonoBehaviour
     public float spawnYOffset = 2.0f;
     [Tooltip("生成位置の散らばり具合（X=左右、Y=奥手前）")]
     public Vector2 spawnArea = new Vector2(3.0f, 3.0f);
-    
+
+    [Tooltip("生成エリア全体をY軸回りに回転させる角度（度）。撮影用にコインが降る向きを調整したい場合などに使用")]
+    public float spawnAreaAngle = 0f;
+
     [Header("生成設定")]
     [Tooltip("合計生成数")]
     public int totalItems = 500;
@@ -696,11 +699,18 @@ public class ItemSpawner : MonoBehaviour
         float offsetX = Random.Range(bounds.minX, bounds.maxX);
         float offsetZ = Random.Range(bounds.minZ, bounds.maxZ);
 
+        // 生成エリアをY軸回りに回転（撮影用の向き調整など）
+        Vector3 rotatedOffset = new Vector3(offsetX, 0f, offsetZ);
+        if (spawnAreaAngle != 0f)
+        {
+            rotatedOffset = Quaternion.Euler(0f, spawnAreaAngle, 0f) * rotatedOffset;
+        }
+
         // ばらつき（散らばり）を加える
         Vector3 randomPos = center + new Vector3(
-            offsetX,
+            rotatedOffset.x,
             Random.Range(-0.5f, 0.5f), // 上下のブレも少しだけ加える
-            offsetZ
+            rotatedOffset.z
         );
 
         // 生成
@@ -919,10 +929,17 @@ public class ItemSpawner : MonoBehaviour
         float offsetX = Random.Range(centerX - halfW, centerX + halfW);
         float offsetZ = Random.Range(centerZ - halfH, centerZ + halfH);
 
+        // 生成エリアをY軸回りに回転（撮影用の向き調整など）
+        Vector3 rotatedOffset = new Vector3(offsetX, 0f, offsetZ);
+        if (spawnAreaAngle != 0f)
+        {
+            rotatedOffset = Quaternion.Euler(0f, spawnAreaAngle, 0f) * rotatedOffset;
+        }
+
         Vector3 randomPos = center + new Vector3(
-            offsetX,
+            rotatedOffset.x,
             Random.Range(-0.5f, 0.5f), // 上下のブレも少しだけ加える
-            offsetZ
+            rotatedOffset.z
         );
 
         GameObject spawnedObj = Instantiate(coinPrefab, randomPos, Random.rotation, parentFolder);
@@ -1069,20 +1086,27 @@ public class ItemSpawner : MonoBehaviour
             wireColor = new Color(0.8f, 0.8f, 0.8f, 0.8f);
         }
 
-        float cx = center.x + (minX + maxX) * 0.5f;
-        float cz = center.z + (minZ + maxZ) * 0.5f;
         float sizeX = Mathf.Abs(maxX - minX);
         float sizeZ = Mathf.Abs(maxZ - minZ);
-        Vector3 cellCenter = new Vector3(cx, center.y, cz);
+
+        // spawnAreaAngle分回転させた位置に描画する（実際の生成ロジックと同じ回転を反映）
+        Vector3 localOffset = new Vector3((minX + maxX) * 0.5f, 0f, (minZ + maxZ) * 0.5f);
+        Quaternion rotation = Quaternion.Euler(0f, spawnAreaAngle, 0f);
+        Vector3 cellCenter = center + rotation * localOffset;
         Vector3 cellSize   = new Vector3(sizeX, 0.01f, sizeZ);
+
+        Matrix4x4 originalMatrix = Gizmos.matrix;
+        Gizmos.matrix = Matrix4x4.TRS(cellCenter, rotation, Vector3.one);
 
         // 塗りつぶし
         Gizmos.color = fillColor;
-        Gizmos.DrawCube(cellCenter, cellSize);
+        Gizmos.DrawCube(Vector3.zero, cellSize);
 
         // 枠線
         Gizmos.color = wireColor;
-        Gizmos.DrawWireCube(cellCenter, cellSize);
+        Gizmos.DrawWireCube(Vector3.zero, cellSize);
+
+        Gizmos.matrix = originalMatrix;
 
         // ラベル
         UnityEditor.Handles.color = wireColor;

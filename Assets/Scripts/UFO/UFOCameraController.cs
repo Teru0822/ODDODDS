@@ -65,6 +65,10 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider
              "OFF (本番用): Playを開始した後は通常通り中断できません（Play2_Canvasの選択画面に戻っているだけの間はこの設定に関わらずいつでもキャンセルできます）。")]
     [SerializeField] private bool debugAllowInterruptDuringPlay = false;
 
+    [Tooltip("ON: シーン開始時にライトを消灯せず、常時フル点灯のままにします（Steamストアページ用スクリーンショット撮影シーンなどで使用）。\n" +
+             "OFF (本番用): 通常通り、開始時は消灯し、プレイ開始時にのみ点灯します。")]
+    [SerializeField] private bool keepLightsOnAtStart = false;
+
     [Header("Audio Settings")]
     [Tooltip("再生用のAudioSource。未設定の場合は自動でGetComponentします")]
     [SerializeField] private AudioSource audioSource;
@@ -376,6 +380,15 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider
         // 開始時はライトをオフにしておく
         SetPlaySpotlight(false, false);
         SetCoinInsertionLightsActive(false);
+
+        // 撮影用: 上記の消灯を上書きして、フリッカー演出無しで常時フル点灯のままにする
+        if (keepLightsOnAtStart)
+        {
+            CacheOriginalLightIntensities();
+            ApplyRawLightsState(true, 1.0f);
+            IsPlaySpotlightActive = true;
+            if (playSpotlight != null) playSpotlight.SetActive(true);
+        }
 
         if (machineHover != null)
         {
