@@ -1,9 +1,8 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 /// <summary>
 /// ポールオブジェクト（poll2, poll3）のスライド伸縮を担う。
-/// Spaceキーによる手動操作と、UFOArmController からの外部制御の両方に対応。
+/// UFOArmController からの外部制御で伸縮する。
 /// </summary>
 public class StretchRope : MonoBehaviour
 {
@@ -30,10 +29,6 @@ public class StretchRope : MonoBehaviour
     [Header("附属オブジェクト（爪など）")]
     [Tooltip("ポール先端に合わせて連動させたいオブジェクト群（親子関係になっていない場合に使用）")]
     public Transform[] attachedObjects;
-
-    [Header("Spaceキー操作")]
-    [Tooltip("Spaceキーによる手動伸縮を許可するか")]
-    public bool allowSpaceKey = true;
 
     // ─────────────────────────────────────
     // 内部状態
@@ -92,7 +87,7 @@ public class StretchRope : MonoBehaviour
         _externalSpeedMul = speedMultiplier;
     }
 
-    /// <summary>外部制御を解除（Space キー操作に戻る）</summary>
+    /// <summary>外部制御を解除する</summary>
     public void StopExternalControl()
     {
         _externalControl = false;
@@ -127,13 +122,6 @@ public class StretchRope : MonoBehaviour
             {
                 StopExternalControl();
             }
-        }
-        else if (allowSpaceKey)
-        {
-            // 手動制御（Space キー）
-            bool spaceDown = Keyboard.current != null && Keyboard.current.spaceKey.isPressed;
-            _stretchTime += (spaceDown ? 1f : -1f) * Time.deltaTime * stretchSpeed;
-            _stretchTime  = Mathf.Clamp01(_stretchTime);
         }
 
         float t = Mathf.SmoothStep(0f, 1f, _stretchTime);
