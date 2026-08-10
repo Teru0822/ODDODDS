@@ -36,6 +36,16 @@ public class TypewriterInteractable : InteractableHighlight
     [Tooltip("スキル取得後のローディング画面最低表示時間（秒）")]
     [SerializeField] private float _turnTransitionDuration = 2f;
 
+    [Header("ブラックダイヤ強制売却")]
+    [Tooltip("磨き段階(0〜3)ごとの現所持金への増減率。rate>0で増加、rate<0で減少（例: -0.15 = 15%減）")]
+    [SerializeField] private DiamondSellRate[] _diamondSellRates = new DiamondSellRate[]
+    {
+        new DiamondSellRate { label = "呪われたダイヤモンド",      rate = -0.15f },
+        new DiamondSellRate { label = "封印されしダイヤモンド",     rate = -0.10f },
+        new DiamondSellRate { label = "解放されそうなダイヤモンド", rate = -0.05f },
+        new DiamondSellRate { label = "ゴッドダイヤモンド",         rate =  0.10f },
+    };
+
     [Header("デバッグ")]
     [Tooltip("ONにするとInspectorにローグライクスキルのオンオフパネルが表示される（Playモードのみ有効）")]
     [SerializeField] private bool _debugMode = false;
@@ -200,6 +210,8 @@ public class TypewriterInteractable : InteractableHighlight
         else
             Debug.LogWarning("[TypewriterInteractable] RoguelikeManager が見つかりません。スキルは反映されません", this);
 
+        SellBlackDiamonds(mgr);
+
         if (controller == null)
         {
             Debug.LogWarning("[TypewriterInteractable] TypewriterController が未設定 - 打鍵をスキップ", this);
@@ -208,6 +220,39 @@ public class TypewriterInteractable : InteractableHighlight
         }
 
         StartCoroutine(TypeAndUnblock(chosen.skillName));
+    }
+
+    private void SellBlackDiamonds(RoguelikeManager mgr)
+    {
+        var wallet = PlayerWallet.Local;
+        if (wallet == null) return;
+
+        int count = wallet.BlackDiamonds;
+        if (count <= 0) return;
+
+        int stage = mgr != null ? mgr.GetDiamondPolishStage() : 0;
+
+        if (_diamondSellRates == null || stage >= _diamondSellRates.Length)
+        {
+            Debug.LogWarning($"[TypewriterInteractable] ダイヤ売却: stage={stage} に対応するレートが未設定です", this);
+            return;
+        }
+
+        float rate = _diamondSellRates[stage].rate;
+        float totalChange = wallet.WashedAmount * rate * count;
+
+        if (totalChange >= 0f)
+            wallet.AddWashed(totalChange);
+        else
+            wallet.ReduceWashed(-totalChange);
+
+        wallet.BlackDiamonds -= count;
+
+        var itemMgr = ItemPanelManager.Instance;
+        if (itemMgr != null)
+            itemMgr.RemoveItem(105, ItemType.CraneItem, count);
+        else
+            Debug.LogWarning("[TypewriterInteractable] ItemPanelManager が見つかりません", this);
     }
 
     private IEnumerator TypeAndUnblock(string text)
@@ -274,4 +319,15 @@ public class TypewriterInteractable : InteractableHighlight
             }
         }
     }
+}
+
+/// <summary>ブラックダイヤ磨き段階ごとの強制売却レート設定</summary>
+[System.Serializable]
+public class DiamondSellRate
+{
+    [Tooltip("Inspector 上の見出し（動作には影響しません）")]
+    public string label;
+
+    [Tooltip("現所持金に対する増減率。正で増加・負で減少（例: -0.15 = 15%減、0.10 = 10%増）")]
+    public float rate;
 }
