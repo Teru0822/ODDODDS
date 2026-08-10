@@ -175,6 +175,37 @@ public class UFOArmController : MonoBehaviour
     [Range(1, 4)]
     [SerializeField] private int volumeBoost = 1;
 
+    [Header("【新規】アーム移動音")]
+    [Tooltip("アームが動いている間（XZ移動・下降・上昇中）ループ再生する音1")]
+    [SerializeField] private AudioClip armMoveLoopSound;
+    [Tooltip("音1の音量")]
+    [Range(0f, 10f)]
+    [SerializeField] private float armMoveVolume = 1.0f;
+    [Tooltip("上のループ音専用のAudioSource。未設定なら自動生成します")]
+    [SerializeField] private AudioSource armMoveLoopAudioSource;
+
+    [Tooltip("アームが動いている間、音1と同時にループ再生する音2（任意）")]
+    [SerializeField] private AudioClip armMoveLoopSound2;
+    [Tooltip("音2の音量")]
+    [Range(0f, 10f)]
+    [SerializeField] private float armMoveVolume2 = 1.0f;
+    [Tooltip("音2専用のAudioSource。未設定なら自動生成します")]
+    [SerializeField] private AudioSource armMoveLoopAudioSource2;
+
+    [Tooltip("アームが動き始めた瞬間に鳴らす音")]
+    [SerializeField] private AudioClip armMoveStartSound;
+    [Tooltip("開始音の音量")]
+    [Range(0f, 10f)]
+    [SerializeField] private float armMoveStartVolume = 1.0f;
+
+    [Tooltip("アームが止まった瞬間に鳴らす音")]
+    [SerializeField] private AudioClip armMoveStopSound;
+    [Tooltip("停止音の音量")]
+    [Range(0f, 10f)]
+    [SerializeField] private float armMoveStopVolume = 1.0f;
+
+    private bool _wasArmMoving = false;
+
     [Header("【デバッグ設定】")]
     [Tooltip("オンにすると、アームの揺れ（Sway）を完全に無効化（揺れなし）にします")]
     [SerializeField] private bool disableSway = false;
@@ -543,6 +574,99 @@ public class UFOArmController : MonoBehaviour
         UpdateMagnet();
         WakeUpNearbyCoins();
         UpdateDescentLaser();
+        UpdateArmMovementSound();
+    }
+
+    /// <summary>アームが実際に動いている（XZ移動・下降・上昇中の）状態かどうか</summary>
+    private bool IsArmMoving => _state == ArmState.Moving || _state == ArmState.Descending || _state == ArmState.Ascending;
+
+    /// <summary>
+    /// アームの移動状態が切り替わった瞬間に開始・停止音を鳴らし、
+    /// 動いている間はループ音を再生する。
+    /// </summary>
+    private void UpdateArmMovementSound()
+    {
+        bool isMoving = IsArmMoving;
+
+        if (isMoving && !_wasArmMoving)
+        {
+            PlayArmMoveOneShot(armMoveStartSound, armMoveStartVolume);
+            StartArmMoveLoop();
+        }
+        else if (!isMoving && _wasArmMoving)
+        {
+            StopArmMoveLoop();
+            PlayArmMoveOneShot(armMoveStopSound, armMoveStopVolume);
+        }
+
+        _wasArmMoving = isMoving;
+    }
+
+    private void StartArmMoveLoop()
+    {
+        if (armMoveLoopSound != null)
+        {
+            EnsureArmMoveLoopAudioSource();
+            armMoveLoopAudioSource.clip = armMoveLoopSound;
+            armMoveLoopAudioSource.loop = true;
+            armMoveLoopAudioSource.volume = armMoveVolume;
+            armMoveLoopAudioSource.Play();
+        }
+
+        if (armMoveLoopSound2 != null)
+        {
+            EnsureArmMoveLoopAudioSource2();
+            armMoveLoopAudioSource2.clip = armMoveLoopSound2;
+            armMoveLoopAudioSource2.loop = true;
+            armMoveLoopAudioSource2.volume = armMoveVolume2;
+            armMoveLoopAudioSource2.Play();
+        }
+    }
+
+    private void StopArmMoveLoop()
+    {
+        if (armMoveLoopAudioSource != null) armMoveLoopAudioSource.Stop();
+        if (armMoveLoopAudioSource2 != null) armMoveLoopAudioSource2.Stop();
+    }
+
+    private void PlayArmMoveOneShot(AudioClip clip, float volume)
+    {
+        if (clip == null) return;
+
+        if (_audioSourceForJingle == null)
+        {
+            _audioSourceForJingle = GetComponent<AudioSource>();
+            if (_audioSourceForJingle == null)
+            {
+                _audioSourceForJingle = gameObject.AddComponent<AudioSource>();
+                _audioSourceForJingle.playOnAwake = false;
+                _audioSourceForJingle.spatialBlend = 0f;
+            }
+        }
+
+        _audioSourceForJingle.PlayOneShot(clip, volume);
+    }
+
+    private void EnsureArmMoveLoopAudioSource()
+    {
+        if (armMoveLoopAudioSource != null) return;
+
+        GameObject go = new GameObject("ArmMoveLoopAudioSource");
+        go.transform.SetParent(transform, false);
+        armMoveLoopAudioSource = go.AddComponent<AudioSource>();
+        armMoveLoopAudioSource.playOnAwake = false;
+        armMoveLoopAudioSource.spatialBlend = 0f;
+    }
+
+    private void EnsureArmMoveLoopAudioSource2()
+    {
+        if (armMoveLoopAudioSource2 != null) return;
+
+        GameObject go = new GameObject("ArmMoveLoopAudioSource2");
+        go.transform.SetParent(transform, false);
+        armMoveLoopAudioSource2 = go.AddComponent<AudioSource>();
+        armMoveLoopAudioSource2.playOnAwake = false;
+        armMoveLoopAudioSource2.spatialBlend = 0f;
     }
 
     /// <summary>
