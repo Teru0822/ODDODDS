@@ -121,6 +121,16 @@ namespace App.Intro
         [Tooltip("取引口を開くカットの番号（0始まり。Shot 08 なら 7）")]
         [SerializeField] private int _doorHatchShotIndex = 7;
 
+        [Header("インターホン演出")]
+        [Tooltip("インターホンを着信状態（ランプ点滅）にするカット番号（0始まり。Shot 06 なら 5）。-1 で無効")]
+        [SerializeField] private int _intercomCallingShotIndex = 5;
+
+        [Tooltip("中央ボタンをハイライトするカット番号（0始まり。Shot 06b を追加した場合は 6）。-1 で無効")]
+        [SerializeField] private int _intercomCenterBtnShotIndex = -1;
+
+        [Tooltip("左右ボタンをハイライトするカット番号（0始まり。Shot 06c を追加した場合は 7）。-1 で無効")]
+        [SerializeField] private int _intercomSideBtnsShotIndex = -1;
+
         [Header("終了時の霧")]
         [Tooltip("モヤでフェードアウト/フェードインする時間(秒)")]
         [SerializeField] private float _fogFadeDuration = 1.5f;
@@ -143,6 +153,9 @@ namespace App.Intro
         [Header("デバッグ")]
         [SerializeField] private bool _logEvents = true;
 
+        [Tooltip("ONにするとセーブデータの isWatchTour を無視して常にツアーを再生する（エディタ専用・確認作業用）")]
+        [SerializeField] private bool _debugAlwaysPlayTour = false;
+
         private bool _isWatchTour = false;//既に一度このセーブデータでツアーを見ているか否か
         private bool _isLoadComplete = false;//ロードが終わったか否か
 
@@ -160,6 +173,11 @@ namespace App.Intro
         private bool _playerWasEnabled = true;
         private readonly List<Canvas> _hiddenCanvases = new List<Canvas>();
         private DoorHatchController _doorHatch;
+        private IntercomController _intercomController;
+
+        private IntercomController GetIntercom() =>
+            _intercomController != null ? _intercomController :
+            (_intercomController = FindFirstObjectByType<IntercomController>());
 
         private void Awake()
         {
@@ -193,7 +211,7 @@ namespace App.Intro
             yield return WaitUntilSceneReady();
             yield return new WaitUntil(() => _isLoadComplete == true);
 
-            if(!_isWatchTour)//一度も見たことが無い時のみツアー開始
+            if(!_isWatchTour || _debugAlwaysPlayTour)//一度も見たことが無い時のみツアー開始
                 StartTour();
             else
             {
@@ -350,6 +368,14 @@ namespace App.Intro
             if (_doorHatch != null && shotIndex == _doorHatchShotIndex)
                 _doorHatch.Open();
 
+            // インターホン演出 (enter)
+            if (_intercomCallingShotIndex >= 0 && shotIndex == _intercomCallingShotIndex)
+                GetIntercom()?.SetDemoCallingState();
+            if (_intercomCenterBtnShotIndex >= 0 && shotIndex == _intercomCenterBtnShotIndex)
+                GetIntercom()?.ForceHighlightCenterButton(true);
+            if (_intercomSideBtnsShotIndex >= 0 && shotIndex == _intercomSideBtnsShotIndex)
+                GetIntercom()?.ForceHighlightSideButtons(true);
+
             StopMotion();
             _motionRoutine = StartCoroutine(AnimateCamera(shot));
 
@@ -371,6 +397,28 @@ namespace App.Intro
 
             if (_doorHatch != null && shotIndex == _doorHatchShotIndex)
                 _doorHatch.Close();
+
+            // インターホン演出 (exit)
+            if (_intercomCenterBtnShotIndex >= 0 && shotIndex == _intercomCenterBtnShotIndex)
+                GetIntercom()?.ForceHighlightCenterButton(false);
+
+            if (_intercomSideBtnsShotIndex >= 0 && shotIndex == _intercomSideBtnsShotIndex)
+            {
+                GetIntercom()?.ForceHighlightSideButtons(false);
+                GetIntercom()?.SetDemoIdleState();
+            }
+            else if (_intercomCallingShotIndex >= 0 && shotIndex == _intercomCallingShotIndex
+                     && _intercomCenterBtnShotIndex < 0 && _intercomSideBtnsShotIndex < 0)
+            {
+                // 06b/06c が無い場合、Calling shot の exit で Idle に戻す
+                GetIntercom()?.SetDemoIdleState();
+            }
+            else if (_intercomCenterBtnShotIndex >= 0 && shotIndex == _intercomCenterBtnShotIndex
+                     && _intercomSideBtnsShotIndex < 0)
+            {
+                // 06b はあるが 06c が無い場合、06b の exit で Idle に戻す
+                GetIntercom()?.SetDemoIdleState();
+            }
         }
 
         /// <summary>カットのカメラを時間に沿って動かす。動き切ったらその姿勢のまま終了する。</summary>

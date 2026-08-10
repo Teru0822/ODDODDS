@@ -2783,6 +2783,8 @@ Transform:
   - {fileID: 1719668755}
   - {fileID: 1084974047}
   - {fileID: 1639353584}
+  - {fileID: 509802651}
+  - {fileID: 638058213}
   - {fileID: 1675626283}
   - {fileID: 1660460736}
   - {fileID: 356949849}
@@ -2891,6 +2893,37 @@ RectTransform:
   m_AnchoredPosition: {x: -0.000061035156, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &509802650
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 509802651}
+  m_Layer: 0
+  m_Name: "Pose_06b_\u30A4\u30F3\u30BF\u30FC\u30DB\u30F3"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &509802651
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 509802650}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.00005796505, y: 0.99990636, z: -0.005999779, w: 0.0123048425}
+  m_LocalPosition: {x: 3.27, y: 1.018, z: -2.928}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 475886230}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!1 &532689846
 GameObject:
   m_ObjectHideFlags: 0
@@ -3373,6 +3406,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 631468674}
   m_CullTransparentMesh: 1
+--- !u!1 &638058212
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 638058213}
+  m_Layer: 0
+  m_Name: "Pose_06c_\u30A4\u30F3\u30BF\u30FC\u30DB\u30F3"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &638058213
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 638058212}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.00005796505, y: 0.99990636, z: -0.005999779, w: 0.0123048425}
+  m_LocalPosition: {x: 3.27, y: 1.018, z: -2.9279993}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 475886230}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!1 &666016243
 GameObject:
   m_ObjectHideFlags: 0
@@ -6121,6 +6185,42 @@ MonoBehaviour:
     onShotExit:
       m_PersistentCalls:
         m_Calls: []
+  - label: "06b_\u4E2D\u592E\u30DC\u30BF\u30F3"
+    startPose: {fileID: 509802651}
+    motion: 0
+    orbitPivot: {fileID: 0}
+    orbitDegrees: 25
+    endPose: {fileID: 0}
+    motionDuration: 10
+    startFov: 40
+    endFov: 36
+    lines:
+    - "\u30E9\u30F3\u30D7\u304C\u70B9\u6EC5\u3057\u305F\u3089\u3001\u3053\u3053\u3067\u51FA\u308D\u3002"
+    durationWithoutTelop: 4
+    onShotEnter:
+      m_PersistentCalls:
+        m_Calls: []
+    onShotExit:
+      m_PersistentCalls:
+        m_Calls: []
+  - label: "06c_\u30A4\u30F3\u30BF\u30FC\u30DB\u30F3_\u5DE6\u53F3\u30DC\u30BF\u30F3"
+    startPose: {fileID: 638058213}
+    motion: 0
+    orbitPivot: {fileID: 0}
+    orbitDegrees: 25
+    endPose: {fileID: 0}
+    motionDuration: 10
+    startFov: 40
+    endFov: 36
+    lines:
+    - "\u5DE6\u3067\u53D6\u5F15\u3001\u53F3\u3067\u65AD\u308B\u3002\u2193\u76F8\u624B\u306F\u9078\u3079\u3002\u3060\u304C\u7121\u8996\u306F\u3059\u308B\u306A\u3002"
+    durationWithoutTelop: 4
+    onShotEnter:
+      m_PersistentCalls:
+        m_Calls: []
+    onShotExit:
+      m_PersistentCalls:
+        m_Calls: []
   - label: "07_\u30C9\u30A2"
     startPose: {fileID: 1675626283}
     motion: 2
@@ -6181,7 +6281,10 @@ MonoBehaviour:
   _startDelay: 0.5
   _ufoSpotlightOnShotIndex: 1
   _ufoSpotlightOffShotIndex: 2
-  _doorHatchShotIndex: 7
+  _doorHatchShotIndex: 9
+  _intercomCallingShotIndex: 5
+  _intercomCenterBtnShotIndex: 6
+  _intercomSideBtnsShotIndex: 7
   _fogFadeDuration: 1.5
   _fallbackFogCanvasGroup: {fileID: 0}
   _hideOtherCanvasesDuringTour: 1
@@ -6189,6 +6292,7 @@ MonoBehaviour:
   - GameUI
   _allowSkipAll: 1
   _logEvents: 1
+  _debugAlwaysPlayTour: 0
 --- !u!1 &1303120258
 GameObject:
   m_ObjectHideFlags: 0

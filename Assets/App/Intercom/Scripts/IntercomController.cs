@@ -24,6 +24,16 @@ public class IntercomController : MonoBehaviour
     [SerializeField] private AudioClip callingClip;        // チャイム音
     [SerializeField] private GameObject entranceCamera;   // 玄関カメラ（オプション・負荷軽減用）
 
+    [Header("IntroTour 演出用: ボタンアウトライン")]
+    [Tooltip("中央ボタン (出る) の MouseHoverOutline。同シーン内なので Inspector から直接アサインできます")]
+    [SerializeField] private MouseHoverOutline _centerButtonOutline;
+
+    [Tooltip("左ボタン (取引) の MouseHoverOutline")]
+    [SerializeField] private MouseHoverOutline _leftButtonOutline;
+
+    [Tooltip("右ボタン (断る) の MouseHoverOutline")]
+    [SerializeField] private MouseHoverOutline _rightButtonOutline;
+
     private Material lampMaterial;
     private Material runtimeDisplayMaterial;
     private AudioSource audioSource;
@@ -132,7 +142,7 @@ public class IntercomController : MonoBehaviour
         }
     }
 
-    public void UpdateState(IntercomState newState)
+    public void UpdateState(IntercomState newState, bool playAudio = true)
     {
         currentState.Value = newState;
 
@@ -151,7 +161,7 @@ public class IntercomController : MonoBehaviour
                 if (displayObject != null) displayObject.SetActive(true);
                 if (entranceCamera != null) entranceCamera.SetActive(true);
                 SetDisplayVisual(true);
-                if (audioSource != null && !audioSource.isPlaying) audioSource.Play();
+                if (audioSource != null && !audioSource.isPlaying && playAudio) audioSource.Play();
                 break;
 
             case IntercomState.Talking:
@@ -212,4 +222,20 @@ public class IntercomController : MonoBehaviour
     public void OnClickCentralButton() { if (currentState.Value == IntercomState.Calling) UpdateState(IntercomState.Talking); }
     public void OnClickRightButton() { if (currentState.Value != IntercomState.Idle && _isCanPushIdle) UpdateState(IntercomState.Idle); }
     public void OnClickLeftButton() { if (currentState.Value == IntercomState.Talking) UpdateState(IntercomState.Trade);/* 開錠ロジック用（将来） */ }
+
+    /// <summary>IntroTour 演出用: インターホンを着信状態（ランプ点滅・画面オン）に見せる。音は鳴らさない。</summary>
+    public void SetDemoCallingState() => UpdateState(IntercomState.Calling, playAudio: false);
+
+    /// <summary>IntroTour 演出用: インターホンをアイドル状態に戻す。</summary>
+    public void SetDemoIdleState() => UpdateState(IntercomState.Idle);
+
+    /// <summary>IntroTour 演出用: 中央ボタンのアウトラインを強制表示／非表示する。</summary>
+    public void ForceHighlightCenterButton(bool show) => _centerButtonOutline?.ForceHighlight(show);
+
+    /// <summary>IntroTour 演出用: 左右ボタンのアウトラインを強制表示／非表示する。</summary>
+    public void ForceHighlightSideButtons(bool show)
+    {
+        _leftButtonOutline?.ForceHighlight(show);
+        _rightButtonOutline?.ForceHighlight(show);
+    }
 }

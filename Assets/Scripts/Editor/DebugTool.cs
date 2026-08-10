@@ -38,14 +38,14 @@ public class DebugTool : EditorWindow
 
     private void OnEnable()
     {
+        _isUseDebugData = EditorPrefs.GetBool("LFEngine_DebugMode", false);
+
         _logo = AssetDatabase.LoadAssetAtPath<Texture2D>(
         "Assets/Resources/illust/LF_Engine_Logo.png"
         );
 
         Debug.Log(_logo);
         Debug.Log(_logo?.GetType());
-
-
     }
 
 
