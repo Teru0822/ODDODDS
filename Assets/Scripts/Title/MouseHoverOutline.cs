@@ -126,6 +126,7 @@ public class MouseHoverOutline : MonoBehaviour
     private MaterialPropertyBlock _mpb;
     private bool _ready;
     private bool _hovered;
+    private bool _forcedHighlight;
 
     /// <summary>現在マウスカーソルが乗っているか (TitlePlayButton 等がクリック判定で参照する)</summary>
     public bool IsHovered => _hovered;
@@ -222,6 +223,15 @@ public class MouseHoverOutline : MonoBehaviour
         }
     }
 
+    /// <summary>チュートリアル演出などから強制的にアウトラインを表示／非表示にする。解除すると通常のホバー判定に戻る。</summary>
+    public void ForceHighlight(bool show)
+    {
+        _forcedHighlight = show;
+        if (!_ready) Setup();
+        Apply(show);
+        if (!show) _hovered = false;
+    }
+
     private void OnDisable()
     {
         if (_hovered)
@@ -229,10 +239,17 @@ public class MouseHoverOutline : MonoBehaviour
             _hovered = false;
             Apply(false);
         }
+        if (_forcedHighlight)
+        {
+            _forcedHighlight = false;
+            Apply(false);
+        }
     }
 
     private void Update()
     {
+        if (_forcedHighlight) return;
+
         if (App.Input.GameInputGate.IsBlocked)
         {
             if (_hovered) { _hovered = false; Apply(false); }
