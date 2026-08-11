@@ -10,6 +10,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using MiniGames.Transitions;
+using UniRx;
+using UniRx.Triggers;
 
 public class DebtCollectionManager : MonoBehaviour
 {
@@ -47,9 +49,9 @@ public class DebtCollectionManager : MonoBehaviour
     private float _characterSpeed = 0.1f;//文字を書くスピード
 
     //数字カウント用アニメーション
-    Sequence countAnimSequence;
-    int previousDecreaseValue;
-    int previousMoneyValue;
+    Sequence _countAnimSequence;
+    int _previousDecreaseValue;
+    int _previousMoneyValue;
 
     [Header("ゲームオーバー用")]
     [SerializeField] private ResultUIManager _resultUIManager;
@@ -62,6 +64,9 @@ public class DebtCollectionManager : MonoBehaviour
     private Vector3 _originRotation;
     private FirstPersonController _fpController;
     private Camera _camera;
+
+    private IEnumerator _debtCoroutine;
+    bool _isStopCoroutine = false;
 
     void Awake()
     {
@@ -82,6 +87,32 @@ public class DebtCollectionManager : MonoBehaviour
         _clipDictionary = _clipSerializeDictionary.GetDictionary;
 
         AdjustLanguageSetting();
+
+        /*
+        this.UpdateAsObservable()
+            .Subscribe(_ =>
+            {
+                
+                if(SettingUIManager.IsMenuOpen && !_isStopCoroutine)
+                {
+                    if(_debtCoroutine != null)
+                    {
+                        StopCoroutine(_debtCoroutine);
+                        if(_countAnimSequence != null) _countAnimSequence.Pause();
+                        _isStopCoroutine = true;
+                    }
+                }
+                else if(!SettingUIManager.IsMenuOpen && _isStopCoroutine)
+                {
+                    if(_debtCoroutine != null)
+                    {
+                        StartCoroutine(_debtCoroutine);
+                        if(_countAnimSequence != null) _countAnimSequence.Play();
+                        _isStopCoroutine = false;
+                    }
+                }
+            }).AddTo(this);
+            */
     }
 
     private void Update()
@@ -215,12 +246,18 @@ public class DebtCollectionManager : MonoBehaviour
         return _conversations.Count(pair => pair.Value.conversationType == type);
     }
 
+    public void StartConversationCoroutine(string key = "")
+    {
+        _debtCoroutine = ShowConversation(key);
+        StartCoroutine(_debtCoroutine);
+    }
+
     /// <summary>
     /// 悪魔の取り立てに関するアニメーションを再生
     /// </summary>
     /// <param name="key">会話のキー</param>
     /// <returns>会話コルーチン</returns>
-    public IEnumerator ShowConversation(string key = "")
+    private IEnumerator ShowConversation(string key = "")
     {
         bool isSuccess = true;//取り立てに耐えたか否か
         bool isFinishFade = false;
@@ -269,36 +306,36 @@ public class DebtCollectionManager : MonoBehaviour
         //取り立て開始
         {
             //今回の取り立て金額に関する情報を取得
-            previousDecreaseValue = MoneyManager.Instance.GetQuotaThisTime();
-            previousMoneyValue = (int)MoneyManager.Instance.CurrentMoney;
+            _previousDecreaseValue = MoneyManager.Instance.GetQuotaThisTime();
+            _previousMoneyValue = (int)MoneyManager.Instance.CurrentMoney;
 
             //ゲームオブジェクトの表示・非表示
             _panel.SetActive(false);
-            _reduceMoneyCounter.text = _reduceMoneyMessage + previousDecreaseValue.ToString();
-            _myMoneyCounter.text = _myMoneyMessage + previousMoneyValue.ToString();
+            _reduceMoneyCounter.text = _reduceMoneyMessage + _previousDecreaseValue.ToString();
+            _myMoneyCounter.text = _myMoneyMessage + _previousMoneyValue.ToString();
 
             //減らす金額を表示する用のアニメーション開始
-            countAnimSequence = DOTween.Sequence();
-            countAnimSequence.Append(_reduceMoneyCounter.DOFade(endValue: 1f, duration: 1f))//請求金額テキストの表示
+            _countAnimSequence = DOTween.Sequence();
+            _countAnimSequence.Append(_reduceMoneyCounter.DOFade(endValue: 1f, duration: 1f))//請求金額テキストの表示
                   .Append(_myMoneyCounter.DOFade(endValue: 1f, duration: 1f))//所持金テキストの表示
                   .Append(_reduceMoneyCounter.rectTransform.DOAnchorPos(new Vector2(0, 180), 1.0f).SetEase(Ease.OutQuart))
                   .Join(_myMoneyCounter.rectTransform.DOAnchorPos(new Vector2(0, -180), 1.0f).SetEase(Ease.OutQuart))
-                  .Append(DOTween.To(() => previousDecreaseValue,//ターゲットとなる変数
-                         num => previousDecreaseValue = num,    //値の更新を行う
+                  .Append(DOTween.To(() => _previousDecreaseValue,//ターゲットとなる変数
+                         num => _previousDecreaseValue = num,    //値の更新を行う
                          0,                                     //最終的な値
                          1.0f                                   //時間
-                         ).OnStart(() => _audioSource.PlayOneShot(_drumRoll)).OnUpdate(() => _reduceMoneyCounter.text = _reduceMoneyMessage + previousDecreaseValue.ToString()))
-                  .Join(DOTween.To(() => previousMoneyValue,
-                         num => previousMoneyValue = num,
-                         previousMoneyValue - previousDecreaseValue,
+                         ).OnStart(() => _audioSource.PlayOneShot(_drumRoll)).OnUpdate(() => _reduceMoneyCounter.text = _reduceMoneyMessage + _previousDecreaseValue.ToString()))
+                  .Join(DOTween.To(() => _previousMoneyValue,
+                         num => _previousMoneyValue = num,
+                         _previousMoneyValue - _previousDecreaseValue,
                          1.0f
-                         ).OnUpdate(() => _myMoneyCounter.text = _myMoneyMessage + previousMoneyValue.ToString()))
+                         ).OnUpdate(() => _myMoneyCounter.text = _myMoneyMessage + _previousMoneyValue.ToString()))
                   .AppendInterval(1.0f)
                   .Append(_reduceMoneyCounter.DOFade(endValue: 0f, duration: 1f))//請求金額テキストの表示
                   .Join(_myMoneyCounter.DOFade(endValue: 0f, duration: 1f));//所持金テキストの表示
-            countAnimSequence.Play();
+            _countAnimSequence.Play();
             MoneyManager.Instance.ApplyTurnDecrease();
-            yield return countAnimSequence.WaitForCompletion();//アニメーションが終わるまで待つ
+            yield return _countAnimSequence.WaitForCompletion();//アニメーションが終わるまで待つ
 
             //取り立て成功か否かで処理を分ける
             if (MoneyManager.Instance.CheckGameOver())//失敗用
@@ -379,6 +416,7 @@ public class DebtCollectionManager : MonoBehaviour
 
             _myMoneyCounter.DOFade(endValue: 0f, duration: 1f);
             _myMoneyCounter.rectTransform.DOAnchorPos(new Vector2(540, 180), 1.0f).SetEase(Ease.OutQuart);
+            _countAnimSequence = null;
         }
 
         Debug.Log("イベント無事終了");

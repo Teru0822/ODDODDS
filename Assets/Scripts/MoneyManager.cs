@@ -96,7 +96,6 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
             .Pairwise()
             .Subscribe(x =>
             {
-                Debug.LogError("呼ばれたよー");
                 //経過ターンに応じて、次回の取り立てターンを計算
                 var diff = x.Current - x.Previous;
                 _nextDebtCollectionTurnCount.Value-= diff;

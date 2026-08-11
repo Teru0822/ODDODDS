@@ -21,6 +21,10 @@ public class RoguelikeSaveData
     public int debtClearTimes;//借金の取り立てに何回耐えきったか
     public bool isWatchTour;//ツアーを一回みたか
     public bool isFinishUfoCatcherInRound;//ラウンド内で、UFOキャッチャーをプレイし終わっているか
+    public VisitorSaveData remainVisitor = null;//前回、訪問者がいたままゲーム終了した時に、状況を復元する用の情報
+    public int tradeTimes;//ゲーム内でトレードに応じた回数
+    public float playTime;//ゲームプレイ時間
+
 
     //恒久ポイントを活用したローグライク要素
     public bool isUnlockPinball    = false; // ピンボール機能を解放

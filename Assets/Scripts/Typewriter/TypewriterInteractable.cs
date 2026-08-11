@@ -295,9 +295,9 @@ public class TypewriterInteractable : InteractableHighlight
                 _debtCollectionManager = FindFirstObjectByType<DebtCollectionManager>();
 
             if(_debtCollectionManager != null && MoneyManager.Instance.DebtClearTimes == 0)
-                yield return StartCoroutine(_debtCollectionManager.ShowConversation("Conversation_00"));
+                _debtCollectionManager.StartConversationCoroutine("Conversation_00");
             else if(_debtCollectionManager != null && MoneyManager.Instance.DebtClearTimes != 0)
-                yield return StartCoroutine(_debtCollectionManager.ShowConversation());
+                _debtCollectionManager.StartConversationCoroutine();
             else
                 Debug.LogError("[TypewriterInteractable] DebtCollectionManager が見つかりません", this);
         }
