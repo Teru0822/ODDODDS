@@ -64,7 +64,9 @@ public static class RoguelikeSaveManager
         {
             var newSaveData = new RoguelikeSaveData();
             newSaveData.money = 10000;
+            newSaveData.remainVisitor = new VisitorSaveData(-1,-1);
             string newJson = JsonUtility.ToJson(newSaveData);
+            //Debug.LogError(newJson);
             byte[] newEncryptedBytes = EncodeText(newJson);
 
             string newPath = GetSaveFilePath();

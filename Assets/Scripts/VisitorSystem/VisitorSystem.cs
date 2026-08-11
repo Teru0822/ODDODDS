@@ -17,6 +17,17 @@ public class VisitorSaveData
 {
     public int id;
     public int eventProgress;
+
+    public VisitorSaveData(int id_setting, int eventProgress_Setting)
+    {
+        id = id_setting;
+        eventProgress = eventProgress_Setting;
+    }
+
+    public VisitorSaveData()
+    {
+        
+    }
 }
 
 /// <summary>
@@ -53,6 +64,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
     private ReactiveProperty<VisitorInstance> _nowSelectedVisitorInstance = new ReactiveProperty<VisitorInstance>(null);
     public IObservable<VisitorInstance> OnSelectVisitorInstance => _nowSelectedVisitorInstance;
     private int _nowSelectIndexInTradeContent = -1;//ガルガンチュアなどの複数の選択肢が用意されてるやつ用
+    private int _tradeTimes;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -110,13 +122,19 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
             visitorSaveDatas.Add(visitorSaveData);
         }
 
+        //訪問者がいた状態でゲームを終了した際にセーブを行う
+        if(_nowSelectedVisitorInstance != null)
+        {
+            saveData.remainVisitor = _nowSelectedVisitorInstance.Value.CreateVisitorSaveData();
+        }
+        else
+            saveData.remainVisitor = null;
+
         saveData.visitorSaveDatas = visitorSaveDatas;
     }
 
     public void ReadSaveData(RoguelikeSaveData saveData)
     {
-        Debug.LogError("visitor_system_readSaveData");
-        
         _visitorInstances.Clear();
         if (saveData.visitorSaveDatas != null && saveData.visitorSaveDatas.Count > 0)
         {
@@ -137,6 +155,9 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
                     Debug.LogWarning($"訪問者ID {visitorSaveData.id} がデータベースに見つかりません。");
                 }
             }
+
+            //トレードに対応した回数を記録
+            saveData.tradeTimes = _tradeTimes;
         }
         else //セーブデータに情報がなかった場合は新規作成
         {
@@ -162,6 +183,16 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
             bool hasFirstConversation = visitorInstance.Conversations.TryGetValue("Conversation1", out VisitorConversationContainer[] conversations) && conversations != null && conversations.Length > 0;
             string firstLine = hasFirstConversation ? conversations[0].lineJp : "(Conversation1が未設定)";
             Debug.Log($"{visitorInstance.VisitorName}\n{visitorInstance.eventProgress}\n{hasFirstConversation}\n{firstLine}");
+        }
+
+        _tradeTimes = saveData.tradeTimes;
+        
+        /*前回、訪問者がいたままゲーム終了した時に、状況を復元する*/
+        if(saveData.remainVisitor != null && saveData.remainVisitor.id != -1 && saveData.remainVisitor.eventProgress != -1)
+        {
+            _nowSelectedVisitorInstance.Value = _visitorInstances[saveData.remainVisitor.id];
+            _visitorPrefabs.GetDictionary[_nowSelectedVisitorInstance.Value.Id].SetActive(true);
+            _icController.UpdateState(IntercomController.IntercomState.Calling);
         }
     }
 
@@ -513,6 +544,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
                 //イベント進行状況を更新
                 visitor.eventProgress++;
                 visitor.key = "Conversation" + visitor.eventProgress.ToString("0");
+                _tradeTimes++;
             }
         }
         else

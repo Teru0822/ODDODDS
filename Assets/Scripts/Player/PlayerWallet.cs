@@ -180,7 +180,6 @@ public class PlayerWallet : MonoBehaviour, IsaveDataProvider
 
     public void ReadSaveData(RoguelikeSaveData saveData)
     {
-        Debug.LogError("PlayerWalletの読み込み開始");
         _washedMoneyAmount.Value = saveData.money;
         _unwashedMoneyAmount.Value = saveData.unwashedMoney;
         _virtuePointAmount.Value = saveData.virtuePoints;
