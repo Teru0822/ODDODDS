@@ -21,6 +21,10 @@ public class RoguelikeManager : MonoBehaviour, IsaveDataProvider
     [SerializeField] private string _jsonFilePath = "Assets/Resources/Roguelike/RoguelikeData.json";
     private bool isFinishLoadJson = false;
 
+    [Header("Devil_Eye（ルーレット）")]
+    [Tooltip("スキルID16取得時にインベントリへ追加する Devil_Eye の ItemData。未設定なら図鑑カラー化をスキップします")]
+    [SerializeField] private ItemData _devilEyeItemData;
+
     [Header("ブラックダイヤの磨き段階")]
     [Tooltip("磨き段階に応じて表示名を書き換える、唯一のブラックダイヤItemData")]
     [SerializeField] private ItemData _blackDiamondItem;
@@ -347,6 +351,9 @@ public class RoguelikeManager : MonoBehaviour, IsaveDataProvider
             roulette.Unlock();
         else
             Debug.LogWarning("[RoguelikeManager] ApplySkill16Effects: RouletteController が見つかりません。");
+
+        if (_devilEyeItemData != null && ItemPanelManager.Instance != null)
+            ItemPanelManager.Instance.AddItem(_devilEyeItemData.id, ItemType.Permanent);
     }
 
     /// <summary>スキルID26取得時：UFOキャッチャーの中身（降らせる枚数）を1000枚に増やす</summary>

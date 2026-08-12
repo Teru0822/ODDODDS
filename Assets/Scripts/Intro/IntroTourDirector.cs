@@ -146,6 +146,10 @@ namespace App.Intro
         [Tooltip("ツアー終了時に SetActive(true) する GO 名のリスト。非アクティブでも検索できます")]
         [SerializeField] private string[] _activateOnTourEnd = { "GameUI" };
 
+        [Header("テロップ表示")]
+        [Tooltip("OFF にするとテロップを表示せず durationWithoutTelop で各カットを送る。動画撮影時に使用")]
+        [SerializeField] private bool _showTelop = true;
+
         [Header("スキップ")]
         [Tooltip("Escキーでツアー全体を飛ばせるようにする。開発中の確認用")]
         [SerializeField] private bool _allowSkipAll = true;
@@ -379,7 +383,7 @@ namespace App.Intro
             StopMotion();
             _motionRoutine = StartCoroutine(AnimateCamera(shot));
 
-            bool hasTelop = shot.lines != null && shot.lines.Length > 0 && _telop != null;
+            bool hasTelop = _showTelop && shot.lines != null && shot.lines.Length > 0 && _telop != null;
             if (hasTelop)
             {
                 yield return _telop.PlayLines(shot.lines);
