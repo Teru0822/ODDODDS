@@ -123,9 +123,17 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
         }
 
         //訪問者がいた状態でゲームを終了した際にセーブを行う
-        if(_nowSelectedVisitorInstance != null)
+        if(_nowSelectedVisitorInstance.Value != null)
         {
-            saveData.remainVisitor = _nowSelectedVisitorInstance.Value.CreateVisitorSaveData();
+            try
+            {
+                saveData.remainVisitor = _nowSelectedVisitorInstance.Value.CreateVisitorSaveData();
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError(e);
+            }
+            
         }
         else
             saveData.remainVisitor = null;
