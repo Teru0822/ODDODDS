@@ -23,12 +23,15 @@ public class DebtCollectionManager : MonoBehaviour
     [SerializeField] private bool _demoGamePlay = false;
     [SerializeField] private int _demoGamePlayEndTurn = 12;
     [SerializeField] private AudioClip _demoFaustClip;
-    [SerializeField]private List<Transform> _demoPinballCameraFoots = new List<Transform>();
-    [SerializeField]private GameObject _faust;
-    [SerializeField]private GameObject _imp;
-    [SerializeField]private GameObject _pinball;
-    [SerializeField]private GameObject _demoCameraPosition;
-    [SerializeField]private Transform _pinballCenter;
+    [SerializeField] private Sprite _thxPlayDemoImage;
+    [SerializeField] private TMP_Text _thxPlayDemoText;
+    [SerializeField] private TMP_Text _quitMessage;
+    private List<Transform> _demoPinballCameraFoots = new List<Transform>();
+    private GameObject _faust;
+    private GameObject _imp;
+    private GameObject _pinball;
+    private GameObject _demoCameraPosition;
+    private Transform _pinballCenter;
 
     [Header("会話用データパス")] 
     [SerializeField] private Language _language = Language.JP;
@@ -259,6 +262,8 @@ public class DebtCollectionManager : MonoBehaviour
 
     public void StartConversationCoroutine(string key = "")
     {
+        FindObjectDemo();
+        _faust.SetActive(false);
         _debtCoroutine = ShowConversation(key);
         StartCoroutine(_debtCoroutine);
     }
@@ -395,7 +400,7 @@ public class DebtCollectionManager : MonoBehaviour
 
 
         //これで会話が終了の場合
-        if(_demoGamePlay && isSuccess && MoneyManager.Instance.CurrentTurnCount != _demoGamePlayEndTurn)
+        if(_demoGamePlay && MoneyManager.Instance.CurrentTurnCount != _demoGamePlayEndTurn)
         {
             //暗転を解除させる
             _panel.SetActive(false);
@@ -433,7 +438,7 @@ public class DebtCollectionManager : MonoBehaviour
         else if(_demoGamePlay && isSuccess && MoneyManager.Instance.CurrentTurnCount == _demoGamePlayEndTurn)//デモ版専用シーンを再生する（体験版リリース後に消す）
         {
             isFinishFade = false;
-            FindObjectDemo();
+            _faust.SetActive(true);
             SceneTransitionManager.Instance.ShowTurnTransition(
             2.0f,
             onDuringLoading: () => Debug.Log("Now Loading"),
@@ -447,9 +452,27 @@ public class DebtCollectionManager : MonoBehaviour
             _imp.transform.DORotate(new Vector3(0,-20,0), 0.5f);
             _faust.transform.DORotate(new Vector3(0,120,0), 0.5f);
             _mainSentence.text = "";
+            _name.text = "???";
 
             yield return new WaitUntil(() => isFinishFade);
             yield return StartCoroutine(TextSystemForFaust());
+
+            //最後まで遊んでくれてありがとう的な
+            _background.sprite = _thxPlayDemoImage;
+            _background.color = new Color(255,255,255,0);
+            _panel.SetActive(false);
+            
+            yield return _background.DOFade(1, 3.0f).WaitForCompletion();
+            yield return _thxPlayDemoText.DOFade(1, 2.0f).WaitForCompletion();
+            yield return _quitMessage.DOFade(1, 2.0f).WaitForCompletion();
+
+            yield return new WaitUntil(() => _clickReference.action.WasPressedThisFrame());
+            RoguelikeSaveManager.DeleteSaveData();
+            #if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;//シーン再生終了
+            #else
+                Application.Quit();//ゲームプレイ終了
+            #endif
         }
 
         Debug.Log("イベント無事終了");
@@ -545,7 +568,9 @@ public class DebtCollectionManager : MonoBehaviour
         {
             yield return TextSystemPlot("アクマ、お待たせしました。↓以前頼まれていたピンボール台の調整が終わりましたよ。", "???");
             //ToDo：ここでピンボールの出現演出を追加
+            _panel.SetActive(false);
             yield return demoSequence().WaitForCompletion();
+            _panel.SetActive(true);
             yield return TextSystemPlot("おぉ！よくできてんじゃねえカ！↓...前の台と外装が変わってねえか？相変わらずいい趣味してるゼ。","アクマ");
             _faust.transform.DORotate(new Vector3(0,75,0), 0.5f);
             yield return TextSystemPlot("誉め言葉として受け取っておきます。して、そちらにいる御仁はどなたですか？","???");
@@ -558,7 +583,9 @@ public class DebtCollectionManager : MonoBehaviour
         {
             yield return TextSystemPlot("Demon, sorry to keep you waiting. ↓ I’ve finished the adjustments to the pinball machine you asked me to make earlier", "???");
             //ToDo：ここでピンボールの出現演出を追加
+            _panel.SetActive(false);
             yield return demoSequence().WaitForCompletion();
+            _panel.SetActive(true);
             yield return TextSystemPlot("Wow! You did a damn good job! ↓ ...Hold on, didn’t you change the exterior from the old machine? Still got some pretty good taste, I see.","Demon");
             _faust.transform.DORotate(new Vector3(0,75,0), 0.5f);
             yield return TextSystemPlot("I’ll take that as a compliment. Now then, who’s the gentleman standing over there?","???");
@@ -612,11 +639,9 @@ public class DebtCollectionManager : MonoBehaviour
         pinballsep.Append(_background.DOFade(1, 0.5f).OnComplete(() => {_camera.transform.position = _demoPinballCameraFoots[0].position; _camera.transform.LookAt(_pinballCenter);}))
         .AppendInterval(0.2f)
         .Append(_background.DOFade(0, 0.5f))
-        .AppendInterval(0.1f)
         .Append(_camera.transform.DOPath(
         new[]
         {
-            _demoPinballCameraFoots[0].position,
             _demoPinballCameraFoots[1].position,
             _demoPinballCameraFoots[2].position,
         },
@@ -624,11 +649,9 @@ public class DebtCollectionManager : MonoBehaviour
         .Append(_background.DOFade(1, 0.5f).OnComplete(() => {_camera.transform.position = _demoPinballCameraFoots[3].position;_camera.transform.LookAt(_pinballCenter);}))
         .AppendInterval(0.2f)
         .Append(_background.DOFade(0, 0.5f))
-        .AppendInterval(0.1f)
         .Append(_camera.transform.DOPath(
         new[]
         {
-            _demoPinballCameraFoots[3].position,
             _demoPinballCameraFoots[4].position,
         },
         5f, PathType.CatmullRom).SetLookAt(_pinballCenter))

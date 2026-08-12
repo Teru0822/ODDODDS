@@ -125,6 +125,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
         //訪問者がいた状態でゲームを終了した際にセーブを行う
         if(_nowSelectedVisitorInstance.Value != null)
         {
+            Debug.LogError(_nowSelectedVisitorInstance.Value.VisitorName);
             try
             {
                 saveData.remainVisitor = _nowSelectedVisitorInstance.Value.CreateVisitorSaveData();
@@ -136,7 +137,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
             
         }
         else
-            saveData.remainVisitor = null;
+            saveData.remainVisitor = new VisitorSaveData(-1,-1);//nullで書きだすと、変数が初期化された状態で書きだされるため、-1を入れる
 
         saveData.visitorSaveDatas = visitorSaveDatas;
     }
@@ -348,7 +349,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
             if(_icController.CurrentState == IntercomController.IntercomState.Idle)//取引を拒否した場合
             {
                 //UIを消して終了処理
-                
+                _nowSelectedVisitorInstance.Value = null;
             }
             else if(_icController.CurrentState == IntercomController.IntercomState.Trade)//取引に応じた場合
             {
@@ -572,6 +573,8 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
         _icController.UpdateState(IntercomController.IntercomState.Idle);
         _select1.gameObject.SetActive(false); 
         _select2.gameObject.SetActive(false);
+
+        Debug.LogError(_nowSelectedVisitorInstance.Value);
     }
 
     /// <summary>
