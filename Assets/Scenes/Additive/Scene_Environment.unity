@@ -3650,7 +3650,7 @@ MonoBehaviour:
   binLocalScale: {x: 1, y: 1, z: 1}
   logEvents: 1
   drawRayGizmo: 1
-  showOnGUIDiagnostics: 1
+  showOnGUIDiagnostics: 0
 --- !u!114 &1122561447
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3779,6 +3779,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RoguelikeManager
   _jsonFilePath: Assets/Resources/Roguelike/RoguelikeData.json
+  _devilEyeItemData: {fileID: 11400000, guid: 0984a2cbe57559349a04060c93869b33, type: 2}
   _blackDiamondItem: {fileID: 11400000, guid: 2874668e1e6a02741ad69048e43045cc, type: 2}
   _diamondStageNames:
   - "\u546A\u308F\u308C\u305F\u30C0\u30A4\u30E4\u30E2\u30F3\u30C9"
