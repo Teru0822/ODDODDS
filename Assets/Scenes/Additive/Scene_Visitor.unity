@@ -119,6 +119,37 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &289890329
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 289890330}
+  m_Layer: 0
+  m_Name: InterComeCameraPosition
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &289890330
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 289890329}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
+  m_LocalPosition: {x: 2.6, y: 7.168, z: -26.01}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!1001 &290399823
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2142,6 +2173,7 @@ MonoBehaviour:
       Value: {fileID: 2022914576}
     - Key: 1
       Value: {fileID: 376636017}
+  _firstCameraPosition: {fileID: 289890330}
   _visitorUI: {fileID: 1428219910}
   _icController: {fileID: 1850081780}
   _nameText: {fileID: 1227807983}
@@ -2185,7 +2217,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
-  m_Volume: 0.21
+  m_Volume: 1
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -3032,6 +3064,7 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 4231797807749907846}
+  - {fileID: 289890330}
   - {fileID: 1428219915}
   - {fileID: 747996427}
   - {fileID: 702227218}

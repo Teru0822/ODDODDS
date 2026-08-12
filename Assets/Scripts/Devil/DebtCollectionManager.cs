@@ -12,12 +12,26 @@ using UnityEngine.UI;
 using MiniGames.Transitions;
 using UniRx;
 using UniRx.Triggers;
+using System.Data.Common;
 
 public class DebtCollectionManager : MonoBehaviour
 {
     public static DebtCollectionManager Instance;
     private bool _isStartDebtCollection = false;//現在、悪魔の取り立てが行われているか
     public bool IsStartDebtCollection => _isStartDebtCollection;
+    [Header("デモ版専用")]
+    [SerializeField] private bool _demoGamePlay = false;
+    [SerializeField] private int _demoGamePlayEndTurn = 12;
+    [SerializeField] private AudioClip _demoFaustClip;
+    [SerializeField] private Sprite _thxPlayDemoImage;
+    [SerializeField] private TMP_Text _thxPlayDemoText;
+    [SerializeField] private TMP_Text _quitMessage;
+    private List<Transform> _demoPinballCameraFoots = new List<Transform>();
+    private GameObject _faust;
+    private GameObject _imp;
+    private GameObject _pinball;
+    private GameObject _demoCameraPosition;
+    private Transform _pinballCenter;
 
     [Header("会話用データパス")] 
     [SerializeField] private Language _language = Language.JP;
@@ -248,6 +262,8 @@ public class DebtCollectionManager : MonoBehaviour
 
     public void StartConversationCoroutine(string key = "")
     {
+        FindObjectDemo();
+        _faust.SetActive(false);
         _debtCoroutine = ShowConversation(key);
         StartCoroutine(_debtCoroutine);
     }
@@ -384,6 +400,7 @@ public class DebtCollectionManager : MonoBehaviour
 
 
         //これで会話が終了の場合
+        if(_demoGamePlay && MoneyManager.Instance.CurrentTurnCount != _demoGamePlayEndTurn)
         {
             //暗転を解除させる
             _panel.SetActive(false);
@@ -392,7 +409,7 @@ public class DebtCollectionManager : MonoBehaviour
             SceneTransitionManager.Instance.ShowTurnTransition(
             _turnTransitionDuration,
             onDuringLoading: () => Debug.Log("Now Loading"),
-            onComplete:      () => {isFinishFade = false; _fpController.enabled = true; MoneyManager.Instance?.AdvanceTurn();});
+            onComplete:      () => {_fpController.enabled = true; MoneyManager.Instance?.AdvanceTurn();});
 
             yield return new WaitForSeconds(1.0f);//大体Loading画面になったであろう時間まで待機
             _gameUI.GetComponent<CanvasGroup>().alpha = 1;//見えるようにする
@@ -417,6 +434,45 @@ public class DebtCollectionManager : MonoBehaviour
             _myMoneyCounter.DOFade(endValue: 0f, duration: 1f);
             _myMoneyCounter.rectTransform.DOAnchorPos(new Vector2(540, 180), 1.0f).SetEase(Ease.OutQuart);
             _countAnimSequence = null;
+        }
+        else if(_demoGamePlay && isSuccess && MoneyManager.Instance.CurrentTurnCount == _demoGamePlayEndTurn)//デモ版専用シーンを再生する（体験版リリース後に消す）
+        {
+            isFinishFade = false;
+            _faust.SetActive(true);
+            SceneTransitionManager.Instance.ShowTurnTransition(
+            2.0f,
+            onDuringLoading: () => Debug.Log("Now Loading"),
+            onComplete:      () => {isFinishFade = true;});
+
+            yield return new WaitForSeconds(1.0f);
+
+            _camera.transform.position = _demoCameraPosition.transform.position;
+            _camera.transform.eulerAngles = _demoCameraPosition.transform.eulerAngles;
+
+            _imp.transform.DORotate(new Vector3(0,-20,0), 0.5f);
+            _faust.transform.DORotate(new Vector3(0,120,0), 0.5f);
+            _mainSentence.text = "";
+            _name.text = "???";
+
+            yield return new WaitUntil(() => isFinishFade);
+            yield return StartCoroutine(TextSystemForFaust());
+
+            //最後まで遊んでくれてありがとう的な
+            _background.sprite = _thxPlayDemoImage;
+            _background.color = new Color(255,255,255,0);
+            _panel.SetActive(false);
+            
+            yield return _background.DOFade(1, 3.0f).WaitForCompletion();
+            yield return _thxPlayDemoText.DOFade(1, 2.0f).WaitForCompletion();
+            yield return _quitMessage.DOFade(1, 2.0f).WaitForCompletion();
+
+            yield return new WaitUntil(() => _clickReference.action.WasPressedThisFrame());
+            RoguelikeSaveManager.DeleteSaveData();
+            #if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;//シーン再生終了
+            #else
+                Application.Quit();//ゲームプレイ終了
+            #endif
         }
 
         Debug.Log("イベント無事終了");
@@ -496,6 +552,130 @@ public class DebtCollectionManager : MonoBehaviour
             yield return new WaitUntil(() => _clickReference.action.WasPressedThisFrame());
             yield return new WaitForSeconds(0.5f);
         }
+    }
+
+    /// <summary>
+    /// ファウスト用。後で消す
+    /// </summary>
+    /// <returns></returns>
+    private IEnumerator TextSystemForFaust()
+    {
+        //指定されたBGMに設定・再生(同じBGMの場合は無視)
+        _audioSource.clip = _demoFaustClip;
+        _audioSource.Play();        
+
+        if(_language == Language.JP)
+        {
+            yield return TextSystemPlot("アクマ、お待たせしました。↓以前頼まれていたピンボール台の調整が終わりましたよ。", "???");
+            //ToDo：ここでピンボールの出現演出を追加
+            _panel.SetActive(false);
+            yield return demoSequence().WaitForCompletion();
+            _panel.SetActive(true);
+            yield return TextSystemPlot("おぉ！よくできてんじゃねえカ！↓...前の台と外装が変わってねえカ？相変わらずいい趣味してるゼ。","アクマ");
+            _faust.transform.DORotate(new Vector3(0,75,0), 0.5f);
+            yield return TextSystemPlot("誉め言葉として受け取っておきます。して、そちらにいる御仁はどなたですか？","???");
+            _imp.transform.DORotate(new Vector3(0,25,0), 0.5f);
+            yield return TextSystemPlot("新しいおもちゃサ。↓そして、新しくなったこいつの初の犠牲者ダ。","アクマ");
+            yield return TextSystemPlot("そうですか。私の名はファウスト、ただの数学者です。↓君がこのゲームにどれほど抗えるのか、楽しみにしていますね。","ファウスト");
+            yield return TextSystemPlot("くはははははははははははははっ！！","ファウスト");
+        }
+        else
+        {
+            yield return TextSystemPlot("Demon, sorry to keep you waiting. ↓ I’ve finished the adjustments to the pinball machine you asked me to make earlier", "???");
+            //ToDo：ここでピンボールの出現演出を追加
+            _panel.SetActive(false);
+            yield return demoSequence().WaitForCompletion();
+            _panel.SetActive(true);
+            yield return TextSystemPlot("Wow! You did a damn good job! ↓ ...Hold on, didn’t you change the exterior from the old machine? Still got some pretty good taste, I see.","Demon");
+            _faust.transform.DORotate(new Vector3(0,75,0), 0.5f);
+            yield return TextSystemPlot("I’ll take that as a compliment. Now then, who’s the gentleman standing over there?","???");
+            _imp.transform.DORotate(new Vector3(0,25,0), 0.5f);
+            yield return TextSystemPlot("He's my new toy. ↓ And he's gonna be the first victim of this newly upgraded pinball machine.","Demon");
+            yield return TextSystemPlot("I see. My name is Faust. I’m just a mathematician. ↓ I’m looking forward to seeing how long you can withstand this game.","Faust");
+            yield return TextSystemPlot("Ku-hahahahahahahahahaha!","Faust");
+        }
+    }
+
+    private IEnumerator TextSystemPlot(string text = "", string name = "")
+    {
+        //カメラ遷移を実施
+        _name.text = name;
+
+        _mainSentence.text = "";//テキストを消去
+        string sentence = AjustDownArrow(text);
+
+        //アクマのアニメーションを遷移させる（任意）
+        //_devil.sprite = _devilExpressions[(int)_conversations[key].devilExpressions[i]];
+
+        //テキストを一文字ずつ描画
+        int charCount = 0;
+        foreach (char c in sentence)
+        {
+            //途中でトリガーボタンを押すとテキストを全て出力(設定を開いているときは反応しない)
+            if (charCount >= 5 && _clickReference.action.IsPressed() && !SettingUIManager.IsMenuOpen)
+            {
+                _mainSentence.text = sentence;
+                break;
+            }
+            else
+            {
+                yield return new WaitUntil(() => SettingUIManager.IsMenuOpen == false);//設定画面が閉じられるまで待つ
+                _mainSentence.text += c;
+            }
+
+            charCount++;
+            yield return new WaitForSeconds(_characterSpeed);
+        }
+
+        //次に進むためのクリック入力
+        yield return new WaitUntil(() => _clickReference.action.WasPressedThisFrame());
+        yield return new WaitForSeconds(0.5f);
+    }
+
+    private Sequence demoSequence()
+    {
+        
+        Sequence pinballsep = DOTween.Sequence();
+        pinballsep.Append(_background.DOFade(1, 0.5f).OnComplete(() => {_camera.transform.position = _demoPinballCameraFoots[0].position; _camera.transform.LookAt(_pinballCenter);}))
+        .AppendInterval(0.2f)
+        .Append(_background.DOFade(0, 0.5f))
+        .Append(_camera.transform.DOPath(
+        new[]
+        {
+            _demoPinballCameraFoots[1].position,
+            _demoPinballCameraFoots[2].position,
+        },
+        5f, PathType.CatmullRom).SetLookAt(_pinballCenter))
+        .Append(_background.DOFade(1, 0.5f).OnComplete(() => {_camera.transform.position = _demoPinballCameraFoots[3].position;_camera.transform.LookAt(_pinballCenter);}))
+        .AppendInterval(0.2f)
+        .Append(_background.DOFade(0, 0.5f))
+        .Append(_camera.transform.DOPath(
+        new[]
+        {
+            _demoPinballCameraFoots[4].position,
+        },
+        5f, PathType.CatmullRom).SetLookAt(_pinballCenter))
+        .Append(_background.DOFade(1, 0.5f).OnComplete(() => {_camera.transform.position = _demoCameraPosition.transform.position; _camera.transform.eulerAngles = _demoCameraPosition.transform.eulerAngles;}))
+        .AppendInterval(0.2f)
+        .Append(_background.DOFade(0, 0.5f));
+
+        return pinballsep;
+    }
+
+    private void FindObjectDemo()
+    {
+        _pinball = GameObject.Find("Demo_pinball");
+        _faust = GameObject.Find("Demo_Faust");
+        _imp = GameObject.Find("imp");
+        _pinballCenter = GameObject.Find("newpinball_eye_inner").transform;
+        _demoCameraPosition = GameObject.Find("Demo_CameraPosition");
+        
+        
+        _demoPinballCameraFoots.Add(GameObject.Find("CinemachineCameraPoint1").transform);
+        _demoPinballCameraFoots.Add(GameObject.Find("CinemachineCameraPoint2").transform);
+        _demoPinballCameraFoots.Add(GameObject.Find("CinemachineCameraPoint3").transform);
+        _demoPinballCameraFoots.Add(GameObject.Find("CinemachineCameraPoint4").transform);
+        _demoPinballCameraFoots.Add(GameObject.Find("CinemachineCameraPoint5").transform);
     }
 }
 
