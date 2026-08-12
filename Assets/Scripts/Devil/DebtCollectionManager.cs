@@ -571,7 +571,7 @@ public class DebtCollectionManager : MonoBehaviour
             _panel.SetActive(false);
             yield return demoSequence().WaitForCompletion();
             _panel.SetActive(true);
-            yield return TextSystemPlot("おぉ！よくできてんじゃねえカ！↓...前の台と外装が変わってねえか？相変わらずいい趣味してるゼ。","アクマ");
+            yield return TextSystemPlot("おぉ！よくできてんじゃねえカ！↓...前の台と外装が変わってねえカ？相変わらずいい趣味してるゼ。","アクマ");
             _faust.transform.DORotate(new Vector3(0,75,0), 0.5f);
             yield return TextSystemPlot("誉め言葉として受け取っておきます。して、そちらにいる御仁はどなたですか？","???");
             _imp.transform.DORotate(new Vector3(0,25,0), 0.5f);
@@ -591,7 +591,7 @@ public class DebtCollectionManager : MonoBehaviour
             yield return TextSystemPlot("I’ll take that as a compliment. Now then, who’s the gentleman standing over there?","???");
             _imp.transform.DORotate(new Vector3(0,25,0), 0.5f);
             yield return TextSystemPlot("He's my new toy. ↓ And he's gonna be the first victim of this newly upgraded pinball machine.","Demon");
-            yield return TextSystemPlot("“I see. My name is Faust. I’m just a mathematician. ↓ I’m looking forward to seeing how long you can withstand this game.","Faust");
+            yield return TextSystemPlot("I see. My name is Faust. I’m just a mathematician. ↓ I’m looking forward to seeing how long you can withstand this game.","Faust");
             yield return TextSystemPlot("Ku-hahahahahahahahahaha!","Faust");
         }
     }

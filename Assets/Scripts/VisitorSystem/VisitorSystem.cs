@@ -59,6 +59,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
 {
     [SerializeField] private VisitorDataBase _visitorDataBase;
     [SerializeField] private SerializeDictionary<int, GameObject> _visitorPrefabs;
+    [SerializeField] private Transform _firstCameraPosition;
     private GameObject _visitor;
     private List<VisitorInstance> _visitorInstances = new List<VisitorInstance>();
     private ReactiveProperty<VisitorInstance> _nowSelectedVisitorInstance = new ReactiveProperty<VisitorInstance>(null);
@@ -330,8 +331,23 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
     /// </summary>
     /// <param name="visitor">訪問者の情報</param>
     /// <returns></returns>
-    public IEnumerator VisitorTradeConversation(VisitorInstance visitor)
+    private IEnumerator VisitorTradeConversation(VisitorInstance visitor)
     {
+        //初期設定
+        //アニメーション開始
+        if (_fpController != null)
+            _fpController.enabled = false;
+
+        if(_mainCamera == null)
+        {
+            _mainCamera = Camera.main;
+        }
+        Transform originTransform = _mainCamera.transform;
+        _mainCamera.transform.DOMove(_firstCameraPosition.transform.position,1.0f);
+        yield return _mainCamera.transform.DORotate(_firstCameraPosition.transform.eulerAngles,1.0f).WaitForCompletion();
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
         //最初に会話を行う
         yield return StartCoroutine(TextSystem(visitor));
         if(_itemPanelManager == null) _itemPanelManager = FindFirstObjectByType<ItemPanelManager>();
@@ -349,7 +365,6 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
             if(_icController.CurrentState == IntercomController.IntercomState.Idle)//取引を拒否した場合
             {
                 //UIを消して終了処理
-                _nowSelectedVisitorInstance.Value = null;
             }
             else if(_icController.CurrentState == IntercomController.IntercomState.Trade)//取引に応じた場合
             {
@@ -470,15 +485,6 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
                         _effectManager.AddEffect(effectData.id);
                     }
                 }
-                
-                //アニメーション開始
-                if (_fpController != null)
-                    _fpController.enabled = false;
-
-                if(_mainCamera == null)
-                {
-                    _mainCamera = Camera.main;
-                }
 
                 Transform returnCameraPos = _mainCamera.gameObject.transform;
                 GameObject itemObj = null;
@@ -540,8 +546,6 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
                 yield return _tradeAnimSequence.WaitForCompletion();//アニメーションが終わるまで待つ
                 _patchObject.transform.DOLocalMoveZ(-0.0004f, 1.0f);
                 _itemLight.SetActive(false);
-                if (_fpController != null)
-                    _fpController.enabled = true;
 
                 //報酬アイテムを破壊しておく
                 if(itemObj != null) Destroy(itemObj);
@@ -561,7 +565,8 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
             yield return StartCoroutine(TextSystem("Can'tTradeText"));
         }
         
-        
+        _mainCamera.transform.DOMove(originTransform.position,1.0f);
+        yield return _mainCamera.transform.DORotate(originTransform.eulerAngles,1.0f).WaitForCompletion();
 
         Debug.Log("訪問者システム終了");
         _visitorPrefabs.GetDictionary[_nowSelectedVisitorInstance.Value.Id].SetActive(false);
@@ -574,7 +579,9 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
         _select1.gameObject.SetActive(false); 
         _select2.gameObject.SetActive(false);
 
-        Debug.LogError(_nowSelectedVisitorInstance.Value);
+        _fpController.enabled = true;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     /// <summary>
@@ -665,13 +672,12 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
 
             //アニメーションを変化させる
 
-
             //テキストを一文字ずつ描画
             int charNum = 0;
             foreach (char c in sentence)
             {
                 //途中でトリガーボタンを押すとテキストを全て出力
-                if (_clickReference.action.IsPressed())
+                if (_clickReference.action.IsPressed() && charNum >= 5)
                 {
                     _conversationText.text = sentence;
                     break;
