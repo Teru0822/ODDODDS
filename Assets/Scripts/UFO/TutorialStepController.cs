@@ -1185,6 +1185,17 @@ public class TutorialStepController : MonoBehaviour
         if (fullyDark == _maskPanelsForcedDark) return;
         _maskPanelsForcedDark = fullyDark;
 
+        // fullDarkBackground=ONの間は、実機のGameUI（所持金表示など）と練習機のUFOCatcherUIManager
+        // （price_table等）も一緒に隠す
+        if (GameUIManager.Instance != null)
+        {
+            GameUIManager.Instance.SetGameUIVisibleExternal(!fullyDark);
+        }
+        if (tutorialCrane != null)
+        {
+            tutorialCrane.SetPracticeUIVisible(!fullyDark);
+        }
+
         if (!_hasCapturedMaskPanelBaseColors)
         {
             _maskPanelImages = new[]

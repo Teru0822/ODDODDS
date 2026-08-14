@@ -393,6 +393,18 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
     }
 
     /// <summary>
+    /// 練習機側のUFOCatcherUIManager（price_table等）の表示だけを一時的に切り替える。
+    /// TutorialStepControllerのfullDarkBackgroundステップから呼ばれる。
+    /// </summary>
+    public void SetPracticeUIVisible(bool visible)
+    {
+        if (ufoCatcherUIManager != null)
+        {
+            ufoCatcherUIManager.SetUIVisibleExternal(visible);
+        }
+    }
+
+    /// <summary>
     /// 残り時間を延長する（実機のUFOCameraController.AddPlayTime相当）。
     /// TutorialItemGoalが時計獲得時に呼び出す。
     /// </summary>
@@ -602,12 +614,12 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
             {
                 if (televisionStaticController != null)
                 {
-                    // UpdateCanvasVisibility は Canvas の表示切替とカメラの有効/無効しか行わず、
-                    // canvasBack.worldCamera の参照先自体は変えないため、先に SyncCanvasWorldCameras で
-                    // チュートリアル側（this）の backCamera を明示的に割り当ててから表示する。
-                    // これを忘れると、Q/E を押すまで実機の backCamera が映り続けてしまう。
-                    televisionStaticController.SyncCanvasWorldCameras(UFOCameraController.UfoSubCameraState.Back);
-                    televisionStaticController.UpdateCanvasVisibility(UFOCameraController.UfoSubCameraState.Back);
+                    // HandleSubCameraChangedは内部でSyncCanvasWorldCameras（チュートリアル側backCameraへの
+                    // 割り当て。これをやらないとQ/Eを押すまで実機のbackCameraが映り続けてしまう）→
+                    // 砂嵐演出→UpdateCanvasVisibleの順に行うため、直接呼ぶより実機と同じ「砂嵐を挟んだ
+                    // 切り替え」になる（以前はSyncCanvasWorldCameras/UpdateCanvasVisibilityを直接呼んで
+                    // いたため、この最初の切り替えだけ砂嵐が出なかった）
+                    televisionStaticController.HandleSubCameraChanged(UFOCameraController.UfoSubCameraState.Back);
                 }
             });
         }

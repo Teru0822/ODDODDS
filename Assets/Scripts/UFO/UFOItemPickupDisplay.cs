@@ -68,6 +68,17 @@ public class UFOItemPickupDisplay : MonoBehaviour
 
     private void Update()
     {
+        // UFOキャッチャーをプレイしている間（実機・練習機どちらか）以外は強制的に非表示にする。
+        // displayHoldSeconds<=0のアイテムは「次のアイテムが来るまで表示し続ける」設定のため、
+        // プレイをやめた後もポップアップが残ってしまうのを防ぐ
+        if (!UFOCameraController.IsPlayingUfo && !TutorialCraneController.IsAnyTutorialPlaying)
+        {
+            if ((displayImage != null && displayImage.enabled) || (itemNameText != null && itemNameText.enabled))
+            {
+                SetVisible(false);
+            }
+        }
+
         if (_currentModelInstance != null)
         {
             _currentModelInstance.transform.Rotate(rotationAxis, rotationSpeed * Time.deltaTime, Space.World);

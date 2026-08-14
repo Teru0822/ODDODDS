@@ -530,6 +530,15 @@ public class GameUIManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 外部（TutorialStepControllerのfullDarkBackgroundステップなど）からGameUI全体の表示を
+    /// 切り替えるための公開API
+    /// </summary>
+    public void SetGameUIVisibleExternal(bool visible)
+    {
+        SetGameUIVisible(visible);
+    }
+
+    /// <summary>
     /// 報酬演出（Drawer Camera Viewpoint）用のフォーカスモード。
     /// true: UnwashCoin以外のHUDを隠し、UnwashCoinのテキストを拡大表示する。
     /// false: 元の表示状態に戻す。

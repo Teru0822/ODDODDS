@@ -107,6 +107,18 @@ public class UFOCatcherUIManager : MonoBehaviour
     /// TutorialCraneController から、実機の UFOCameraController.IsPlaySessionActive には一切触れずに
     /// 同じ見た目のUI切り替え（Play2_tutorial の Play を押した時など）だけを行うために呼ばれる。
     /// </summary>
+    /// <summary>
+    /// 生成済みのUIの表示だけを一時的に切り替える。ApplySessionActiveUIStateと違い、UIの生成・破棄は
+    /// 行わないため、fullDarkBackgroundステップの間だけ一時的に隠す、といった用途に使う
+    /// </summary>
+    public void SetUIVisibleExternal(bool visible)
+    {
+        if (_canvas != null)
+        {
+            _canvas.gameObject.SetActive(visible);
+        }
+    }
+
     public void ApplySessionActiveUIState(bool isSessionActive)
     {
         if (isSessionActive)

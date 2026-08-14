@@ -448,6 +448,96 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4568b001dc5ae8748838a2b4b2d3634a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonController
+--- !u!1 &78236670
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 78236671}
+  - component: {fileID: 78236673}
+  - component: {fileID: 78236672}
+  - component: {fileID: 78236674}
+  m_Layer: 5
+  m_Name: GlitchOverlay
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &78236671
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 78236670}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 50, y: 50, z: 50}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 1443746183}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: -1}
+  m_SizeDelta: {x: -1200, y: -980}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &78236672
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 78236670}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 2100000, guid: 072e1e0f98b2dd24a90afb6742a8cde3, type: 2}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &78236673
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 78236670}
+  m_CullTransparentMesh: 1
+--- !u!114 &78236674
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 78236670}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d285b2787265e5548baab5b463a4f2ba, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TutorialCanvasGlitchEffect
+  intensity: 0.5
+  noiseFlickerSpeed: 121.8
 --- !u!1001 &89375024
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2832,7 +2922,7 @@ Transform:
   m_GameObject: {fileID: 549582279}
   serializedVersion: 2
   m_LocalRotation: {x: -0.24707438, y: -0.67669106, z: -0.2434738, w: 0.6494337}
-  m_LocalPosition: {x: 5.782, y: 7.51, z: -11.963}
+  m_LocalPosition: {x: 5.782, y: 7.51, z: -12.324}
   m_LocalScale: {x: 0.4855078, y: 0.11629, z: 2.9469}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4727,7 +4817,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1034135756}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0.03}
   m_LocalScale: {x: 6, y: 6, z: 6}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -4736,7 +4826,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -397, y: -408}
+  m_AnchoredPosition: {x: 13, y: -392}
   m_SizeDelta: {x: 100, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1034135758
@@ -5519,6 +5609,9 @@ MonoBehaviour:
   staticSound: {fileID: 8300000, guid: 39361cfbeab23314aba9cac3bfd0baf3, type: 3}
   staticVolume: 1
   loopStaticSound: 1
+  tutorialStaticLoopAudioSource: {fileID: 0}
+  tutorialStaticLoopSound: {fileID: 8300000, guid: 39361cfbeab23314aba9cac3bfd0baf3, type: 3}
+  tutorialStaticLoopVolume: 0.3
 --- !u!1 &1165467552
 GameObject:
   m_ObjectHideFlags: 0
@@ -6574,7 +6667,7 @@ MonoBehaviour:
     waitForExternalAction: 0
     fullDarkBackground: 0
     hideDimmingMask: 0
-    messageBoxMaxWidth: 600
+    messageBoxMaxWidth: 580
     overrideMessageBoxPosition: 1
     messageBoxAnchor: {x: 0.5, y: 0.7}
     messageBoxPivot: {x: 0.5, y: 0.7}
@@ -6596,7 +6689,7 @@ MonoBehaviour:
     targetUI2: {fileID: 0}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 1755706113}
-    message: "\u3072\u3068\u307E\u305A\u30EC\u30D0\u30FC\u3092\u52D5\u304B\u3057\u3066\u307F\u306A\u3001\u30AB\u30FC\u30BD\u30EB\u3092\u5408\u308F\u305B\u3066\u5DE6\u30AF\u30EA\u30C3\u30AF\u3067\u64CD\u4F5C\u3060\nWASD\u3067\u3082\u64CD\u4F5C\u53EF\u80FD\u3060"
+    message: "\u3072\u3068\u307E\u305A\u30EC\u30D0\u30FC\u3092\u52D5\u304B\u3057\u3066\u307F\u308D\u3001\u30AB\u30FC\u30BD\u30EB\u3092\u5408\u308F\u305B\u3066\u5DE6\u30AF\u30EA\u30C3\u30AF\u9577\u62BC\u3057\u3067\u64CD\u4F5C\u3060\nWASD\u3067\u3082\u64CD\u4F5C\u3067\u304D\u308B"
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
@@ -6656,7 +6749,7 @@ MonoBehaviour:
     targetUI2: {fileID: 0}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 227449733}
-    message: "\u6B21\u306B\u30A2\u30FC\u30E0\u3092\u964D\u4E0B\u3055\u305B\u3066\u307F\u306A\u3001\u3053\u306E\u30DC\u30BF\u30F3\u3067\u30B3\u30A4\u30F3\u304C\u3064\u304B\u3081\u308B\u305E\n1\u756A\u30AD\u30FC\u3092\u62BC\u3059\u3053\u3068\u3067\u3082\u64CD\u4F5C\u53EF\u80FD\u3060"
+    message: "\u6B21\u306B\u30A2\u30FC\u30E0\u3092\u964D\u4E0B\u3055\u305B\u3066\u307F\u306A\u3001\u3053\u306E\u30DC\u30BF\u30F3\u3067\u30B3\u30A4\u30F3\u304C\u3064\u304B\u3081\u308B\n1\u756A\u30AD\u30FC\u3092\u62BC\u3059\u3053\u3068\u3067\u3082\u64CD\u4F5C\u53EF\u80FD\u3060"
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
@@ -6720,7 +6813,7 @@ MonoBehaviour:
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
-    fallbackWorldTargetSize: {x: 600, y: 600}
+    fallbackWorldTargetSize: {x: 700, y: 600}
     waitForExternalAction: 1
     fullDarkBackground: 0
     hideDimmingMask: 0
@@ -6750,7 +6843,7 @@ MonoBehaviour:
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
-    fallbackWorldTargetSize: {x: 600, y: 600}
+    fallbackWorldTargetSize: {x: 700, y: 600}
     waitForExternalAction: 1
     fullDarkBackground: 0
     hideDimmingMask: 0
@@ -6780,7 +6873,7 @@ MonoBehaviour:
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
-    fallbackWorldTargetSize: {x: 600, y: 600}
+    fallbackWorldTargetSize: {x: 700, y: 600}
     waitForExternalAction: 1
     fullDarkBackground: 0
     hideDimmingMask: 0
@@ -6810,7 +6903,7 @@ MonoBehaviour:
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
-    fallbackWorldTargetSize: {x: 600, y: 600}
+    fallbackWorldTargetSize: {x: 700, y: 600}
     waitForExternalAction: 0
     fullDarkBackground: 0
     hideDimmingMask: 0
@@ -6898,7 +6991,7 @@ MonoBehaviour:
     targetWorld: {fileID: 0}
     message: "\u8868\u3092\u898B\u3066\u826F\u3044\u30A2\u30A4\u30C6\u30E0\u3092\u72D9\u3046\u3068\u3044\u3044"
     padding: 0
-    rectAdjustMin: {x: -20, y: -380}
+    rectAdjustMin: {x: -20, y: -430}
     rectAdjustMax: {x: 300, y: 0}
     fallbackWorldTargetSize: {x: 300, y: 300}
     waitForExternalAction: 0
@@ -6926,9 +7019,9 @@ MonoBehaviour:
     targetUI2: {fileID: 7191062920111406091}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 0}
-    message: "\u305F\u3060\u3057\u30D6\u30E9\u30C3\u30AF\u30C0\u30A4\u30E4\u306F\u6C17\u3092\u4ED8\u3051\u308D\u3001\u3042\u308C\u306F\u30C7\u30D3\u30EB\u30B3\u30A4\u30F3\u3092\u6E1B\u3089\u3059\u305E\n\u6D17\u6D44\u3059\u308C\u3070\u3042\u308B\u3044\u306F\u3001\u3001\u3001\u3060\u304C\u306A"
+    message: "\u305F\u3060\u3057\u30D6\u30E9\u30C3\u30AF\u30C0\u30A4\u30E4\u306B\u306F\u6C17\u3092\u4ED8\u3051\u308D\u3001\u3042\u308C\u306F\u30C7\u30D3\u30EB\u30B3\u30A4\u30F3\u3092\u6E1B\u3089\u3059\u305E\u6D17\u6D44\u3059\u308C\u3070\u3042\u308B\u3044\u306F\u3001\u3001\u3001\u3060\u304C\u306A"
     padding: 0
-    rectAdjustMin: {x: -20, y: -380}
+    rectAdjustMin: {x: -20, y: -430}
     rectAdjustMax: {x: 300, y: 0}
     fallbackWorldTargetSize: {x: 300, y: 300}
     waitForExternalAction: 0
@@ -6958,7 +7051,7 @@ MonoBehaviour:
     targetWorld: {fileID: 0}
     message: "\u7802\u6642\u8A08\u306F\u5236\u9650\u6642\u9593\u3092\u56DE\u5FA9\u3059\u308B\u3053\u3068\u304C\u3067\u304D\u308B\u305E"
     padding: 0
-    rectAdjustMin: {x: -20, y: -380}
+    rectAdjustMin: {x: -20, y: -430}
     rectAdjustMax: {x: 300, y: 0}
     fallbackWorldTargetSize: {x: 300, y: 300}
     waitForExternalAction: 0
@@ -7160,11 +7253,6 @@ MonoBehaviour:
   messageBoxGap: 24
   messageBoxPadding: {x: 32, y: 20}
   messageCharacterInterval: 0.06
-  enableMessageSway: 1
-  messageSwayAngle: 1
-  messageSwayPositionAmount: 1
-  messageSwaySpeed: 3
-  messageSwayCharacterOffset: 0.2
   messageTypingSound: {fileID: 8300000, guid: d76fe7901f976e249aaada8403e9d911, type: 3}
   messageTypingPitchMin: 0.6
   messageTypingPitchMax: 0.8
@@ -8541,6 +8629,7 @@ RectTransform:
   - {fileID: 2091445466}
   - {fileID: 1034135757}
   - {fileID: 1599661883}
+  - {fileID: 78236671}
   m_Father: {fileID: 931561450}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -9421,7 +9510,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1569405593
 Transform:
   m_ObjectHideFlags: 0
@@ -9657,7 +9746,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1599661883
 RectTransform:
   m_ObjectHideFlags: 0
@@ -11784,6 +11873,7 @@ GameObject:
   - component: {fileID: 1880645340}
   - component: {fileID: 1880645342}
   - component: {fileID: 1880645341}
+  - component: {fileID: 1880645343}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -11910,6 +12000,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1880645339}
   m_CullTransparentMesh: 1
+--- !u!114 &1880645343
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1880645339}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49acec6c54cde43428b9152331260b92, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextTrembleEffect
+  angle: 6
+  positionAmount: 6
+  speed: 5
+  characterOffset: 4
 --- !u!1001 &1885820926
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -13999,6 +14105,7 @@ GameObject:
   - component: {fileID: 2091445466}
   - component: {fileID: 2091445468}
   - component: {fileID: 2091445467}
+  - component: {fileID: 2091445469}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -14125,6 +14232,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2091445465}
   m_CullTransparentMesh: 1
+--- !u!114 &2091445469
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2091445465}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49acec6c54cde43428b9152331260b92, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextTrembleEffect
+  angle: 6
+  positionAmount: 6
+  speed: 5
+  characterOffset: 4
 --- !u!1 &2104767980
 GameObject:
   m_ObjectHideFlags: 0

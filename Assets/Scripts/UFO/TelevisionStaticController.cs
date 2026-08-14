@@ -89,6 +89,19 @@ public class TelevisionStaticController : MonoBehaviour
     [Tooltip("砂嵐の表示時間（staticDuration）に合わせてループ再生するか。false の場合は開始時に一度だけ再生する")]
     [SerializeField] private bool loopStaticSound = true;
 
+    [Header("Tutorial_Canvas 表示中の砂嵐ループ音")]
+    [Tooltip("Tutorial_Canvas表示中、ずっとループ再生する専用AudioSource。未設定なら自身にAddComponentして使う")]
+    [SerializeField] private AudioSource tutorialStaticLoopAudioSource;
+
+    [Tooltip("Tutorial_Canvas表示中にループ再生するSE。未設定ならstaticSoundを代用する")]
+    [SerializeField] private AudioClip tutorialStaticLoopSound;
+
+    [Range(0f, 5f)]
+    [Tooltip("Tutorial_Canvasループ音のボリューム")]
+    [SerializeField] private float tutorialStaticLoopVolume = 0.5f;
+
+    private bool _wasTutorialCanvasActive;
+
     private Coroutine _staticCoroutine;
 
     /// <summary>
@@ -153,6 +166,47 @@ public class TelevisionStaticController : MonoBehaviour
         // 初期状態: Play_Canvas のみ表示し、カメラ用 Canvas はすべて非表示
         _cameraSwitchingEnabled = false;
         ShowPlayCanvas();
+    }
+
+    private void Update()
+    {
+        // Tutorial_Canvasの表示/非表示は複数箇所（ShowTutorialCanvas/UpdateCanvasVisibility/
+        // ShowPlayCanvas等）から切り替えられるため、呼び出し箇所ごとにループ音を仕込むのではなく、
+        // 毎フレーム状態を監視して変化した瞬間にループ再生の開始・停止を行う
+        bool isTutorialCanvasActive = tutorialCanvas != null && tutorialCanvas.gameObject.activeSelf;
+        if (isTutorialCanvasActive != _wasTutorialCanvasActive)
+        {
+            _wasTutorialCanvasActive = isTutorialCanvasActive;
+            SetTutorialStaticLoopActive(isTutorialCanvasActive);
+        }
+    }
+
+    /// <summary>
+    /// Tutorial_Canvas表示中だけループ再生する砂嵐SEの再生・停止を切り替える。
+    /// </summary>
+    private void SetTutorialStaticLoopActive(bool active)
+    {
+        AudioClip clip = tutorialStaticLoopSound != null ? tutorialStaticLoopSound : staticSound;
+        if (clip == null) return;
+
+        if (tutorialStaticLoopAudioSource == null)
+        {
+            tutorialStaticLoopAudioSource = gameObject.AddComponent<AudioSource>();
+            tutorialStaticLoopAudioSource.playOnAwake = false;
+            tutorialStaticLoopAudioSource.spatialBlend = 0f;
+        }
+
+        if (active)
+        {
+            tutorialStaticLoopAudioSource.clip = clip;
+            tutorialStaticLoopAudioSource.loop = true;
+            tutorialStaticLoopAudioSource.volume = tutorialStaticLoopVolume;
+            tutorialStaticLoopAudioSource.Play();
+        }
+        else
+        {
+            tutorialStaticLoopAudioSource.Stop();
+        }
     }
 
     /// <summary>
