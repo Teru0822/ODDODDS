@@ -94,6 +94,14 @@ public class ItemSpawner : MonoBehaviour
     [Tooltip("行高さの比率 [奥（上）, 中, 手前（下）]。値が大きいほどその行が長くなります。")]
     public float[] grid9RowWeights    = new float[] { 1f, 1f, 1f };
 
+    [Header("チュートリアル設定")]
+    [Tooltip("ON: 練習用UFOキャッチャー（Practice_Cranegame）側のItemSpawnerであることを示す。\n" +
+             "実機・練習機の両方にItemSpawnerが存在するため、通常のOFF個体（実機側）とON個体（練習機側）の" +
+             "Awake()実行順序次第でstatic Instance（実機のフィーバータイム/プレゼントボックス等が参照する" +
+             "グローバル参照）がどちらになるか不定になってしまうバグを防ぐため、ON側は絶対にInstanceを奪わない。\n" +
+             "練習機側のItemSpawnerでは必ずこれをONにしてください。")]
+    [SerializeField] private bool isPracticeInstance = false;
+
     public static ItemSpawner Instance { get; private set; }
     public static bool IsSpawning { get; private set; } = false;
     public static bool IsInitialSpawning { get; private set; } = false;
@@ -111,7 +119,12 @@ public class ItemSpawner : MonoBehaviour
 
     void Awake()
     {
-        Instance = this;
+        // 練習機側は実機のFeverTime/プレゼントボックス等が参照するstatic Instanceを奪わない
+        // （実機・練習機どちらのAwake()が後に実行されても、実機側だけが必ずInstanceになるようにする）
+        if (!isPracticeInstance)
+        {
+            Instance = this;
+        }
 
         // ItemData アセットが設定されていれば、そちらを優先してリストを構築する
         if (initialActiveItemAssets != null && initialActiveItemAssets.Count > 0)
@@ -190,7 +203,8 @@ public class ItemSpawner : MonoBehaviour
     {
         // デバッグモードでない場合は、Inspectorの手動設定を無視して必ず500枚からスタートする
         // （1000/1500への増加はローグライクスキル id26/id27 の獲得によってのみ行われる）
-        if (!debugMode)
+        // 練習機側は常に500枚固定（タイプライター/ローグライクの影響を一切受けない）
+        if (isPracticeInstance || !debugMode)
         {
             spawnCount = SpawnCountType.Count500;
         }
@@ -206,13 +220,20 @@ public class ItemSpawner : MonoBehaviour
                 _activeItems.Add(clone);
             }
         }
-        
+
         _spawnCoroutine = StartCoroutine(SpawnRoutine());
 
         // ローディング画面で隠れているこのタイミングのうちに、まだ一度も生成したことがない特殊アイテム
         // （ルーレット等、解放されるまで排出率0のもの）のシェーダーを事前コンパイルさせておく。
         // これをしないと、実際に解放されて初めて画面上に現れた瞬間にシェーダーコンパイルが走り、一瞬カクつく。
         StartCoroutine(PrewarmSpecialPrefabsRoutine());
+
+        // 練習機側は、最初の500枚を降らせたらそれきりで良い（実機のようにターンが変わるたびに
+        // 降らせ直す必要はない）ため、MoneyManagerのターン変更購読自体を行わない
+        if (isPracticeInstance)
+        {
+            return;
+        }
 
         // ラウンド（MoneyManager のターン）が進むたびに、マシン内に残っているアイテムを消して降らせ直す。
         // MoneyManager は加法ロードされる別サブシーン側にいるため、MultiSceneLoader の非同期ロードが
@@ -600,7 +621,8 @@ public class ItemSpawner : MonoBehaviour
         // 2. 固定枠の確率を取得
         // ルーレットアイテムは、タイプライター id16「クレーンゲームにルーレット機能を追加する」で
         // 解放されるまでは絶対に排出しない（RouletteController側のデバッグ強制も考慮する）
-        bool rouletteUnlocked = RouletteController.Instance != null && RouletteController.Instance.IsRouletteUnlocked;
+        // 練習機側は実機のタイプライター/ローグライク解放状況に一切影響されず、常に初期状態のまま
+        bool rouletteUnlocked = !isPracticeInstance && RouletteController.Instance != null && RouletteController.Instance.IsRouletteUnlocked;
         float jpRate = rouletteUnlocked ? rouletteItemRate : 0f;
         float hgRate = hourglassRate;
         float bdRate = blackDiamondRate;

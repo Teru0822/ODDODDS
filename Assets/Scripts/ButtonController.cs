@@ -35,6 +35,12 @@ public class ButtonController : MonoBehaviour
     [Range(0f, 10f)]
     [SerializeField] private float soundVolume = 1.0f;
 
+    [Header("チュートリアル用制御元（任意）")]
+    [Tooltip("設定すると、UFOCameraControllerの静的な状態の代わりにこちらを参照します（ICraneControlSourceを実装したコンポーネント）。" +
+             "未設定なら今まで通りUFOCameraControllerを見ます（実機用）。")]
+    [SerializeField] private MonoBehaviour controlSourceOverride;
+    private ICraneControlSource _controlSource;
+
     private Vector3  _originalLocalPos;
     private bool     _isPressed = false;
     private Collider _collider;
@@ -43,17 +49,29 @@ public class ButtonController : MonoBehaviour
     {
         _originalLocalPos = transform.localPosition;
         _collider         = GetComponent<Collider>();
-        
+        _controlSource    = controlSourceOverride as ICraneControlSource;
+
         if (audioSource == null)
         {
             audioSource = GetComponent<AudioSource>();
         }
     }
 
+    private bool IsPlaying => _controlSource != null ? _controlSource.IsPlayingCrane : UFOCameraController.IsPlayingUfo;
+    private bool IsActive => _controlSource != null ? _controlSource.IsButtonTypeActive(buttonType) : UFOCameraController.IsControlActive;
+    private Camera ActiveCam => _controlSource != null
+        ? _controlSource.GetActiveCamera()
+        : (UFOCameraController.Instance != null ? UFOCameraController.Instance.GetActiveCamera() : Camera.main);
+    private void NotifyInput()
+    {
+        if (_controlSource != null) _controlSource.NotifyControlInputUsed();
+        else UFOCameraController.Instance?.NotifyControlInputUsed();
+    }
+
     void Update()
     {
         // UFOプレイ中かつアクティブなプレイセッション中のみ操作を許可する
-        if (!UFOCameraController.IsPlayingUfo || !UFOCameraController.IsControlActive)
+        if (!IsPlaying || !IsActive)
         {
             _isPressed = false;
             float inactiveTargetY = _originalLocalPos.y;
@@ -91,11 +109,14 @@ public class ButtonController : MonoBehaviour
     /// </summary>
     public void TriggerPress()
     {
+        Debug.Log($"[TutorialDebug] TriggerPress: buttonType={buttonType}, IsActive={IsActive}");
         // UFOプレイ中かつアクティブなプレイセッション中のみ操作を許可する
-        if (!UFOCameraController.IsPlayingUfo || !UFOCameraController.IsControlActive) return;
+        if (!IsPlaying || !IsActive) return;
 
         _isPressed = true;
-        UFOCameraController.Instance?.NotifyControlInputUsed();
+        NotifyInput();
+        // 押下と同じフレームで即座に通知する（連打防止のロックを1フレームも遅れず掛けられるように）
+        _controlSource?.NotifyButtonPressed(buttonType);
 
         // クリック効果音の再生
         PlaySound(clickSound);
@@ -134,7 +155,7 @@ public class ButtonController : MonoBehaviour
     /// <summary>マウス座標がこのオブジェクトのCollider上にあるか判定</summary>
     bool IsMouseOverThis(Vector2 screenPos)
     {
-        Camera activeCam = UFOCameraController.Instance != null ? UFOCameraController.Instance.GetActiveCamera() : Camera.main;
+        Camera activeCam = ActiveCam;
         if (_collider == null || activeCam == null) return false;
         Ray ray = activeCam.ScreenPointToRay(screenPos);
         return _collider.Raycast(ray, out _, 1000f);

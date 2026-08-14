@@ -53,6 +53,36 @@ public class TelevisionAnimator : MonoBehaviour
     [Tooltip("ゴール座標から「3」キーを押してモニターを仕舞う回転 (度数表示 X, Y, Z)")]
     [SerializeField] private Vector3 stowEulerAngles = new Vector3(-113.592f, -132.161f, 1.139f);
 
+    [Header("6. チュートリアル座標設定（Practice_Cranegame用・スタート相当）")]
+    [Tooltip("チュートリアル中（TutorialCraneController から呼ばれる）に即座にワープする位置")]
+    [SerializeField] private Vector3 tutorialPosition;
+
+    [Tooltip("チュートリアル中に即座にワープする回転 (Quaternion)")]
+    [SerializeField] private Quaternion tutorialRotation;
+
+    [Tooltip("チュートリアル中に即座にワープする回転 (度数表示 X, Y, Z)")]
+    [SerializeField] private Vector3 tutorialEulerAngles;
+
+    [Header("7. ゴール座標設定（チュートリアル・Play2_tutorial の Play 押下後）")]
+    [Tooltip("チュートリアルで Play が押された後、スタート座標(チュートリアル)からアニメーション移動する先の位置")]
+    [SerializeField] private Vector3 goalTutorialPosition;
+
+    [Tooltip("ゴール座標(チュートリアル)の回転 (Quaternion)")]
+    [SerializeField] private Quaternion goalTutorialRotation;
+
+    [Tooltip("ゴール座標(チュートリアル)の回転 (度数表示 X, Y, Z)")]
+    [SerializeField] private Vector3 goalTutorialEulerAngles;
+
+    [Header("8. 収納座標設定（チュートリアル・ゴール到達後に「3」キー）")]
+    [Tooltip("チュートリアルでゴール座標から「3」キーを押してモニターを仕舞う位置")]
+    [SerializeField] private Vector3 stowTutorialPosition;
+
+    [Tooltip("収納座標(チュートリアル)の回転 (Quaternion)")]
+    [SerializeField] private Quaternion stowTutorialRotation;
+
+    [Tooltip("収納座標(チュートリアル)の回転 (度数表示 X, Y, Z)")]
+    [SerializeField] private Vector3 stowTutorialEulerAngles;
+
     [Header("5. アニメーション設定")]
     [Tooltip("UFOキャッチャーアクセス時（出現 -> スタート）の所要時間（秒）")]
     [SerializeField, Min(0.01f)] private float enterAnimationDuration = 1.0f;
@@ -73,6 +103,9 @@ public class TelevisionAnimator : MonoBehaviour
     public Quaternion StartRotation => (startRotation != Quaternion.identity && startRotation.w != 0) ? startRotation : Quaternion.Euler(startEulerAngles);
     public Quaternion EndRotation => (endRotation != Quaternion.identity && endRotation.w != 0) ? endRotation : Quaternion.Euler(endEulerAngles);
     public Quaternion StowRotation => (stowRotation != Quaternion.identity && stowRotation.w != 0) ? stowRotation : Quaternion.Euler(stowEulerAngles);
+    public Quaternion TutorialRotation => (tutorialRotation != Quaternion.identity && tutorialRotation.w != 0) ? tutorialRotation : Quaternion.Euler(tutorialEulerAngles);
+    public Quaternion GoalTutorialRotation => (goalTutorialRotation != Quaternion.identity && goalTutorialRotation.w != 0) ? goalTutorialRotation : Quaternion.Euler(goalTutorialEulerAngles);
+    public Quaternion StowTutorialRotation => (stowTutorialRotation != Quaternion.identity && stowTutorialRotation.w != 0) ? stowTutorialRotation : Quaternion.Euler(stowTutorialEulerAngles);
 
 #if UNITY_EDITOR
     private void OnValidate()
@@ -85,12 +118,24 @@ public class TelevisionAnimator : MonoBehaviour
             endEulerAngles = endRotation.eulerAngles;
         if (stowRotation != Quaternion.identity && stowRotation.w != 0 && stowEulerAngles == Vector3.zero)
             stowEulerAngles = stowRotation.eulerAngles;
+        if (tutorialRotation != Quaternion.identity && tutorialRotation.w != 0 && tutorialEulerAngles == Vector3.zero)
+            tutorialEulerAngles = tutorialRotation.eulerAngles;
+        if (goalTutorialRotation != Quaternion.identity && goalTutorialRotation.w != 0 && goalTutorialEulerAngles == Vector3.zero)
+            goalTutorialEulerAngles = goalTutorialRotation.eulerAngles;
+        if (stowTutorialRotation != Quaternion.identity && stowTutorialRotation.w != 0 && stowTutorialEulerAngles == Vector3.zero)
+            stowTutorialEulerAngles = stowTutorialRotation.eulerAngles;
     }
 #endif
 
     private Coroutine _animCoroutine;
     private bool _isAtGoal = false;
     private bool _isStowed = false;
+
+    // --- チュートリアル用の状態（実機とは完全に独立して管理する） ---
+    private bool _isTutorialMode = false;
+    private bool _isAtGoalTutorial = false;
+    private bool _isStowedTutorial = false;
+    private bool _tutorialKey3InputAllowed = true;
 
     private void OnEnable()
     {
@@ -124,8 +169,28 @@ public class TelevisionAnimator : MonoBehaviour
         }
 #endif
 
+        if (!isDigit3Pressed) return;
+
+        // チュートリアル中は実機とは別の座標・状態で収納 <-> 復元を切り替える（競合しないよう完全に分離）
+        if (_isTutorialMode)
+        {
+            if (!_tutorialKey3InputAllowed) return;
+
+            if (_isAtGoalTutorial)
+            {
+                Debug.Log("[TelevisionAnimator] (チュートリアル)ゴール座標にてキー「3」が押されました。収納アニメーションを開始します。");
+                PlayStowAnimationTutorial();
+            }
+            else if (_isStowedTutorial)
+            {
+                Debug.Log("[TelevisionAnimator] (チュートリアル)収納座標にてキー「3」が再押下されました。ゴール座標への復元アニメーションを開始します。");
+                PlayRestoreFromStowAnimationTutorial();
+            }
+            return;
+        }
+
         // 「3」キー（テンキーの3含む）が押された時、トグルで収納 <-> 復元を切り替え
-        if (isDigit3Pressed && UFOCameraController.IsPlayingUfo)
+        if (UFOCameraController.IsPlayingUfo)
         {
             if (_isAtGoal)
             {
@@ -236,6 +301,215 @@ public class TelevisionAnimator : MonoBehaviour
             stowEulerAngles = transform.localEulerAngles;
         }
         Debug.Log($"[TelevisionAnimator] 収納(しまい)座標を保存しました → 位置: {stowPosition}, 回転: {stowEulerAngles}");
+    }
+
+    /// <summary>
+    /// 現在の Transform 位置・回転を『チュートリアル座標』に保存します。
+    /// </summary>
+    [ContextMenu("9. 現在の Transform を『チュートリアル座標』として保存")]
+    public void SaveCurrentTransformAsTutorial()
+    {
+        if (useWorldSpace)
+        {
+            tutorialPosition = transform.position;
+            tutorialRotation = transform.rotation;
+            tutorialEulerAngles = transform.eulerAngles;
+        }
+        else
+        {
+            tutorialPosition = transform.localPosition;
+            tutorialRotation = transform.localRotation;
+            tutorialEulerAngles = transform.localEulerAngles;
+        }
+        Debug.Log($"[TelevisionAnimator] チュートリアル座標を保存しました → 位置: {tutorialPosition}, 回転: {tutorialEulerAngles}");
+    }
+
+    /// <summary>
+    /// television を即座に『チュートリアル座標』へワープさせます（アニメーションなし）。
+    /// TutorialCraneController から、ラウンド1のチュートリアル開始時（ローディング画面の裏）に呼ばれます。
+    /// </summary>
+    public void SetToTutorialTransform()
+    {
+        ApplyTransform(tutorialPosition, TutorialRotation);
+    }
+
+    /// <summary>
+    /// 現在の Transform 位置・回転を『ゴール座標(チュートリアル)』に保存します。
+    /// </summary>
+    [ContextMenu("10. 現在の Transform を『ゴール座標(チュートリアル)』として保存")]
+    public void SaveCurrentTransformAsGoalTutorial()
+    {
+        if (useWorldSpace)
+        {
+            goalTutorialPosition = transform.position;
+            goalTutorialRotation = transform.rotation;
+            goalTutorialEulerAngles = transform.eulerAngles;
+        }
+        else
+        {
+            goalTutorialPosition = transform.localPosition;
+            goalTutorialRotation = transform.localRotation;
+            goalTutorialEulerAngles = transform.localEulerAngles;
+        }
+        Debug.Log($"[TelevisionAnimator] ゴール座標(チュートリアル)を保存しました → 位置: {goalTutorialPosition}, 回転: {goalTutorialEulerAngles}");
+    }
+
+    /// <summary>
+    /// 現在の Transform 位置・回転を『収納座標(チュートリアル)』に保存します。
+    /// </summary>
+    [ContextMenu("11. 現在の Transform を『収納座標(チュートリアル)』として保存")]
+    public void SaveCurrentTransformAsStowTutorial()
+    {
+        if (useWorldSpace)
+        {
+            stowTutorialPosition = transform.position;
+            stowTutorialRotation = transform.rotation;
+            stowTutorialEulerAngles = transform.eulerAngles;
+        }
+        else
+        {
+            stowTutorialPosition = transform.localPosition;
+            stowTutorialRotation = transform.localRotation;
+            stowTutorialEulerAngles = transform.localEulerAngles;
+        }
+        Debug.Log($"[TelevisionAnimator] 収納座標(チュートリアル)を保存しました → 位置: {stowTutorialPosition}, 回転: {stowTutorialEulerAngles}");
+    }
+
+    public void SetToGoalTutorialTransform()
+    {
+        ApplyTransform(goalTutorialPosition, GoalTutorialRotation);
+    }
+
+    public void SetToStowTutorialTransform()
+    {
+        ApplyTransform(stowTutorialPosition, StowTutorialRotation);
+    }
+
+    /// <summary>
+    /// チュートリアルモードの有効/無効を切り替える。TutorialCraneController から、
+    /// 練習機の場所へ移動した時に true、実機側へ戻した時に false を呼ぶ。
+    /// true の間は、キー「3」の収納/復元がチュートリアル用の座標・状態のみを操作し、実機側には一切影響しない。
+    /// </summary>
+    public void SetTutorialModeActive(bool active)
+    {
+        _isTutorialMode = active;
+        if (!active)
+        {
+            _isAtGoalTutorial = false;
+            _isStowedTutorial = false;
+            _tutorialKey3InputAllowed = true;
+        }
+    }
+
+    /// <summary>
+    /// チュートリアル中、キー「3」（収納/復元トグル）の入力を一時的に禁止/許可する。
+    /// チュートリアルのステップ演出で「今は3番キーを使わせたくない」ステップ用。
+    /// </summary>
+    public void SetTutorialKey3InputAllowed(bool allowed)
+    {
+        _tutorialKey3InputAllowed = allowed;
+    }
+
+    /// <summary>
+    /// チュートリアルで Play2_tutorial の Play が押された時に呼ぶ。
+    /// スタート座標(チュートリアル)からゴール座標(チュートリアル)へアニメーション移動する（実機の PlayCoinAnimation 相当）。
+    /// </summary>
+    public void PlayCoinAnimationTutorial(System.Action onComplete = null)
+    {
+        if (this == null || gameObject == null) return;
+
+        _isAtGoalTutorial = false;
+        _isStowedTutorial = false;
+
+        if (_animCoroutine != null)
+        {
+            StopCoroutine(_animCoroutine);
+        }
+        _animCoroutine = StartCoroutine(AnimateRoutine(tutorialPosition, TutorialRotation, goalTutorialPosition, GoalTutorialRotation, coinAnimationDuration, () =>
+        {
+            _isAtGoalTutorial = true;
+            _isStowedTutorial = false;
+            Debug.Log("[TelevisionAnimator] (チュートリアル)ゴール座標への移動が完了しました。キー「3」で収納が可能です。");
+            onComplete?.Invoke();
+        }));
+    }
+
+    /// <summary>
+    /// チュートリアルのゴール座標から「3」キー押下時（ゴール座標 -> 収納座標）のアニメーションを再生します。
+    /// </summary>
+    public void PlayStowAnimationTutorial()
+    {
+        if (this == null || gameObject == null) return;
+
+        _isAtGoalTutorial = false;
+
+        if (_animCoroutine != null)
+        {
+            StopCoroutine(_animCoroutine);
+        }
+        _animCoroutine = StartCoroutine(AnimateRoutine(goalTutorialPosition, GoalTutorialRotation, stowTutorialPosition, StowTutorialRotation, stowAnimationDuration, () =>
+        {
+            _isAtGoalTutorial = false;
+            _isStowedTutorial = true;
+            Debug.Log("[TelevisionAnimator] (チュートリアル)モニターの収納移動が完了しました。再度キー「3」で復元可能です。");
+        }));
+    }
+
+    /// <summary>
+    /// チュートリアルの収納座標から「3」キー再押下時（収納座標 -> ゴール座標）のアニメーションを再生します。
+    /// </summary>
+    public void PlayRestoreFromStowAnimationTutorial()
+    {
+        if (this == null || gameObject == null) return;
+
+        _isStowedTutorial = false;
+
+        if (_animCoroutine != null)
+        {
+            StopCoroutine(_animCoroutine);
+        }
+        _animCoroutine = StartCoroutine(AnimateRoutine(stowTutorialPosition, StowTutorialRotation, goalTutorialPosition, GoalTutorialRotation, stowAnimationDuration, () =>
+        {
+            _isAtGoalTutorial = true;
+            _isStowedTutorial = false;
+            Debug.Log("[TelevisionAnimator] (チュートリアル)モニターがゴール座標へ復元しました。再度キー「3」で収納可能です。");
+        }));
+    }
+
+    /// <summary>
+    /// 現在の位置・回転を（useWorldSpace設定に従って）取得します。
+    /// TutorialCraneController など、一時的に television を移動して後で元に戻したいスクリプトが、
+    /// 呼び出し時点の実際の位置を記憶しておくために使用します。
+    /// </summary>
+    public void GetCurrentTransform(out Vector3 position, out Quaternion rotation)
+    {
+        if (useWorldSpace)
+        {
+            position = transform.position;
+            rotation = transform.rotation;
+        }
+        else
+        {
+            position = transform.localPosition;
+            rotation = transform.localRotation;
+        }
+    }
+
+    /// <summary>
+    /// 指定した位置・回転を（useWorldSpace設定に従って）即座に反映します。
+    /// </summary>
+    public void ApplyTransform(Vector3 position, Quaternion rotation)
+    {
+        if (useWorldSpace)
+        {
+            transform.position = position;
+            transform.rotation = rotation;
+        }
+        else
+        {
+            transform.localPosition = position;
+            transform.localRotation = rotation;
+        }
     }
 
     public void SetToSpawnTransform()

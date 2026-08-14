@@ -4,6 +4,16 @@ using UnityEngine.Video;
 using UnityEngine.UI;
 
 /// <summary>
+/// Q/E によるサブカメラ切り替え（Left/Right/Back）を提供する側が実装するインターフェース。
+/// 実機の UFOCameraController の代わりに、チュートリアル(TutorialCraneController)など別のカメラ群を
+/// TelevisionStaticController の Canvas 切り替えに差し込むための、ICraneControlSource と同じ考え方の拡張点。
+/// </summary>
+public interface ISubCameraSource
+{
+    Camera GetSubCamera(UFOCameraController.UfoSubCameraState state);
+}
+
+/// <summary>
 /// television オブジェクトや UI 用にアタッチして使用するスクリプト。
 /// サブカメラ（Left, Right, Back）を Q/E キーで切り替えた際に、対応する Canvas の表示切替と 0.5 秒間の砂嵐演出を実行します。
 /// </summary>
@@ -25,11 +35,17 @@ public class TelevisionStaticController : MonoBehaviour
     [Tooltip("Play Canvas から 30/60/90 を選択した際に、砂嵐を挟んで切り替わる Canvas")]
     [SerializeField] private Canvas playCanvas2;
 
+    [Tooltip("チュートリアルの Yes/No を尋ねる Canvas（ラウンド1のみ表示）")]
+    [SerializeField] private Canvas tutorialCanvas;
+
     [Tooltip("Play Canvas のコンテンツスケール（カメラ内に収める調整用。小さくすると全体が縮小される）")]
     [SerializeField, Range(0.01f, 2.0f)] private float playCanvasScale = 0.5f;
 
     [Tooltip("Play Canvas2 のコンテンツスケール（カメラ内に収める調整用。小さくすると全体が縮小される）")]
     [SerializeField, Range(0.01f, 2.0f)] private float playCanvas2Scale = 0.5f;
+
+    [Tooltip("Tutorial Canvas のコンテンツスケール（カメラ内に収める調整用。小さくすると全体が縮小される）")]
+    [SerializeField, Range(0.01f, 2.0f)] private float tutorialCanvasScale = 0.5f;
 
     [Header("砂嵐（TV Static）演出設定")]
     [Tooltip("砂嵐を配置した Noise Canvas")]
@@ -80,6 +96,21 @@ public class TelevisionStaticController : MonoBehaviour
     /// 初期状態では false（Play_Canvas のみ表示）。外部から EnableCameraSwitching() で有効化する。
     /// </summary>
     private bool _cameraSwitchingEnabled = false;
+
+    /// <summary>
+    /// 設定されている間、Q/E のサブカメラ切り替えはこちら（チュートリアル等）のカメラ群を使用する。
+    /// null の場合は今まで通り実機の UFOCameraController.Instance を使用する。
+    /// </summary>
+    private ISubCameraSource _subCameraSourceOverride;
+
+    /// <summary>
+    /// Q/E サブカメラ切り替えの参照先を差し替える。TutorialCraneController が、
+    /// 練習機の場所へ移動した時に自分自身を設定し、実機側へ戻した時に null を設定する。
+    /// </summary>
+    public void SetSubCameraSourceOverride(ISubCameraSource source)
+    {
+        _subCameraSourceOverride = source;
+    }
 
     private void OnEnable()
     {
@@ -182,9 +213,31 @@ public class TelevisionStaticController : MonoBehaviour
         if (canvasRight != null) canvasRight.gameObject.SetActive(state == UFOCameraController.UfoSubCameraState.Right);
         if (canvasBack != null)  canvasBack.gameObject.SetActive(state == UFOCameraController.UfoSubCameraState.Back);
 
-        // カメラ用 Canvas に切り替えたら Play_Canvas / Play_Canvas2 を非表示にする
+        // カメラ用 Canvas に切り替えたら Play_Canvas / Play_Canvas2 / Tutorial_Canvas を非表示にする
         if (playCanvas != null) playCanvas.gameObject.SetActive(false);
         if (playCanvas2 != null) playCanvas2.gameObject.SetActive(false);
+        if (tutorialCanvas != null) tutorialCanvas.gameObject.SetActive(false);
+
+        SyncTvCamerasEnabled();
+    }
+
+    /// <summary>
+    /// 砂嵐演出を挟まずに Tutorial_Canvas を直接表示します。
+    /// ラウンド1でまだプレイしていない状態で UFOモードに入った瞬間（カメラ到着と同フレーム）に
+    /// TouchPanelOutlineController から呼ばれ、Play_Canvas を経由せず最初から Tutorial_Canvas を見せるために使用する。
+    /// </summary>
+    public void ShowTutorialCanvas()
+    {
+        if (canvasLeft != null)  canvasLeft.gameObject.SetActive(false);
+        if (canvasRight != null) canvasRight.gameObject.SetActive(false);
+        if (canvasBack != null)  canvasBack.gameObject.SetActive(false);
+        if (playCanvas != null)  playCanvas.gameObject.SetActive(false);
+        if (playCanvas2 != null) playCanvas2.gameObject.SetActive(false);
+        if (tutorialCanvas != null)
+        {
+            tutorialCanvas.gameObject.SetActive(true);
+            ScaleCanvasContent(tutorialCanvas, tutorialCanvasScale);
+        }
 
         SyncTvCamerasEnabled();
     }
@@ -199,6 +252,7 @@ public class TelevisionStaticController : MonoBehaviour
         if (canvasRight != null) canvasRight.gameObject.SetActive(false);
         if (canvasBack != null)  canvasBack.gameObject.SetActive(false);
         if (playCanvas2 != null) playCanvas2.gameObject.SetActive(false);
+        if (tutorialCanvas != null) tutorialCanvas.gameObject.SetActive(false);
         if (playCanvas != null)
         {
             playCanvas.gameObject.SetActive(true);
@@ -241,10 +295,11 @@ public class TelevisionStaticController : MonoBehaviour
         if (canvasBack != null)  canvasBack.gameObject.SetActive(false);
         if (playCanvas != null)  playCanvas.gameObject.SetActive(false);
         if (playCanvas2 != null) playCanvas2.gameObject.SetActive(false);
+        if (tutorialCanvas != null) tutorialCanvas.gameObject.SetActive(false);
         if (targetCanvas != null)
         {
             targetCanvas.gameObject.SetActive(true);
-            ScaleCanvasContent(targetCanvas, targetCanvas == playCanvas2 ? playCanvas2Scale : playCanvasScale);
+            ScaleCanvasContent(targetCanvas, GetScaleForCanvas(targetCanvas));
         }
 
         SyncTvCamerasEnabled();
@@ -260,10 +315,13 @@ public class TelevisionStaticController : MonoBehaviour
     }
 
     /// <summary>
-    /// Play_Canvas / canvasLeft / canvasRight / canvasBack の worldCamera（PlayCamera, 左右背面カメラ）は
-    /// 全て同じ RenderTexture へ描画するため、対応する Canvas が非表示の間は必ず無効化しておかないと
+    /// Play_Canvas / canvasLeft / canvasRight / canvasBack / tutorialCanvas の worldCamera（PlayCamera, 左右背面カメラ,
+    /// TutorialCamera）は全て同じ RenderTexture へ描画するため、対応する Canvas が非表示の間は必ず無効化しておかないと
     /// 描画が競合してしまう（例: UFOCameraController.SetSubCameraState はカメラ切り替えが未解禁でも
     /// backCamera.enabled を直接 true にするため、対応する canvasBack が表示されるまでは無効化し続ける必要がある）。
+    /// tutorialCanvas 用の TutorialCamera をここで無効化し忘れると、Tutorial_Canvas から Play_Canvas へ戻った後も
+    /// TutorialCamera が同じ RenderTexture へ描画し続け、PlayCamera の描画結果を上書きしてしまい
+    /// 「Play_Canvas に戻っても映らない」状態になる。
     /// Play_Canvas2 は Screen Space - Overlay（専用カメラなし）で TV 画面の上に重ねて表示する仕組みのため、
     /// Play_Canvas2 表示中もその背景として PlayCamera は有効なままにしておく
     /// （そうしないと RenderTexture に描画するカメラが1つも無くなり、直前の砂嵐フレームで画面が固まってしまう）。
@@ -278,6 +336,7 @@ public class TelevisionStaticController : MonoBehaviour
         SyncCanvasCameraEnabled(canvasLeft);
         SyncCanvasCameraEnabled(canvasRight);
         SyncCanvasCameraEnabled(canvasBack);
+        SyncCanvasCameraEnabled(tutorialCanvas);
     }
 
     private static void SyncCanvasCameraEnabled(Canvas canvas)
@@ -295,8 +354,18 @@ public class TelevisionStaticController : MonoBehaviour
     }
 
     /// <summary>
+    /// 対象 Canvas に対応するスケール値（playCanvasScale / playCanvas2Scale / tutorialCanvasScale）を返します。
+    /// </summary>
+    private float GetScaleForCanvas(Canvas canvas)
+    {
+        if (canvas == playCanvas2) return playCanvas2Scale;
+        if (canvas == tutorialCanvas) return tutorialCanvasScale;
+        return playCanvasScale;
+    }
+
+    /// <summary>
     /// 指定した Canvas 内の全子要素を __PlayCanvasScaleContainer にまとめ、scale 倍にスケーリングしてカメラ内に収めます。
-    /// Play_Canvas / Play_Canvas2 の両方で共通して使用します（それぞれ playCanvasScale / playCanvas2Scale で調整）。
+    /// Play_Canvas / Play_Canvas2 / Tutorial_Canvas で共通して使用します（それぞれ playCanvasScale / playCanvas2Scale / tutorialCanvasScale で調整）。
     /// </summary>
     private void ScaleCanvasContent(Canvas canvas, float scale)
     {
@@ -374,6 +443,16 @@ public class TelevisionStaticController : MonoBehaviour
     public bool IsCameraSwitchingEnabled => _cameraSwitchingEnabled;
 
     /// <summary>
+    /// カメラ切り替え（Q/Eキー等）の有効・無効だけを切り替える（Canvas表示には触れない）。
+    /// TutorialCraneController など、Canvas切り替えを自前で管理している側から使用する
+    /// （EnableCameraSwitching/DisableCameraSwitching は Play_Canvas 表示も兼ねてしまうため使えない）。
+    /// </summary>
+    public void SetCameraSwitchingEnabled(bool enabled)
+    {
+        _cameraSwitchingEnabled = enabled;
+    }
+
+    /// <summary>
     /// 初期表示用の Play Canvas を外部（TouchPanelOutlineController 等）から参照するための公開プロパティ。
     /// </summary>
     public Canvas PlayCanvas => playCanvas;
@@ -382,6 +461,11 @@ public class TelevisionStaticController : MonoBehaviour
     /// 30/60/90 選択後に切り替わる Play Canvas2 を外部から参照するための公開プロパティ。
     /// </summary>
     public Canvas PlayCanvas2 => playCanvas2;
+
+    /// <summary>
+    /// チュートリアルのYes/Noを尋ねる Canvas を外部（TutorialPromptController等）から参照するための公開プロパティ。
+    /// </summary>
+    public Canvas TutorialCanvas => tutorialCanvas;
 
     /// <summary>
     /// Play Canvas2 が現在表示中かどうか。UFOCameraController が Esc/F キーの挙動を切り替える際に参照する。
@@ -393,12 +477,17 @@ public class TelevisionStaticController : MonoBehaviour
     /// </summary>
     public void SyncCanvasWorldCameras(UFOCameraController.UfoSubCameraState state)
     {
-        if (UFOCameraController.Instance == null) return;
+        ISubCameraSource source = _subCameraSourceOverride;
+        if (source == null)
+        {
+            if (UFOCameraController.Instance == null) return;
+            source = UFOCameraController.Instance;
+        }
 
-        Camera leftCam = UFOCameraController.Instance.GetSubCamera(UFOCameraController.UfoSubCameraState.Left);
-        Camera rightCam = UFOCameraController.Instance.GetSubCamera(UFOCameraController.UfoSubCameraState.Right);
-        Camera backCam = UFOCameraController.Instance.GetSubCamera(UFOCameraController.UfoSubCameraState.Back);
-        Camera activeCam = UFOCameraController.Instance.GetSubCamera(state);
+        Camera leftCam = source.GetSubCamera(UFOCameraController.UfoSubCameraState.Left);
+        Camera rightCam = source.GetSubCamera(UFOCameraController.UfoSubCameraState.Right);
+        Camera backCam = source.GetSubCamera(UFOCameraController.UfoSubCameraState.Back);
+        Camera activeCam = source.GetSubCamera(state);
 
         if (canvasLeft != null && leftCam != null && canvasLeft.renderMode == RenderMode.ScreenSpaceCamera)
             canvasLeft.worldCamera = leftCam;

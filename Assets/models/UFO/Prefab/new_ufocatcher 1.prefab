@@ -10595,7 +10595,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UFOCameraController
   playerCamera: {fileID: 0}
-  frontCamera: {fileID: 7925405138788672573}
+  frontCameraPos: {fileID: 0}
   leftCamera: {fileID: 3765522845575665704}
   rightCamera: {fileID: 6118290646299472296}
   backCamera: {fileID: 5336918042384276037}
@@ -13640,6 +13640,7 @@ MonoBehaviour:
   audioSource: {fileID: 0}
   clickSound: {fileID: 8300000, guid: 4bbcb5e1c055b7b49b638217bd9eb11a, type: 3}
   soundVolume: 1
+  controlSourceOverride: {fileID: 0}
 --- !u!1001 &313080865681338954
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -14702,6 +14703,7 @@ MonoBehaviour:
   audioSource: {fileID: 0}
   clickSound: {fileID: 0}
   soundVolume: 1
+  controlSourceOverride: {fileID: 0}
 --- !u!64 &8654306729456830548
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -16132,6 +16134,7 @@ MonoBehaviour:
   audioSource: {fileID: 0}
   clickSound: {fileID: 8300000, guid: 4bbcb5e1c055b7b49b638217bd9eb11a, type: 3}
   soundVolume: 1
+  controlSourceOverride: {fileID: 0}
 --- !u!64 &559674819290221663
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -16383,6 +16386,10 @@ PrefabInstance:
     - target: {fileID: 1253917590715540325, guid: dc644b8eff261da47997a8bcbf239a9b, type: 3}
       propertyPath: m_Layer
       value: 11
+      objectReference: {fileID: 0}
+    - target: {fileID: 1253917590715540325, guid: dc644b8eff261da47997a8bcbf239a9b, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1671206944214456896, guid: dc644b8eff261da47997a8bcbf239a9b, type: 3}
       propertyPath: m_Layer
@@ -19732,6 +19739,7 @@ MonoBehaviour:
   invertHorizontal: 0
   invertVertical: 0
   pivotOverride: {fileID: 3359797426665849927}
+  controlSourceOverride: {fileID: 0}
 --- !u!1 &1445174463819652687 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6966147424097941600, guid: c1fa887fc1047404b922208fc489aa97, type: 3}

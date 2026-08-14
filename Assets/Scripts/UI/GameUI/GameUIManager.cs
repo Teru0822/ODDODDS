@@ -14,6 +14,14 @@ public class GameUIManager : MonoBehaviour
 {
     public static GameUIManager Instance { get; private set; }
 
+    /// <summary>通常のMoneyCount表示（HUD側）。チュートリアルのハイライト対象などInspectorで直接ドラッグ
+    /// できない場面はこちら経由で取得する</summary>
+    public RectTransform MoneyTextRect => _moneyText != null ? _moneyText.rectTransform : null;
+
+    /// <summary>playerInfoPanel内の「差し引き後MoneyCount」表示。実行時（playerInfoPanel表示中）にのみ実体が確定するため、
+    /// チュートリアルのハイライト対象などInspectorで直接ドラッグできない場面はこちら経由で取得する</summary>
+    public RectTransform MoneyTextInfoRect => _moneyText_info != null ? _moneyText_info.rectTransform : null;
+
     [Header("表示制御")]
     [Tooltip("GameUI全体の表示切り替えに使用するCanvasGroup。未設定なら自動取得")]
     [SerializeField] private CanvasGroup _canvasGroup;
@@ -71,6 +79,11 @@ public class GameUIManager : MonoBehaviour
     private Vector3 _unwashCoinGroupOriginalScale;
     private Vector2 _unwashCoinGroupOriginalPosition;
     private bool _isRewardFocusActive = false;
+
+    [Header("tutorial_canvas / Play_canvas / Play2_canvas 閲覧中のフォーカス表示")]
+    [Tooltip("報酬フォーカスと同じく _hudElementsToHideDuringRewardFocus を隠すが、拡大・移動はせず等倍のまま表示する。" +
+             "そのうえで、この閲覧中だけ改めて表示しておきたい要素（Moneyの表示など）")]
+    [SerializeField] private List<GameObject> _hudElementsToShowWhileBrowsing = new List<GameObject>();
 
 
     [Header("メニュー用のSettings")]
@@ -301,6 +314,7 @@ public class GameUIManager : MonoBehaviour
             .AddTo(this);
 
         UFOCameraController.OnUfoModeChanged += HandleUfoModeChanged;
+        UFOCameraController.OnPlaySessionActiveChanged += HandlePlaySessionActiveChanged;
         RewardSelectionUI.OnTypewriterUIChanged += HandleTypewriterUIChanged;
         RoguelikeManager.OnDiamondPolishStageChanged += SetBlackDiamondStage;
 
@@ -392,6 +406,7 @@ public class GameUIManager : MonoBehaviour
     private void OnDestroy()
     {
         UFOCameraController.OnUfoModeChanged -= HandleUfoModeChanged;
+        UFOCameraController.OnPlaySessionActiveChanged -= HandlePlaySessionActiveChanged;
         RewardSelectionUI.OnTypewriterUIChanged -= HandleTypewriterUIChanged;
         RoguelikeManager.OnDiamondPolishStageChanged -= SetBlackDiamondStage;
     }
@@ -442,7 +457,19 @@ public class GameUIManager : MonoBehaviour
 
     private void HandleUfoModeChanged(bool isPlayingUfo)
     {
-        SetGameUIVisible(!isPlayingUfo);
+        if (isPlayingUfo)
+        {
+            // machine をクリックした直後（tutorial_canvas / Play_canvas / Play2_canvas を閲覧中）はまだ
+            // 有料セッションが始まっていないため、GameUI自体は表示したまま、UnwashCoin以外を隠す
+            // 閲覧用フォーカス表示にする（拡大・移動はせず等倍のまま）。
+            // price_table 側のUIは実際にプレイが始まってから表示される。
+            SetGameUIVisible(true);
+            SetBrowsingFocusMode(true);
+            return;
+        }
+
+        SetGameUIVisible(true);
+        SetBrowsingFocusMode(false);
 
         // UFOキャッチャー終了時、GameUIが再表示された瞬間に通常状態が一瞬映ってしまわないよう、
         // 最初からフォーカスモード（UnwashCoin以外を隠した状態）にしておく。
@@ -450,13 +477,41 @@ public class GameUIManager : MonoBehaviour
         //
         // ただし、Play2_Canvasで一度もPlayを押さずに（＝有料セッションを一度も開始せずに）UFOモードを
         // 抜けた場合は、UFOItemGoal側でOpenDrawer()自体がスキップされ引き出しの演出が発生しないため、
-        // SetRewardFocusMode(false) を呼ぶ機会が無い。フォーカスモードに入れっぱなしにならないよう、
-        // その場合は最初からフォーカスモードにしない。
-        if (!isPlayingUfo)
+        // SetRewardFocusMode(false) を呼ぶ機会が無い。その場合は上の SetBrowsingFocusMode(false) で
+        // 既に元の表示へ戻っているため、ここでは何もしない。
+        bool didStartPlaySession = UFOCameraController.Instance != null && UFOCameraController.Instance.PaymentCount > 0;
+        if (didStartPlaySession) SetRewardFocusMode(true);
+    }
+
+    /// <summary>
+    /// UFOCameraController.IsPlaySessionActive が変化した時に呼ばれる。
+    /// Play_Canvas2 で実際に Play を押してセッションが始まった瞬間に GameUI を完全に隠し（price_table 側のUIに切り替え）、
+    /// セッションが終わってもまだ UFOモード中（再び Play_Canvas を選べる状態）なら閲覧用フォーカス表示に戻す。
+    /// </summary>
+    private void HandlePlaySessionActiveChanged(bool isSessionActive)
+    {
+        ApplySessionActiveUIState(isSessionActive);
+    }
+
+    /// <summary>
+    /// 実機のセッション開始/終了時と同じGameUI切り替えを行う。
+    /// TutorialCraneController から、実機の UFOCameraController.IsPlaySessionActive には一切触れずに
+    /// 同じ見た目のUI切り替え（Play2_tutorial の Play を押した時など）だけを行うために呼ばれる。
+    /// </summary>
+    public void ApplySessionActiveUIState(bool isSessionActive)
+    {
+        if (isSessionActive)
         {
-            bool didStartPlaySession = UFOCameraController.Instance != null && UFOCameraController.Instance.PaymentCount > 0;
-            if (didStartPlaySession) SetRewardFocusMode(true);
+            SetGameUIVisible(false);
+            return;
         }
+
+        if (UFOCameraController.IsPlayingUfo)
+        {
+            SetGameUIVisible(true);
+            SetBrowsingFocusMode(true);
+        }
+        // UFOモードごと終了した場合は HandleUfoModeChanged 側で処理される
     }
 
     private void HandleTypewriterUIChanged(bool isShowing)
@@ -505,6 +560,58 @@ public class GameUIManager : MonoBehaviour
             _unwashCoinGroupContainer.anchoredPosition = _unwashCoinGroupOriginalPosition;
         }
     }
+
+    /// <summary>
+    /// tutorial_canvas / Play_canvas / Play2_canvas 閲覧中（まだプレイ開始前）用のフォーカスモード。
+    /// SetRewardFocusMode と同じ _hudElementsToHideDuringRewardFocus を隠すが、
+    /// UnwashCoinグループの拡大・移動は行わず等倍のまま表示する。
+    /// さらに _hudElementsToShowWhileBrowsing（Moneyの表示など）は、隠した後で改めて表示する。
+    /// </summary>
+    public void SetBrowsingFocusMode(bool enabled)
+    {
+        foreach (var element in _hudElementsToHideDuringRewardFocus)
+        {
+            if (element != null) element.SetActive(!enabled);
+        }
+
+        if (enabled)
+        {
+            foreach (var element in _hudElementsToShowWhileBrowsing)
+            {
+                if (element != null) element.SetActive(true);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Play_Canvas2 表示中、選択した秒数の消費 Devil Coins を反映して MoneyCount の表示を
+    /// 「現在の所持数 → 差し引き後の所持数」に切り替える。TouchPanelOutlineController から、
+    /// 30/60/90 選択時（Play_Canvas2 へ切り替わるタイミング）に呼ばれる。
+    /// </summary>
+    public void ShowMoneyCountPreview(float cost)
+    {
+        if (MoneyManager.Instance == null) return;
+
+        float current = MoneyManager.Instance.CurrentMoney;
+        float after = current - cost;
+        string text = $"{current:N0} → {after:N0}";
+
+        if (_moneyText != null) _moneyText.text = text;
+        if (_moneyText_info != null) _moneyText_info.text = text;
+    }
+
+    /// <summary>
+    /// Play_Canvas に戻った時、MoneyCount の表示を通常の所持数表示に戻す。
+    /// </summary>
+    public void ClearMoneyCountPreview()
+    {
+        if (MoneyManager.Instance == null) return;
+
+        string text = MoneyManager.Instance.CurrentMoney.ToString("N0");
+        if (_moneyText != null) _moneyText.text = text;
+        if (_moneyText_info != null) _moneyText_info.text = text;
+    }
+
     /// <summary>
     /// アイテム、エフェクト、お金（訪問者イベントのみ）を取得・消失した際にそれぞれキューに追加する。
     /// </summary>

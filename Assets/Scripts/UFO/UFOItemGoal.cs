@@ -175,7 +175,10 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
 
     private void Awake()
     {
-        if (Instance == null) Instance = this;
+        // 練習機側（Practice_Cranegame）には実機からコピーされた無効化済みのUFOItemGoalが残っており、
+        // GameObjectが有効ならAwake()自体は実行されてしまう。enabledをチェックし、無効化されている
+        // （＝練習機側の残骸）場合はstatic Instanceを絶対に奪わないようにする
+        if (Instance == null && enabled) Instance = this;
 
         // セーブデータ読み込み（当選不可化）が行われる前に、元のweightを控えておく
         if (rouletteController != null && !_originalSpecialDropWeightCaptured)

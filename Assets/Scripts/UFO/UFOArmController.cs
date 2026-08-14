@@ -252,6 +252,14 @@ public class UFOArmController : MonoBehaviour
     /// </summary>
     public bool IsInputLocked => IsBusy || (_toggleClawCoroutine != null);
 
+    /// <summary>Start Descentの下降→掴み→上昇の一連動作が本当に完了した瞬間（Ascending→Idle）に発火する。
+    /// ForceResetToIdle()による強制リセットではここは発火しない（実際に完了したわけではないため）</summary>
+    public event System.Action OnDescentCycleCompleted;
+
+    /// <summary>Toggle Clawによる爪の手動開閉が一連の動作を終えた瞬間に発火する。
+    /// ForceReleaseToggleClawLock()による強制リセットではここは発火しない</summary>
+    public event System.Action OnClawToggleCompleted;
+
     // ─────────────────────────────────────
 
 
@@ -563,6 +571,47 @@ public class UFOArmController : MonoBehaviour
         // アームが閉じきる時間（0.5秒）待ってからコルーチンを解放する
         yield return new WaitForSeconds(0.5f);
         _toggleClawCoroutine = null;
+        OnClawToggleCompleted?.Invoke();
+    }
+
+    /// <summary>
+    /// 手動開閉コルーチン（_toggleClawCoroutine）が実行中のまま残ってしまっている場合に、強制的に
+    /// 停止してIsInputLockedを解除する。コンポーネントの無効化などでコルーチンが後片付けコード
+    /// （_toggleClawCoroutine = null の代入）を実行できないまま強制終了すると、実際には動いていない
+    /// のにIsInputLockedがtrueのまま固定され、以降StartDescentCycle()等が静かに無視され続けることがある。
+    /// チュートリアルなど、確実にクリーンな状態から操作させたい場面の直前で呼ぶ。
+    /// </summary>
+    public void ForceReleaseToggleClawLock()
+    {
+        if (_toggleClawCoroutine != null)
+        {
+            StopCoroutine(_toggleClawCoroutine);
+            _toggleClawCoroutine = null;
+            _wantFingerOpen = false;
+        }
+    }
+
+    /// <summary>
+    /// ForceReleaseToggleClawLockに加えて、_state自体が連打等でIdle以外のまま固まってしまっている場合も
+    /// 強制的にIdleへ戻す。_stateが中途半端な状態のまま残っていると、IsBusy（ひいてはIsInputLocked）が
+    /// ずっとtrueのままになり、以降のStartDescentCycle()が静かに無視され続けることがある。
+    /// アームが下降中だった場合は見た目が不自然にならないよう、ロープを上昇させて回収する。
+    /// </summary>
+    public void ForceResetToIdle()
+    {
+        ForceReleaseToggleClawLock();
+
+        if (_state != ArmState.Idle)
+        {
+            bool wasLowered = _state == ArmState.Descending || _state == ArmState.Grabbing;
+            _state = ArmState.Idle;
+            _wantFingerOpen = false;
+
+            if (wasLowered && stretchRope != null)
+            {
+                stretchRope.StartExternalAscent(descentSpeedMultiplier);
+            }
+        }
     }
     private bool _collidersDisabledForSpawn = false;
 
@@ -1269,6 +1318,8 @@ public class UFOArmController : MonoBehaviour
                 {
                     Debug.Log("[UFOArmController] State changed: Ascending -> Idle.");
                     _state = ArmState.Idle;
+                    Debug.Log($"[TutorialDebug] OnDescentCycleCompleted invoking on {gameObject.name} (id={GetInstanceID()}), subscriberCount={OnDescentCycleCompleted?.GetInvocationList().Length ?? 0}");
+                    OnDescentCycleCompleted?.Invoke();
                 }
                 break;
         }
