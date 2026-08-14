@@ -83,10 +83,10 @@ screens:
       color: "#33FF66"
       text: "=== BALANCE INQUIRY ==="
     - type: text
-      text: "CLEAN BALANCE:  ¥{cleanBalance}"
+      text: "CLEAN BALANCE:  {cleanBalance} DC"
     - type: text
       color: "#FF5533"
-      text: "UNWASHED DEBT:  ¥{unwashedDebt}"
+      text: "UNWASHED DEBT:  {unwashedDebt} DC"
     - type: text
       text: ""
     - type: text
@@ -106,12 +106,12 @@ screens:
       color: "#33FF66"
       text: "=== LAUNDER DEBT ==="
     - type: text
-      text: "DIRTY CASH: ¥{unwashedDebt}"
+      text: "DIRTY CASH: {unwashedDebt} DC"
     - type: text
-      text: "LAUNDERING FEE ({feeRatePercent}%): -¥{launderFee}"
+      text: "LAUNDERING FEE ({feeRatePercent}%): -{launderFee} DC"
     - type: text
       color: "#33FF99"
-      text: "CREDITED NET AMOUNT: ¥{launderNet}"
+      text: "CREDITED NET AMOUNT: {launderNet} DC"
     - type: text
       text: ""
     - type: text
@@ -131,19 +131,19 @@ screens:
     - type: text
       text: ""
     - type: text
-      text: "CASH: ¥{cleanBalance}"
+      text: "CASH: {cleanBalance} DC"
     - type: text
       text: ""
     - type: text
-      text: "[img:gold] GOLD   : {selGoldOpen}{goldOwned}  (¥{goldPrice}/x1){selGoldClose}"
+      text: "[img:gold] GOLD   : {selGoldOpen}{goldOwned}  ({goldPrice} DC/x1){selGoldClose}"
     - type: text
       text: ""
     - type: text
-      text: "[img:silver] SILVER : {selSilverOpen}{silverOwned}  (¥{silverPrice}/x1){selSilverClose}"
+      text: "[img:silver] SILVER : {selSilverOpen}{silverOwned}  ({silverPrice} DC/x1){selSilverClose}"
     - type: text
       text: ""
     - type: text
-      text: "[img:bronze] BRONZE : {selBronzeOpen}{bronzeOwned}  (¥{bronzePrice}/x1){selBronzeClose}"
+      text: "[img:bronze] BRONZE : {selBronzeOpen}{bronzeOwned}  ({bronzePrice} DC/x1){selBronzeClose}"
     - type: text
       text: ""
     - type: text
@@ -177,7 +177,7 @@ screens:
     - type: text
       text: ""
     - type: text
-      text: "CREDITED AMOUNT: ¥{creditedAmount}"
+      text: "CREDITED AMOUNT: {creditedAmount} DC"
     - type: text
       text: ""
     - type: text

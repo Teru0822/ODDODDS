@@ -42,6 +42,71 @@ namespace App.ATM
         public static ATMController Instance { get; private set; }
         public static bool IsInteracting { get; private set; } = false;
 
+        // --- ハッキングモード (ATMHackingMode) へ渡すための公開窓口 ---
+
+        /// <summary>ATM を起動して画面を操作できる状態か。</summary>
+        public bool IsScreenActive => _currentState == ATMState.Active;
+
+        /// <summary>ATM 操作中に使っているカメラ。3D オブジェクトのクリック判定に使う。</summary>
+        public Camera ScreenCamera => playerCamera;
+
+        /// <summary>ATM 画面に重ねる WorldSpace キャンバス。</summary>
+        public Transform ScreenCanvas => _uiCanvasGo != null ? _uiCanvasGo.transform : null;
+
+        /// <summary>
+        /// 画面キャンバスの大きさ。実際の画面の見た目とは一致しないので、
+        /// 重ねる UI の大きさには TryGetScreenTextArea() を使うこと。
+        /// </summary>
+        public Vector2 ScreenCanvasSize
+        {
+            get
+            {
+                if (_uiCanvasGo != null) return _uiCanvasGo.GetComponent<RectTransform>().sizeDelta;
+                return new Vector2(800f, 600f);
+            }
+        }
+
+        /// <summary>
+        /// ATM 画面に今表示されている文字の範囲(キャンバス座標)を返す。
+        ///
+        /// 3D テキストの RectTransform は 20x5 しかなく実際の表示範囲と一致しないため、
+        /// 描画済みメッシュの範囲から測る。キャンバスと 3D テキストは同じ親・同じスケールなので、
+        /// テキストのローカル座標 1 = キャンバス座標 1 として扱える。
+        /// 画面に重ねる UI の大きさをここに合わせると、ATM ごとに調整しなくても収まる。
+        /// </summary>
+        public bool TryGetScreenTextArea(out Vector2 size, out Vector2 center)
+        {
+            size = default;
+            center = default;
+            if (atmScreenText == null) return false;
+
+            atmScreenText.ForceMeshUpdate();
+            Bounds bounds = atmScreenText.textBounds;
+
+            // 文字が無い/極端に狭いときは測定失敗として扱う
+            if (bounds.size.x < 1f || bounds.size.y < 1f) return false;
+
+            // 3D テキストとキャンバスでスケールが違っても合うよう、実際の比で換算する。
+            // キャンバスは 3D テキストと同じ位置・同じ向きに置いてあるので、原点はそのまま使える
+            float ratio = 1f;
+            if (_uiCanvasGo != null)
+            {
+                float canvasScale = _uiCanvasGo.transform.lossyScale.x;
+                if (Mathf.Abs(canvasScale) > 1e-6f) ratio = atmScreenText.transform.lossyScale.x / canvasScale;
+            }
+
+            size = new Vector2(bounds.size.x, bounds.size.y) * ratio;
+            center = new Vector2(bounds.center.x, bounds.center.y) * ratio;
+            return true;
+        }
+
+        public AudioSource Speaker => audioSource;
+        public AudioClip KeyClickSound => keyClickSound;
+        public AudioClip ConfirmSound => confirmSound;
+        public AudioClip CancelSound => cancelSound;
+        public AudioClip SuccessSound => washSuccessSound;
+        public AudioClip StartupSound => startupSound;
+
         [Header("カメラ・遷移設定 (別シーンアセット)")]
         [Tooltip("プレイヤーのメインカメラ。ランタイムで自動取得するためアサイン不要です")]
         [SerializeField] private Camera playerCamera;
@@ -78,6 +143,17 @@ namespace App.ATM
 
         [Tooltip("電源オフ音。ATMを閉じて元の視点へ戻る時に鳴る")]
         [SerializeField] private AudioClip shutdownSound;
+
+        [Tooltip("起動中ずっと鳴らすループ音（ファンやHDDの唸りなど）。" +
+                 "起動音が鳴り終わってから再生を始め、電源オフ時に止める")]
+        [SerializeField] private AudioClip idleLoopSound;
+
+        [Tooltip("ループ音の音量")]
+        [Range(0f, 1f)]
+        [SerializeField] private float idleLoopVolume = 0.5f;
+
+        [Tooltip("ループ音の鳴り始め／止まり際のフェード時間(秒)。0 で即座に切り替わる")]
+        [SerializeField] private float idleLoopFadeDuration = 0.35f;
 
         [Tooltip("資金洗浄・コイン売却が成立した時の音 (SE/debtPay など)")]
         [SerializeField] private AudioClip washSuccessSound;
@@ -224,6 +300,13 @@ namespace App.ATM
         private ATMScreenRenderer _screenRenderer;
         private Transform _imageContainer;
 
+        // 裏メニュー(ハッキングモード)。Awake で自動生成するため配置は不要
+        private ATMHackingMode _hacking;
+
+        // 起動中に鳴らし続けるループ音。単発SEと混ざらないよう専用の AudioSource を使う
+        private AudioSource _loopSource;
+        private Coroutine _loopRoutine;
+
         // アニメーション演出でレンダラへ渡す可変トークンのバッキング値
         private string _typedTitle = "";
         private string _loginPrompt = "";
@@ -246,6 +329,8 @@ namespace App.ATM
             if (audioSource == null) audioSource = GetComponent<AudioSource>();
             if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
 
+            CreateIdleLoopSource();
+
             // SEの自動ロード (Resourcesフォルダの debtPay をデフォルト成功音に)
             if (washSuccessSound == null)
             {
@@ -265,6 +350,10 @@ namespace App.ATM
 
             // ハイブリッドボタン用の極小 WorldSpace Canvas をバックグラウンドで事前生成
             CreateWorldSpaceUICanvas();
+
+            // 裏メニュー(ハッキングモード)。手動でアタッチされていればそれを使う
+            _hacking = GetComponent<ATMHackingMode>();
+            if (_hacking == null) _hacking = gameObject.AddComponent<ATMHackingMode>();
         }
 
         private void Start()
@@ -279,6 +368,10 @@ namespace App.ATM
 
         private void OnDisable()
         {
+            // 無効化でコルーチンが止まるため、ループ音はここで直接止める（鳴りっぱなし防止）
+            if (_loopSource != null) _loopSource.Stop();
+            _loopRoutine = null;
+
             // コルーチンが途中で止まっても、紙幣と開いたままの排出口を残さない
             DespawnMoneyProp();
             if (atmDoor != null && _doorPosCached) atmDoor.localPosition = _doorClosedLocalPos;
@@ -301,8 +394,12 @@ namespace App.ATM
         {
             if (_currentState != ATMState.Active) return;
 
+            // ハッキング中は Escape の意味が「ハッキング中断」に変わるため、ATM 退出には使わせない。
+            // キーパッド操作はそのまま通し、OnATMKeyPressed 経由でハッキング側へ回す
+            bool hacking = _hacking != null && _hacking.IsActive;
+
             // Escキー押下で元の視点へ戻る (アニメーションや洗浄処理中以外)
-            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+            if (!hacking && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             {
                 if (!_isLaunderProcessing && !_isCountingUp)
                 {
@@ -321,7 +418,7 @@ namespace App.ATM
             HandlePhysicalKeyboardInput();
 
             // コイン両替中はスピンボックスをアンカーへ毎フレーム追従（実行中のドラッグ調整に即反応）
-            if (_currentSubState == ATMSubState.CoinExchange)
+            if (!hacking && _currentSubState == ATMSubState.CoinExchange)
             {
                 PositionSpinboxes();
             }
@@ -433,6 +530,9 @@ namespace App.ATM
             SetATMState(true);
             _currentState = ATMState.Active;
 
+            // 起動音が鳴り終わってから、起動中ずっと鳴らすループ音へ引き継ぐ
+            StartIdleLoop(startupSound != null ? startupSound.length : 0f);
+
             // Welcome画面でタイピング演出を開始
             ChangeSubState(ATMSubState.Welcome);
 
@@ -449,6 +549,12 @@ namespace App.ATM
         private IEnumerator TransitionToPlayer()
         {
             _currentState = ATMState.TransitioningToPlayer;
+
+            // ハッキング画面を出したまま退出されると画面が戻らないので、必ず畳んでから閉じる
+            if (_hacking != null) _hacking.Abort();
+
+            // ループ音を止めてから電源オフ音へ切り替える
+            StopIdleLoop();
 
             if (shutdownSound != null && audioSource != null)
             {
@@ -536,6 +642,22 @@ namespace App.ATM
 
             // 起動中はインスペクター設定のEmission色、閉じると0(消灯)
             SetEmission(active);
+        }
+
+        /// <summary>
+        /// 通常の ATM 画面（3Dテキスト・コイン両替のスピンボックス・YAML の画像）の表示を切り替える。
+        /// ハッキング画面を重ねる間だけ false にして、下の画面が透けないようにする。
+        /// </summary>
+        public void SetNormalScreenVisible(bool visible)
+        {
+            if (atmScreenText != null) atmScreenText.enabled = visible;
+
+            if (_coinExchangePanelGo != null)
+            {
+                _coinExchangePanelGo.SetActive(visible && _currentSubState == ATMSubState.CoinExchange);
+            }
+
+            if (_imageContainer != null) _imageContainer.gameObject.SetActive(visible);
         }
 
         /// <summary>
@@ -771,6 +893,15 @@ namespace App.ATM
             // 処理中・カウントアップ演出中はキー入力をブロック
             if (_currentSubState == ATMSubState.Processing || _isLaunderProcessing || _isCountingUp) return;
 
+            // ハッキング中は通常メニューを飛ばしてハッキング画面へ入力を渡す。
+            // ログイン前でも操作できるよう、Welcome 画面の入力制限より前に処理する
+            if (_hacking != null && _hacking.IsActive)
+            {
+                PlayRoleSound(role);
+                _hacking.HandleKey(role);
+                return;
+            }
+
             // 起動画面のタイピング演出が終わるまでは入力不可
             if (_currentSubState == ATMSubState.Welcome && !_canProceedFromWelcome) return;
 
@@ -999,6 +1130,32 @@ namespace App.ATM
             _bronzeSellQty = Mathf.Clamp(_bronzeSellQty + amount, 0, max);
             PlayKeyFeedback();
             UpdateDisplay();
+        }
+
+        /// <summary>
+        /// コインを売った時とまったく同じ手順で現金を入金する。
+        /// MoneyManager 経由で加算し（＝バフ／デバフも同じように効く）、
+        /// 排出口を開けて紙幣を出すカウントアップ演出まで行う。
+        /// ハッキングの報酬など、コイン売却以外の入金経路から呼ぶ。
+        /// </summary>
+        public void CreditCash(float amount)
+        {
+            if (amount <= 0f) return;
+
+            var wallet = PlayerWallet.Local;
+            if (wallet == null || MoneyManager.Instance == null)
+            {
+                Debug.LogWarning($"[ATMController] 入金先が見つからないため {amount} を加算できませんでした " +
+                                 $"(wallet={(wallet != null)}, moneyManager={(MoneyManager.Instance != null)})", this);
+                return;
+            }
+
+            float startCash = wallet.WashedAmount;
+            MoneyManager.Instance.AddMoney(amount);
+            float endCash = wallet.WashedAmount;
+
+            Debug.Log($"[ATMController] 現金を入金しました: {startCash:N0} → {endCash:N0} DC");
+            StartCoroutine(AnimateCashCountUp(startCash, endCash));
         }
 
         public void SellGold()
@@ -1297,6 +1454,103 @@ namespace App.ATM
                 if (found != null) return found;
             }
             return null;
+        }
+
+        // --- 起動中のループ音 ---
+
+        /// <summary>
+        /// ループ音専用の AudioSource を用意する。
+        /// 本体の AudioSource は PlayOneShot 用で、Stop() すると鳴っている単発SEまで止まってしまうため分ける。
+        /// 聞こえ方（3D/2D や減衰）は本体と揃える。
+        /// </summary>
+        private void CreateIdleLoopSource()
+        {
+            if (_loopSource != null) return;
+
+            _loopSource = gameObject.AddComponent<AudioSource>();
+            _loopSource.playOnAwake = false;
+            _loopSource.loop = true;
+            _loopSource.volume = 0f;
+
+            if (audioSource != null)
+            {
+                _loopSource.outputAudioMixerGroup = audioSource.outputAudioMixerGroup;
+                _loopSource.spatialBlend = audioSource.spatialBlend;
+                _loopSource.rolloffMode = audioSource.rolloffMode;
+                _loopSource.minDistance = audioSource.minDistance;
+                _loopSource.maxDistance = audioSource.maxDistance;
+                _loopSource.dopplerLevel = audioSource.dopplerLevel;
+                _loopSource.spread = audioSource.spread;
+            }
+        }
+
+        /// <summary>起動音が鳴り終わるのを待ってからループ音を鳴らし始める。</summary>
+        private void StartIdleLoop(float delay)
+        {
+            if (idleLoopSound == null || _loopSource == null) return;
+
+            if (_loopRoutine != null) StopCoroutine(_loopRoutine);
+            _loopRoutine = StartCoroutine(StartIdleLoopRoutine(delay));
+        }
+
+        private IEnumerator StartIdleLoopRoutine(float delay)
+        {
+            if (delay > 0f) yield return new WaitForSeconds(delay);
+
+            // 起動音の途中で閉じられていたら鳴らさない
+            if (_currentState != ATMState.Active)
+            {
+                _loopRoutine = null;
+                yield break;
+            }
+
+            _loopSource.clip = idleLoopSound;
+            _loopSource.volume = 0f;
+            _loopSource.Play();
+
+            yield return FadeIdleLoop(idleLoopVolume);
+            _loopRoutine = null;
+        }
+
+        /// <summary>ループ音をフェードさせて止める。</summary>
+        private void StopIdleLoop()
+        {
+            if (_loopSource == null) return;
+
+            if (_loopRoutine != null)
+            {
+                StopCoroutine(_loopRoutine);
+                _loopRoutine = null;
+            }
+
+            if (!_loopSource.isPlaying) return;
+            _loopRoutine = StartCoroutine(StopIdleLoopRoutine());
+        }
+
+        private IEnumerator StopIdleLoopRoutine()
+        {
+            yield return FadeIdleLoop(0f);
+            _loopSource.Stop();
+            _loopRoutine = null;
+        }
+
+        private IEnumerator FadeIdleLoop(float targetVolume)
+        {
+            if (idleLoopFadeDuration <= 0f)
+            {
+                _loopSource.volume = targetVolume;
+                yield break;
+            }
+
+            float startVolume = _loopSource.volume;
+            float elapsed = 0f;
+            while (elapsed < idleLoopFadeDuration)
+            {
+                elapsed += Time.deltaTime;
+                _loopSource.volume = Mathf.Lerp(startVolume, targetVolume, elapsed / idleLoopFadeDuration);
+                yield return null;
+            }
+            _loopSource.volume = targetVolume;
         }
 
         /// <summary>SEを鳴らす小さなヘルパー。クリップ／AudioSource 未設定時は何もしない。</summary>
