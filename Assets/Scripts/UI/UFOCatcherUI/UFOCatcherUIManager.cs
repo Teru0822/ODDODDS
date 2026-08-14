@@ -65,24 +65,51 @@ public class UFOCatcherUIManager : MonoBehaviour
     [Tooltip("ListItem UIの生成設定リスト。ここの数だけListItemが生成されます")]
     [SerializeField] private List<ListItemSpawnData> _listItemDatas = new List<ListItemSpawnData>();
 
+    [Header("チュートリアル設定")]
+    [Tooltip("ON: 練習用UFOキャッチャー（Practice_Cranegame）側のUFOCatcherUIManagerであることを示す。\n" +
+             "実機・練習機の両方にUFOCatcherUIManagerが存在するため、OFF（実機側）はUFOCameraControllerの" +
+             "static イベントを購読して自動でUIを出し入れするが、ON（練習機側）は購読しない。\n" +
+             "購読してしまうと、実機のセッション開始/終了のたびに練習機側のUIまで一緒に出入りしてしまう" +
+             "（TutorialCraneControllerがApplySessionActiveUIState()を直接呼ぶので、練習機側はそもそも購読不要）。\n" +
+             "練習機側のUFOCatcherUIManagerでは必ずこれをONにしてください。")]
+    [SerializeField] private bool isPracticeInstance = false;
+
     private Canvas _canvas;
     private List<GameObject> _generatedUIObjects = new List<GameObject>();
 
     private void Start()
     {
-        // UFOカメラコントローラーのプレイ開始・終了イベントを購読
-        UFOCameraController.OnUfoModeChanged += HandleUfoModeChanged;
+        // 練習機側はTutorialCraneControllerがApplySessionActiveUIState()を直接呼ぶため、
+        // 実機のstaticイベントは購読しない（購読すると実機のセッション変化にも反応してしまう）
+        if (isPracticeInstance) return;
+
+        // Play_Canvas2 で Play を押して実際にプレイセッションが始まった/終わったタイミングを購読する
+        // （tutorial_canvas / Play_canvas / Play2_canvas を閲覧しているだけの間は表示しない）
+        UFOCameraController.OnPlaySessionActiveChanged += HandlePlaySessionActiveChanged;
     }
 
     private void OnDestroy()
     {
-        UFOCameraController.OnUfoModeChanged -= HandleUfoModeChanged;
+        if (!isPracticeInstance)
+        {
+            UFOCameraController.OnPlaySessionActiveChanged -= HandlePlaySessionActiveChanged;
+        }
         ClearGeneratedUI();
     }
 
-    private void HandleUfoModeChanged(bool isPlayingUfo)
+    private void HandlePlaySessionActiveChanged(bool isSessionActive)
     {
-        if (isPlayingUfo)
+        ApplySessionActiveUIState(isSessionActive);
+    }
+
+    /// <summary>
+    /// 実機のセッション開始/終了時と同じ price_table UI切り替えを行う。
+    /// TutorialCraneController から、実機の UFOCameraController.IsPlaySessionActive には一切触れずに
+    /// 同じ見た目のUI切り替え（Play2_tutorial の Play を押した時など）だけを行うために呼ばれる。
+    /// </summary>
+    public void ApplySessionActiveUIState(bool isSessionActive)
+    {
+        if (isSessionActive)
         {
             GenerateUI();
         }

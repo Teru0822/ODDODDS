@@ -1,0 +1,131 @@
+using System.Collections;
+using UnityEngine;
+
+/// <summary>
+/// チュートリアル用の落とし口（練習UFOキャッチャー用）。
+/// 実機の UFOItemGoal とは完全に分離しており、所持金・アイテム所持数・実機のランプ（タグ検索で
+/// シーン全体のInsertableItemを操作する仕組み）など、実機の永続データ/共有オブジェクトには
+/// 一切触れない。入ってきたアイテムは、種別ごとの効果音・ランプ演出のあと見た目上消えるだけ。
+/// </summary>
+public class TutorialItemGoal : MonoBehaviour
+{
+    [Header("再生用")]
+    [Tooltip("未設定なら自動でGetComponent/AddComponentします")]
+    [SerializeField] private AudioSource audioSource;
+
+    [Header("効果音（種別ごと。未設定の種別はcoinGetSoundで代用）")]
+    [SerializeField] private AudioClip coinGetSound;
+    [SerializeField] private AudioClip watchGetSound;
+    [SerializeField] private AudioClip blackDiamondGetSound;
+
+    [Header("ランプ演出（チュートリアル専用のLightのみを対象にする。実機のランプには一切触れない）")]
+    [Tooltip("アイテム獲得時に点灯させるLight（任意・複数可）")]
+    [SerializeField] private Light[] flashLights;
+
+    [Tooltip("通常アイテム（コイン等）の点灯色")]
+    [SerializeField] private Color coinFlashColor = Color.white;
+
+    [Tooltip("時計獲得時の点灯色")]
+    [SerializeField] private Color watchFlashColor = new Color(1f, 0.9f, 0.3f);
+
+    [Tooltip("ブラックダイヤ獲得時の点灯色")]
+    [SerializeField] private Color blackDiamondFlashColor = new Color(0.8f, 0f, 1f);
+
+    [Tooltip("ランプの点灯を維持する時間（秒）")]
+    [SerializeField, Min(0.05f)] private float flashDuration = 1.0f;
+
+    [Header("時計効果（実機のUFOItemGoalと同じ挙動）")]
+    [Tooltip("このTutorialItemGoalが属する練習UFOキャッチャーのTutorialCraneController")]
+    [SerializeField] private TutorialCraneController tutorialCrane;
+
+    [Tooltip("時計を落とし口に入れたときに残り時間を何秒延長するか")]
+    [SerializeField] private float watchTimeExtension = 20f;
+
+    /// <summary>アイテムが落とし口に入った瞬間に発火する（チュートリアルステップの進行検知等に使う）</summary>
+    public event System.Action<UFOItemType> OnItemDropped;
+
+    private Coroutine _flashCoroutine;
+
+    private void OnTriggerEnter(Collider other)
+    {
+        HandleItemDrop(other);
+    }
+
+    /// <summary>
+    /// アイテムが入ったときの実際の処理。複数の穴（小・中・大）がある場合は、
+    /// それぞれの穴の判定用CubeにTutorialItemGoalTriggerを付けて、こちらに転送してもらう
+    /// （実機のUFOItemGoal.HandleItemDropと同じ構造）。
+    /// </summary>
+    public void HandleItemDrop(Collider other)
+    {
+        // 複数パーツ構成のモデルにも対応するため、親方向も辿って UFOItem を探す
+        UFOItem item = other.GetComponentInParent<UFOItem>();
+        if (item == null) return;
+
+        switch (item.itemType)
+        {
+            case UFOItemType.Watch:
+                PlaySound(watchGetSound != null ? watchGetSound : coinGetSound);
+                FlashLights(watchFlashColor);
+                tutorialCrane?.AddPlayTime(watchTimeExtension);
+                break;
+            case UFOItemType.BlackDiamond:
+                PlaySound(blackDiamondGetSound != null ? blackDiamondGetSound : coinGetSound);
+                FlashLights(blackDiamondFlashColor);
+                break;
+            default:
+                PlaySound(coinGetSound);
+                FlashLights(coinFlashColor);
+                break;
+        }
+
+        OnItemDropped?.Invoke(item.itemType);
+
+        Destroy(item.gameObject);
+    }
+
+    private void PlaySound(AudioClip clip)
+    {
+        if (clip == null) return;
+
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+            if (audioSource == null)
+            {
+                audioSource = gameObject.AddComponent<AudioSource>();
+                audioSource.playOnAwake = false;
+                audioSource.spatialBlend = 0f;
+            }
+        }
+        audioSource.PlayOneShot(clip);
+    }
+
+    private void FlashLights(Color color)
+    {
+        if (flashLights == null || flashLights.Length == 0) return;
+
+        if (_flashCoroutine != null)
+        {
+            StopCoroutine(_flashCoroutine);
+        }
+        _flashCoroutine = StartCoroutine(FlashLightsRoutine(color));
+    }
+
+    private IEnumerator FlashLightsRoutine(Color color)
+    {
+        foreach (var light in flashLights)
+        {
+            if (light == null) continue;
+            light.color = color;
+            light.enabled = true;
+        }
+
+        yield return new WaitForSeconds(flashDuration);
+
+        foreach (var light in flashLights)
+        {
+            if (light != null) light.enabled = false;
+        }
+    }
+}

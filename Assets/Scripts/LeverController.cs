@@ -36,6 +36,12 @@ public class LeverController : MonoBehaviour
     [Tooltip("回転の基準（ピボット）とするオブジェクト。未指定の場合は自身のピボットを使用します。")]
     public Transform pivotOverride;
 
+    [Header("チュートリアル用制御元（任意）")]
+    [Tooltip("設定すると、UFOCameraControllerの静的な状態の代わりにこちらを参照します（ICraneControlSourceを実装したコンポーネント）。" +
+             "未設定なら今まで通りUFOCameraControllerを見ます（実機用）。")]
+    [SerializeField] private MonoBehaviour controlSourceOverride;
+    private ICraneControlSource _controlSource;
+
     // 内部状態
     private bool       _isDragging      = false;
     private float      _targetAngleH    = 0f;   // マウス入力による目標角度
@@ -52,6 +58,7 @@ public class LeverController : MonoBehaviour
         _initialWorldRot = transform.rotation;
         _leverInitialUp  = transform.up;          // レバーが +Y 以外を向いていても対応
         _collider        = GetComponent<Collider>();
+        _controlSource   = controlSourceOverride as ICraneControlSource;
 
         if (pivotOverride != null)
         {
@@ -60,10 +67,21 @@ public class LeverController : MonoBehaviour
         }
     }
 
+    private bool IsPlaying => _controlSource != null ? _controlSource.IsPlayingCrane : UFOCameraController.IsPlayingUfo;
+    private bool IsActive => _controlSource != null ? _controlSource.IsControlActive : UFOCameraController.IsControlActive;
+    private Camera ActiveCam => _controlSource != null
+        ? _controlSource.GetActiveCamera()
+        : (UFOCameraController.Instance != null ? UFOCameraController.Instance.GetActiveCamera() : Camera.main);
+    private void NotifyInput()
+    {
+        if (_controlSource != null) _controlSource.NotifyControlInputUsed();
+        else UFOCameraController.Instance?.NotifyControlInputUsed();
+    }
+
     void Update()
     {
         // UFOプレイ中かつアクティブなプレイセッション中のみ操作を許可する
-        if (!UFOCameraController.IsPlayingUfo || !UFOCameraController.IsControlActive)
+        if (!IsPlaying || !IsActive)
         {
             _isDragging = false;
             _targetAngleH = 0f;
@@ -84,7 +102,7 @@ public class LeverController : MonoBehaviour
             if (mouse.leftButton.wasPressedThisFrame && IsMouseOverThis(mouse.position.ReadValue()))
             {
                 _isDragging = true;
-                UFOCameraController.Instance?.NotifyControlInputUsed();
+                NotifyInput();
             }
             if (mouse.leftButton.wasReleasedThisFrame)
                 _isDragging = false;
@@ -116,7 +134,7 @@ public class LeverController : MonoBehaviour
         }
         else if (isKeyboardActive)
         {
-            UFOCameraController.Instance?.NotifyControlInputUsed();
+            NotifyInput();
 
             // キーを押している間は最大角度までレバーを倒す（マウスドラッグの最大到達状態と同じ）
             _targetAngleH = keyH * dirH * leverMaxAngle;
@@ -140,7 +158,7 @@ public class LeverController : MonoBehaviour
 
     void ApplyLeverRotation()
     {
-        Camera activeCam = UFOCameraController.Instance != null ? UFOCameraController.Instance.GetActiveCamera() : Camera.main;
+        Camera activeCam = ActiveCam;
         if (activeCam == null) return;
         var cam = activeCam.transform;
 
@@ -199,7 +217,7 @@ public class LeverController : MonoBehaviour
 
     void UpdateArmInput()
     {
-        Camera activeCam = UFOCameraController.Instance != null ? UFOCameraController.Instance.GetActiveCamera() : Camera.main;
+        Camera activeCam = ActiveCam;
         if (activeCam == null || armController == null) return;
         var cam = activeCam.transform;
 
@@ -233,7 +251,7 @@ public class LeverController : MonoBehaviour
 
     bool IsMouseOverThis(Vector2 screenPos)
     {
-        Camera activeCam = UFOCameraController.Instance != null ? UFOCameraController.Instance.GetActiveCamera() : Camera.main;
+        Camera activeCam = ActiveCam;
         if (_collider == null || activeCam == null) return false;
         Ray ray = activeCam.ScreenPointToRay(screenPos);
         return _collider.Raycast(ray, out _, 1000f);

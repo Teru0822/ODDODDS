@@ -60,6 +60,33 @@ public class TelevisionAnimatorEditor : Editor
         }
 
         EditorGUILayout.EndHorizontal();
+        EditorGUILayout.BeginHorizontal();
+
+        if (GUILayout.Button("9. 『チュートリアル座標』に保存", GUILayout.Height(28)))
+        {
+            Undo.RecordObject(animator, "Save Television Tutorial Transform");
+            animator.SaveCurrentTransformAsTutorial();
+            EditorUtility.SetDirty(animator);
+        }
+
+        EditorGUILayout.EndHorizontal();
+        EditorGUILayout.BeginHorizontal();
+
+        if (GUILayout.Button("10. 『ゴール座標(チュートリアル)』に保存", GUILayout.Height(28)))
+        {
+            Undo.RecordObject(animator, "Save Television Goal Tutorial Transform");
+            animator.SaveCurrentTransformAsGoalTutorial();
+            EditorUtility.SetDirty(animator);
+        }
+
+        if (GUILayout.Button("11. 『収納座標(チュートリアル)』に保存", GUILayout.Height(28)))
+        {
+            Undo.RecordObject(animator, "Save Television Stow Tutorial Transform");
+            animator.SaveCurrentTransformAsStowTutorial();
+            EditorUtility.SetDirty(animator);
+        }
+
+        EditorGUILayout.EndHorizontal();
 
         EditorGUILayout.Space(5);
         EditorGUILayout.LabelField("プレビュー配置", EditorStyles.boldLabel);
@@ -88,6 +115,24 @@ public class TelevisionAnimatorEditor : Editor
         {
             Undo.RecordObject(animator.transform, "Set Television to Stow Transform");
             animator.SetToStowTransform();
+        }
+
+        if (GUILayout.Button("チュートリアル位置", GUILayout.Height(24)))
+        {
+            Undo.RecordObject(animator.transform, "Set Television to Tutorial Transform");
+            animator.SetToTutorialTransform();
+        }
+
+        if (GUILayout.Button("ゴール位置(チュートリアル)", GUILayout.Height(24)))
+        {
+            Undo.RecordObject(animator.transform, "Set Television to Goal Tutorial Transform");
+            animator.SetToGoalTutorialTransform();
+        }
+
+        if (GUILayout.Button("収納位置(チュートリアル)", GUILayout.Height(24)))
+        {
+            Undo.RecordObject(animator.transform, "Set Television to Stow Tutorial Transform");
+            animator.SetToStowTutorialTransform();
         }
 
         EditorGUILayout.EndHorizontal();

@@ -26,6 +26,12 @@ public class UFOArmManager : MonoBehaviour
 
     private void Awake()
     {
+        // 練習機側（Practice_Cranegame）には実機からコピーされた無効化済みのUFOArmManagerが残っており、
+        // GameObjectが有効ならAwake()自体は実行されてしまう。無効化されている（＝練習機側の残骸）場合は
+        // static Instanceを奪わないのはもちろん、Destroy(gameObject)で実機側を巻き添えにしないよう
+        // 早期リターンする
+        if (!enabled) return;
+
         if (Instance == null)
         {
             Instance = this;

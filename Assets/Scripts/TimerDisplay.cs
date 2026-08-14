@@ -82,6 +82,13 @@ public class TimerDisplay : MonoBehaviour
     [Header("非プレイ中の表示")]
     [SerializeField] private string idleText = "00:00.0";
 
+    [Header("チュートリアル用（任意）")]
+    [Tooltip("設定すると実機の状態ではなくこちらのチュートリアルセッションを見る。" +
+             "ラウンド/プレイ回数/制限時間プレビュー等の実機専用表示は行わず、シンプルなカウントダウンのみ表示する")]
+    [SerializeField] private TutorialCraneController tutorialCraneOverride;
+
+    private bool _tutorialWasActive;
+
     // -----------------------------------------------------------------------
     // 定数
     // -----------------------------------------------------------------------
@@ -156,6 +163,12 @@ public class TimerDisplay : MonoBehaviour
 
     private void Update()
     {
+        if (tutorialCraneOverride != null)
+        {
+            UpdateTutorialMode();
+            return;
+        }
+
         bool isPlayingUfo    = UFOCameraController.IsPlayingUfo;
         bool isSessionActive = UFOCameraController.IsPlaySessionActive;
 
@@ -212,10 +225,45 @@ public class TimerDisplay : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (tutorialCraneOverride != null) return; // カウントダウン表示はUpdateTutorialMode側で直接更新する
+
         if (_state == DisplayState.Countdown && _fadeTimer <= 0f)
             UpdateCountdownText();
         if (_state != DisplayState.Hidden)
             UpdateRoundIndicator();
+    }
+
+    // -----------------------------------------------------------------------
+    // チュートリアル用の簡易表示（ラウンド/プレイ回数/制限時間プレビュー等はすべてスキップし、
+    // シンプルなカウントダウンのみ表示する）
+    // -----------------------------------------------------------------------
+
+    private void UpdateTutorialMode()
+    {
+        bool active = tutorialCraneOverride.IsPlayingTutorial;
+
+        if (!active)
+        {
+            if (_tutorialWasActive)
+            {
+                ApplyAlpha(0f);
+                SetTexts("", "");
+                _displayCanvas?.SetActive(false);
+            }
+            _tutorialWasActive = false;
+            return;
+        }
+
+        if (!_tutorialWasActive)
+        {
+            _displayCanvas?.SetActive(true);
+            ApplyAlpha(1f);
+        }
+        _tutorialWasActive = true;
+
+        float remaining = Mathf.Max(0f, tutorialCraneOverride.RemainingTime);
+        SetTexts("", FormatCountdown(remaining));
+        ApplyCountdownColor(remaining <= warningThreshold);
     }
 
     // -----------------------------------------------------------------------

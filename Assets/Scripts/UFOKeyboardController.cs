@@ -27,9 +27,10 @@ public class UFOKeyboardController : MonoBehaviour
 
     void Update()
     {
-        // UFOプレイ中かつアクティブなプレイセッション中のみ操作を許可する
-        if (!UFOCameraController.IsPlayingUfo || !UFOCameraController.IsControlActive) return;
-
+        // 実機/チュートリアルどちらのプレイ許可判定も ButtonController.TriggerPress() 側が
+        // 自分のcontrolSourceOverride経由で正しく行うため、ここでは実機限定の判定はしない
+        // （ここで実機のUFOCameraControllerだけを見てしまうと、チュートリアル中はキー操作が
+        // 一切効かなくなる）。
         var keyboard = Keyboard.current;
         if (keyboard == null) return;
 
