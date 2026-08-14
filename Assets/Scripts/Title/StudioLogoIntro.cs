@@ -55,7 +55,26 @@ public class StudioLogoIntro : MonoBehaviour
     [SerializeField] private float _gapBeforeTitle = 0.4f;
 
     [Tooltip("タイトルシーンがフェードインする時間。ゆっくり出したいので長めが既定")]
-    [SerializeField] private float _titleFadeIn = 2.0f;
+    [SerializeField] private float _titleFadeIn = 4.0f;
+
+    [Tooltip("スキップされた時のタイトルのフェードイン時間。ここだけは一気に切り替わらないよう残す")]
+    [SerializeField] private float _titleFadeInWhenSkipped = 1.0f;
+
+    [Header("タイトルBGM")]
+    [Tooltip("タイトルシーンで流すBGM。タイトルのフェードインと同時に鳴りはじめ、" +
+             "次の画面へ遷移する時にフェードアウトする。" +
+             "このシーンのオブジェクトで鳴らすので、シーンを抜ければ自動的に消える")]
+    [SerializeField] private AudioClip _titleBgm;
+
+    [Range(0f, 1f)]
+    [Tooltip("BGMの音量")]
+    [SerializeField] private float _bgmVolume = 0.6f;
+
+    [Tooltip("BGMがフェードインする時間(秒)。0以下ならタイトルのフェードイン時間に合わせる")]
+    [SerializeField] private float _bgmFadeIn = 0f;
+
+    [Tooltip("次の画面へ遷移する時にBGMがフェードアウトする時間(秒)")]
+    [SerializeField] private float _bgmFadeOut = 1.5f;
 
     [Header("演出後に有効化するオブジェクト")]
     [Tooltip("タイトルが現れてから動かしたいもの（BGMのAudioSourceなど）。演出中は非アクティブにしておく")]
@@ -77,20 +96,44 @@ public class StudioLogoIntro : MonoBehaviour
     // アプリ起動から一度でも再生したか。シーンを読み直しても false に戻らないよう static
     private static bool _hasPlayedThisLaunch;
 
+    /// <summary>タイトルシーンに置かれている本コンポーネント。BGMを外から止めるのに使う。</summary>
+    public static StudioLogoIntro Current { get; private set; }
+
     private Canvas _canvas;
     private RawImage _background;
     private RawImage _logoImage;
     private RectTransform _logoRect;
     private AudioSource _audioSource;
+    private AudioSource _bgmSource;
+    private Coroutine _bgmRoutine;
     private bool _skipRequested;
+
+    // 2回目以降のタイトル表示ではロゴ演出を行わない（BGMだけ鳴らす）
+    private bool _skipIntroEntirely;
+
+    /// <summary>実際に使うタイトルのフェードイン時間。スキップされた時は短縮する。</summary>
+    private float ResolvedTitleFadeDuration =>
+        _skipRequested ? Mathf.Min(_titleFadeIn, Mathf.Max(0f, _titleFadeInWhenSkipped)) : _titleFadeIn;
 
     private void Awake()
     {
+        Current = this;
+
+        // ロゴSE用の AudioSource を先に確保する。BGM用より後に GetComponent すると
+        // BGM用のほうを拾ってしまい、SEの音量がBGMのフェード(開始時は音量0)に巻き込まれる
+        _audioSource = GetComponent<AudioSource>();
+        if (_audioSource == null) _audioSource = gameObject.AddComponent<AudioSource>();
+        _audioSource.playOnAwake = false;
+        _audioSource.spatialBlend = 0f;
+
+        CreateBgmSource();
+
         if (_playOnlyOncePerLaunch && _hasPlayedThisLaunch)
         {
-            // 2回目以降は演出せず、伏せてあるオブジェクトだけ起こして終わる
+            // 2回目以降は演出せず、伏せてあるオブジェクトだけ起こす。
+            // BGM は毎回鳴らしたいので、ここではコンポーネントを止めない
+            _skipIntroEntirely = true;
             ActivateAfterIntroObjects();
-            enabled = false;
             return;
         }
 
@@ -98,14 +141,26 @@ public class StudioLogoIntro : MonoBehaviour
         BuildOverlay();
     }
 
+    private void OnDestroy()
+    {
+        if (Current == this) Current = null;
+    }
+
     private void Start()
     {
-        if (!enabled) return;
+        if (_skipIntroEntirely)
+        {
+            // 演出を挟まないぶん、BGMだけ静かに立ち上げる
+            StartBgmFadeIn(_bgmFadeIn > 0f ? _bgmFadeIn : _titleFadeIn);
+            return;
+        }
+
         StartCoroutine(PlayIntro());
     }
 
     private void Update()
     {
+        if (_skipIntroEntirely) return;
         if (!_allowSkip || _skipRequested) return;
 
         // このプロジェクトは新Input System専用設定のため、旧 Input クラスは使えない
@@ -150,11 +205,6 @@ public class StudioLogoIntro : MonoBehaviour
         _logoImage.enabled = _logo != null;
 
         LayoutLogo();
-
-        _audioSource = gameObject.GetComponent<AudioSource>();
-        if (_audioSource == null) _audioSource = gameObject.AddComponent<AudioSource>();
-        _audioSource.playOnAwake = false;
-        _audioSource.spatialBlend = 0f;
     }
 
     private static RawImage CreateImage(Transform parent, string name)
@@ -201,7 +251,9 @@ public class StudioLogoIntro : MonoBehaviour
 
         yield return WaitOrSkip(_gapBeforeTitle);
 
-        // 覆っていた色を晴らして、タイトルシーンを見せる
+        // 覆っていた色を晴らして、タイトルシーンを見せる。
+        // BGM も同じ長さで一緒に立ち上げ、絵と音が揃って現れるようにする
+        StartBgmFadeIn(_bgmFadeIn > 0f ? _bgmFadeIn : ResolvedTitleFadeDuration);
         yield return FadeBackground(_backgroundColor.a, 0f, _titleFadeIn);
 
         ActivateAfterIntroObjects();
@@ -237,7 +289,7 @@ public class StudioLogoIntro : MonoBehaviour
         if (_background == null) yield break;
 
         // ここはスキップされても、いきなり切り替わらないよう短縮だけする
-        float actual = _skipRequested ? Mathf.Min(duration, 0.35f) : duration;
+        float actual = _skipRequested ? Mathf.Min(duration, Mathf.Max(0f, _titleFadeInWhenSkipped)) : duration;
         if (actual <= 0f)
         {
             SetBackgroundAlpha(to);
@@ -281,6 +333,84 @@ public class StudioLogoIntro : MonoBehaviour
         Color c = _backgroundColor;
         c.a = a;
         _background.color = c;
+    }
+
+    // --- タイトルBGM ---
+
+    /// <summary>
+    /// BGM専用の AudioSource を用意する。
+    /// ロゴSE用の AudioSource は PlayOneShot 用なので、止める操作が干渉しないよう分ける。
+    /// このシーンのオブジェクトに載せる（DontDestroyOnLoad しない）ため、
+    /// シーンを抜けた時点でBGMは確実に消える。
+    /// </summary>
+    private void CreateBgmSource()
+    {
+        if (_bgmSource != null) return;
+
+        _bgmSource = gameObject.AddComponent<AudioSource>();
+        _bgmSource.playOnAwake = false;
+        _bgmSource.loop = true;
+        _bgmSource.spatialBlend = 0f;   // タイトルBGMなので2Dで鳴らす
+        _bgmSource.volume = 0f;
+    }
+
+    /// <summary>BGMを鳴らしはじめ、指定時間かけて既定音量までフェードインする。</summary>
+    private void StartBgmFadeIn(float duration)
+    {
+        if (_titleBgm == null || _bgmSource == null) return;
+
+        if (_bgmRoutine != null) StopCoroutine(_bgmRoutine);
+
+        _bgmSource.clip = _titleBgm;
+        _bgmSource.volume = 0f;
+        _bgmSource.Play();
+        _bgmRoutine = StartCoroutine(FadeBgm(_bgmVolume, duration));
+    }
+
+    /// <summary>
+    /// タイトルBGMをフェードアウトさせて止める。次の画面へ遷移する時に呼ぶ。
+    /// duration が負なら Inspector の設定値を使う。
+    /// </summary>
+    public void FadeOutBgm(float duration = -1f)
+    {
+        if (_bgmSource == null || !_bgmSource.isPlaying) return;
+
+        if (_bgmRoutine != null) StopCoroutine(_bgmRoutine);
+        _bgmRoutine = StartCoroutine(FadeOutBgmRoutine(duration < 0f ? _bgmFadeOut : duration));
+    }
+
+    /// <summary>タイトルシーンのBGMを止める。参照を持っていない場所から呼ぶ用。</summary>
+    public static void StopTitleBgm(float duration = -1f)
+    {
+        if (Current != null) Current.FadeOutBgm(duration);
+    }
+
+    private IEnumerator FadeOutBgmRoutine(float duration)
+    {
+        yield return FadeBgm(0f, duration);
+        if (_bgmSource != null) _bgmSource.Stop();
+        _bgmRoutine = null;
+    }
+
+    private IEnumerator FadeBgm(float targetVolume, float duration)
+    {
+        if (_bgmSource == null) yield break;
+
+        if (duration <= 0f)
+        {
+            _bgmSource.volume = targetVolume;
+            yield break;
+        }
+
+        float startVolume = _bgmSource.volume;
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            _bgmSource.volume = Mathf.Lerp(startVolume, targetVolume, Mathf.Clamp01(elapsed / duration));
+            yield return null;
+        }
+        _bgmSource.volume = targetVolume;
     }
 
     private void DeactivateAfterIntroObjects()

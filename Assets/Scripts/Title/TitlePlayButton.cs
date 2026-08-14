@@ -189,6 +189,10 @@ public class TitlePlayButton : MonoBehaviour
     private void OnConversationComplete()
     {
         if (logEvents) Debug.Log("[TitlePlayButton] 悪魔の会話が完了。モヤ暗転とロードを開始します。", this);
+
+        // タイトルBGMは次の画面へ持ち越さない。暗転と一緒にフェードアウトさせる
+        StudioLogoIntro.StopTitleBgm();
+
         if(sceneTransitionManager == null) sceneTransitionManager = FindFirstObjectByType<SceneTransitionManager>();//ゲームシーンからタイトルシーンに戻った際に無くなるため
 
         if (sceneTransitionManager != null)

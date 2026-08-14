@@ -1101,13 +1101,16 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   audioSource: {fileID: 0}
-  startupSound: {fileID: 0}
-  shutdownSound: {fileID: 0}
+  startupSound: {fileID: 8300000, guid: 8eb2923a32e613e4a87513372f6fdc1a, type: 3}
+  shutdownSound: {fileID: 8300000, guid: d2996e056d02ac8428dee241d3d027ce, type: 3}
+  idleLoopSound: {fileID: 0}
+  idleLoopVolume: 0.5
+  idleLoopFadeDuration: 0.35
   washSuccessSound: {fileID: 0}
-  keyClickSound: {fileID: 0}
+  keyClickSound: {fileID: 8300000, guid: 802e2d41a7954c749944acd59fb2a820, type: 3}
   selectSound: {fileID: 0}
-  confirmSound: {fileID: 0}
-  cancelSound: {fileID: 0}
+  confirmSound: {fileID: 8300000, guid: 66b4c8e28b6ca5e408a46b4b967e69e3, type: 3}
+  cancelSound: {fileID: 8300000, guid: e8bb408d8d8cf7b4c994cca55611f042, type: 3}
   electronicSoundVolume: 1
   keyButtons:
   - {fileID: 599287927}
@@ -1153,6 +1156,96 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7718053816494518415, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
   m_PrefabInstance: {fileID: 2758825138502516796}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1177008532
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1177008526}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86d3f1effbdfea14cbb42e6f54b42ff4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMHackingMode
+  triggerObject: {fileID: 1805605858}
+  triggerObjectName: atm_design4
+  blinkColor: {r: 1, g: 0.08, b: 0.08, a: 1}
+  blinkSpeed: 2.2
+  blinkIntensity: 3.5
+  blinkOnlyWhileScreenActive: 1
+  outlineColor: {r: 1, g: 0.1, b: 0.1, a: 1}
+  outlineWidth: 4
+  pressDirection: {x: 0, y: 0, z: -1}
+  pressDistance: 0.006
+  pressDuration: 0.09
+  releaseDuration: 0.16
+  transfers:
+  - fromBank: MAMMON BANK
+    toBank: STYX SAVINGS
+    amount: 80000
+    difficulty: 0
+  - fromBank: GEHENNA TRUST
+    toBank: CERBERUS BANK
+    amount: 420000
+    difficulty: 1
+  - fromBank: PANDEMONIUM BANK
+    toBank: LETHE HOLDINGS
+    amount: 1850000
+    difficulty: 2
+  difficulties:
+  - difficulty: 0
+    label: EASY
+    layerLabels:
+    - FIREWALL Lv.1
+    - BANK ADMIN
+    safeZoneHalfWidth: 0.13
+    finalSafeZoneScale: 0.8
+    cursorSpeed: 0.7
+    finalCursorSpeedScale: 1.25
+    maxShake: 6
+  - difficulty: 1
+    label: NORMAL
+    layerLabels:
+    - FIREWALL Lv.1
+    - FIREWALL Lv.2
+    - BANK ADMIN
+    safeZoneHalfWidth: 0.115
+    finalSafeZoneScale: 0.72
+    cursorSpeed: 0.85
+    finalCursorSpeedScale: 1.45
+    maxShake: 10
+  - difficulty: 2
+    label: HARD
+    layerLabels:
+    - FIREWALL Lv.1
+    - FIREWALL Lv.2
+    - FIREWALL Lv.3
+    - BANK ADMIN
+    safeZoneHalfWidth: 0.11
+    finalSafeZoneScale: 0.72
+    cursorSpeed: 0.95
+    finalCursorSpeedScale: 1.5
+    maxShake: 16
+  oneSuccessPerVisit: 1
+  screenSize: {x: 11.3, y: 7.16}
+  screenScale: 1.18
+  screenOffset: {x: -0.57, y: -2.07, z: 0}
+  screenPadding: 1.05
+  transferBarOffset: {x: 1.28, y: 0}
+  transferBarWidth: 0.603
+  transferBarThickness: 1
+  transferProgressSpeedRange: {x: 0.02, y: 0.045}
+  minigameBarOffset: {x: 0, y: 0}
+  minigameBarWidth: 1
+  minigameBarThickness: 1.42
+  safeZoneThickness: 0.83
+  safeZoneWidth: 0.502
+  triggerSound: {fileID: 0}
+  bootSound: {fileID: 0}
+  breachSound: {fileID: 0}
+  deniedSound: {fileID: 0}
+  authorizedSound: {fileID: 0}
 --- !u!114 &1214958071 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7829022221041823055, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
@@ -1359,6 +1452,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 047e1268cec465845bd522202f1cdf18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::App.ATM.ATMPhysicalButton
+--- !u!4 &1805605858 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2245442443735692335, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+  m_PrefabInstance: {fileID: 2758825138502516796}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1852216393 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8295591563862043288, guid: 98c5ce036f68d8941922e7541fb70887, type: 3}
@@ -1805,6 +1903,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6942256637255133749, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1177008530}
+    - targetCorrespondingSourceObject: {fileID: 6942256637255133749, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1177008532}
     - targetCorrespondingSourceObject: {fileID: 6061382097804974434, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1475763484}
