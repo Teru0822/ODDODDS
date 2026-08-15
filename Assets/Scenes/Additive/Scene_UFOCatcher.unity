@@ -7194,6 +7194,7 @@ MonoBehaviour:
     resetTimerOnEnter: 1
     resetTimerToSeconds: 30
     advanceWhenTimerExpires: 1
+  debugAllowShiftEnterToFinishTutorial: 1
   referenceResolution: {x: 1920, y: 1080}
   overlayCanvas: {fileID: 432966207}
   overlayCanvasGroup: {fileID: 0}
@@ -13320,6 +13321,9 @@ MonoBehaviour:
   tutorialCameraPos: {fileID: 101501359}
   fpController: {fileID: 0}
   tutorialDuration: 30
+  warningAudioSource: {fileID: 0}
+  lowTimeWarningSound: {fileID: 8300000, guid: 95831d7d112bdea4281e9151acbddc29, type: 3}
+  warningSoundVolume: 0.62
   loadingMinimumDuration: 1
   televisionAnimator: {fileID: 1153044095}
   televisionStaticController: {fileID: 1153044099}

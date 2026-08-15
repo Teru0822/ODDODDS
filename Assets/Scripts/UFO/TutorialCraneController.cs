@@ -28,6 +28,19 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
     [Tooltip("チュートリアルの制限時間（秒）")]
     [SerializeField] private float tutorialDuration = 30f;
 
+    [Header("残り時間警告音（実機のUFOCameraController.UpdateWarningSoundと同じ仕組み）")]
+    [Tooltip("パトランプは複数箇所に配置されるため、音はパトランプ側ではなくここに一元化して1回だけ鳴らす")]
+    [SerializeField] private AudioSource warningAudioSource;
+
+    [Tooltip("残り10秒を切った時にループ再生する警告音")]
+    [SerializeField] private AudioClip lowTimeWarningSound;
+
+    [Range(0f, 10f)]
+    [Tooltip("警告音のボリューム（1を超えるとブースト）")]
+    [SerializeField] private float warningSoundVolume = 1f;
+
+    private bool _hasPlayedLowTimeWarning = false;
+
     [Header("チュートリアル開始時のローディング演出")]
     [Tooltip("開始時はすらーぷせず、SceneTransitionManager のローディング画面の裏で瞬間移動します。ローディング画面の最低表示時間（秒）")]
     [SerializeField] private float loadingMinimumDuration = 1.0f;
@@ -352,6 +365,56 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
                 OnTimerExpired?.Invoke();
             }
         }
+
+        UpdateWarningSound();
+    }
+
+    /// <summary>
+    /// 残り時間が10秒を切ったら警告音をループ再生する（実機のUFOCameraController.UpdateWarningSoundと
+    /// 同じロジック）。パトランプは複数箇所に配置されるため、音はここに一元化して1回だけ鳴らす。
+    /// </summary>
+    private void UpdateWarningSound()
+    {
+        bool shouldPlay = IsPlayingTutorial && _playTimer > 0f && _playTimer <= 10f;
+
+        if (shouldPlay)
+        {
+            if (!_hasPlayedLowTimeWarning)
+            {
+                _hasPlayedLowTimeWarning = true;
+                if (lowTimeWarningSound != null)
+                {
+                    if (warningAudioSource == null)
+                    {
+                        warningAudioSource = GetComponent<AudioSource>();
+                        if (warningAudioSource == null)
+                        {
+                            warningAudioSource = gameObject.AddComponent<AudioSource>();
+                            warningAudioSource.playOnAwake = false;
+                            warningAudioSource.spatialBlend = 0f;
+                        }
+                    }
+                    warningAudioSource.clip = lowTimeWarningSound;
+                    warningAudioSource.loop = true;
+                    warningAudioSource.volume = warningSoundVolume;
+                    warningAudioSource.Play();
+                }
+            }
+        }
+        else
+        {
+            bool isActuallyPlayingWarning = warningAudioSource != null && warningAudioSource.isPlaying && warningAudioSource.clip == lowTimeWarningSound;
+            if (_hasPlayedLowTimeWarning || isActuallyPlayingWarning)
+            {
+                _hasPlayedLowTimeWarning = false;
+                if (warningAudioSource != null && warningAudioSource.clip == lowTimeWarningSound)
+                {
+                    warningAudioSource.Stop();
+                    warningAudioSource.clip = null;
+                    warningAudioSource.loop = false;
+                }
+            }
+        }
     }
 
     /// <summary>タイマーが0になった瞬間に発火する。チュートリアルステップ側が
@@ -368,6 +431,7 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
         _playTimer = seconds;
         _timerStarted = false;
         _timerPaused = false;
+        _hasPlayedLowTimeWarning = false;
     }
 
     /// <summary>タイマーの残り秒数。チュートリアルステップ側から閾値監視に使う</summary>
@@ -498,6 +562,7 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
         _toggleClawAllowed = true;
         _feverTimeButtonAllowed = true;
         _playTimer = tutorialDuration;
+        _hasPlayedLowTimeWarning = false;
 
         if (fpController != null)
         {

@@ -147,6 +147,11 @@ public class TutorialStepController : MonoBehaviour
     [Header("ステップ")]
     [SerializeField] private List<TutorialStep> steps = new List<TutorialStep>();
 
+    [Header("デバッグ")]
+    [Tooltip("ON: チュートリアル中にShift+Enterを押すと、現在のステップを無視して即座にチュートリアルを" +
+             "終了扱いにして実機側へ戻る（デバッグ用のショートカット）")]
+    [SerializeField] private bool debugAllowShiftEnterToFinishTutorial = false;
+
     [Tooltip("rectAdjustMin/Maxを調整した時の基準解像度（今Editorで確認しながら値を決めた時の解像度を入れる）。" +
              "実行時の実解像度がこれと異なる場合、比率に応じて自動スケーリングする")]
     [SerializeField] private Vector2 referenceResolution = new Vector2(1920f, 1080f);
@@ -540,6 +545,16 @@ public class TutorialStepController : MonoBehaviour
     private void Update()
     {
         if (!_isActive || _currentStepIndex < 0 || _currentStepIndex >= steps.Count) return;
+
+        // デバッグ用: Shift+Enterで現在のステップを無視して即座にチュートリアルを終了する
+        if (debugAllowShiftEnterToFinishTutorial && Keyboard.current != null &&
+            Keyboard.current.enterKey.wasPressedThisFrame &&
+            (Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed))
+        {
+            Debug.Log("[TutorialDebug] Shift+Enterによりチュートリアルを強制終了します");
+            EndTutorial();
+            return;
+        }
 
         TutorialStep step = steps[_currentStepIndex];
 

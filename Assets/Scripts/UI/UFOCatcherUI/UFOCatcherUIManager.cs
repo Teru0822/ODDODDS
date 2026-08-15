@@ -79,6 +79,11 @@ public class UFOCatcherUIManager : MonoBehaviour
 
     private void Start()
     {
+        // シーン上でCanvasが手動でアクティブのまま残っていると、プレイ開始/終了イベントが一度も
+        // 発火する前（起動直後や、プレイ経験が一度もない状態）にもprice_tableが見えてしまうため、
+        // 起動時に必ず一度非表示にしておく
+        ClearGeneratedUI();
+
         // 練習機側はTutorialCraneControllerがApplySessionActiveUIState()を直接呼ぶため、
         // 実機のstaticイベントは購読しない（購読すると実機のセッション変化にも反応してしまう）
         if (isPracticeInstance) return;
@@ -86,6 +91,25 @@ public class UFOCatcherUIManager : MonoBehaviour
         // Play_Canvas2 で Play を押して実際にプレイセッションが始まった/終わったタイミングを購読する
         // （tutorial_canvas / Play_canvas / Play2_canvas を閲覧しているだけの間は表示しない）
         UFOCameraController.OnPlaySessionActiveChanged += HandlePlaySessionActiveChanged;
+    }
+
+    private void Update()
+    {
+        // イベント駆動の表示切り替えだけに頼らず、実際にプレイ中かどうかを毎フレーム確認して
+        // 食い違いが起きないようにする（セッション終了イベントが何らかの理由で発火しなかった場合の保険）。
+        // IsPlaySessionActive（引き出し演出が終わるまでtrueのまま）ではなく、クレーン操作自体が
+        // 終わった瞬間にfalseになるIsPlayingUfoを見る。そうしないと引き出し演出中もprice_tableが
+        // 消えず、拡大されたUnwashCoin表示と重なって見えてしまう
+        if (_canvas == null || !_canvas.gameObject.activeSelf) return;
+
+        bool isActuallyPlaying = isPracticeInstance
+            ? TutorialCraneController.IsAnyTutorialPlaying
+            : UFOCameraController.IsPlayingUfo;
+
+        if (!isActuallyPlaying)
+        {
+            ClearGeneratedUI();
+        }
     }
 
     private void OnDestroy()

@@ -6,6 +6,9 @@ using UnityEngine;
 /// 同じスクリプトを練習機側にそのまま付けると実機の残り時間で光ってしまう。
 /// こちらはTutorialCraneController側の残り時間を見て、練習機の残り時間が10秒以下になったときだけ
 /// 光る・回転するようにした練習機専用版。
+///
+/// 音は鳴らさない（パトランプは複数個所に配置されるため、ここで鳴らすと台数分重複してしまう。
+/// 実機がUFOCameraControllerに集約しているのと同じ理由で、音はTutorialCraneController側に集約する）。
 /// </summary>
 public class TutorialPatoLampController : MonoBehaviour
 {
