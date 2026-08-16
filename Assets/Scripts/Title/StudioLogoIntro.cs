@@ -73,7 +73,7 @@ public class StudioLogoIntro : MonoBehaviour
     [Tooltip("BGMがフェードインする時間(秒)。0以下ならタイトルのフェードイン時間に合わせる")]
     [SerializeField] private float _bgmFadeIn = 0f;
 
-    [Tooltip("次の画面へ遷移する時にBGMがフェードアウトする時間(秒)")]
+    [Tooltip("ローディングが終わった時にBGMがフェードアウトする時間(秒)")]
     [SerializeField] private float _bgmFadeOut = 1.5f;
 
     [Header("演出後に有効化するオブジェクト")]
@@ -359,6 +359,9 @@ public class StudioLogoIntro : MonoBehaviour
     {
         if (_titleBgm == null || _bgmSource == null) return;
 
+        // 前回の遷移で引き継いだBGMがまだ残っていたら、二重に鳴らないよう始末する
+        TitleBgmCarrier.StopCurrentImmediate();
+
         if (_bgmRoutine != null) StopCoroutine(_bgmRoutine);
 
         _bgmSource.clip = _titleBgm;
@@ -383,6 +386,31 @@ public class StudioLogoIntro : MonoBehaviour
     public static void StopTitleBgm(float duration = -1f)
     {
         if (Current != null) Current.FadeOutBgm(duration);
+    }
+
+    /// <summary>
+    /// BGMをシーン遷移をまたげる入れ物へ引き渡す。
+    /// タイトルシーンが破棄されてもローディング中は鳴り続け、
+    /// ロード完了時に TitleBgmCarrier.StopCurrent() でフェードアウトさせる。
+    /// </summary>
+    public void HandOverBgmForLoading()
+    {
+        if (_bgmSource == null || !_bgmSource.isPlaying) return;
+
+        // フェードイン途中でも、その時点の音量のまま引き継ぐ
+        if (_bgmRoutine != null)
+        {
+            StopCoroutine(_bgmRoutine);
+            _bgmRoutine = null;
+        }
+
+        TitleBgmCarrier.TakeOver(_bgmSource, _bgmFadeOut);
+    }
+
+    /// <summary>タイトルBGMをローディングへ引き継ぐ。参照を持っていない場所から呼ぶ用。</summary>
+    public static void HandOverTitleBgm()
+    {
+        if (Current != null) Current.HandOverBgmForLoading();
     }
 
     private IEnumerator FadeOutBgmRoutine(float duration)
