@@ -34,7 +34,7 @@ screens:
   welcome:
     - type: text
       color: "#33FF66"
-      size: 120
+      size: 200
       text: "=== Devil's Bank ==="
     - type: text
       text: ""
@@ -45,9 +45,9 @@ screens:
     - type: text
       text: ""
     - type: text
-      text: "INPUT YOUR PASSCODE:"
+      text: "AUTO-AUTHENTICATION..."
     - type: text
-      size: 140
+      size: 180
       color: "#33FF99"
       text: "[ {passcodeMasked} ]"
     - type: text
@@ -127,28 +127,29 @@ screens:
   coinExchange:
     - type: text
       color: "#33FF66"
+      size: 150
       text: "=== COIN EXCHANGE ==="
     - type: text
       text: ""
-    - type: text
-      text: "CASH: {cleanBalance} DC"
-    - type: text
-      text: ""
-    - type: text
-      text: "[img:gold] GOLD   : {selGoldOpen}{goldOwned}  ({goldPrice} DC/x1){selGoldClose}"
+    # 金/銀/銅の3行は ATMController がコードで生成する（1行ずつ位置や画像を調整できるようにするため）。
+    # ここは行数を合わせて場所を空けているだけ。文言や画像は Inspector の「コイン行 (金/銀/銅) の配置」で変更する
     - type: text
       text: ""
     - type: text
-      text: "[img:silver] SILVER : {selSilverOpen}{silverOwned}  ({silverPrice} DC/x1){selSilverClose}"
+      text: ""
     - type: text
       text: ""
     - type: text
-      text: "[img:bronze] BRONZE : {selBronzeOpen}{bronzeOwned}  ({bronzePrice} DC/x1){selBronzeClose}"
+      text: ""
     - type: text
       text: ""
     - type: text
+      text: ""
+    - type: text
+      size: 50
+      align: left
       color: "#558855"
-      text: "[UP/DOWN] SELECT   [ENTER] EDIT/SELL   [CANCEL] EXIT"
+      text: "[UP/DOWN] SELECT   [SPACE] SELL ALL   [CANCEL] EXIT"
 
   # --- 処理中（プログレスバー）。{progressBar}/{progressPercent} はコードが差し込む ---
   processing:
@@ -166,6 +167,60 @@ screens:
     - type: text
       color: "#FF3333"
       text: "WARNING: DO NOT POWER OFF TERMINAL"
+
+  # --- ハッキング起動画面（黒と赤のぱちぱち中に出る文字） ---
+  # 1要素目 = 大見出し / 2要素目以降 = 起動メッセージ（並べた順に、演出時間を均等に割って表示）
+  # 反映されるのは text / color / size のみ。size は 100 でコード側の既定サイズ
+  # ぱちぱちの長さ・速さ・強さ・色は ATMHackingMode の「起動演出（黒と赤のぱちぱち）」で調整する
+  hackBoot:
+    - type: text
+      color: "#FF2A2A"
+      size: 100
+      text: "HACKING MODE"
+    - type: text
+      color: "#BF4040"
+      size: 100
+      text: "BYPASSING SECURITY LAYER..."
+    - type: text
+      color: "#BF4040"
+      size: 100
+      text: "INJECTING PAYLOAD..."
+    - type: text
+      color: "#BF4040"
+      size: 100
+      text: "SCANNING INTERBANK TRAFFIC..."
+    - type: text
+      color: "#BF4040"
+      size: 100
+      text: "ROOT ACCESS GRANTED"
+
+  # --- ハッキング失敗（ステージ1で失敗）画面 ---
+  # 1要素目 = 大見出し / 2要素目 = その下の行。中央に大きく表示される
+  hackDenied:
+    - type: text
+      color: "#FF2A2A"
+      size: 100
+      text: "ACCESS DENIED"
+    - type: text
+      color: "#BF4040"
+      size: 100
+      text: "CONNECTION TERMINATED BY HOST"
+
+  # --- ハッキング成功（ミニゲームクリア）画面 ---
+  # ハッキング画面はコード生成UIのため、この画面だけは特別扱い:
+  #   1要素目 = 大見出し / 2要素目 = その下の行
+  #   反映されるのは text / color / size のみ（align・font・画像は無視されます）
+  #   size は 100 でコード側の既定サイズ。150 なら1.5倍
+  # 使えるトークン: {amount} {fromBank} {toBank} {difficulty}
+  hackSuccess:
+    - type: text
+      color: "#33FF66"
+      size: 80
+      text: "MISSION COMPLETE"
+    - type: text
+      color: "#BF4040"
+      size: 110
+      text: "{amount}  REROUTED FROM {fromBank}"
 
   # --- 取引成功 ---
   success:

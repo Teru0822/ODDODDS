@@ -3,6 +3,16 @@ using UnityEngine;
 
 namespace App.ATM
 {
+    /// <summary>ハッキングモードを実行できる条件。</summary>
+    public enum HackUnlockMode
+    {
+        /// <summary>いつでも実行できる。デバッグ用。</summary>
+        Debug_Always = 0,
+
+        /// <summary>取り立てが今ターン終了時に来て、かつコインを全部売っても届かない時だけ実行できる。</summary>
+        Release_WhenDebtUnpayable = 1
+    }
+
     /// <summary>ハッキングの難易度。送金額の大小に対応する。</summary>
     public enum HackDifficulty
     {
@@ -59,9 +69,9 @@ namespace App.ATM
         [Range(0.02f, 0.4f)]
         public float safeZoneHalfWidth = 0.13f;
 
-        [Tooltip("最終階層で安全地帯をどこまで縮めるか。0.7 なら最初の 70% の幅になる")]
-        [Range(0.2f, 1f)]
-        public float finalSafeZoneScale = 0.8f;
+        [Tooltip("最終階層で安全地帯をどこまで縮めるか。0.3 なら最初の 30% の幅まで細くなる")]
+        [Range(0.1f, 1f)]
+        public float finalSafeZoneScale = 0.4f;
 
         [Tooltip("最初の階層のカーソル速度。1.0 でバーを 1 秒に 1 往復ぶん進む")]
         [Range(0.2f, 3f)]
@@ -74,6 +84,13 @@ namespace App.ATM
         [Tooltip("終盤の画面揺れの最大量(画面座標)。0 で揺れなし")]
         [Range(0f, 40f)]
         public float maxShake = 8f;
+
+        [Tooltip("最初のステージの制限時間(秒)。0以下にすると制限なし")]
+        public float timeLimit = 9f;
+
+        [Tooltip("最終ステージでの制限時間の倍率。0.6 なら最初の6割の時間しかない")]
+        [Range(0.1f, 1f)]
+        public float finalTimeLimitScale = 0.6f;
 
         /// <summary>階層数。</summary>
         public int LayerCount => layerLabels != null ? layerLabels.Length : 0;
@@ -96,7 +113,8 @@ namespace App.ATM
                 safeHalfWidth = safeZoneHalfWidth * Mathf.Lerp(1f, finalSafeZoneScale, progress),
                 cursorSpeed = cursorSpeed * Mathf.Lerp(1f, finalCursorSpeedScale, progress),
                 fakeZoneCount = CountFakeZones(progress),
-                shakeAmount = progress >= 0.5f ? maxShake * Mathf.InverseLerp(0.5f, 1f, progress) : 0f
+                shakeAmount = progress >= 0.5f ? maxShake * Mathf.InverseLerp(0.5f, 1f, progress) : 0f,
+                timeLimit = timeLimit > 0f ? timeLimit * Mathf.Lerp(1f, finalTimeLimitScale, progress) : 0f
             };
         }
 
@@ -122,6 +140,9 @@ namespace App.ATM
         public float cursorSpeed;
         public int fakeZoneCount;
         public float shakeAmount;
+
+        /// <summary>このステージの制限時間(秒)。0以下なら制限なし。</summary>
+        public float timeLimit;
     }
 
     /// <summary>
@@ -180,33 +201,39 @@ namespace App.ATM
                     difficulty = HackDifficulty.Easy,
                     label = "EASY",
                     layerLabels = new[] { "FIREWALL Lv.1", "BANK ADMIN" },
-                    safeZoneHalfWidth = 0.11f,
-                    finalSafeZoneScale = 0.78f,
+                    safeZoneHalfWidth = 0.18f,
+                    finalSafeZoneScale = 0.40f,
                     cursorSpeed = 0.85f,
                     finalCursorSpeedScale = 1.30f,
-                    maxShake = 8f
+                    maxShake = 8f,
+                    timeLimit = 9f,
+                    finalTimeLimitScale = 0.65f
                 },
                 new HackDifficultySettings
                 {
                     difficulty = HackDifficulty.Normal,
                     label = "NORMAL",
                     layerLabels = new[] { "FIREWALL Lv.1", "FIREWALL Lv.2", "BANK ADMIN" },
-                    safeZoneHalfWidth = 0.095f,
-                    finalSafeZoneScale = 0.75f,
+                    safeZoneHalfWidth = 0.17f,
+                    finalSafeZoneScale = 0.33f,
                     cursorSpeed = 1.00f,
                     finalCursorSpeedScale = 1.40f,
-                    maxShake = 13f
+                    maxShake = 13f,
+                    timeLimit = 8f,
+                    finalTimeLimitScale = 0.58f
                 },
                 new HackDifficultySettings
                 {
                     difficulty = HackDifficulty.Hard,
                     label = "HARD",
                     layerLabels = new[] { "FIREWALL Lv.1", "FIREWALL Lv.2", "FIREWALL Lv.3", "BANK ADMIN" },
-                    safeZoneHalfWidth = 0.09f,
-                    finalSafeZoneScale = 0.72f,
+                    safeZoneHalfWidth = 0.16f,
+                    finalSafeZoneScale = 0.30f,
                     cursorSpeed = 1.15f,
                     finalCursorSpeedScale = 1.45f,
-                    maxShake = 20f
+                    maxShake = 20f,
+                    timeLimit = 7f,
+                    finalTimeLimitScale = 0.5f
                 }
             };
         }

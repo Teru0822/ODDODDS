@@ -9,6 +9,16 @@ using UnityEngine.SceneManagement;
 
 namespace App.Intro
 {
+    /// <summary>イントロツアーの動作モード。</summary>
+    public enum IntroTourMode
+    {
+        /// <summary>製品版。一度見たセーブデータではスキップし、ツアー中はテロップを表示する。</summary>
+        Release = 0,
+
+        /// <summary>PV撮影・確認用。セーブデータに関係なく毎回再生し、テロップは表示しない。</summary>
+        Debug_MovieCapture = 1
+    }
+
     /// <summary>カットのカメラの動き方。</summary>
     public enum IntroTourMotion
     {
@@ -146,9 +156,11 @@ namespace App.Intro
         [Tooltip("ツアー終了時に SetActive(true) する GO 名のリスト。非アクティブでも検索できます")]
         [SerializeField] private string[] _activateOnTourEnd = { "GameUI" };
 
-        [Header("テロップ表示")]
-        [Tooltip("OFF にするとテロップを表示せず durationWithoutTelop で各カットを送る。動画撮影時に使用")]
-        [SerializeField] private bool _showTelop = true;
+        [Header("動作モード")]
+        [Tooltip("Release: 製品版の動作。このセーブデータで一度ツアーを見ていればスキップし、ツアー中はテロップを表示する。\n" +
+                 "Debug_MovieCapture: PV撮影・確認用。セーブデータに関係なく毎回ツアーを再生し、テロップは表示しない" +
+                 "（各カットは durationWithoutTelop の時間で送る）")]
+        [SerializeField] private IntroTourMode _mode = IntroTourMode.Debug_MovieCapture;
 
         [Header("スキップ")]
         [Tooltip("Escキーでツアー全体を飛ばせるようにする。開発中の確認用")]
@@ -157,8 +169,11 @@ namespace App.Intro
         [Header("デバッグ")]
         [SerializeField] private bool _logEvents = true;
 
-        [Tooltip("ONにするとセーブデータの isWatchTour を無視して常にツアーを再生する（エディタ専用・確認作業用）")]
-        [SerializeField] private bool _debugAlwaysPlayTour = false;
+        /// <summary>テロップを表示するか。製品版のみ表示する。</summary>
+        private bool ShowTelop => _mode == IntroTourMode.Release;
+
+        /// <summary>セーブデータの isWatchTour を無視して毎回ツアーを再生するか。</summary>
+        private bool AlwaysPlayTour => _mode == IntroTourMode.Debug_MovieCapture;
 
         private bool _isWatchTour = false;//既に一度このセーブデータでツアーを見ているか否か
         private bool _isLoadComplete = false;//ロードが終わったか否か
@@ -215,7 +230,7 @@ namespace App.Intro
             yield return WaitUntilSceneReady();
             yield return new WaitUntil(() => _isLoadComplete == true);
 
-            if(!_isWatchTour || _debugAlwaysPlayTour)//一度も見たことが無い時のみツアー開始
+            if(!_isWatchTour || AlwaysPlayTour)//一度も見たことが無い時のみツアー開始（撮影モードは毎回）
                 StartTour();
             else
             {
@@ -383,7 +398,7 @@ namespace App.Intro
             StopMotion();
             _motionRoutine = StartCoroutine(AnimateCamera(shot));
 
-            bool hasTelop = _showTelop && shot.lines != null && shot.lines.Length > 0 && _telop != null;
+            bool hasTelop = ShowTelop && shot.lines != null && shot.lines.Length > 0 && _telop != null;
             if (hasTelop)
             {
                 yield return _telop.PlayLines(shot.lines);

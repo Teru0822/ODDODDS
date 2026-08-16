@@ -41,6 +41,11 @@ namespace App.ATM
         public static readonly Color Green = new Color(0.2f, 1f, 0.4f, 1f);
         private static readonly Color DimRed = new Color(0.75f, 0.25f, 0.25f, 1f);
 
+        /// <summary>状態行の既定色。YAML で色を指定しなかった時のフォールバックに使う。</summary>
+        public static Color DimRedPublic => DimRed;
+        private static readonly Color SpaceButtonNormal = new Color(0.55f, 0.04f, 0.04f, 0.92f);
+        private static readonly Color SpaceButtonPressed = new Color(1f, 0.35f, 0.35f, 1f);
+
         private const int TransferRowCount = 3;
         private const int FakeZonePoolSize = 4;
 
@@ -86,15 +91,39 @@ namespace App.ATM
         private readonly TransferRow[] _rows = new TransferRow[TransferRowCount];
 
         private readonly GameObject _gameGroup;
-        private readonly TextMeshProUGUI _layerLabel;
-        private readonly TextMeshProUGUI _layerCounter;
-        private readonly TextMeshProUGUI _gameAmount;
         private readonly Image _barTrack;
         private readonly Image _safeZone;
         private readonly Image[] _fakeZones = new Image[FakeZonePoolSize];
         private readonly Image _cursor;
+        private Image _spaceButton;
+        private TextMeshProUGUI _spaceButtonLabel;
+        private TextMeshProUGUI _timerText;
 
         private float _barWidth;
+
+        // YAML から % 指定で大きさを変えられるよう、組み上げ時の文字サイズを控えておく
+        private readonly float _baseTitleFontSize;
+        private readonly float _baseStatusFontSize;
+
+        // 見出しの配置。一覧やミニゲームでは上部、起動演出と結果表示では画面中央に大きく出す
+        private readonly Vector2 _titleTopPosition;
+        private readonly Vector2 _statusTopPosition;
+        private readonly Vector2 _titleCenterPosition;
+        private readonly Vector2 _statusCenterPosition;
+
+        /// <summary>中央寄せ時に見出しを何倍にするか。YAML の size はこの上に掛かる。</summary>
+        private const float CenteredTitleScale = 1.6f;
+        private const float CenteredStatusScale = 1.35f;
+
+        private bool _headlineCentered;
+        private Vector2 _titleUserOffset;
+        private Vector2 _statusUserOffset;
+        private float _titleSizePercent = 100f;
+        private float _statusSizePercent = 100f;
+
+        // 残り時間の文字サイズ。基準サイズは組み上げ時に控え、% で拡大縮小する
+        private float _baseTimerFontSize;
+        private float _timerSizePercent = 100f;
 
         public GameObject Root => _root;
 
@@ -167,9 +196,16 @@ namespace App.ATM
             _footer = CreateText("Footer", _root.transform, new Vector2(0f, -halfHeight + bandHeight + S(30f)),
                                  new Vector2(_screenSize.x, S(32f)), S(20f), DimRed, TextAlignmentOptions.Center);
 
+            _baseTitleFontSize = _title.fontSize;
+            _baseStatusFontSize = _status.fontSize;
+
+            _titleTopPosition = _title.rectTransform.anchoredPosition;
+            _statusTopPosition = _status.rectTransform.anchoredPosition;
+            _titleCenterPosition = new Vector2(0f, _screenSize.y * 0.09f);
+            _statusCenterPosition = new Vector2(0f, -_screenSize.y * 0.07f);
+
             _listGroup = BuildTransferList(halfHeight, bandHeight);
-            _gameGroup = BuildMinigame(out _layerLabel, out _layerCounter, out _gameAmount,
-                                       out _barTrack, out _safeZone, out _cursor);
+            _gameGroup = BuildMinigame(out _barTrack, out _safeZone, out _cursor);
 
             // 画面全体の点滅用。最前面に置く
             _flash = CreateImage("Flash", _root.transform, Vector2.zero, _screenSize, new Color(1f, 1f, 1f, 0f));
@@ -261,8 +297,7 @@ namespace App.ATM
             return row;
         }
 
-        private GameObject BuildMinigame(out TextMeshProUGUI layerLabel, out TextMeshProUGUI layerCounter,
-                                         out TextMeshProUGUI amount, out Image track, out Image safeZone, out Image cursor)
+        private GameObject BuildMinigame(out Image track, out Image safeZone, out Image cursor)
         {
             var group = new GameObject("Minigame", typeof(RectTransform));
             group.transform.SetParent(_root.transform, false);
@@ -272,15 +307,12 @@ namespace App.ATM
             groupRect.anchoredPosition = Vector2.zero;
             groupRect.sizeDelta = _screenSize;
 
-            amount = CreateText("Amount", group.transform, new Vector2(0f, _screenSize.y * 0.17f),
-                                new Vector2(_screenSize.x, S(40f)), S(28f), DimRed, TextAlignmentOptions.Center);
-
-            layerLabel = CreateText("LayerLabel", group.transform, new Vector2(0f, _screenSize.y * 0.09f),
-                                    new Vector2(_screenSize.x, S(52f)), S(40f), Red, TextAlignmentOptions.Center);
-            layerLabel.fontStyle = FontStyles.Bold;
-
-            layerCounter = CreateText("LayerCounter", group.transform, new Vector2(0f, _screenSize.y * 0.035f),
-                                      new Vector2(_screenSize.x, S(30f)), S(20f), DimRed, TextAlignmentOptions.Center);
+            // 見出し(FIREWALL BREACH)と階層表示は共通の Title / Status を使う。
+            // ここではその下に「残り時間 → バー → SPACE BAR」を並べる
+            _timerText = CreateText("Timer", group.transform, new Vector2(0f, _screenSize.y * 0.045f),
+                                    new Vector2(_screenSize.x, S(60f)), S(40f), Color.white, TextAlignmentOptions.Center);
+            _timerText.fontStyle = FontStyles.Bold;
+            _baseTimerFontSize = _timerText.fontSize;
 
             _barWidth = _screenSize.x * 0.8f;
             float barHeight = _screenSize.y * 0.1f;
@@ -305,6 +337,14 @@ namespace App.ATM
 
             cursor = CreateImage("Cursor", track.transform, Vector2.zero,
                                  new Vector2(S(7f), barHeight + S(16f)), Color.white);
+
+            // バーの下に押しボタン。マウスクリックでも SPACE キーでも止められる
+            _spaceButton = CreateImage("SpaceButton", group.transform, new Vector2(0f, -_screenSize.y * 0.27f),
+                                       new Vector2(S(300f), S(62f)), SpaceButtonNormal);
+            _spaceButtonLabel = CreateText("Label", _spaceButton.transform, Vector2.zero,
+                                           new Vector2(S(300f), S(62f)), S(28f), Color.white, TextAlignmentOptions.Center);
+            _spaceButtonLabel.fontStyle = FontStyles.Bold;
+            _spaceButtonLabel.text = "SPACE BAR";
 
             return group;
         }
@@ -418,13 +458,57 @@ namespace App.ATM
                 _userOffset.z);
         }
 
-        public void SetTitle(string text, Color color)
+        /// <summary>
+        /// 大見出しを設定する。sizePercent は組み上げ時の文字サイズに対する割合で、
+        /// 100 なら既定のまま。YAML から大きさを指定できるようにするために受け取る。
+        /// </summary>
+        public void SetTitle(string text, Color color, float sizePercent = 100f)
         {
             _title.text = text;
             _title.color = color;
+            _titleSizePercent = Mathf.Max(1f, sizePercent);
+            ApplyHeadlineStyle();
         }
 
-        public void SetStatus(string text) => _status.text = text;
+        /// <summary>状態行を設定する。色と大きさは既定へ戻る。</summary>
+        public void SetStatus(string text) => SetStatus(text, DimRed);
+
+        /// <summary>色と大きさも指定して状態行を設定する。</summary>
+        public void SetStatus(string text, Color color, float sizePercent = 100f)
+        {
+            _status.text = text;
+            _status.color = color;
+            _statusSizePercent = Mathf.Max(1f, sizePercent);
+            ApplyHeadlineStyle();
+        }
+
+        /// <summary>
+        /// 見出しの並べ方を切り替える。
+        /// centered=true で画面中央に大きく出す（起動演出・結果表示用）。false は従来どおり上部。
+        /// offset は YAML の x/y による微調整量で、基準レイアウト(800x600)の単位で渡す。
+        /// </summary>
+        public void SetHeadlineLayout(bool centered, Vector2 titleOffset, Vector2 statusOffset)
+        {
+            _headlineCentered = centered;
+            _titleUserOffset = titleOffset;
+            _statusUserOffset = statusOffset;
+            ApplyHeadlineStyle();
+        }
+
+        private void ApplyHeadlineStyle()
+        {
+            float titleScale = _headlineCentered ? CenteredTitleScale : 1f;
+            float statusScale = _headlineCentered ? CenteredStatusScale : 1f;
+
+            _title.fontSize = _baseTitleFontSize * titleScale * _titleSizePercent * 0.01f;
+            _status.fontSize = _baseStatusFontSize * statusScale * _statusSizePercent * 0.01f;
+
+            Vector2 titleBase = _headlineCentered ? _titleCenterPosition : _titleTopPosition;
+            Vector2 statusBase = _headlineCentered ? _statusCenterPosition : _statusTopPosition;
+
+            _title.rectTransform.anchoredPosition = titleBase + _titleUserOffset * _uiScale;
+            _status.rectTransform.anchoredPosition = statusBase + _statusUserOffset * _uiScale;
+        }
 
         public void SetFooter(string text) => _footer.text = text;
 
@@ -548,12 +632,9 @@ namespace App.ATM
 
         // --- ミニゲーム ---
 
-        public void SetupMinigame(HackLayer layer, int layerIndex, int layerCount, HackTransferJob job)
+        /// <summary>ステージ開始時の見た目を整える。文字は Title / Status / Timer 側で出す。</summary>
+        public void SetupMinigame(HackLayer layer)
         {
-            _layerLabel.text = layer.label;
-            _layerCounter.text = $"LAYER {layerIndex + 1} / {layerCount}";
-            _gameAmount.text = $"INTERCEPTING {DevilCurrency.Format(job.amount)}   ACC {job.accountNumber}";
-
             // 実際の幅は UpdateMinigame が毎フレーム渡してくる（判定と同じ値）
             ApplyZoneSizes();
         }
@@ -588,6 +669,60 @@ namespace App.ATM
                 color.a = fakeAlpha;
                 _fakeZones[i].color = color;
             }
+        }
+
+        /// <summary>画面座標が SPACE BAR ボタンの上にあるか。</summary>
+        public bool IsPointOnSpaceButton(Vector2 screenPoint, Camera camera)
+        {
+            if (_spaceButton == null || !_spaceButton.gameObject.activeInHierarchy) return false;
+            return RectTransformUtility.RectangleContainsScreenPoint(_spaceButton.rectTransform, screenPoint, camera);
+        }
+
+        /// <summary>SPACE BAR ボタンの押し込み表示。キー入力でも光らせる。</summary>
+        public void SetSpaceButtonPressed(bool pressed)
+        {
+            if (_spaceButton == null) return;
+
+            _spaceButton.color = pressed ? SpaceButtonPressed : SpaceButtonNormal;
+            if (_spaceButtonLabel != null) _spaceButtonLabel.color = pressed ? Color.black : Color.white;
+        }
+
+        /// <summary>
+        /// 残り時間の表示を更新する。limit が 0 以下なら制限なしとして非表示にする。
+        /// 残りが少なくなるほど赤くして、点滅で危険を知らせる。
+        /// </summary>
+        /// <summary>残り時間の文字の大きさ(%)。100 で組み上げ時の既定サイズ。</summary>
+        public void SetTimerSize(float sizePercent)
+        {
+            _timerSizePercent = Mathf.Max(1f, sizePercent);
+            if (_timerText != null) _timerText.fontSize = _baseTimerFontSize * _timerSizePercent * 0.01f;
+        }
+
+        public void SetTimer(float remaining, float limit)
+        {
+            if (_timerText == null) return;
+
+            if (limit <= 0f)
+            {
+                if (_timerText.gameObject.activeSelf) _timerText.gameObject.SetActive(false);
+                return;
+            }
+
+            if (!_timerText.gameObject.activeSelf) _timerText.gameObject.SetActive(true);
+
+            remaining = Mathf.Max(0f, remaining);
+            _timerText.text = $"TIME  {remaining:0.0}";
+
+            // 残り3割を切ったら赤く点滅させる
+            float ratio = remaining / limit;
+            if (ratio > 0.3f)
+            {
+                _timerText.color = Color.white;
+                return;
+            }
+
+            bool on = Mathf.Repeat(Time.time * 6f, 1f) < 0.5f;
+            _timerText.color = on ? Red : new Color(0.5f, 0.1f, 0.1f, 1f);
         }
 
         public void SetCursorColor(Color color) => _cursor.color = color;

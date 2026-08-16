@@ -190,19 +190,21 @@ public class TitlePlayButton : MonoBehaviour
     {
         if (logEvents) Debug.Log("[TitlePlayButton] 悪魔の会話が完了。モヤ暗転とロードを開始します。", this);
 
-        // タイトルBGMは次の画面へ持ち越さない。暗転と一緒にフェードアウトさせる
-        StudioLogoIntro.StopTitleBgm();
-
         if(sceneTransitionManager == null) sceneTransitionManager = FindFirstObjectByType<SceneTransitionManager>();//ゲームシーンからタイトルシーンに戻った際に無くなるため
 
         if (sceneTransitionManager != null)
         {
-            sceneTransitionManager.TransitionToScene(targetSceneName);
+            // タイトルBGMはローディング中も鳴らし続けたいので、シーンを跨げる入れ物へ引き渡す。
+            // ロードが終わったタイミング(遷移完了コールバック)でフェードアウトさせる
+            StudioLogoIntro.HandOverTitleBgm();
+            sceneTransitionManager.TransitionToScene(targetSceneName, () => TitleBgmCarrier.StopCurrent());
         }
         else
         {
             // TransitionManager が無い場合のフォールバック（既存のロード）
+            // ロード完了を知る手段がないため、ここでBGMを止めておく
             if (logEvents) Debug.LogWarning("[TitlePlayButton] SceneTransitionManager が設定されていません。通常の LoadScene を実行します。", this);
+            StudioLogoIntro.StopTitleBgm();
             StartCoroutine(LoadGameScene());
         }
     }
