@@ -65,19 +65,25 @@ public class TriggerSoundPlayer : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         if (other == null) return;
+        Debug.Log($"[TriggerSoundPlayer][DIAG] {gameObject.name}: OnTriggerEnter検知 other={other.name}, tag={other.tag}, requiredTag={requiredTag}, playOnlyOnce={playOnlyOnce}, hasPlayed={_hasPlayed}");
         if (playOnlyOnce && _hasPlayed) return;
 
         // 破棄された無効なコライダー参照をリストからクリーンアップ
         _activeColliders.RemoveWhere(c => c == null);
 
         // すでに検知済みの同一コライダーはスキップ
-        if (_activeColliders.Contains(other)) return;
+        if (_activeColliders.Contains(other))
+        {
+            Debug.Log($"[TriggerSoundPlayer][DIAG] {gameObject.name}: 既に_activeColliders登録済みのためスキップ (other={other.name}, 現在の登録数={_activeColliders.Count})");
+            return;
+        }
 
         // タグによる侵入制限があるかチェック
         if (!string.IsNullOrEmpty(requiredTag))
         {
             if (!other.CompareTag(requiredTag))
             {
+                Debug.Log($"[TriggerSoundPlayer][DIAG] {gameObject.name}: タグ不一致のためスキップ (other.tag={other.tag})");
                 return; // タグが一致しない場合は処理スキップ
             }
         }
@@ -92,6 +98,7 @@ public class TriggerSoundPlayer : MonoBehaviour
             _activeColliders.Add(other);
 
             // UFOキャッチャーのコイン投入演出を連動トリガー
+            Debug.Log($"[TriggerSoundPlayer][DIAG] {gameObject.name}: 音声再生・検知済み登録が完了。triggerCoinAnimation={triggerCoinAnimation}, UFOCameraController.Instance={(UFOCameraController.Instance != null ? UFOCameraController.Instance.gameObject.name + " (id=" + UFOCameraController.Instance.GetInstanceID() + ")" : "null")}");
             if (triggerCoinAnimation && UFOCameraController.Instance != null)
             {
                 UFOCameraController.Instance.TriggerCoinInsertionAnimation();

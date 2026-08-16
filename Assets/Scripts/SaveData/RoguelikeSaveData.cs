@@ -58,4 +58,5 @@ public class RoguelikeSaveData
     //UFOキャッチャー・ルーレット特別演出（Element2 / Roulette03）
     public bool isRouletteCandyObtained = false;    // candyを入手済みか
     public bool isRoulettePinballObtained = false;  // pinballを入手済みか
+    public int rouletteSpinAttemptCount = 0;        // ルーレットを回した累計回数（特別演出スロットの保証抽選判定用。1,2回目は強制当選）
 }

@@ -25,6 +25,13 @@ public class UFOArmController : MonoBehaviour
     [Tooltip("StretchRope が付いているオブジェクト（6）")]
     public StretchRope stretchRope;
 
+    [Header("スポーン連携")]
+    [Tooltip("このアームが属する機体のItemSpawner（実機側アームには実機のItemSpawner、練習機側アームには" +
+             "練習機のItemSpawnerを設定する）。ItemSpawner.IsInitialSpawning等はstaticで実機・練習機共有のため、" +
+             "片方の機体のスポーン完了でもう片方の当たり判定が誤って復活してしまうのを防ぐため、" +
+             "このインスタンス固有の状態（IsInitialSpawningInstance）を見るのに使う。未設定ならstaticにフォールバックする")]
+    public ItemSpawner itemSpawner;
+
     // ─────────────────────────────────────
     [Header("XZ 移動設定")]
     [Tooltip("レバー入力に対するアーム移動速度")]
@@ -881,8 +888,10 @@ public class UFOArmController : MonoBehaviour
             colliders.AddRange(swayJoint.GetComponentsInChildren<Collider>(true));
         }
 
-        // 初期ウェーブ生成中（およびその後の3秒間の沈殿待ち時間）のみコライダーを無効化する
-        bool shouldDisable = ItemSpawner.IsInitialSpawning;
+        // 初期ウェーブ生成中（およびその後の3秒間の沈殿待ち時間）のみコライダーを無効化する。
+        // itemSpawnerが設定されていれば、このアーム自身の機体のスポーン状態（インスタンス版）を見る。
+        // 未設定の場合のみ、従来のstatic（実機・練習機共有、片方の完了に巻き込まれる恐れがある）にフォールバックする
+        bool shouldDisable = itemSpawner != null ? itemSpawner.IsInitialSpawningInstance : ItemSpawner.IsInitialSpawning;
 
         if (shouldDisable != _collidersDisabledForSpawn)
         {

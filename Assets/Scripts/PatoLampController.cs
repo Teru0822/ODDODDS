@@ -50,11 +50,14 @@ public class PatoLampController : MonoBehaviour
                       $"lightsCount={(_lights != null ? _lights.Length : -1)}");
         }
 
-        // セッションが有効かつ残り時間が10秒以下で、かつアイテム獲得演出中でない時のみアクティブにする
+        // セッションが有効かつ残り時間が10秒以下で、かつアイテム獲得演出中・ルーレット演出中でない時のみアクティブにする
+        // （ルーレット回転中〜配当完了までは、UFOChaseLightController側の水色演出に譲り、パトランプは回転させない）
         if (UFOCameraController.Instance != null && UFOCameraController.IsPlaySessionActive)
         {
+            bool isRoulettePlaying = UFOItemGoal.IsRouletteRewardPending ||
+                                      (RouletteController.Instance != null && RouletteController.Instance.IsSpinning);
             float remaining = UFOCameraController.Instance.RemainingTime;
-            if (remaining > 0f && remaining <= 10f && !UFOItemGoal.IsFlashing)
+            if (remaining > 0f && remaining <= 10f && !UFOItemGoal.IsFlashing && !isRoulettePlaying)
             {
                 shouldBeActive = true;
             }

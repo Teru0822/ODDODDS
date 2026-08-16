@@ -175,6 +175,9 @@ public class TouchPanelOutlineController : MonoBehaviour
     private float _selectedTutorialCost;
     private bool _tutorialPending;
     private bool _hasStartedPlaySession;
+    // チュートリアルを最後まで見終えた（Quitで途中終了ではなく）ことがあれば、
+    // ラウンド1中に機体を何度クリックし直してもTutorial_Canvas（Yes/No）を出さない
+    private bool _hasCompletedTutorialOnce;
 
     private void Awake()
     {
@@ -332,6 +335,7 @@ public class TouchPanelOutlineController : MonoBehaviour
     {
         if (!active) return;
         if (_hasStartedPlaySession) return;
+        if (_hasCompletedTutorialOnce) return;
         if (MoneyManager.Instance == null || MoneyManager.Instance.CurrentTurnCount > 1) return;
 
         _tutorialPending = true;
@@ -738,6 +742,7 @@ public class TouchPanelOutlineController : MonoBehaviour
     private void HandleTutorialCompleted()
     {
         _tutorialPending = false;
+        _hasCompletedTutorialOnce = true;
 
         HideAll();
         SetActiveGroup(PanelGroup.Play);

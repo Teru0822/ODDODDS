@@ -433,8 +433,7 @@ public class TimerDisplay : MonoBehaviour
     {
         var mm      = MoneyManager.Instance;
         int current = mm != null ? mm.CurrentTurnCount : 1;
-        string main = maxRound > 0 ? $" {current} / {maxRound}" : $" {current}";
-        SetTexts("ROUND", main);
+        SetTexts("Turn", $"{current}");
     }
 
     void RefreshPlayInfo()

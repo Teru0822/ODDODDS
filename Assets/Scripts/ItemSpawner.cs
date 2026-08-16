@@ -11,6 +11,10 @@ public class ItemSpawner : MonoBehaviour
     public float spawnYOffset = 2.0f;
     [Tooltip("生成位置の散らばり具合（X=左右、Y=奥手前）")]
     public Vector2 spawnArea = new Vector2(3.0f, 3.0f);
+    [Tooltip("生成時の高さ(Y座標)のバラつき幅（±この値の範囲でランダムにずらす）。" +
+             "横幅を広げられない場合、これを大きくすると同時に生成されるアイテム同士が" +
+             "重なりにくくなり、着地時に弾き飛ばされることが減る")]
+    public float spawnYVariance = 0.5f;
 
     [Tooltip("生成エリア全体をY軸回りに回転させる角度（度）。撮影用にコインが降る向きを調整したい場合などに使用")]
     public float spawnAreaAngle = 0f;
@@ -105,6 +109,13 @@ public class ItemSpawner : MonoBehaviour
     public static ItemSpawner Instance { get; private set; }
     public static bool IsSpawning { get; private set; } = false;
     public static bool IsInitialSpawning { get; private set; } = false;
+
+    // IsSpawning/IsInitialSpawningはstatic（実機・練習機で共有）のため、片方が先に終わると
+    // もう片方がまだスポーン中でもfalseに戻ってしまう（例: 練習機500枚が先に終わり、実機1500枚が
+    // まだ降っている途中でもUFOArmControllerの当たり判定が復活してしまう）。
+    // このインスタンス自身のスポーン状態だけを見たい場合はこちらを使う
+    public bool IsSpawningInstance { get; private set; } = false;
+    public bool IsInitialSpawningInstance { get; private set; } = false;
 
     // 現在のウェーブの設定
     private GridType _currentWaveGridType;
@@ -272,13 +283,19 @@ public class ItemSpawner : MonoBehaviour
 
     private IEnumerator SpawnRoutine()
     {
-        IsInitialSpawning = true;
+        // IsSpawning/IsInitialSpawning(static)は実機・練習機で共有されており、練習機側が先に
+        // 更新してしまうと実機側の状態を巻き込んで壊してしまうため、staticは実機側だけが更新する。
+        // 練習機側はインスタンス版（IsSpawningInstance/IsInitialSpawningInstance）だけを更新する
+        IsInitialSpawningInstance = true;
+        if (!isPracticeInstance) IsInitialSpawning = true;
+
         // 選択された枚数を適用
         totalItems = (int)spawnCount;
         spawnDuration = (10f / 2000f) * totalItems;
         Debug.Log($"[ItemSpawner] スポーン開始: totalItems={totalItems}, spawnDuration={spawnDuration:F2}秒");
 
-        IsSpawning = true;
+        IsSpawningInstance = true;
+        if (!isPracticeInstance) IsSpawning = true;
         int spawnedCount = 0;
         float startTime = Time.time;
 
@@ -303,12 +320,14 @@ public class ItemSpawner : MonoBehaviour
         }
 
         // スポーン完了！全コインに「今から凍結チェックを始めていいよ」と通知する
-        IsSpawning = false;
+        IsSpawningInstance = false;
+        if (!isPracticeInstance) IsSpawning = false;
         CoinOptimizer.freezeStartTime = Time.time + 3.0f;
         Debug.Log($"[ItemSpawner] スポーン完了。{CoinOptimizer.freezeStartTime:F1}秒後から凍結チェック開始");
 
         yield return new WaitForSeconds(3.0f);
-        IsInitialSpawning = false;
+        IsInitialSpawningInstance = false;
+        if (!isPracticeInstance) IsInitialSpawning = false;
     }
 
     /// <summary>
@@ -322,8 +341,13 @@ public class ItemSpawner : MonoBehaviour
             StopCoroutine(_spawnCoroutine);
             _spawnCoroutine = null;
         }
-        IsSpawning = false;
-        IsInitialSpawning = false;
+        IsSpawningInstance = false;
+        IsInitialSpawningInstance = false;
+        if (!isPracticeInstance)
+        {
+            IsSpawning = false;
+            IsInitialSpawning = false;
+        }
 
         _spawnCoroutine = StartCoroutine(RespawnAllRoutine());
     }
@@ -731,7 +755,7 @@ public class ItemSpawner : MonoBehaviour
         // ばらつき（散らばり）を加える
         Vector3 randomPos = center + new Vector3(
             rotatedOffset.x,
-            Random.Range(-0.5f, 0.5f), // 上下のブレも少しだけ加える
+            Random.Range(-spawnYVariance, spawnYVariance), // 上下のブレを加える（重なり防止）
             rotatedOffset.z
         );
 
@@ -875,27 +899,31 @@ public class ItemSpawner : MonoBehaviour
     }
 
     /// <summary>
-    /// ルーレット発生時（旧ジャックポット）に指定のプレハブリストからランダムに指定数だけエリア0（左上）に降らせる
+    /// ルーレット発生時（旧ジャックポット）に指定のプレハブリストからランダムに指定数だけエリア0（左上）に降らせる。
+    /// フィーバータイムのコイン雨にも同じ処理を使い回しているため、「ルーレット当選の払い出し中かどうか」を
+    /// 見分けたい呼び出し元（UFOItemGoal.HandleRouletteSpinComplete等）はonCompleteで完了タイミングを取得できる
     /// </summary>
-    public void StartRouletteRain(System.Collections.Generic.List<GameObject> prefabs, int count, float duration, Vector2 areaScale, Vector2 areaOffset)
+    public void StartRouletteRain(System.Collections.Generic.List<GameObject> prefabs, int count, float duration, Vector2 areaScale, Vector2 areaOffset, System.Action onComplete = null)
     {
         if (prefabs == null || prefabs.Count == 0)
         {
             Debug.LogWarning("[ItemSpawner] StartRouletteRain: prefabs が null または空です。降雨をスキップします。");
+            onComplete?.Invoke();
             return;
         }
         if (count <= 0)
         {
             Debug.LogWarning($"[ItemSpawner] StartRouletteRain: count が {count} で 0 以下のため、降雨をスキップします。");
+            onComplete?.Invoke();
             return;
         }
-        StartCoroutine(RouletteRainRoutine(prefabs, count, duration, areaScale, areaOffset));
+        StartCoroutine(RouletteRainRoutine(prefabs, count, duration, areaScale, areaOffset, onComplete));
     }
 
-    private IEnumerator RouletteRainRoutine(System.Collections.Generic.List<GameObject> prefabs, int count, float duration, Vector2 areaScale, Vector2 areaOffset)
+    private IEnumerator RouletteRainRoutine(System.Collections.Generic.List<GameObject> prefabs, int count, float duration, Vector2 areaScale, Vector2 areaOffset, System.Action onComplete)
     {
         Debug.Log($"[ItemSpawner] ルーレット（旧ジャックポット）発生: {count}枚のオブジェクトをエリア0に降らせます（期間: {duration}秒、範囲スケール: {areaScale}、オフセット: {areaOffset}）");
-        
+
         bool wasSpawning = IsSpawning;
         IsSpawning = true;
 
@@ -930,6 +958,7 @@ public class ItemSpawner : MonoBehaviour
         {
             IsSpawning = false;
         }
+        onComplete?.Invoke();
     }
 
     private void SpawnRouletteSingleItem(GameObject coinPrefab, GridType activeGrid, Vector2 areaScale, Vector2 areaOffset)
@@ -960,7 +989,7 @@ public class ItemSpawner : MonoBehaviour
 
         Vector3 randomPos = center + new Vector3(
             rotatedOffset.x,
-            Random.Range(-0.5f, 0.5f), // 上下のブレも少しだけ加える
+            Random.Range(-spawnYVariance, spawnYVariance), // 上下のブレを加える（重なり防止）
             rotatedOffset.z
         );
 

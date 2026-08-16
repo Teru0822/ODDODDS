@@ -120,6 +120,16 @@ public class SettingUIManager : MonoBehaviour
 
     private MouseHoverOutline[] _mouseHoverOutlines;
 
+    // 設定を開く直前の状態を覚えておき、閉じたときはそこへ戻す。
+    // クレーンゲーム/チュートリアル/TV閲覧中は、それぞれ独自にfpsControllerを無効化・
+    // カーソル状態を管理しているため、設定を閉じた際に無条件でfpsControllerを有効化・
+    // カーソルをロックしてしまうと、それらのモードの最中でもプレイヤーのカメラに
+    // 戻ってしまう（GameInputGateにはATMしか登録していないため、設定側はこれらのモード中か
+    // どうかを知る手段が無く、この状態記憶で対応する）
+    private bool _fpsControllerWasEnabledBeforeMenu;
+    private CursorLockMode _cursorLockStateBeforeMenu;
+    private bool _cursorVisibleBeforeMenu;
+
     void Awake()
     {
         //シングルトン設定
@@ -289,6 +299,12 @@ public class SettingUIManager : MonoBehaviour
 
             if (_isOpenMenu)
             {
+                // クレーンゲーム/チュートリアル/TV閲覧中にEscapeで設定を開いた場合、閉じたときに
+                // この直前の状態へ戻せるよう記憶しておく
+                _fpsControllerWasEnabledBeforeMenu = _fpsController != null && _fpsController.enabled;
+                _cursorLockStateBeforeMenu = Cursor.lockState;
+                _cursorVisibleBeforeMenu = Cursor.visible;
+
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
                 if(_fpsController != null) _fpsController.enabled = false;
@@ -303,9 +319,11 @@ public class SettingUIManager : MonoBehaviour
             }
             else
             {
-                Cursor.lockState = CursorLockMode.Locked;
-                Cursor.visible = false;
-                if(_fpsController != null &&  DebtCollectionManager.Instance.IsStartDebtCollection == false) _fpsController.enabled = true;
+                // クレーンゲーム/チュートリアル/TV閲覧中に開いていた場合は、無条件でプレイヤーの
+                // カメラに戻さず、開く直前の状態（それらのモードのカメラのまま）に戻す
+                Cursor.lockState = _cursorLockStateBeforeMenu;
+                Cursor.visible = _cursorVisibleBeforeMenu;
+                if(_fpsController != null && _fpsControllerWasEnabledBeforeMenu && DebtCollectionManager.Instance.IsStartDebtCollection == false) _fpsController.enabled = true;
                 SettingButtonAnimation(-1, _settingIndex);
                 _settingIndex = 0;
 
@@ -346,6 +364,10 @@ public class SettingUIManager : MonoBehaviour
             return;
         } 
 
+        _fpsControllerWasEnabledBeforeMenu = _fpsController != null && _fpsController.enabled;
+        _cursorLockStateBeforeMenu = Cursor.lockState;
+        _cursorVisibleBeforeMenu = Cursor.visible;
+
         _settingPanel.SetActive(true);
         _isOpenMenu = true;
         Cursor.lockState = CursorLockMode.None;
@@ -376,9 +398,9 @@ public class SettingUIManager : MonoBehaviour
 
         _settingPanel.SetActive(false);
         _isOpenMenu = false;
-        if(_fpsController != null &&  DebtCollectionManager.Instance.IsStartDebtCollection == false) _fpsController.enabled = true;//悪魔の取り立て中は体の自由は聞かないまま
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        if(_fpsController != null && _fpsControllerWasEnabledBeforeMenu && DebtCollectionManager.Instance.IsStartDebtCollection == false) _fpsController.enabled = true;//悪魔の取り立て中は体の自由は聞かないまま
+        Cursor.lockState = _cursorLockStateBeforeMenu;
+        Cursor.visible = _cursorVisibleBeforeMenu;
         SettingButtonAnimation(-1, _settingIndex);
         _settingIndex = 0;
 

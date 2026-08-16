@@ -3,13 +3,24 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
+/// <summary>ATMの買取価格を連動表示する対象のコイン種別（Noneなら連動なし、coinTextをそのまま使う）</summary>
+public enum CoinPriceLinkType
+{
+    None,
+    Gold,
+    Silver,
+    Bronze,
+}
+
 [System.Serializable]
 public struct PriceCoinSpawnData
 {
     [Tooltip("コインの画像 (未設定ならPrefabのデフォルトを使用)")]
     public Sprite coinSprite;
-    [Tooltip("コインのテキスト (値段など)")]
+    [Tooltip("コインのテキスト (値段など)。coinPriceLinkTypeがNone以外の場合はATMの現在買取価格で上書きされます")]
     public string coinText;
+    [Tooltip("None以外を指定すると、coinTextの代わりにATMControllerの現在買取価格を「x{価格}DC」形式で表示します")]
+    public CoinPriceLinkType coinPriceLinkType;
     [Tooltip("ON: ルーレット機能（Devil_Eye）が解放されるまで、この項目を price_table に表示しません")]
     public bool requiresRouletteUnlock;
 
@@ -327,7 +338,22 @@ public class UFOCatcherUIManager : MonoBehaviour
                     {
                         coinUI.SetImage(spriteToUse);
                     }
-                    coinUI.SetText(coinData.coinText);
+
+                    // 金貨・銀貨・銅貨はATMの現在買取価格（毎回変動する）を「xNNNDC」形式で表示する。
+                    // 対象外（None）の項目はcoinTextをそのまま使う
+                    string textToUse = coinData.coinText;
+                    if (coinData.coinPriceLinkType != CoinPriceLinkType.None && App.ATM.ATMController.Instance != null)
+                    {
+                        float price = 0f;
+                        if (coinData.coinPriceLinkType == CoinPriceLinkType.Gold)
+                            price = App.ATM.ATMController.Instance.GoldPrice;
+                        else if (coinData.coinPriceLinkType == CoinPriceLinkType.Silver)
+                            price = App.ATM.ATMController.Instance.SilverPrice;
+                        else if (coinData.coinPriceLinkType == CoinPriceLinkType.Bronze)
+                            price = App.ATM.ATMController.Instance.BronzePrice;
+                        textToUse = $"x{price:N0}DC";
+                    }
+                    coinUI.SetText(textToUse);
                 }
                 else
                 {

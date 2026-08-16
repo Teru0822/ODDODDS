@@ -62,6 +62,16 @@ public class TutorialItemGoal : MonoBehaviour
         UFOItem item = other.GetComponentInParent<UFOItem>();
         if (item == null) return;
 
+        // チュートリアルをプレイしていない間（Yes/No待ちの間に物理的に転がり込んだ等）に
+        // 何か入っても、効果音・ランプ演出・時間延長などは一切発生させない（未プレイ判定）。
+        // ただし入ったアイテム自体は消しておかないと機体内に残り続けるため、破棄だけは行う。
+        // tutorialCrane未設定の場合は判定できないため、従来通り処理する（安全側に倒す）
+        if (tutorialCrane != null && !tutorialCrane.IsPlayingTutorial)
+        {
+            Destroy(item.gameObject);
+            return;
+        }
+
         switch (item.itemType)
         {
             case UFOItemType.Watch:
@@ -80,6 +90,12 @@ public class TutorialItemGoal : MonoBehaviour
         }
 
         OnItemDropped?.Invoke(item.itemType);
+
+        // 左下の3D回転ポップアップに、今取得したアイテムを表示する（実機のUFOItemGoalと同じ）
+        if (UFOItemPickupDisplay.Instance != null)
+        {
+            UFOItemPickupDisplay.Instance.ShowPickedItem(item.gameObject);
+        }
 
         Destroy(item.gameObject);
     }

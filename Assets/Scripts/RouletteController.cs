@@ -319,12 +319,33 @@ public class RouletteController : MonoBehaviour
     // 内部ロジック
     // -----------------------------------------------------------------------
 
+    // SetForcedNextResult() で設定された、次回1回分だけ強制する当選インデックス（消費後は自動的に解除）
+    private int? _forcedNextWinningIndex = null;
+
     /// <summary>
-    /// 重み付きランダムで当選スロットのインデックスを返す。
+    /// 次に呼ばれるSpin()の結果を強制的に指定インデックスにする（1回限り、消費後は自動的に解除される）。
+    /// SpinForceResult()と違い、通常のSpin()と同じアニメーション経路（useSequenceAnimation時はDevil_Eyeの
+    /// イントロ〜アウトロ演出込み）をそのまま使う。保証当選演出などで使用する。
+    /// </summary>
+    public void SetForcedNextResult(int slotIndex)
+    {
+        _forcedNextWinningIndex = Mathf.Clamp(slotIndex, 0, slots.Length - 1);
+    }
+
+    /// <summary>
+    /// 重み付きランダムで当選スロットのインデックスを返す。SetForcedNextResult()で予約されていれば、
+    /// それを最優先で返し予約を消費する。
     /// ItemSpawner.cs の累積和パターンを踏襲。
     /// </summary>
     private int SelectWinningSlot()
     {
+        if (_forcedNextWinningIndex.HasValue)
+        {
+            int forced = _forcedNextWinningIndex.Value;
+            _forcedNextWinningIndex = null;
+            return forced;
+        }
+
         float totalWeight = 0f;
         for (int i = 0; i < slots.Length; i++)
             totalWeight += slots[i].weight;

@@ -239,6 +239,13 @@ namespace App.ATM
         private float _silverPrice;
         private float _bronzePrice;
 
+        /// <summary>現在の金貨買取価格（DC）。UFOCatcherUIManager等の他画面からの参照用</summary>
+        public float GoldPrice => _goldPrice;
+        /// <summary>現在の銀貨買取価格（DC）。UFOCatcherUIManager等の他画面からの参照用</summary>
+        public float SilverPrice => _silverPrice;
+        /// <summary>現在の銅貨買取価格（DC）。UFOCatcherUIManager等の他画面からの参照用</summary>
+        public float BronzePrice => _bronzePrice;
+
         private int _goldSellQty = 0;
         private int _silverSellQty = 0;
         private int _bronzeSellQty = 0;
@@ -354,6 +361,10 @@ namespace App.ATM
             // 裏メニュー(ハッキングモード)。手動でアタッチされていればそれを使う
             _hacking = GetComponent<ATMHackingMode>();
             if (_hacking == null) _hacking = gameObject.AddComponent<ATMHackingMode>();
+
+            // ATMを一度も開いていない状態でも買取価格を他画面（UFOCatcherUIManager等）から参照できるよう、
+            // 起動時に一度だけ初期値をランダム設定しておく（未訪問時は0のままになってしまうため）
+            RerollCoinPrices();
         }
 
         private void Start()
@@ -456,6 +467,14 @@ namespace App.ATM
             }
         }
 
+        /// <summary>コインの現在買取価格をランダムに再設定する（ATMを開くたび、および起動時の初期値として使用）</summary>
+        private void RerollCoinPrices()
+        {
+            _goldPrice = Mathf.Round(Random.Range(8000f, 15000f));
+            _silverPrice = Mathf.Round(Random.Range(1500f, 3500f));
+            _bronzePrice = Mathf.Round(Random.Range(150f, 450f));
+        }
+
         private void OnATMClicked()
         {
             if (_currentState != ATMState.Off) return;
@@ -463,9 +482,7 @@ namespace App.ATM
             ResolveCrossSceneReferences();
 
             // コインの現在買取価格をターン変動としてランダム設定
-            _goldPrice = Mathf.Round(Random.Range(8000f, 15000f));
-            _silverPrice = Mathf.Round(Random.Range(1500f, 3500f));
-            _bronzePrice = Mathf.Round(Random.Range(150f, 450f));
+            RerollCoinPrices();
 
             // 売却数量のリセット
             _goldSellQty = 0;

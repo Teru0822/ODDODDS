@@ -16,6 +16,12 @@ public class UFODrawerRewardDisplay : MonoBehaviour
 {
     public static UFODrawerRewardDisplay Instance { get; private set; }
 
+    [Header("練習機設定")]
+    [Tooltip("ON: 練習用UFOキャッチャー（Practice_Cranegame）側のUFODrawerRewardDisplayであることを示す。\n" +
+             "実機・練習機は同じPrefab（new_ufocatcher 1）内のコンポーネントのため両方が有効な状態で存在してしまう。\n" +
+             "練習機側インスタンスではこれをONにして、static Instanceを実機側から奪わないようにする")]
+    [SerializeField] private bool isPracticeInstance = false;
+
     public enum RewardItemType { Gold, Silver, Bronze, BlackDiamond }
 
     [System.Serializable]
@@ -84,14 +90,17 @@ public class UFODrawerRewardDisplay : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
+        // 練習機側（Practice_Cranegame）のインスタンスはstatic Instanceを絶対に奪わないようにする
+        if (!isPracticeInstance)
         {
-            Instance = this;
-        }
-        else if (Instance != this)
-        {
-            Destroy(gameObject);
-            return;
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+            else if (Instance != this)
+            {
+                Debug.LogWarning("[UFODrawerRewardDisplay] Multiple non-practice instances of UFODrawerRewardDisplay detected in the scene.");
+            }
         }
 
         if (drawerTransform != null)

@@ -19,6 +19,9 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
     public static event System.Action<bool> OnPlaySessionActiveChanged;
     public static bool IsControlActive => IsPlaySessionActive && IsPlaySpotlightActive && Instance != null && Instance._controlsUnlocked && Instance._playTimer > 0f;
 
+    /// <summary>プレイヤーが実際にレバー/ボタンを操作し、タイマーのカウントダウンが始まっているかどうか（UFOChaseLightControllerがチェイス開始判定に使う）</summary>
+    public static bool IsTimerStarted => Instance != null && Instance._timerStarted;
+
     [Header("Camera Settings")]
     [Tooltip("Player's first-person camera")]
     [SerializeField] private Camera playerCamera;
@@ -105,7 +108,13 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
     [Tooltip("コイン投入演出で出現させるコインのPrefab")]
     [SerializeField] private GameObject coinPrefab;
 
-    [Tooltip("コインの親とするDEVILCATCHERオブジェクト名")]
+    [Tooltip("コインの親とするDEVILCATCHERオブジェクトへの直接参照。設定されていればこちらを優先して使う。\n" +
+             "GameObject.Find(devilCatcherName)によるシーン全体検索は、同名オブジェクトが複数存在する場合\n" +
+             "（例：実機と練習機で同じ名前）どちらを拾うか不定になるため、実機・練習機それぞれで確実に\n" +
+             "この参照を直接アサインすることを推奨する")]
+    [SerializeField] private Transform devilCatcherOverride;
+
+    [Tooltip("devilCatcherOverride が未設定の場合のフォールバック用：コインの親とするDEVILCATCHERオブジェクト名")]
     [SerializeField] private string devilCatcherName = "DEVILCATCHER";
 
     [Tooltip("コイン出現時のローカル座標")]
@@ -261,6 +270,10 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
 
     private bool _isTransitioning = false;
     private bool _hasPlayedLowTimeWarning = false;
+    // 点灯フリッカー演出（PlayLightOnFlickerCoroutine）の参照。すぐに退出してSetPlaySpotlight(false)が
+    // 呼ばれても、参照が無いと演出コルーチンを止められず、演出の最後（完全点灯）が後から上書きして
+    // ライトがつけっぱなしになってしまうため、消灯時に確実に止められるよう保持しておく
+    private Coroutine _playLightFlickerCoroutine;
     private Vector3 _originalPlayerCamPos;
     private Quaternion _originalPlayerCamRot;
 
@@ -703,15 +716,25 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
             yield break;
         }
 
-        // 親とする DEVILCATCHER オブジェクトをシーンから検索
-        GameObject devilCatcher = GameObject.Find(devilCatcherName);
-        if (devilCatcher == null)
+        // 親とする DEVILCATCHER オブジェクトを解決する。
+        // devilCatcherOverride が設定されていれば最優先（実機・練習機の取り違えを防ぐため）。
+        // 未設定の場合のみ、従来通りシーン全体を名前で検索するフォールバックを使う
+        // （同名オブジェクトが複数ある場合、どちらを拾うか不定になる点に注意）
+        Transform parentTransform = devilCatcherOverride;
+        if (parentTransform == null)
         {
-            // 表記揺れ対策
-            devilCatcher = GameObject.Find("new_ufocatcher 1");
+            GameObject devilCatcher = GameObject.Find(devilCatcherName);
+            if (devilCatcher == null)
+            {
+                // 表記揺れ対策
+                devilCatcher = GameObject.Find("new_ufocatcher 1");
+            }
+            parentTransform = devilCatcher != null ? devilCatcher.transform : null;
+            if (parentTransform != null)
+            {
+                Debug.LogWarning($"[UFOCameraController] devilCatcherOverride が未設定のため、名前検索のフォールバックで '{parentTransform.name}' を使用します。取り違えのリスクがあるため、インスペクターで devilCatcherOverride を直接アサインすることを推奨します。");
+            }
         }
-
-        Transform parentTransform = devilCatcher != null ? devilCatcher.transform : null;
 
         // コインをインスタンス化
         GameObject coin = Instantiate(activeCoinPrefab);
@@ -755,6 +778,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
 
         // コイン投入演出の完了カウント
         _completedCoinAnimationCount++;
+        Debug.Log($"[UFOCameraController][DIAG] コイン({coin.name})のLerp移動+物理落下解放が完了。完了数: {_completedCoinAnimationCount} / {coinAnimationRepeatCount}");
         if (_completedCoinAnimationCount >= coinAnimationRepeatCount)
         {
             Debug.Log($"[UFOCameraController] すべてのコイン({coinAnimationRepeatCount}枚)の投入アニメーションが完了しました。OnAllCoinsInserted を発火します。");
@@ -769,6 +793,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
     /// </summary>
     public void TriggerCoinInsertionAnimation()
     {
+        Debug.Log($"[UFOCameraController][DIAG] TriggerCoinInsertionAnimation呼び出し (this id={GetInstanceID()}, gameObject={gameObject.name}, _triggeredCoinCount={_triggeredCoinCount}/{coinAnimationRepeatCount})");
         if (_triggeredCoinCount < coinAnimationRepeatCount)
         {
             StartCoroutine(AnimateCoinInsertion());
@@ -814,13 +839,22 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
                 PlayLightSoundWithTailCut(lightFlickerSound, lightFlickerVolume, 0.4f);
             }
 
-            StartCoroutine(PlayLightOnFlickerCoroutine());
+            if (_playLightFlickerCoroutine != null) StopCoroutine(_playLightFlickerCoroutine);
+            _playLightFlickerCoroutine = StartCoroutine(PlayLightOnFlickerCoroutine());
         }
         else
         {
+            // 点灯フリッカー演出が途中の場合、止めずに消灯すると、演出コルーチンが後から
+            // 「完全点灯」で上書きしてライトがつけっぱなしになるため、必ず先に止める
+            if (_playLightFlickerCoroutine != null)
+            {
+                StopCoroutine(_playLightFlickerCoroutine);
+                _playLightFlickerCoroutine = null;
+            }
+
             IsPlaySpotlightActive = false;
             ApplyRawLightsState(false);
-            
+
             // 消灯音の再生（カットなしで最後まで流す）
             if (playSound && lightOffSound != null)
             {
@@ -919,6 +953,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
         // 最終的に完全点灯状態にし、タイマーを起動
         ApplyRawLightsState(true, 1.0f);
         IsPlaySpotlightActive = true;
+        _playLightFlickerCoroutine = null;
         Debug.Log("[UFOCameraController] ライト点滅演出が完了しました。常時点灯を開始しタイマーを起動します。");
     }
 
@@ -1309,8 +1344,11 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
 
     private void UpdateWarningSound()
     {
-        // UFOItemGoal.IsFlashing (アイテム演出中) は警告音を鳴らさない
-        bool shouldPlay = IsPlaySessionActive && _playTimer > 0f && _playTimer <= 10f && !UFOItemGoal.IsFlashing;
+        // UFOItemGoal.IsFlashing (アイテム演出中) や、ルーレット回転中〜配当完了まで（水色点滅演出中）は警告音を鳴らさない
+        bool isRoulettePlaying = UFOItemGoal.IsRouletteRewardPending ||
+                                  (RouletteController.Instance != null && RouletteController.Instance.IsSpinning);
+        bool shouldPlay = IsPlaySessionActive && _playTimer > 0f && _playTimer <= 10f &&
+                           !UFOItemGoal.IsFlashing && !isRoulettePlaying;
 
         if (shouldPlay)
         {

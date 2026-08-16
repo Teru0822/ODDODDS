@@ -35,6 +35,20 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
     /// </summary>
     public static bool IsFlashing { get; private set; } = false;
 
+    /// <summary>
+    /// ルーレット当選が確定してから、報酬アイテムの降雨が終わるまでtrue。
+    /// UFOChaseLightControllerが「当選〜配当完了までライトを水色で点滅させる」判定に使う。
+    /// StartRouletteRainはフィーバータイムのコイン雨とも共用しているため、実際にルーレット当選による
+    /// 呼び出しかどうかはこのフラグで明示的に区別する
+    /// </summary>
+    public static bool IsRouletteRewardPending { get; private set; } = false;
+
+    /// <summary>
+    /// ルーレット回転中/当選後の配当待ちでUFOChaseLightControllerが使う水色。
+    /// インスペクターで既に調整済みのrouletteFlashColor（RouletteItem投入時の点滅色）をそのまま流用する
+    /// </summary>
+    public static Color RouletteChaseColor =>
+        Instance != null ? Instance.rouletteFlashColor : new Color(0.3f, 0.85f, 1f, 1f) * 2f;
 
 
 
@@ -167,9 +181,9 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
     private bool _isCandyObtained = false;
     private bool _isPinballObtained = false;
 
-    // 特別演出スロットの元々のweight（当選不可にした後、ラウンドリセット時に元へ戻すため）
-    private float _originalSpecialDropWeight = 1f;
-    private bool _originalSpecialDropWeightCaptured = false;
+    // ルーレットを回した累計回数（セーブデータから復元される）。1・2回目は特別演出スロットを強制的に当選させ、
+    // 3回目以降はアイテムを消費していても保証は行わず元の確率に戻す
+    private int _rouletteSpinAttemptCount = 0;
 
     public static UFOItemGoal Instance { get; private set; }
 
@@ -179,51 +193,25 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
         // GameObjectが有効ならAwake()自体は実行されてしまう。enabledをチェックし、無効化されている
         // （＝練習機側の残骸）場合はstatic Instanceを絶対に奪わないようにする
         if (Instance == null && enabled) Instance = this;
-
-        // セーブデータ読み込み（当選不可化）が行われる前に、元のweightを控えておく
-        if (rouletteController != null && !_originalSpecialDropWeightCaptured)
-        {
-            var slot = rouletteController.GetSlotEntry(specialDropSlotIndex);
-            if (slot != null)
-            {
-                _originalSpecialDropWeight = slot.weight;
-                _originalSpecialDropWeightCaptured = true;
-            }
-        }
     }
 
     public void WriteSaveData(RoguelikeSaveData saveData)
     {
         saveData.isRouletteCandyObtained = _isCandyObtained;
         saveData.isRoulettePinballObtained = _isPinballObtained;
+        saveData.rouletteSpinAttemptCount = _rouletteSpinAttemptCount;
     }
 
     public void ReadSaveData(RoguelikeSaveData saveData)
     {
         _isCandyObtained = saveData.isRouletteCandyObtained;
         _isPinballObtained = saveData.isRoulettePinballObtained;
-        ApplySpecialDropSlotAvailability();
+        _rouletteSpinAttemptCount = saveData.rouletteSpinAttemptCount;
     }
 
     /// <summary>
-    /// candy・pinball の両方を入手済みの場合、対象スロット（はてなマーク）の当選確率を0にして
-    /// 二度と当たらないようにする。
-    /// </summary>
-    private void ApplySpecialDropSlotAvailability()
-    {
-        if (!_isCandyObtained || !_isPinballObtained) return;
-        if (rouletteController == null) return;
-
-        var slot = rouletteController.GetSlotEntry(specialDropSlotIndex);
-        if (slot != null)
-        {
-            slot.weight = 0f;
-            Debug.Log("[UFOItemGoal] candy/pinball を両方入手済みのため、特別演出スロットの当選確率を0にしました。");
-        }
-    }
-
-    /// <summary>
-    /// candy/pinball の入手状況をリセットし、特別演出スロットを再度当選可能に戻す。
+    /// candy/pinball の入手状況をリセットする。
+    /// スロット自体の当選確率は常にInspectorで設定した元の値のままなので、weightの操作は不要。
     /// 【接続待ち】ラウンド進行・ゲームオーバー処理が実装され次第、そこから呼び出してください
     /// （例: MoneyManager.CheckGameOver() のゲームオーバー確定処理内など）。
     /// </summary>
@@ -232,17 +220,8 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
         _isCandyObtained = false;
         _isPinballObtained = false;
 
-        if (rouletteController != null)
-        {
-            var slot = rouletteController.GetSlotEntry(specialDropSlotIndex);
-            if (slot != null)
-            {
-                slot.weight = _originalSpecialDropWeight;
-            }
-        }
-
         //RoguelikeSaveManager.Save();
-        Debug.Log("[UFOItemGoal] candy/pinball の入手状況をリセットしました。次のラウンドで再び抽選対象になります。");
+        Debug.Log("[UFOItemGoal] candy/pinball の入手状況をリセットしました。");
     }
 
     private void Start()
@@ -425,6 +404,9 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
     {
         Debug.Log($"[UFOItemGoal] HandleRouletteSpinComplete: 当選結果インデックス = {winningIndex}");
 
+        // 当選確定〜配当（降雨）完了までtrueにする。以下の各分岐で必ずfalseに戻す
+        IsRouletteRewardPending = true;
+
         // 時間の一時停止解除は、このイベント（スピン結果確定）ではなく、Devil_Eyeのアニメーション一連の
         // 流れが完全に終わった時点（ProcessRouletteQueueRoutine側）で行う。
         // （連続投入時の待ち行列処理と整合させるため）
@@ -432,6 +414,9 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
         // 2. 特別演出スロット（Element2 / Roulette03）の場合は、通常の降雨処理をスキップして専用演出を行う
         if (winningIndex == specialDropSlotIndex)
         {
+            // 降雨を伴わない演出のため、IsRouletteRewardPendingはTriggerSpecialDrop側
+            // （実際に演出が完了するSpecialDropRoutineの終わり、または開始できなかった早期returnの各分岐）
+            // で確定させる。ここで即falseに戻すと、水色点滅が始まる前に終わってしまうため触らない
             TriggerSpecialDrop();
             return;
         }
@@ -486,21 +471,24 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
                 Debug.Log($"[UFOItemGoal] ルーレット当選結果 [{winningIndex}]: {rewardPrefab.name} (枚数: {rainCount}, 時間: {rainDuration}秒, 範囲スケール: {rainScale}) の降雨を開始しました！");
 
                 ItemSpawner.Instance.StartRouletteRain(
-                    prefabsToSpawn, 
-                    rainCount, 
-                    rainDuration, 
-                    rainScale, 
-                    rouletteRainAreaOffset
+                    prefabsToSpawn,
+                    rainCount,
+                    rainDuration,
+                    rainScale,
+                    rouletteRainAreaOffset,
+                    onComplete: () => { IsRouletteRewardPending = false; }
                 );
             }
             else
             {
                 Debug.LogError($"[UFOItemGoal] 当選インデックス {winningIndex} に対応するプレハブが Spawner 内から見つかりません！");
+                IsRouletteRewardPending = false;
             }
         }
         else
         {
             Debug.LogError("[UFOItemGoal] ItemSpawner.Instance が null のため、ドロップを生成できません！");
+            IsRouletteRewardPending = false;
         }
     }
 
@@ -510,43 +498,30 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
     /// </summary>
     private void TriggerSpecialDrop()
     {
-        // 両方入手済みならこのスロット自体が当たらないはずだが、念のための保険
-        if (_isCandyObtained && _isPinballObtained)
-        {
-            Debug.LogWarning("[UFOItemGoal] candy/pinball を両方入手済みのため、特別演出をスキップします。");
-            return;
-        }
-
-        bool giveCandy;
-        if (!_isCandyObtained && !_isPinballObtained)
-        {
-            // まだどちらも入手していない：ランダムに選ぶ
-            giveCandy = Random.value < 0.5f;
-        }
-        else
-        {
-            // 片方だけ入手済み：まだ持っていない方を確定で出す
-            giveCandy = !_isCandyObtained;
-        }
+        // 片方だけ入手済みの場合は、まだ持っていない方を確定で出す（ペア完成を保証する）。
+        // 両方未入手、または両方入手済み（スロットのweightはもう0にしないので、両方揃った後も引ける）の場合は50%
+        bool exactlyOneObtained = _isCandyObtained != _isPinballObtained;
+        bool giveCandy = exactlyOneObtained ? !_isCandyObtained : Random.value < 0.5f;
 
         GameObject prefabToUse = giveCandy ? specialDropCandyPrefab : specialDropPinballPrefab;
 
         if (prefabToUse == null)
         {
             Debug.LogWarning("[UFOItemGoal] 特別演出用のプレハブ（candy/ピンボール）がインスペクターに設定されていません。");
+            IsRouletteRewardPending = false;
             return;
         }
 
         if (specialDropStartPoint == null || specialDropEndPoint == null)
         {
             Debug.LogWarning("[UFOItemGoal] 特別演出の落下開始/終了位置がインスペクターに設定されていません。");
+            IsRouletteRewardPending = false;
             return;
         }
 
-        // 入手状態を更新し、両方揃ったらこのスロットを二度と当たらないようにする
+        // 入手状態を記録する（スロットの当選確率自体には影響しない）
         if (giveCandy) _isCandyObtained = true;
         else _isPinballObtained = true;
-        ApplySpecialDropSlotAvailability();
         RoguelikeSaveManager.Save();
 
         // インベントリ（ItemPanelManager）へ加算する。当たり判定が無い演出のため、
@@ -632,6 +607,9 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
 
         yield return new WaitForSeconds(specialDropDestroyDelay);
         Destroy(obj);
+
+        // 特別演出が完全に終わったので、水色点滅演出を終了する
+        IsRouletteRewardPending = false;
     }
 
     private void HandleUnwashedMoneyChanged(float newAmount)
@@ -662,16 +640,23 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
     /// </summary>
     public void HandleItemDrop(Collider other)
     {
-        // UFOキャッチャーをプレイしていない間（ラウンド開始時のスポーン落下・物理的な転がり込みなど）に
-        // 何か入っても、獲得金額・枚数などの加算は一切行わない
-        if (!UFOCameraController.IsPlayingUfo) return;
-
         // ぶつかった相手が UFOItem コンポーネントを持っているか確認
         // （複数パーツ構成のモデルで、Colliderと UFOItem が別オブジェクトの場合にも対応するため、
         //   親方向も辿って検索する）
         UFOItem item = other.GetComponentInParent<UFOItem>();
-        
-        if (item != null)
+        if (item == null) return;
+
+        // UFOキャッチャーを実際にプレイしていない間（ラウンド開始時のスポーン落下・物理的な転がり込みなど）に
+        // 何か入っても、獲得金額・枚数・効果音などは一切発生させない（未プレイ判定）。
+        // IsPlayingUfo（UFOエリア滞在中ずっとtrue）ではなく、実際にプレイ中かどうかを示す
+        // IsPlaySessionActiveを見る。ただし入ったアイテム自体は消しておかないと機体内に残り続けるため、
+        // カウントはせず破棄だけは行う
+        if (!UFOCameraController.IsPlaySessionActive)
+        {
+            Destroy(item.gameObject);
+            return;
+        }
+
         {
             // 獲得金額の計算（基本額 × 強化倍率）
             float finalValue = item.baseValue * scoreMultiplier;
@@ -744,6 +729,7 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
                     // コイン獲得音の再生
                     PlaySound(coinGetSound);
                     UFODrawerRewardDisplay.Instance?.AddItem(UFODrawerRewardDisplay.RewardItemType.Bronze);
+                    UFOChaseLightController.TriggerCoinCatchFlash();
                     break;
                 case UFOItemType.SilverCoin:
                     _sessionSilverCoins++;
@@ -751,6 +737,7 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
                     // コイン獲得音の再生
                     PlaySound(coinGetSound);
                     UFODrawerRewardDisplay.Instance?.AddItem(UFODrawerRewardDisplay.RewardItemType.Silver);
+                    UFOChaseLightController.TriggerCoinCatchFlash();
                     break;
                 case UFOItemType.GoldCoin:
                     _sessionGoldCoins++;
@@ -758,6 +745,7 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
                     // コイン獲得音の再生
                     PlaySound(coinGetSound);
                     UFODrawerRewardDisplay.Instance?.AddItem(UFODrawerRewardDisplay.RewardItemType.Gold);
+                    UFOChaseLightController.TriggerCoinCatchFlash();
                     break;
                 case UFOItemType.RouletteItem:
                     TriggerRouletteItemGoalEffect(finalValue);
@@ -891,13 +879,26 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
         {
             _pendingRouletteCount--;
 
-            // このアイテム分のランプ点滅（青）
-            TriggerLampFlash(rouletteFlashColor, true);
+            // ルーレット中/当選後の点灯・点滅は UFOChaseLightController が
+            // RouletteController.IsSpinning / IsRouletteRewardPending を見て担当するため、
+            // ここでの旧来のタグ式ランプ点滅（TriggerLampFlash）は行わない
 
             // リスナーの多重登録を防ぎつつ、イベントを購読
             rouletteController.OnSpinComplete.RemoveListener(HandleRouletteSpinComplete);
             rouletteController.OnSpinComplete.AddListener(HandleRouletteSpinComplete);
 
+            // ルーレットを回した累計回数（1・2回目は特別演出スロットを強制当選させる保証抽選。
+            // 3回目以降は、たとえアイテムを消費していても保証せず元の確率に戻す）
+            _rouletteSpinAttemptCount++;
+            RoguelikeSaveManager.Save();
+
+            if (_rouletteSpinAttemptCount <= 2)
+            {
+                // 通常のSpin()と全く同じアニメーション経路（Devil_Eyeのイントロ〜アウトロ演出込み）のまま、
+                // 当選結果だけ特別演出スロットに強制する
+                Debug.Log($"[UFOItemGoal] {_rouletteSpinAttemptCount}回目のルーレット：特別演出スロットを保証抽選で強制当選させます。");
+                rouletteController.SetForcedNextResult(specialDropSlotIndex);
+            }
             rouletteController.Spin();
 
             // Spin() がコルーチンを開始し IsSpinning が true になるのを1フレーム待つ
@@ -944,19 +945,10 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
             {
                 if (obj != null)
                 {
-                    // 子オブジェクトの中から名前が "spotlight" (大文字小文字・スペース無視) である Light を収集
-                    Light[] childLights = obj.GetComponentsInChildren<Light>(true);
-                    foreach (var light in childLights)
-                    {
-                        if (light != null)
-                        {
-                            string nameClean = light.gameObject.name.ToLower().Replace(" ", "");
-                            if (nameClean.Contains("spotlight"))
-                            {
-                                targetLights.Add(light);
-                            }
-                        }
-                    }
+                    // 子オブジェクトのLightを全て収集する（以前は名前に"spotlight"を含むものだけに
+                    // 絞っていたが、タグで既に対象を絞っているうえ、bottom_lump/PatoLamp等
+                    // "spotlight"を含まない名前のライトが対象から漏れてしまっていたため撤廃）
+                    targetLights.AddRange(obj.GetComponentsInChildren<Light>(true));
 
                     // Rendererも収集する
                     targetRenderers.AddRange(obj.GetComponentsInChildren<Renderer>(true));
