@@ -70,6 +70,15 @@ namespace App.ATM
         }
 
         /// <summary>
+        /// 画面定義の要素をそのまま取り出す。
+        /// 3Dテキストへ流し込まず、別のUI（ハッキング画面など）へ文言や大きさを渡したい時に使う。
+        /// </summary>
+        public bool TryGetElements(string screenId, out List<ATMScreenElement> elements)
+        {
+            return _library.TryGet(screenId, out elements);
+        }
+
+        /// <summary>
         /// 画面を切り替える。画像オーバーレイを再構築し、テキストも更新する。
         /// 画面遷移時に一度だけ呼ぶこと（画像の作り直しを毎フレーム行わないため）。
         /// </summary>

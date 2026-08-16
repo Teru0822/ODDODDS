@@ -64,7 +64,7 @@ namespace App.ATM
         }
 
         /// <summary>1 階層ぶんの配置を決めて開始する。</summary>
-        public void BeginLayer(HackLayer layer, int layerIndex, int layerCount, HackTransferJob job)
+        public void BeginLayer(HackLayer layer)
         {
             _layer = layer;
             _elapsed = 0f;
@@ -86,7 +86,7 @@ namespace App.ATM
                 _cursor = _safeCenter > 0.5f ? 0.05f : 0.95f;
             }
 
-            _ui.SetupMinigame(layer, layerIndex, layerCount, job);
+            _ui.SetupMinigame(layer);
             _ui.SetSafeZoneColor(ATMHackingUI.Green);
             _ui.SetCursorColor(Color.white);
             PushToUI();

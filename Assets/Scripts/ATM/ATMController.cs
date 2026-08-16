@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
@@ -14,6 +16,43 @@ namespace App.ATM
         TransitioningToATM,
         Active,
         TransitioningToPlayer
+    }
+
+    /// <summary>
+    /// コイン両替画面の1行（金/銀/銅）の見た目と配置。
+    /// 画面テキスト(YAML)の行として並べると位置を個別に動かせないため、
+    /// この3行だけはコードで生成して1行ずつ自由に配置できるようにしている。
+    /// </summary>
+    [System.Serializable]
+    public class CoinRowLayout
+    {
+        [Tooltip("行頭に出す名前")]
+        public string label = "GOLD";
+
+        [Tooltip("【推奨】行の位置アンカー。ATMの子に空オブジェクトを作り Scene ビューでドラッグ配置する。" +
+                 "未割当てなら下の Position を使う")]
+        public Transform anchor;
+
+        [Tooltip("アンカー未割当て時の位置(Canvasローカル座標)")]
+        public Vector2 position;
+
+        [Tooltip("行の大きさ(Canvasローカル px)")]
+        public Vector2 size = new Vector2(320f, 40f);
+
+        [Tooltip("文字の位置。行の中心からのずれ")]
+        public Vector2 textOffset = new Vector2(24f, 0f);
+
+        [Tooltip("文字サイズ")]
+        public float fontSize = 14f;
+
+        [Tooltip("コイン画像のファイル名。StreamingAssets/ATM/images に置いたもの")]
+        public string imageFile = "gold.png";
+
+        [Tooltip("コイン画像の位置。行の中心からのずれ")]
+        public Vector2 imageOffset = new Vector2(-130f, 0f);
+
+        [Tooltip("コイン画像の大きさ")]
+        public Vector2 imageSize = new Vector2(26f, 26f);
     }
 
     /// <summary>
@@ -46,6 +85,13 @@ namespace App.ATM
 
         /// <summary>ATM を起動して画面を操作できる状態か。</summary>
         public bool IsScreenActive => _currentState == ATMState.Active;
+
+        /// <summary>
+        /// 自動ログインが終わって操作画面に入っているか。
+        /// ログイン画面の間は裏メニュー（ハッキング）を出さないための判定に使う。
+        /// </summary>
+        public bool IsLoggedIn => _currentSubState != ATMSubState.Welcome
+                                 && _currentSubState != ATMSubState.PasscodeInput;
 
         /// <summary>ATM 操作中に使っているカメラ。3D オブジェクトのクリック判定に使う。</summary>
         public Camera ScreenCamera => playerCamera;
@@ -100,6 +146,15 @@ namespace App.ATM
             return true;
         }
 
+        /// <summary>
+        /// この起動時点で「取り立てが今ターン終了時に来る」かつ「コインを全部売っても取り立て額に届かない」か。
+        /// ハッキングモードを解禁してよいかの判定に使う。ATM を起動するたびに評価し直す。
+        /// </summary>
+        public bool IsDebtUnpayableThisVisit { get; private set; }
+
+        /// <summary>画面テキスト(YAML)のレンダラ。ハッキング画面が文言を読むのに使う。</summary>
+        public ATMScreenRenderer ScreenRenderer => _screenRenderer;
+
         public AudioSource Speaker => audioSource;
         public AudioClip KeyClickSound => keyClickSound;
         public AudioClip ConfirmSound => confirmSound;
@@ -152,7 +207,8 @@ namespace App.ATM
         [Range(0f, 1f)]
         [SerializeField] private float idleLoopVolume = 0.5f;
 
-        [Tooltip("ループ音の鳴り始め／止まり際のフェード時間(秒)。0 で即座に切り替わる")]
+        [Tooltip("起動音→ループ音→電源オフ音のつなぎ目を重ねる時間(秒)。" +
+                 "この長さだけ音を重ねながら入れ替えるので、切れ目が聞こえなくなる。0 で即座に切り替わる")]
         [SerializeField] private float idleLoopFadeDuration = 0.35f;
 
         [Tooltip("資金洗浄・コイン売却が成立した時の音 (SE/debtPay など)")]
@@ -179,6 +235,36 @@ namespace App.ATM
         [Header("物理ボタン (テンキー) 設定 (プレハブ内アセット)")]
         [Tooltip("3Dモデル内の各ボタンオブジェクト。インスペクターでの指定が必須です")]
         [SerializeField] private List<ATMPhysicalButton> keyButtons = new List<ATMPhysicalButton>();
+
+        [Header("パスコードの表示")]
+        [Tooltip("入力済みの桁に使う文字")]
+        [SerializeField] private string passcodeMaskCharacter = "*";
+
+        [Tooltip("未入力の桁に使う文字")]
+        [SerializeField] private string passcodeEmptyCharacter = "_";
+
+        [Tooltip("入力済み文字の縦位置(em)。マイナスで下がる。" +
+                 "「*」は字形が上寄りなので、行の中央に見えるよう既定で少し下げている")]
+        [SerializeField] private float passcodeMaskVerticalOffset = -0.22f;
+
+        [Tooltip("入力済み文字の大きさ(%)。100 で行の文字サイズと同じ")]
+        [SerializeField] private float passcodeMaskSizePercent = 100f;
+
+        [Tooltip("未入力文字の縦位置(em)。プラスで上がる。「_」はベースラインより下に描かれる")]
+        [SerializeField] private float passcodeEmptyVerticalOffset = 0f;
+
+        [Tooltip("未入力文字の大きさ(%)。100 で行の文字サイズと同じ")]
+        [SerializeField] private float passcodeEmptySizePercent = 100f;
+
+        [Header("パスコード自動入力の演出")]
+        [Tooltip("WELCOME 表示後、パスコードを打ちはじめるまでの間(秒)")]
+        [SerializeField] private float passcodeAutoStartDelay = 0.45f;
+
+        [Tooltip("1桁ごとの間隔(秒)")]
+        [SerializeField] private float passcodeAutoTypeInterval = 0.18f;
+
+        [Tooltip("打ち終わってから決定キーを押すまでの間(秒)")]
+        [SerializeField] private float passcodeAutoConfirmDelay = 0.35f;
 
         [Header("資金洗浄パラメータ")]
         [Tooltip("資金洗浄時の手数料率 (0.1 = 10%)")]
@@ -221,6 +307,14 @@ namespace App.ATM
         [Tooltip("この金額以上なら money_middle を出す (下回れば money_small)")]
         [SerializeField] private float moneyMiddleThreshold = 1000f;
 
+        [Header("カウントアップのタイプ音")]
+        [Tooltip("数字が流れている間に鳴らすタイプ音の間隔(秒)。小さいほど細かく鳴る")]
+        [SerializeField] private float countUpSoundInterval = 0.06f;
+
+        [Tooltip("タイプ音の音量")]
+        [Range(0f, 1f)]
+        [SerializeField] private float countUpSoundVolume = 0.3f;
+
         [Tooltip("紙幣を物理で落とすか。OFF(既定)なら指定位置に固定表示する。" +
                  "money_* はピンボール用にRigidbody/Colliderを持つため、OFFの間はそれらを無効化します")]
         [SerializeField] private bool moneyPropUsePhysics = false;
@@ -261,6 +355,15 @@ namespace App.ATM
         private readonly TextMeshProUGUI[] _spinTexts = new TextMeshProUGUI[3];
         private readonly UnityEngine.UI.Image[] _spinBgs = new UnityEngine.UI.Image[3];
 
+        // 換金の確定ボタン
+        private UnityEngine.UI.Image _confirmButtonImage;
+        private TextMeshProUGUI _confirmButtonText;
+
+        // コイン行(金/銀/銅)。1行ずつ個別に配置できるようコードで生成する
+        private readonly RectTransform[] _coinRowRoots = new RectTransform[3];
+        private readonly TextMeshProUGUI[] _coinRowTexts = new TextMeshProUGUI[3];
+        private readonly UnityEngine.UI.Image[] _coinRowImages = new UnityEngine.UI.Image[3];
+
         // コイン両替の選択/編集状態
         private int _selectedCoinRow = 0;        // 0=金,1=銀,2=銅（初期選択は金）
         private bool _isEditingQty = false;      // false=行選択モード, true=個数編集モード
@@ -281,11 +384,41 @@ namespace App.ATM
         [Tooltip("スピンボックス内の「▲/数量/▼」の文字サイズ。実行中に変更しても毎フレーム反映される")]
         [SerializeField] private float _spinboxFontSize = DefaultSpinboxFontSize;
 
+        [Header("コイン行 (金/銀/銅) の配置")]
+        [Tooltip("金・銀・銅それぞれの行の位置・文字・画像を個別に調整する。空なら既定値で3行つくる。" +
+                 "実行中に値を変えると毎フレーム反映されるので、Playしながら位置を決められる")]
+        [SerializeField] private CoinRowLayout[] _coinRows = new CoinRowLayout[0];
+
+        [Tooltip("コイン行の文字色（非選択時）")]
+        [SerializeField] private Color _coinRowNormalColor = Color.white;
+
+        [Tooltip("コイン行の文字色（選択時）")]
+        [SerializeField] private Color _coinRowSelectedColor = new Color(0.20f, 1f, 0.40f, 1f);
+
+        [Header("換金の確定ボタン")]
+        [Tooltip("【推奨】確定ボタンの位置アンカー。ATMの子に空オブジェクトを作り、Sceneビューで画面上の置きたい位置へ" +
+                 "ドラッグして割り当てるだけ。実行中もドラッグで即追従します。未割当てなら下のVector2(Canvasローカル座標)で配置")]
+        [SerializeField] private Transform _confirmButtonAnchor;
+
+        [Tooltip("アンカー未割当て時のフォールバック配置(Canvasローカル座標)")]
+        [SerializeField] private Vector2 _confirmButtonPos = new Vector2(250f, -230f);
+
+        [Tooltip("確定ボタンの大きさ(Canvasローカル px)。実行中に変更しても毎フレーム反映される")]
+        [SerializeField] private Vector2 _confirmButtonSize = new Vector2(120f, 42f);
+
+        [Tooltip("確定ボタンの文字サイズ。実行中に変更しても毎フレーム反映される")]
+        [SerializeField] private float _confirmButtonFontSize = 14f;
+
+        [Tooltip("確定ボタンに出す文字")]
+        [SerializeField] private string _confirmButtonLabel = "SELL";
+
         // 既定値。ContextMenu の「既定値にリセット」からも参照する
         private static readonly Vector2 DefaultSpinboxSize = new Vector2(34f, 52f);
         private const float DefaultSpinboxFontSize = 11f;
         private static readonly Color SpinboxDimColor = new Color(0.10f, 0.16f, 0.10f, 0.90f);
         private static readonly Color SpinboxActiveColor = new Color(0.20f, 0.85f, 0.30f, 0.95f);
+        private static readonly Color ConfirmButtonDimColor = new Color(0.10f, 0.16f, 0.10f, 0.90f);
+        private static readonly Color ConfirmButtonReadyColor = new Color(0.20f, 0.85f, 0.30f, 0.95f);
 
         // 高速カウントアップ表示用のキャッシュ金額
         private float _visualWashedAmount = 0f;
@@ -303,9 +436,20 @@ namespace App.ATM
         // 裏メニュー(ハッキングモード)。Awake で自動生成するため配置は不要
         private ATMHackingMode _hacking;
 
+        // マウスホイール入力の連射防止
+        private const float ScrollInputInterval = 0.12f;
+        private const float ScrollInputThreshold = 0.01f;
+        private float _lastScrollTime;
+
         // 起動中に鳴らし続けるループ音。単発SEと混ざらないよう専用の AudioSource を使う
-        private AudioSource _loopSource;
+        // ループ音は2本のAudioSourceを交互に使い、末尾と頭を重ねて継ぎ目を消す
+        private readonly AudioSource[] _loopSources = new AudioSource[2];
         private Coroutine _loopRoutine;
+
+        // 起動音・電源オフ音。末尾をフェードさせたいので PlayOneShot ではなく専用ソースで鳴らす
+        private AudioSource _stateSource;
+        private Coroutine _stateRoutine;
+        private float _stateBaseVolume = 1f;
 
         // アニメーション演出でレンダラへ渡す可変トークンのバッキング値
         private string _typedTitle = "";
@@ -368,9 +512,14 @@ namespace App.ATM
 
         private void OnDisable()
         {
-            // 無効化でコルーチンが止まるため、ループ音はここで直接止める（鳴りっぱなし防止）
-            if (_loopSource != null) _loopSource.Stop();
+            // 無効化でコルーチンが止まるため、ここで直接止める（鳴りっぱなし防止）
+            foreach (AudioSource source in _loopSources)
+            {
+                if (source != null) source.Stop();
+            }
+            if (_stateSource != null) _stateSource.Stop();
             _loopRoutine = null;
+            _stateRoutine = null;
 
             // コルーチンが途中で止まっても、紙幣と開いたままの排出口を残さない
             DespawnMoneyProp();
@@ -408,8 +557,19 @@ namespace App.ATM
                 }
             }
 
+            // SPACE でも一括換金できるようにする（ハッキング中は SPACE がミニゲーム用なので除外）
+            if (!hacking && _currentSubState == ATMSubState.CoinExchange
+                && Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
+            {
+                AnimateButtonByRole(KeyRole.Confirm);
+                SellAllSelected();
+            }
+
+            // スピンボックスの▲▼と確定ボタンのクリックを先に見る。拾えたら3Dキーパッドの判定はしない
+            bool spinboxClicked = !hacking && HandleSpinboxClicks();
+
             // UIボタンの上にマウスカーソルがない場合のみ、3Dキーパッドの直接クリックを判定する (ハイブリッドクリックの両立)
-            if (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject())
+            if (!spinboxClicked && (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject()))
             {
                 Handle3DButtonClicks();
             }
@@ -478,6 +638,9 @@ namespace App.ATM
         private IEnumerator TransitionToATM()
         {
             _currentState = ATMState.TransitioningToATM;
+
+            // 買取価格が決まったこの時点で、取り立てを賄えるかどうかを判定しておく
+            EvaluateDebtPressure();
             IsInteracting = true;
             // フォーカス中の Escape は ATM 退出に使うため、設定画面側に渡さない
             App.Input.GameInputGate.CaptureEscape(this);
@@ -522,22 +685,45 @@ namespace App.ATM
                 playerCamera.transform.rotation = targetRot;
             }
 
-            if (startupSound != null && audioSource != null)
-            {
-                audioSource.PlayOneShot(startupSound);
-            }
-
             SetATMState(true);
             _currentState = ATMState.Active;
 
-            // 起動音が鳴り終わってから、起動中ずっと鳴らすループ音へ引き継ぐ
-            StartIdleLoop(startupSound != null ? startupSound.length : 0f);
+            // 起動音 → ループ音。末尾を重ねながら入れ替えるのでつなぎ目が聞こえない。
+            // 状態を Active にしてから呼ぶこと（ループ開始時に状態を見て鳴らすか決めている）
+            PlayStartupAndIdleLoop();
 
             // Welcome画面でタイピング演出を開始
             ChangeSubState(ATMSubState.Welcome);
 
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
+        }
+
+        /// <summary>
+        /// 「取り立てが今ターン終了時に来る」かつ「今の所持金＋コインを全部売った額でも取り立て額に届かない」
+        /// かどうかを判定する。今回の買取価格で計算するため、ATM を開くたびに結果が変わりうる。
+        /// </summary>
+        private void EvaluateDebtPressure()
+        {
+            IsDebtUnpayableThisVisit = false;
+
+            MoneyManager money = MoneyManager.Instance;
+            var wallet = PlayerWallet.Local;
+            if (money == null || wallet == null) return;
+
+            // 取り立てがこのターンの終わりに来ないなら対象外
+            if (money.NextDebtCollectionTurnCount > 0) return;
+
+            float quota = money.GetQuotaThisTime();
+            float coinValue = wallet.GoldCoins * _goldPrice
+                            + wallet.SilverCoins * _silverPrice
+                            + wallet.BronzeCoins * _bronzePrice;
+            float best = wallet.WashedAmount + coinValue;
+
+            IsDebtUnpayableThisVisit = best < quota;
+
+            Debug.Log($"[ATMController] 取り立て判定: 取り立て {quota:N0} DC / 所持金 {wallet.WashedAmount:N0} DC " +
+                      $"+ コイン {coinValue:N0} DC = {best:N0} DC → {(IsDebtUnpayableThisVisit ? "不足（ハッキング解禁）" : "足りる")}");
         }
 
         public void TriggerExit()
@@ -553,13 +739,8 @@ namespace App.ATM
             // ハッキング画面を出したまま退出されると画面が戻らないので、必ず畳んでから閉じる
             if (_hacking != null) _hacking.Abort();
 
-            // ループ音を止めてから電源オフ音へ切り替える
-            StopIdleLoop();
-
-            if (shutdownSound != null && audioSource != null)
-            {
-                audioSource.PlayOneShot(shutdownSound);
-            }
+            // ループ音 → 電源オフ音。こちらも重ねながら入れ替える
+            PlayShutdownAndStopIdleLoop();
 
             SetATMState(false);
             _screenRenderer?.ClearImages();
@@ -747,7 +928,7 @@ namespace App.ATM
 
             float fee = dirty * launderingFeeRate;
             float net = dirty - fee;
-            string masked = new string('*', _inputPasscode.Length).PadRight(4, '_');
+            string masked = BuildMaskedPasscode();
 
             // コイン両替：選択中の行だけ緑色にするための color タグ差し込み用トークン
             const string selOpen = "<color=#33FF66>";
@@ -785,6 +966,62 @@ namespace App.ATM
             };
         }
 
+        /// <summary>
+        /// パスコードの伏せ字表示を作る。
+        ///
+        /// 「*」は字形そのものが上寄りに描かれるため、そのまま並べると行の中で浮いて見える。
+        /// TMP の voffset タグで下げて、行の中央に見えるよう調整する
+        /// （入力済みと未入力で下げ幅を変えられるようにしてある）。
+        /// </summary>
+        private string BuildMaskedPasscode()
+        {
+            const int digits = 4;
+            int filled = Mathf.Clamp(_inputPasscode.Length, 0, digits);
+
+            string maskChar = string.IsNullOrEmpty(passcodeMaskCharacter) ? "*" : passcodeMaskCharacter;
+            string emptyChar = string.IsNullOrEmpty(passcodeEmptyCharacter) ? "_" : passcodeEmptyCharacter;
+
+            var sb = new StringBuilder(96);
+            AppendStyled(sb, Repeat(maskChar, filled), passcodeMaskVerticalOffset, passcodeMaskSizePercent);
+            AppendStyled(sb, Repeat(emptyChar, digits - filled), passcodeEmptyVerticalOffset, passcodeEmptySizePercent);
+            return sb.ToString();
+        }
+
+        private static string Repeat(string unit, int count)
+        {
+            if (count <= 0 || string.IsNullOrEmpty(unit)) return string.Empty;
+
+            var sb = new StringBuilder(unit.Length * count);
+            for (int i = 0; i < count; i++) sb.Append(unit);
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// 大きさと縦位置を指定して追記する。
+        /// voffset は em 指定なので、size を変えてもずらし量は文字の大きさに追従する。
+        /// </summary>
+        private static void AppendStyled(StringBuilder sb, string text, float offsetEm, float sizePercent)
+        {
+            if (string.IsNullOrEmpty(text)) return;
+
+            bool hasSize = !Mathf.Approximately(sizePercent, 100f) && sizePercent > 0f;
+            bool hasOffset = !Mathf.Approximately(offsetEm, 0f);
+
+            if (hasSize)
+            {
+                sb.Append("<size=").Append(sizePercent.ToString("0.###", CultureInfo.InvariantCulture)).Append("%>");
+            }
+            if (hasOffset)
+            {
+                sb.Append("<voffset=").Append(offsetEm.ToString("0.###", CultureInfo.InvariantCulture)).Append("em>");
+            }
+
+            sb.Append(text);
+
+            if (hasOffset) sb.Append("</voffset>");
+            if (hasSize) sb.Append("</size>");
+        }
+
         /// <summary>縦スピンボックス3個の数量表示と、編集中行の緑ハイライトを更新する。</summary>
         private void UpdateSpinboxes()
         {
@@ -798,6 +1035,8 @@ namespace App.ATM
                 if (_spinBgs[i] != null) _spinBgs[i].color = active ? SpinboxActiveColor : SpinboxDimColor;
                 _spinTexts[i].color = active ? Color.white : new Color(0.7f, 0.8f, 0.7f, 1f);
             }
+
+            UpdateCoinRows();
         }
 
         /// <summary>
@@ -820,6 +1059,35 @@ namespace App.ATM
                 // 文字サイズも追従させ、Inspector で大きさを詰めた時に文字がはみ出さないようにする
                 // (TMP の fontSize は同値なら再構築しないので毎フレーム代入して問題ない)
                 if (_spinTexts[i] != null) _spinTexts[i].fontSize = _spinboxFontSize;
+            }
+
+            PositionCoinRows();
+            PositionConfirmButton();
+        }
+
+        /// <summary>
+        /// 確定ボタンの位置・大きさを更新する。スピンボックスと同じく、
+        /// アンカーを割り当てておけば Scene ビューでドラッグしながら位置を決められる。
+        /// </summary>
+        private void PositionConfirmButton()
+        {
+            if (_confirmButtonImage == null) return;
+
+            RectTransform rect = _confirmButtonImage.rectTransform;
+            if (_confirmButtonAnchor != null) rect.position = _confirmButtonAnchor.position;
+            else rect.anchoredPosition = _confirmButtonPos;
+
+            rect.sizeDelta = _confirmButtonSize;
+
+            if (_confirmButtonText != null)
+            {
+                _confirmButtonText.fontSize = _confirmButtonFontSize;
+                _confirmButtonText.text = _confirmButtonLabel;
+
+                // 売れる枚数が入っている時だけ明るくして、押せると分かるようにする
+                bool ready = HasSellableSelection();
+                _confirmButtonImage.color = ready ? ConfirmButtonReadyColor : ConfirmButtonDimColor;
+                _confirmButtonText.color = ready ? Color.white : new Color(0.7f, 0.8f, 0.7f, 1f);
             }
         }
 
@@ -871,9 +1139,43 @@ namespace App.ATM
             _typedTitle = fullTitle;
             _screenRenderer?.UpdateText("welcome", BuildTokens());
 
-            // タイピング完了。以降このwelcome画面上でパスコード入力を受け付ける
+            // パスコードは端末が自動で入力する。プレイヤーは何も押さなくてよい
+            yield return AutoTypePasscode();
+        }
+
+        /// <summary>
+        /// パスコードを自動入力する演出。
+        /// 1桁ずつ伏せ字が埋まり、実機のキーも合わせて沈むので「端末が勝手に認証している」ように見せる。
+        /// 入力を待たずにそのままコイン両替画面へ進む。
+        /// </summary>
+        private IEnumerator AutoTypePasscode()
+        {
+            _inputPasscode = "";
+            _screenRenderer?.UpdateText("welcome", BuildTokens());
+
+            yield return new WaitForSeconds(passcodeAutoStartDelay);
+
+            foreach (char digit in TargetPasscode)
+            {
+                _inputPasscode += digit;
+                _screenRenderer?.UpdateText("welcome", BuildTokens());
+
+                // 対応する数字キーを沈ませて、押しているように見せる
+                if (digit >= '0' && digit <= '9') AnimateButtonByRole((KeyRole)(digit - '0'));
+                else PlaySe(keyClickSound);
+
+                yield return new WaitForSeconds(passcodeAutoTypeInterval);
+            }
+
+            yield return new WaitForSeconds(passcodeAutoConfirmDelay);
+
+            // 決定キーまで自動で押す
+            AnimateButtonByRole(KeyRole.Confirm);
+            PlaySe(confirmSound, electronicSoundVolume);
+            yield return new WaitForSeconds(0.25f);
+
             _isTyping = false;
-            _canProceedFromWelcome = true;
+            ChangeSubState(ATMSubState.CoinExchange);
         }
 
         private void UpdateDisplay()
@@ -1212,6 +1514,53 @@ namespace App.ATM
             }
         }
 
+        /// <summary>
+        /// 選んだ枚数のコインをまとめて換金する。
+        /// 金・銀・銅のどれか1種でも枚数が入っていれば、その全部を一度に売る。
+        /// SPACE / 確定ボタン / 行選択中の決定キー から呼ばれる。
+        /// </summary>
+        public void SellAllSelected()
+        {
+            if (_isCountingUp) return;
+
+            var wallet = PlayerWallet.Local;
+            if (wallet == null) return;
+
+            // 所持数を超えていないか最終確認してから確定させる
+            int gold = Mathf.Clamp(_goldSellQty, 0, wallet.GoldCoins);
+            int silver = Mathf.Clamp(_silverSellQty, 0, wallet.SilverCoins);
+            int bronze = Mathf.Clamp(_bronzeSellQty, 0, wallet.BronzeCoins);
+
+            if (gold + silver + bronze <= 0)
+            {
+                // 1枚も選ばれていない時はエラーとして知らせる
+                PlaySe(cancelSound, electronicSoundVolume);
+                return;
+            }
+
+            float gained = gold * _goldPrice + silver * _silverPrice + bronze * _bronzePrice;
+
+            wallet.GoldCoins -= gold;
+            wallet.SilverCoins -= silver;
+            wallet.BronzeCoins -= bronze;
+
+            float startCash = wallet.WashedAmount;
+            MoneyManager.Instance.AddMoney(gained);
+            float endCash = wallet.WashedAmount;
+
+            Debug.Log($"[ATMController] 一括換金: 金{gold} 銀{silver} 銅{bronze} → {gained:N0} DC");
+
+            _goldSellQty = 0;
+            _silverSellQty = 0;
+            _bronzeSellQty = 0;
+            _isEditingQty = false;
+
+            StartCoroutine(AnimateCashCountUp(startCash, endCash));
+        }
+
+        /// <summary>換金できる枚数が入っているか。</summary>
+        private bool HasSellableSelection() => _goldSellQty + _silverSellQty + _bronzeSellQty > 0;
+
         // --- コイン両替：行選択 / 個数編集 の状態機械 ---
 
         /// <summary>
@@ -1236,8 +1585,13 @@ namespace App.ATM
                 }
                 else if (role == KeyRole.Confirm)
                 {
-                    _isEditingQty = true;      // スピンボックスが緑に点灯し、個数を編集できる
-                    _qtyFreshInput = true;
+                    // 枚数が入っていれば一括換金。まだ何も選んでいなければ個数編集に入る
+                    if (HasSellableSelection()) SellAllSelected();
+                    else
+                    {
+                        _isEditingQty = true;  // スピンボックスが緑に点灯し、個数を編集できる
+                        _qtyFreshInput = true;
+                    }
                     UpdateDisplay();
                 }
                 else if (role == KeyRole.Cancel)
@@ -1270,7 +1624,8 @@ namespace App.ATM
                 }
                 else if (role == KeyRole.Confirm)
                 {
-                    SellSelectedRow();         // 個数確定→売却(現金化)＆カウントアップ演出
+                    // 個数を確定して行選択へ戻る。ここでは売らないので、
+                    // 別の種類のコインも続けて選んでからまとめて換金できる
                     _isEditingQty = false;
                     UpdateDisplay();
                 }
@@ -1326,15 +1681,13 @@ namespace App.ATM
             float duration = 1.0f; // 1秒かけてカウントアップ
             float elapsed = 0f;
 
-            // 成功・取引時の音
-            if (washSuccessSound != null && audioSource != null)
-            {
-                audioSource.PlayOneShot(washSuccessSound, 0.8f);
-            }
+            // 成立音（ジャキーン）は鳴らさない。数字が流れるタイプ音だけ鳴らす。
+            // 排出口の開閉は並行して進める。ここで待つと、その時間ぶんタイプ音の鳴り出しが遅れてしまう
+            Coroutine dispense = StartCoroutine(DispenseMoneyRoutine(targetAmount - startAmount));
 
-            // 排出口を開けてから、払い出し金額に応じた紙幣を出す
-            yield return MoveDoor(true);
-            SpawnMoneyProp(targetAmount - startAmount);
+            // 最初の1発は待たずに鳴らす
+            PlaySe(keyClickSound, countUpSoundVolume);
+            float soundTimer = 0f;
 
             while (elapsed < duration)
             {
@@ -1342,17 +1695,16 @@ namespace App.ATM
                 float t = Mathf.Clamp01(elapsed / duration);
                 // イージングをかけて最後になだらかに流し込む
                 float rate = 1f - Mathf.Pow(1f - t, 3); // EaseOutCubic
-                
+
                 _visualWashedAmount = Mathf.Round(Mathf.Lerp(startAmount, targetAmount, rate));
                 UpdateDisplay();
 
-                // カウントアップ中のダダダダッという連続電子音
-                if (Time.frameCount % 4 == 0)
+                // 数字が流れている間のタイプ音。フレームレートに左右されないよう時間で刻む
+                soundTimer += Time.deltaTime;
+                if (soundTimer >= countUpSoundInterval)
                 {
-                    if (keyClickSound != null && audioSource != null)
-                    {
-                        audioSource.PlayOneShot(keyClickSound, 0.3f);
-                    }
+                    soundTimer -= countUpSoundInterval;
+                    PlaySe(keyClickSound, countUpSoundVolume);
                 }
 
                 yield return null;
@@ -1361,12 +1713,20 @@ namespace App.ATM
             _visualWashedAmount = targetAmount;
             UpdateDisplay();
 
-            // 払い出し完了：紙幣を消して排出口を閉じる
+            // 払い出し完了：紙幣を消して排出口を閉じる（開く動作が残っていれば待ってから）
+            yield return dispense;
             DespawnMoneyProp();
             yield return MoveDoor(false);
 
             _isCountingUp = false;
             UpdateDisplay();
+        }
+
+        /// <summary>排出口を開けてから紙幣を出す。カウントアップと並行して走らせる。</summary>
+        private IEnumerator DispenseMoneyRoutine(float payoutAmount)
+        {
+            yield return MoveDoor(true);
+            SpawnMoneyProp(payoutAmount);
         }
 
         /// <summary>
@@ -1459,41 +1819,144 @@ namespace App.ATM
         // --- 起動中のループ音 ---
 
         /// <summary>
-        /// ループ音専用の AudioSource を用意する。
-        /// 本体の AudioSource は PlayOneShot 用で、Stop() すると鳴っている単発SEまで止まってしまうため分ける。
+        /// ループ音と、起動音／電源オフ音のための AudioSource を用意する。
+        ///
+        /// 本体の AudioSource は PlayOneShot 用で、鳴っている音の音量を後から動かせない。
+        /// 起動音・電源オフ音は末尾や頭を重ねて入れ替えたいので、専用ソースに分ける。
         /// 聞こえ方（3D/2D や減衰）は本体と揃える。
         /// </summary>
         private void CreateIdleLoopSource()
         {
-            if (_loopSource != null) return;
+            if (_loopSources[0] != null) return;
 
-            _loopSource = gameObject.AddComponent<AudioSource>();
-            _loopSource.playOnAwake = false;
-            _loopSource.loop = true;
-            _loopSource.volume = 0f;
+            // ループ音は2本を交互に鳴らして重ねるので、AudioSource 側の loop は使わない
+            _loopSources[0] = CreateSubAudioSource(false);
+            _loopSources[1] = CreateSubAudioSource(false);
+            _stateSource = CreateSubAudioSource(false);
+            _stateBaseVolume = audioSource != null ? audioSource.volume : 1f;
+        }
+
+        private AudioSource CreateSubAudioSource(bool loop)
+        {
+            var source = gameObject.AddComponent<AudioSource>();
+            source.playOnAwake = false;
+            source.loop = loop;
+            source.volume = 0f;
 
             if (audioSource != null)
             {
-                _loopSource.outputAudioMixerGroup = audioSource.outputAudioMixerGroup;
-                _loopSource.spatialBlend = audioSource.spatialBlend;
-                _loopSource.rolloffMode = audioSource.rolloffMode;
-                _loopSource.minDistance = audioSource.minDistance;
-                _loopSource.maxDistance = audioSource.maxDistance;
-                _loopSource.dopplerLevel = audioSource.dopplerLevel;
-                _loopSource.spread = audioSource.spread;
+                source.outputAudioMixerGroup = audioSource.outputAudioMixerGroup;
+                source.spatialBlend = audioSource.spatialBlend;
+                source.rolloffMode = audioSource.rolloffMode;
+                source.minDistance = audioSource.minDistance;
+                source.maxDistance = audioSource.maxDistance;
+                source.dopplerLevel = audioSource.dopplerLevel;
+                source.spread = audioSource.spread;
+            }
+            return source;
+        }
+
+        /// <summary>
+        /// 起動音を鳴らし、その末尾にループ音を重ねながら入れ替える。
+        /// 起動音の終わりとループの立ち上がりを重ねることで、つなぎ目が聞こえなくなる。
+        /// </summary>
+        private void PlayStartupAndIdleLoop()
+        {
+            float overlap = Mathf.Max(0f, idleLoopFadeDuration);
+            float startupLength = 0f;
+
+            if (startupSound != null && _stateSource != null)
+            {
+                _stateSource.clip = startupSound;
+                _stateSource.volume = _stateBaseVolume;
+                _stateSource.Play();
+
+                startupLength = startupSound.length / Mathf.Max(0.01f, _stateSource.pitch);
+
+                // 起動音の末尾もフェードさせる。ここを切りっぱなしにすると「プツッ」と鳴る
+                if (_stateRoutine != null) StopCoroutine(_stateRoutine);
+                _stateRoutine = StartCoroutine(FadeOutStateSourceRoutine(Mathf.Max(0f, startupLength - overlap), overlap));
+            }
+
+            // ループは起動音が終わる少し前から立ち上げて重ねる
+            StartIdleLoop(Mathf.Max(0f, startupLength - overlap), overlap);
+        }
+
+        /// <summary>電源オフ音を鳴らし、ループ音をそこへ重ねながら消す。</summary>
+        private void PlayShutdownAndStopIdleLoop()
+        {
+            float overlap = Mathf.Max(0f, idleLoopFadeDuration);
+
+            // ループは電源オフ音の頭に重ねながら消していく
+            StopIdleLoop(overlap);
+
+            if (shutdownSound != null && _stateSource != null)
+            {
+                if (_stateRoutine != null)
+                {
+                    StopCoroutine(_stateRoutine);
+                    _stateRoutine = null;
+                }
+
+                _stateSource.clip = shutdownSound;
+                _stateSource.volume = _stateBaseVolume;
+                _stateSource.Play();
             }
         }
 
-        /// <summary>起動音が鳴り終わるのを待ってからループ音を鳴らし始める。</summary>
-        private void StartIdleLoop(float delay)
+        /// <summary>指定秒だけ待ってから、起動音をフェードアウトさせる。</summary>
+        private IEnumerator FadeOutStateSourceRoutine(float delay, float duration)
         {
-            if (idleLoopSound == null || _loopSource == null) return;
+            if (delay > 0f) yield return new WaitForSeconds(delay);
 
-            if (_loopRoutine != null) StopCoroutine(_loopRoutine);
-            _loopRoutine = StartCoroutine(StartIdleLoopRoutine(delay));
+            yield return FadeSource(_stateSource, 0f, duration);
+            if (_stateSource != null) _stateSource.Stop();
+            _stateRoutine = null;
         }
 
-        private IEnumerator StartIdleLoopRoutine(float delay)
+        /// <summary>
+        /// 起動中のループ音を一時的に止める。ハッキング画面など、別のBGMへ入れ替える時に呼ぶ。
+        /// </summary>
+        public void SuspendIdleLoop(float fadeDuration = -1f)
+        {
+            StopIdleLoop(fadeDuration < 0f ? Mathf.Max(0f, idleLoopFadeDuration) : fadeDuration);
+        }
+
+        /// <summary>止めていたループ音を鳴らし直す。ATM を開いたままの時だけ効く。</summary>
+        public void ResumeIdleLoop(float fadeDuration = -1f)
+        {
+            if (_currentState != ATMState.Active)
+            {
+                Debug.Log($"[ATMController] ループ音を再開しませんでした（ATMの状態: {_currentState}）");
+                return;
+            }
+            if (idleLoopSound == null)
+            {
+                Debug.LogWarning("[ATMController] Idle Loop Sound が未設定のため、ループ音を再開できません。", this);
+                return;
+            }
+
+            StartIdleLoop(0f, fadeDuration < 0f ? Mathf.Max(0f, idleLoopFadeDuration) : fadeDuration);
+        }
+
+        /// <summary>ループ音を鳴らし始める。delay 秒待ってから duration 秒かけて立ち上げる。</summary>
+        private void StartIdleLoop(float delay, float duration)
+        {
+            if (idleLoopSound == null || _loopSources[0] == null) return;
+
+            if (_loopRoutine != null) StopCoroutine(_loopRoutine);
+            _loopRoutine = StartCoroutine(IdleLoopRoutine(delay, duration));
+        }
+
+        /// <summary>
+        /// ループ音を鳴らし続ける。
+        ///
+        /// AudioSource の loop に任せると、クリップの末尾と先頭が波形として繋がっていない場合に
+        /// 1周ごとに「プツッ」と鳴ってしまう。そこで 2 本の AudioSource へ交互に同じクリップを
+        /// 予約再生し、末尾と頭を overlap 秒だけ重ねて等パワーで入れ替える。
+        /// 開始時刻の指定には dspTime を使う（フレーム単位だと重なりがずれて隙間が空く）。
+        /// </summary>
+        private IEnumerator IdleLoopRoutine(float delay, float firstFadeIn)
         {
             if (delay > 0f) yield return new WaitForSeconds(delay);
 
@@ -1504,18 +1967,72 @@ namespace App.ATM
                 yield break;
             }
 
-            _loopSource.clip = idleLoopSound;
-            _loopSource.volume = 0f;
-            _loopSource.Play();
+            float pitch = Mathf.Max(0.01f, _loopSources[0].pitch);
+            float clipLength = idleLoopSound.length / pitch;
 
-            yield return FadeIdleLoop(idleLoopVolume);
-            _loopRoutine = null;
+            // 重なりがクリップ長に対して大きすぎると成立しないので抑える
+            float overlap = Mathf.Clamp(idleLoopFadeDuration, 0f, clipLength * 0.45f);
+
+            // 末尾を次の頭に重ねるぶん、1周の間隔はクリップ長より overlap 秒短くなる
+            float period = Mathf.Max(0.05f, clipLength - overlap);
+
+            int current = 0;
+            double startDsp = AudioSettings.dspTime + 0.05;   // 予約はわずかに先へ入れる
+            ScheduleLoopSource(current, startDsp);
+
+            // 最初の1本は起動音との重なりに合わせて立ち上げる
+            yield return FadeSource(_loopSources[current], idleLoopVolume, firstFadeIn);
+
+            while (true)
+            {
+                double crossDsp = startDsp + period;
+
+                // 予約が間に合うよう、交差の少し手前で次を仕込む
+                while (AudioSettings.dspTime < crossDsp - 0.2) yield return null;
+
+                int next = 1 - current;
+                ScheduleLoopSource(next, crossDsp);
+
+                // 交差の瞬間まで待つ
+                while (AudioSettings.dspTime < crossDsp) yield return null;
+
+                // ここから overlap 秒かけて入れ替える。
+                // 前の音は残り overlap 秒ぶんしか鳴っていないので、フェードし終わると自然に終わる
+                float elapsed = 0f;
+                while (elapsed < overlap)
+                {
+                    elapsed += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsed / Mathf.Max(0.0001f, overlap));
+                    _loopSources[next].volume = idleLoopVolume * Mathf.Sin(t * Mathf.PI * 0.5f);
+                    _loopSources[current].volume = idleLoopVolume * Mathf.Cos(t * Mathf.PI * 0.5f);
+                    yield return null;
+                }
+
+                _loopSources[next].volume = idleLoopVolume;
+                _loopSources[current].volume = 0f;
+                _loopSources[current].Stop();
+
+                current = next;
+                startDsp = crossDsp;
+            }
         }
 
-        /// <summary>ループ音をフェードさせて止める。</summary>
-        private void StopIdleLoop()
+        /// <summary>指定の AudioSource へループ用クリップを仕込み、dsp 時刻に鳴りはじめるよう予約する。</summary>
+        private void ScheduleLoopSource(int index, double dspTime)
         {
-            if (_loopSource == null) return;
+            AudioSource source = _loopSources[index];
+            if (source == null) return;
+
+            source.Stop();
+            source.clip = idleLoopSound;
+            source.volume = 0f;
+            source.PlayScheduled(dspTime);
+        }
+
+        /// <summary>ループ音をフェードさせて止める。重ね再生中の2本ともまとめて消す。</summary>
+        private void StopIdleLoop(float duration)
+        {
+            if (_loopSources[0] == null) return;
 
             if (_loopRoutine != null)
             {
@@ -1523,34 +2040,75 @@ namespace App.ATM
                 _loopRoutine = null;
             }
 
-            if (!_loopSource.isPlaying) return;
-            _loopRoutine = StartCoroutine(StopIdleLoopRoutine());
+            if (!IsIdleLoopPlaying()) return;
+            _loopRoutine = StartCoroutine(StopIdleLoopRoutine(duration));
         }
 
-        private IEnumerator StopIdleLoopRoutine()
+        private bool IsIdleLoopPlaying()
         {
-            yield return FadeIdleLoop(0f);
-            _loopSource.Stop();
+            foreach (AudioSource source in _loopSources)
+            {
+                if (source != null && source.isPlaying) return true;
+            }
+            return false;
+        }
+
+        private IEnumerator StopIdleLoopRoutine(float duration)
+        {
+            float volume0 = _loopSources[0].volume;
+            float volume1 = _loopSources[1].volume;
+
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / Mathf.Max(0.0001f, duration));
+                float curve = 1f - Mathf.Cos(t * Mathf.PI * 0.5f);   // 等パワーの下げ側
+                _loopSources[0].volume = Mathf.Lerp(volume0, 0f, curve);
+                _loopSources[1].volume = Mathf.Lerp(volume1, 0f, curve);
+                yield return null;
+            }
+
+            foreach (AudioSource source in _loopSources)
+            {
+                if (source == null) continue;
+                source.volume = 0f;
+                source.Stop();
+            }
             _loopRoutine = null;
         }
 
-        private IEnumerator FadeIdleLoop(float targetVolume)
+        /// <summary>
+        /// AudioSource の音量をフェードさせる。
+        /// 曲線は等パワー（sin/cos）。線形だと音を重ねた瞬間に合計の音量が凹み、
+        /// かえって切れ目が目立ってしまうため。
+        /// </summary>
+        private static IEnumerator FadeSource(AudioSource source, float targetVolume, float duration)
         {
-            if (idleLoopFadeDuration <= 0f)
+            if (source == null) yield break;
+
+            if (duration <= 0f)
             {
-                _loopSource.volume = targetVolume;
+                source.volume = targetVolume;
                 yield break;
             }
 
-            float startVolume = _loopSource.volume;
+            float startVolume = source.volume;
+            bool rising = targetVolume > startVolume;
             float elapsed = 0f;
-            while (elapsed < idleLoopFadeDuration)
+
+            while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
-                _loopSource.volume = Mathf.Lerp(startVolume, targetVolume, elapsed / idleLoopFadeDuration);
+                float t = Mathf.Clamp01(elapsed / duration);
+                float curve = rising
+                    ? Mathf.Sin(t * Mathf.PI * 0.5f)
+                    : 1f - Mathf.Cos(t * Mathf.PI * 0.5f);
+
+                source.volume = Mathf.Lerp(startVolume, targetVolume, curve);
                 yield return null;
             }
-            _loopSource.volume = targetVolume;
+            source.volume = targetVolume;
         }
 
         /// <summary>SEを鳴らす小さなヘルパー。クリップ／AudioSource 未設定時は何もしない。</summary>
@@ -1620,6 +2178,58 @@ namespace App.ATM
             PlaySe(keyClickSound);
         }
 
+        /// <summary>
+        /// コイン両替画面で、スピンボックスの▲▼をマウスクリックで操作する。
+        ///
+        /// UI 側の raycastTarget を使わず自前で当たり判定を取る。
+        /// WorldSpace キャンバスの GraphicRaycaster はカメラ設定に左右されるうえ、
+        /// EventSystem 経由にすると3Dキーパッドのクリック判定を塞いでしまうため。
+        /// </summary>
+        /// <returns>クリックを処理したら true</returns>
+        private bool HandleSpinboxClicks()
+        {
+            if (_currentSubState != ATMSubState.CoinExchange) return false;
+            if (_isCountingUp) return false;
+            if (Mouse.current == null || !Mouse.current.leftButton.wasPressedThisFrame) return false;
+            if (playerCamera == null) return false;
+
+            Vector2 screenPoint = Mouse.current.position.ReadValue();
+
+            // 確定ボタンを先に判定する
+            if (_confirmButtonImage != null
+                && RectTransformUtility.RectangleContainsScreenPoint(_confirmButtonImage.rectTransform, screenPoint, playerCamera))
+            {
+                PlayKeyFeedback();
+                SellAllSelected();
+                UpdateDisplay();
+                return true;
+            }
+
+            for (int row = 0; row < _spinBgs.Length; row++)
+            {
+                if (_spinBgs[row] == null) continue;
+
+                RectTransform rect = _spinBgs[row].rectTransform;
+                if (!RectTransformUtility.RectangleContainsScreenPoint(rect, screenPoint, playerCamera)) continue;
+                if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(rect, screenPoint, playerCamera, out Vector2 local)) continue;
+
+                // クリックした行を選択して編集モードにする
+                _selectedCoinRow = row;
+                _isEditingQty = true;
+                _qtyFreshInput = false;
+
+                // 上端寄り＝▲、下端寄り＝▼。中央（数字）は行の選択だけ行う
+                float threshold = rect.rect.height * 0.17f;
+                if (local.y > threshold) SetSelectedQty(GetSelectedQty() + 1);
+                else if (local.y < -threshold) SetSelectedQty(GetSelectedQty() - 1);
+
+                PlayKeyFeedback();
+                UpdateDisplay();
+                return true;
+            }
+            return false;
+        }
+
         private void Handle3DButtonClicks()
         {
             if (Mouse.current == null || !Mouse.current.leftButton.wasPressedThisFrame) return;
@@ -1658,16 +2268,49 @@ namespace App.ATM
             else if (Keyboard.current.digit7Key.wasPressedThisFrame || Keyboard.current.numpad7Key.wasPressedThisFrame) { inputRole = KeyRole.Num7; keyPressed = true; }
             else if (Keyboard.current.digit8Key.wasPressedThisFrame || Keyboard.current.numpad8Key.wasPressedThisFrame) { inputRole = KeyRole.Num8; keyPressed = true; }
             else if (Keyboard.current.digit9Key.wasPressedThisFrame || Keyboard.current.numpad9Key.wasPressedThisFrame) { inputRole = KeyRole.Num9; keyPressed = true; }
-            else if (Keyboard.current.enterKey.wasPressedThisFrame || Keyboard.current.numpadEnterKey.wasPressedThisFrame) { inputRole = KeyRole.Confirm; keyPressed = true; }
-            else if (Keyboard.current.backspaceKey.wasPressedThisFrame) { inputRole = KeyRole.Cancel; keyPressed = true; }
-            else if (Keyboard.current.upArrowKey.wasPressedThisFrame) { inputRole = KeyRole.Up; keyPressed = true; }
-            else if (Keyboard.current.downArrowKey.wasPressedThisFrame) { inputRole = KeyRole.Down; keyPressed = true; }
+            // 決定(右)は Enter / → / D、取消(左)は BackSpace / ← / A で受ける
+            else if (Keyboard.current.enterKey.wasPressedThisFrame || Keyboard.current.numpadEnterKey.wasPressedThisFrame
+                     || Keyboard.current.rightArrowKey.wasPressedThisFrame || Keyboard.current.dKey.wasPressedThisFrame)
+            { inputRole = KeyRole.Confirm; keyPressed = true; }
+            else if (Keyboard.current.backspaceKey.wasPressedThisFrame
+                     || Keyboard.current.leftArrowKey.wasPressedThisFrame || Keyboard.current.aKey.wasPressedThisFrame)
+            { inputRole = KeyRole.Cancel; keyPressed = true; }
+            else if (Keyboard.current.upArrowKey.wasPressedThisFrame || Keyboard.current.wKey.wasPressedThisFrame)
+            { inputRole = KeyRole.Up; keyPressed = true; }
+            else if (Keyboard.current.downArrowKey.wasPressedThisFrame || Keyboard.current.sKey.wasPressedThisFrame)
+            { inputRole = KeyRole.Down; keyPressed = true; }
+
+            // マウスホイールでも上下を選べるようにする
+            if (!keyPressed && TryReadScrollRole(out KeyRole scrollRole))
+            {
+                inputRole = scrollRole;
+                keyPressed = true;
+            }
 
             if (keyPressed)
             {
                 AnimateButtonByRole(inputRole);
                 OnATMKeyPressed(inputRole);
             }
+        }
+
+        /// <summary>
+        /// マウスホイールの回転を上下入力として拾う。
+        /// ホイールは押しっぱなしの概念がなく1回転で複数フレーム値が入ることがあるため、
+        /// 連続で反応しないよう最短間隔を設けている。
+        /// </summary>
+        private bool TryReadScrollRole(out KeyRole role)
+        {
+            role = KeyRole.Other;
+            if (Mouse.current == null) return false;
+            if (Time.unscaledTime - _lastScrollTime < ScrollInputInterval) return false;
+
+            float scroll = Mouse.current.scroll.ReadValue().y;
+            if (Mathf.Abs(scroll) < ScrollInputThreshold) return false;
+
+            role = scroll > 0f ? KeyRole.Up : KeyRole.Down;
+            _lastScrollTime = Time.unscaledTime;
+            return true;
         }
 
         // --- スピンボックスと売却ボタンのみを重ねる WorldSpace Canvas の動的構築 ---
@@ -1720,6 +2363,11 @@ namespace App.ATM
             CreateVerticalSpinbox(0);
             CreateVerticalSpinbox(1);
             CreateVerticalSpinbox(2);
+
+            EnsureCoinRowDefaults();
+            for (int row = 0; row < _coinRowRoots.Length; row++) CreateCoinRow(row);
+
+            CreateConfirmButton();
             PositionSpinboxes();
 
             // 画面テキスト由来の画像オーバーレイを載せるコンテナ（キャンバス全面）
@@ -1773,6 +2421,139 @@ namespace App.ATM
             txtRt.anchorMax = Vector2.one;
             txtRt.sizeDelta = Vector2.zero;
             _spinTexts[row] = tmp;
+        }
+
+        /// <summary>Inspector 未設定なら、金/銀/銅の3行ぶんの既定レイアウトを用意する。</summary>
+        private void EnsureCoinRowDefaults()
+        {
+            if (_coinRows != null && _coinRows.Length >= 3) return;
+
+            _coinRows = new[]
+            {
+                new CoinRowLayout
+                {
+                    label = "GOLD", imageFile = "gold.png", position = new Vector2(-60f, 40f)
+                },
+                new CoinRowLayout
+                {
+                    label = "SILVER", imageFile = "silver.png", position = new Vector2(-60f, -50f)
+                },
+                new CoinRowLayout
+                {
+                    label = "BRONZE", imageFile = "bronze.png", position = new Vector2(-60f, -140f)
+                }
+            };
+        }
+
+        /// <summary>
+        /// コイン1行（画像＋テキスト）を生成する。
+        /// 行ごとに独立した入れ物にしておき、位置・大きさは毎フレーム Inspector の値を反映する。
+        /// </summary>
+        private void CreateCoinRow(int row)
+        {
+            CoinRowLayout layout = _coinRows[row];
+
+            var rootGo = new GameObject($"CoinRow{row}_{layout.label}", typeof(RectTransform));
+            rootGo.transform.SetParent(_coinExchangePanelGo.transform, false);
+            _coinRowRoots[row] = rootGo.GetComponent<RectTransform>();
+            _coinRowRoots[row].sizeDelta = layout.size;
+
+            // コイン画像。StreamingAssets に無ければ画像なしで文字だけ出す
+            var imageGo = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+            imageGo.transform.SetParent(rootGo.transform, false);
+
+            _coinRowImages[row] = imageGo.GetComponent<Image>();
+            _coinRowImages[row].raycastTarget = false;
+            _coinRowImages[row].preserveAspect = true;
+
+            Sprite sprite = ATMHackingArt.TryLoadImage(layout.imageFile);
+            _coinRowImages[row].sprite = sprite;
+            _coinRowImages[row].enabled = sprite != null;
+
+            var textGo = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+            textGo.transform.SetParent(rootGo.transform, false);
+
+            _coinRowTexts[row] = textGo.GetComponent<TextMeshProUGUI>();
+            _coinRowTexts[row].fontSize = layout.fontSize;
+            _coinRowTexts[row].alignment = TextAlignmentOptions.Left;
+            _coinRowTexts[row].raycastTarget = false;
+            _coinRowTexts[row].enableWordWrapping = false;
+        }
+
+        /// <summary>コイン行の位置・大きさを Inspector の値へ毎フレーム合わせる。</summary>
+        private void PositionCoinRows()
+        {
+            for (int row = 0; row < _coinRowRoots.Length; row++)
+            {
+                if (_coinRowRoots[row] == null || _coinRows == null || row >= _coinRows.Length) continue;
+                CoinRowLayout layout = _coinRows[row];
+
+                if (layout.anchor != null) _coinRowRoots[row].position = layout.anchor.position;
+                else _coinRowRoots[row].anchoredPosition = layout.position;
+                _coinRowRoots[row].sizeDelta = layout.size;
+
+                if (_coinRowImages[row] != null)
+                {
+                    RectTransform imageRect = _coinRowImages[row].rectTransform;
+                    imageRect.anchoredPosition = layout.imageOffset;
+                    imageRect.sizeDelta = layout.imageSize;
+                }
+
+                if (_coinRowTexts[row] != null)
+                {
+                    RectTransform textRect = _coinRowTexts[row].rectTransform;
+                    textRect.anchoredPosition = layout.textOffset;
+                    textRect.sizeDelta = layout.size;
+                    _coinRowTexts[row].fontSize = layout.fontSize;
+                }
+            }
+        }
+
+        /// <summary>コイン行の文言と、選択中の行のハイライトを更新する。</summary>
+        private void UpdateCoinRows()
+        {
+            var wallet = PlayerWallet.Local;
+
+            for (int row = 0; row < _coinRowTexts.Length; row++)
+            {
+                if (_coinRowTexts[row] == null || _coinRows == null || row >= _coinRows.Length) continue;
+
+                int owned = wallet != null ? GetOwned(row) : 0;
+                float price = row == 0 ? _goldPrice : (row == 1 ? _silverPrice : _bronzePrice);
+
+                _coinRowTexts[row].text = $"{_coinRows[row].label} : {owned}  ({price:N0} DC/x1)";
+                _coinRowTexts[row].color = _selectedCoinRow == row ? _coinRowSelectedColor : _coinRowNormalColor;
+            }
+        }
+
+        /// <summary>
+        /// 換金の確定ボタンを生成する。クリック判定は自前で行うため Button は付けず、
+        /// レイキャストも受けない（3Dキーパッドのクリックを塞がないため）。
+        /// </summary>
+        private void CreateConfirmButton()
+        {
+            var buttonGo = new GameObject("SellConfirmButton", typeof(RectTransform), typeof(Image));
+            buttonGo.transform.SetParent(_coinExchangePanelGo.transform, false);
+
+            _confirmButtonImage = buttonGo.GetComponent<Image>();
+            _confirmButtonImage.color = ConfirmButtonDimColor;
+            _confirmButtonImage.raycastTarget = false;
+            _confirmButtonImage.rectTransform.sizeDelta = _confirmButtonSize;
+
+            var textGo = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+            textGo.transform.SetParent(buttonGo.transform, false);
+
+            _confirmButtonText = textGo.GetComponent<TextMeshProUGUI>();
+            _confirmButtonText.text = _confirmButtonLabel;
+            _confirmButtonText.fontSize = _confirmButtonFontSize;
+            _confirmButtonText.color = Color.white;
+            _confirmButtonText.alignment = TextAlignmentOptions.Center;
+            _confirmButtonText.raycastTarget = false;
+
+            RectTransform textRect = textGo.GetComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.sizeDelta = Vector2.zero;
         }
 
         private GameObject CreateUIButton(Transform parent, string name, string text, Vector2 anchoredPos, Vector2 size, Color baseColor)

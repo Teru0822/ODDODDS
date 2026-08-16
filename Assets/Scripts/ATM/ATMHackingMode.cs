@@ -64,6 +64,12 @@ namespace App.ATM
         [Tooltip("難易度ごとの設定。空なら既定値(Easy=2段/Normal=3段/Hard=4段)を使う")]
         [SerializeField] private List<HackDifficultySettings> difficulties = new List<HackDifficultySettings>();
 
+        [Header("解禁条件")]
+        [Tooltip("Debug_Always: いつでも実行できる（デバッグ用）。\n" +
+                 "Release_WhenDebtUnpayable: 取り立てが今ターン終了時に来て、かつ" +
+                 "コインを全部売っても取り立て額に届かない時だけ実行できる（リリース時の想定）")]
+        [SerializeField] private HackUnlockMode unlockMode = HackUnlockMode.Debug_Always;
+
         [Header("報酬")]
         [Tooltip("ON: 1回の ATM 起動につき成功は1度まで。ATM を閉じて入り直せばまた狙える")]
         [SerializeField] private bool oneSuccessPerVisit = true;
@@ -121,21 +127,96 @@ namespace App.ATM
         [Range(0.3f, 2.5f)]
         [SerializeField] private float safeZoneWidth = 1f;
 
+        [Header("ミニゲーム画面の文字")]
+        [Tooltip("見出し「FIREWALL BREACH」の大きさ(%)")]
+        [SerializeField] private float minigameTitleSize = 100f;
+
+        [Tooltip("階層表示「FIREWALL Lv.2/4」の大きさ(%)")]
+        [SerializeField] private float minigameLayerTextSize = 145f;
+
+        [Tooltip("残り時間「TIME 5.4」の大きさ(%)")]
+        [SerializeField] private float minigameTimerTextSize = 130f;
+
+        [Header("起動演出（黒と赤のぱちぱち）")]
+        [Tooltip("ATM画面が切れて真っ暗になる時間(秒)")]
+        [SerializeField] private float bootBlackoutDuration = 0.14f;
+
+        [Tooltip("その直後に白く光る時間(秒)")]
+        [SerializeField] private float bootWhiteFlashDuration = 0.04f;
+
+        [Tooltip("白のあと、起動が始まるまで暗いままの時間(秒)")]
+        [SerializeField] private float bootBlackHoldDuration = 0.24f;
+
+        [Tooltip("赤いぱちぱちが続く時間(秒)。この間に起動メッセージも順に切り替わる")]
+        [SerializeField] private float bootFlashDuration = 1.5f;
+
+        [Tooltip("ぱちぱちの速さ。大きいほど細かく点滅する")]
+        [SerializeField] private float bootBlinkSpeed = 38f;
+
+        [Tooltip("ぱちぱちの強さ。点いている瞬間の色の濃さ")]
+        [Range(0f, 1f)]
+        [SerializeField] private float bootFlashStrength = 0.5f;
+
+        [Tooltip("ぱちぱちの色")]
+        [SerializeField] private Color bootFlashColor = new Color(1f, 0.16f, 0.16f, 1f);
+
+        [Header("ハッキング中のループBGM")]
+        [Tooltip("ハッキング画面を開いている間ずっと流すループBGM。起動音の終わりに重ねて鳴りはじめ、" +
+                 "通常のATM画面へ戻る時に消えて、ATM本体のループ音へ戻る")]
+        [SerializeField] private AudioClip hackingLoopSound;
+
+        [Tooltip("ループBGMの音量")]
+        [Range(0f, 1f)]
+        [SerializeField] private float hackingLoopVolume = 0.6f;
+
+        [Tooltip("起動音との重なり／終了時のフェード時間(秒)")]
+        [SerializeField] private float hackingLoopFadeDuration = 0.4f;
+
+        [Tooltip("起動音からループBGMへ切り替えるまでの時間(秒)。" +
+                 "0以下なら「黒と赤のぱちぱちが終わるタイミング」に合わせる。" +
+                 "起動音が長くても最後まで待たずに切り替わり、起動音は重ねながら消える")]
+        [SerializeField] private float hackingLoopStartDelay = 0f;
+
         [Header("効果音 (未設定なら ATM 本体の音を流用)")]
         [Tooltip("トリガーをクリックした時の音")]
         [SerializeField] private AudioClip triggerSound;
+        [Range(0f, 1f)]
+        [SerializeField] private float triggerVolume = 1f;
 
         [Tooltip("ハッキング画面が起動する時の音")]
         [SerializeField] private AudioClip bootSound;
+        [Range(0f, 1f)]
+        [SerializeField] private float bootVolume = 1f;
 
-        [Tooltip("階層を突破した時の音")]
+        [Tooltip("タイミングバー成功時の音")]
         [SerializeField] private AudioClip breachSound;
+        [Range(0f, 1f)]
+        [SerializeField] private float breachVolume = 1f;
 
-        [Tooltip("失敗した時の音")]
+        [Tooltip("タイミングバー失敗時の音")]
         [SerializeField] private AudioClip deniedSound;
+        [Range(0f, 1f)]
+        [SerializeField] private float deniedVolume = 1f;
 
-        [Tooltip("送金を横取りできた時の音")]
+        [Tooltip("ステージアップ時（次の階層へ進む時）の音")]
+        [SerializeField] private AudioClip stageUpSound;
+        [Range(0f, 1f)]
+        [SerializeField] private float stageUpVolume = 1f;
+
+        [Tooltip("ステージが上がるごとに Stage Up Sound のピッチをどれだけ上げるか。" +
+                 "0.1 なら1段上がるごとに +10%。0 で変化なし")]
+        [Range(0f, 0.5f)]
+        [SerializeField] private float stageUpPitchStep = 0.12f;
+
+        [Tooltip("ステージダウン時（失敗して前の階層へ戻る時）の音")]
+        [SerializeField] private AudioClip stageDownSound;
+        [Range(0f, 1f)]
+        [SerializeField] private float stageDownVolume = 1f;
+
+        [Tooltip("ミニゲームクリア時（送金を横取りできた時）の音")]
         [SerializeField] private AudioClip authorizedSound;
+        [Range(0f, 1f)]
+        [SerializeField] private float authorizedVolume = 1f;
 
         private static readonly int BaseColorID = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorID = Shader.PropertyToID("_Color");
@@ -171,12 +252,34 @@ namespace App.ATM
         private int _lastInputFrame = -1;
         private KeyRole _lastInputRole = KeyRole.Other;
 
+        // SPACE BAR ボタンをマウスで押し込んでいる間 true（見た目の反映用）
+        private bool _spaceButtonHeld;
+
+        // ハッキング中のループBGM。ATM 本体のループ音とは別のソースで鳴らす
+        private AudioSource _loopSource;
+        private Coroutine _loopRoutine;
+
+        // 起動音。途中で止めたり重ねて消したりできるよう、PlayOneShot ではなく専用ソースで鳴らす
+        private AudioSource _bootSource;
+
+        // ピッチを変えて鳴らすSE用（ステージアップ音など）
+        private AudioSource _pitchedSource;
+
         /// <summary>ハッキング画面を出している間 true。ATMController 側の入力はこちらへ回る。</summary>
         public bool IsActive => _flowCoroutine != null;
 
-        /// <summary>トリガーが反応できる状態か。</summary>
-        private bool CanTrigger => _controller != null && _controller.IsScreenActive && !IsActive
-                                   && !(oneSuccessPerVisit && _successThisVisit);
+        /// <summary>
+        /// トリガーが反応できる状態か。
+        /// ログイン画面の間は反応させない（点滅・アウトラインもここに従う）。
+        /// </summary>
+        private bool CanTrigger => _controller != null && _controller.IsScreenActive && _controller.IsLoggedIn
+                                   && !IsActive
+                                   && !(oneSuccessPerVisit && _successThisVisit)
+                                   && IsUnlocked;
+
+        /// <summary>解禁条件を満たしているか。</summary>
+        private bool IsUnlocked => unlockMode == HackUnlockMode.Debug_Always
+                                   || (_controller != null && _controller.IsDebtUnpayableThisVisit);
 
         private void Awake()
         {
@@ -202,12 +305,68 @@ namespace App.ATM
             }
 
             ResolveTrigger();
+            CreateLoopSource();
+        }
+
+        /// <summary>
+        /// ハッキング中のループBGM用 AudioSource を用意する。
+        /// 聞こえ方は ATM 本体のスピーカーに合わせる。
+        /// </summary>
+        private void CreateLoopSource()
+        {
+            _loopSource = CreateSubAudioSource(true);
+            _bootSource = CreateSubAudioSource(false);
+
+            // ピッチを変えて鳴らす用。ATM 本体のスピーカーのピッチを触ると他の音まで変わるため分ける
+            _pitchedSource = CreateSubAudioSource(false);
+            _pitchedSource.volume = 1f;
+        }
+
+        private AudioSource CreateSubAudioSource(bool loop)
+        {
+            var source = gameObject.AddComponent<AudioSource>();
+            source.playOnAwake = false;
+            source.loop = loop;
+            source.volume = 0f;
+
+            AudioSource speaker = _controller != null ? _controller.Speaker : null;
+            if (speaker == null) return source;
+
+            source.outputAudioMixerGroup = speaker.outputAudioMixerGroup;
+            source.spatialBlend = speaker.spatialBlend;
+            source.rolloffMode = speaker.rolloffMode;
+            source.minDistance = speaker.minDistance;
+            source.maxDistance = speaker.maxDistance;
+            source.dopplerLevel = speaker.dopplerLevel;
+            source.spread = speaker.spread;
+            return source;
         }
 
         private void OnDestroy()
         {
             RestoreTriggerMaterial();
             SetOutline(false);
+        }
+
+        /// <summary>
+        /// 難易度設定をコード側の既定値へ戻す。
+        /// Inspector で配列を展開すると、その時点の値がシーンに保存されて
+        /// コード側の既定値が効かなくなるため、調整をやり直したい時に使う。
+        /// コンポーネント右上の「⋮」から実行する。
+        /// </summary>
+        [ContextMenu("難易度設定を既定値にリセット")]
+        private void ResetDifficultiesToDefault()
+        {
+            difficulties = HackDefaults.CreateDifficulties();
+            Debug.Log("[ATMHackingMode] 難易度設定を既定値へ戻しました", this);
+
+#if UNITY_EDITOR
+            UnityEditor.EditorUtility.SetDirty(this);
+            if (!Application.isPlaying && gameObject.scene.IsValid())
+            {
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
+            }
+#endif
         }
 
         private void Update()
@@ -334,8 +493,11 @@ namespace App.ATM
         {
             if (_propertyBlock == null || _triggerRenderer == null) return;
 
-            bool shouldBlink = CanTrigger || (!blinkOnlyWhileScreenActive && !IsActive
-                                              && !(oneSuccessPerVisit && _successThisVisit));
+            // ATM を開いている間はログイン後のみ。閉じている間は設定次第で点滅させる
+            bool shouldBlink = _controller.IsScreenActive
+                ? CanTrigger
+                : (!blinkOnlyWhileScreenActive && !IsActive
+                   && !(oneSuccessPerVisit && _successThisVisit) && IsUnlocked);
 
             // 点滅中は赤いアウトラインも出して、押せる場所だとはっきり分かるようにする
             SetOutline(shouldBlink && outlineWidth > 0f);
@@ -375,7 +537,7 @@ namespace App.ATM
             if (!Physics.Raycast(ray, out RaycastHit hit, 5f)) return;
             if (hit.transform != triggerObject && !hit.transform.IsChildOf(triggerObject)) return;
 
-            PlaySe(triggerSound != null ? triggerSound : _controller.KeyClickSound);
+            PlaySe(triggerSound != null ? triggerSound : _controller.KeyClickSound, triggerVolume);
             PressTrigger();
             StartHacking();
         }
@@ -471,6 +633,12 @@ namespace App.ATM
                     HandleKey(KeyRole.Confirm);
                 }
 
+                // SPACE キーの押し込みをボタンの見た目にも反映する
+                if (_phase == HackPhase.Minigame && _ui != null)
+                {
+                    _ui.SetSpaceButtonPressed(keyboard.spaceKey.isPressed || _spaceButtonHeld);
+                }
+
                 if (keyboard.backspaceKey.wasPressedThisFrame) HandleKey(KeyRole.Cancel);
                 if (keyboard.upArrowKey.wasPressedThisFrame || keyboard.wKey.wasPressedThisFrame) HandleKey(KeyRole.Up);
                 if (keyboard.downArrowKey.wasPressedThisFrame || keyboard.sKey.wasPressedThisFrame) HandleKey(KeyRole.Down);
@@ -480,14 +648,21 @@ namespace App.ATM
                 if (keyboard.digit3Key.wasPressedThisFrame || keyboard.numpad3Key.wasPressedThisFrame) HandleKey(KeyRole.Num3);
             }
 
-            if (Mouse.current == null || !Mouse.current.leftButton.wasPressedThisFrame) return;
+            if (Mouse.current == null) return;
 
-            // ミニゲームは左クリックでも止められる
+            // ミニゲームは画面上の SPACE BAR ボタンをクリックしても止められる
             if (_phase == HackPhase.Minigame)
             {
-                HandleKey(KeyRole.Confirm);
+                bool onButton = _ui != null
+                                && _ui.IsPointOnSpaceButton(Mouse.current.position.ReadValue(), _controller.ScreenCamera);
+
+                _spaceButtonHeld = onButton && Mouse.current.leftButton.isPressed;
+
+                if (onButton && Mouse.current.leftButton.wasPressedThisFrame) HandleKey(KeyRole.Confirm);
                 return;
             }
+
+            if (!Mouse.current.leftButton.wasPressedThisFrame) return;
 
             // 一覧では行をクリックしてそのまま開始できる
             if (_phase == HackPhase.TransferList && _ui != null)
@@ -536,6 +711,15 @@ namespace App.ATM
                 StopCoroutine(_flowCoroutine);
                 _flowCoroutine = null;
             }
+
+            // ATM ごと閉じる時に呼ばれる。本体側が電源オフ音へ切り替えるので、ここでは音を止めるだけ
+            if (_loopRoutine != null)
+            {
+                StopCoroutine(_loopRoutine);
+                _loopRoutine = null;
+            }
+            if (_loopSource != null) _loopSource.Stop();
+            if (_bootSource != null) _bootSource.Stop();
 
             _phase = HackPhase.Hidden;
             _minigame?.ResetShake();
@@ -642,23 +826,48 @@ namespace App.ATM
             _phase = HackPhase.Boot;
             _ui.SetPhase(HackPhase.Boot);
             _ui.SetBootProgress(0f);
-            _ui.SetTitle("HACKING MODE", ATMHackingUI.Red);
+
+            // 見出しと起動メッセージは YAML(hackBoot) から読む。1要素目が見出し、2要素目以降がメッセージ
+            List<YamlLine> lines = ReadYamlLines("hackBoot", null);
+            YamlLine titleLine = lines.Count > 0 ? lines[0] : null;
+            YamlLine firstMessage = lines.Count > 1 ? lines[1] : null;
+
+            // 起動演出は画面中央に大きく出す。YAML の x/y でさらに微調整できる
+            _ui.SetHeadlineLayout(true,
+                                  titleLine != null ? titleLine.offset : Vector2.zero,
+                                  firstMessage != null ? firstMessage.offset : Vector2.zero);
+
+            _ui.SetTitle(titleLine != null ? titleLine.text : "HACKING MODE",
+                         titleLine != null ? titleLine.ResolveColor(ATMHackingUI.Red) : ATMHackingUI.Red,
+                         titleLine != null ? titleLine.sizePercent : 100f);
             _ui.SetStatus("");
             _ui.SetFooter("");
 
             // ATM の画面が一瞬切れる
             _ui.SetFlash(Color.black, 1f);
-            yield return new WaitForSeconds(0.14f);
+            yield return new WaitForSeconds(Mathf.Max(0f, bootBlackoutDuration));
             _ui.SetFlash(Color.white, 1f);
-            yield return new WaitForSeconds(0.04f);
+            yield return new WaitForSeconds(Mathf.Max(0f, bootWhiteFlashDuration));
             _ui.SetFlash(Color.black, 1f);
-            yield return new WaitForSeconds(0.24f);
+            yield return new WaitForSeconds(Mathf.Max(0f, bootBlackHoldDuration));
 
-            PlaySe(bootSound != null ? bootSound : _controller.StartupSound);
+            // 起動音は専用ソースで鳴らす。途中で抜けた時に止められるようにするため
+            AudioClip boot = bootSound != null ? bootSound : _controller.StartupSound;
+            PlayBootSound(boot);
+
+            // ATM 本体のループ音を止めて、ぱちぱちが終わる頃にハッキングBGMへ重ねながら入れ替える
+            _controller.SuspendIdleLoop(hackingLoopFadeDuration);
+
+            float switchDelay = hackingLoopStartDelay > 0f
+                ? hackingLoopStartDelay
+                : Mathf.Max(0f, bootFlashDuration - hackingLoopFadeDuration);
+            StartHackingLoop(switchDelay);
 
             // 画面全体を赤く明滅させながら起動する
-            const float duration = 1.5f;
+            float duration = Mathf.Max(0.01f, bootFlashDuration);
             float elapsed = 0f;
+            int shownMessage = -1;
+
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
@@ -666,11 +875,20 @@ namespace App.ATM
 
                 _ui.SetBootProgress(t);
                 _ui.ScrollStripes(elapsed * 0.4f);
-                _ui.SetStatus(BootMessage(t));
+
+                // メッセージは残り時間を均等に割って順に出す
+                int index = SelectBootMessageIndex(lines, t);
+                if (index != shownMessage)
+                {
+                    shownMessage = index;
+                    YamlLine line = index >= 0 ? lines[index] : null;
+                    if (line != null) _ui.SetStatus(line.text, line.ResolveColor(ATMHackingUI.DimRedPublic), line.sizePercent);
+                    else _ui.SetStatus(DefaultBootMessage(t));
+                }
 
                 // 明滅は最初ほど強く、最後には収まる
-                float blink = Mathf.Sin(elapsed * 38f) > 0f ? 1f : 0f;
-                _ui.SetFlash(ATMHackingUI.Red, blink * 0.5f * (1f - t));
+                float blink = Mathf.Sin(elapsed * bootBlinkSpeed) > 0f ? 1f : 0f;
+                _ui.SetFlash(bootFlashColor, blink * bootFlashStrength * (1f - t));
                 yield return null;
             }
 
@@ -678,7 +896,18 @@ namespace App.ATM
             _ui.SetFlash(Color.clear, 0f);
         }
 
-        private static string BootMessage(float t)
+        /// <summary>進行度に対応する起動メッセージの番号。YAML に無ければ -1。</summary>
+        private static int SelectBootMessageIndex(List<YamlLine> lines, float t)
+        {
+            // 0番目は見出しなので、1番目以降がメッセージ
+            int messageCount = lines.Count - 1;
+            if (messageCount <= 0) return -1;
+
+            return 1 + Mathf.Clamp(Mathf.FloorToInt(t * messageCount), 0, messageCount - 1);
+        }
+
+        /// <summary>YAML に hackBoot が無い時に使う既定のメッセージ。</summary>
+        private static string DefaultBootMessage(float t)
         {
             if (t < 0.3f) return "BYPASSING SECURITY LAYER...";
             if (t < 0.6f) return "INJECTING PAYLOAD...";
@@ -692,6 +921,7 @@ namespace App.ATM
             _selectionConfirmed = false;
 
             _ui.SetPhase(HackPhase.TransferList);
+            _ui.SetHeadlineLayout(false, Vector2.zero, Vector2.zero);   // 一覧は上部に戻す
             _ui.SetTitle("HACKING MODE", ATMHackingUI.Red);
             _ui.SetStatus("INTERCEPTED TRANSFERS - SELECT TARGET");
             _ui.SetFooter("[UP/DOWN] SELECT    [ENTER] BREACH    [CANCEL] ABORT");
@@ -714,23 +944,47 @@ namespace App.ATM
 
             _phase = HackPhase.Minigame;
             _ui.SetPhase(HackPhase.Minigame);
-            _ui.SetTitle("FIREWALL BREACH", ATMHackingUI.Red);
+            _ui.SetHeadlineLayout(false, Vector2.zero, Vector2.zero);   // ミニゲームは上部に戻す
+            _ui.SetTitle("FIREWALL BREACH", ATMHackingUI.Red, minigameTitleSize);
+            _ui.SetTimerSize(minigameTimerTextSize);
 
-            for (int i = 0; i < layerCount; i++)
+            // 失敗しても即終了ではなく、ステージ1でだけ終わる。ステージ2以降は1つ下へ戻る
+            int stage = 0;
+            while (stage < layerCount)
             {
-                HackLayer layer = settings.BuildLayer(i);
-                _minigame.BeginLayer(layer, i, layerCount, job);
+                HackLayer layer = settings.BuildLayer(stage);
+                _minigame.BeginLayer(layer);
 
-                _ui.SetStatus("STOP THE CURSOR INSIDE THE SAFE ZONE");
+                // 「FIREWALL Lv.2/4」のように、今のステージと最大ステージを見出しの下に出す
+                _ui.SetStatus($"{layer.label}/{layerCount}", ATMHackingUI.Red, minigameLayerTextSize);
                 _ui.SetFooter(layer.fakeZoneCount > 0
-                    ? "[ENTER]/[SPACE] STOP    WARNING: DECOY ZONES ARE BLINKING"
-                    : "[ENTER]/[SPACE] STOP    [CANCEL] ABORT");
+                    ? "[SPACE]/[ENTER] STOP    WARNING: DECOY ZONES ARE BLINKING"
+                    : "[SPACE]/[ENTER] STOP    [CANCEL] ABORT");
 
                 _stopRequested = false;
+                float remaining = layer.timeLimit;
+                bool timedOut = false;
+
+                _ui.SetTimer(remaining, layer.timeLimit);
+
                 while (!_stopRequested && !_cancelRequested)
                 {
                     _minigame.Tick(Time.deltaTime);
                     _ui.ScrollStripes(Time.time * 0.3f);
+
+                    // 制限時間。0になったら失敗として扱う
+                    if (layer.timeLimit > 0f)
+                    {
+                        remaining -= Time.deltaTime;
+                        _ui.SetTimer(remaining, layer.timeLimit);
+
+                        if (remaining <= 0f)
+                        {
+                            timedOut = true;
+                            break;
+                        }
+                    }
+
                     yield return null;
                 }
 
@@ -740,18 +994,40 @@ namespace App.ATM
                     yield break;
                 }
 
-                bool cleared = _minigame.IsCursorSafe();
-                Debug.Log($"[ATMHackingMode] 階層 {i + 1}/{layerCount} '{layer.label}': {(cleared ? "突破" : "失敗")}");
-                _minigame.ShowJudgement(cleared);
-                PlaySe(cleared
-                    ? (breachSound != null ? breachSound : _controller.ConfirmSound)
-                    : (deniedSound != null ? deniedSound : _controller.CancelSound));
+                bool cleared = !timedOut && _minigame.IsCursorSafe();
+                Debug.Log($"[ATMHackingMode] ステージ {stage + 1}/{layerCount} '{layer.label}': " +
+                          $"{(cleared ? "成功" : timedOut ? "時間切れ" : "失敗")}");
 
-                _ui.SetStatus(cleared ? "LAYER BREACHED" : "TRACE DETECTED");
+                _minigame.ShowJudgement(cleared);
+                if (cleared) PlaySe(breachSound != null ? breachSound : _controller.ConfirmSound, breachVolume);
+                else PlaySe(deniedSound != null ? deniedSound : _controller.CancelSound, deniedVolume);
+
+                _ui.SetStatus(cleared ? "LAYER BREACHED" : timedOut ? "TIME OUT" : "TRACE DETECTED");
                 yield return FlashScreen(cleared ? ATMHackingUI.Green : ATMHackingUI.Red, 0.45f);
                 _minigame.ResetShake();
 
-                if (!cleared) yield break;
+                if (cleared)
+                {
+                    stage++;
+                    // まだ先がある＝ステージアップ
+                    if (stage < layerCount)
+                    {
+                        // ステージが上がるごとにピッチを上げて、上昇していく感じを出す
+                        PlaySePitched(stageUpSound, stageUpVolume, 1f + stageUpPitchStep * stage);
+                        _ui.SetStatus($"STAGE UP  -  LAYER {stage + 1}");
+                        yield return new WaitForSeconds(0.5f);
+                    }
+                    continue;
+                }
+
+                // ステージ1で失敗したら、そこで打ち切り
+                if (stage == 0) yield break;
+
+                // ステージ2以降は1つ下へ戻ってやり直し
+                stage--;
+                PlaySe(stageDownSound, stageDownVolume);
+                _ui.SetStatus($"STAGE DOWN  -  BACK TO LAYER {stage + 1}");
+                yield return new WaitForSeconds(0.7f);
             }
 
             _clearedAllLayers = true;
@@ -761,12 +1037,15 @@ namespace App.ATM
         {
             _phase = HackPhase.Result;
             _ui.SetPhase(HackPhase.Result);
-            _ui.SetTitle("TRANSFER AUTHORIZED", ATMHackingUI.Green);
-            _ui.SetStatus($"{DevilCurrency.Format(job.amount)}  REROUTED FROM {job.fromBank}");
+            // 文言・大きさ・色は StreamingAssets/ATM/ATMScreens.yaml の hackSuccess 画面から読む。
+            // 1要素目が大見出し、2要素目がその下の行。YAML に無ければ下の既定値を使う
+            ApplyYamlHeadline("hackSuccess", job,
+                              "MISSION COMPLETE", ATMHackingUI.Green,
+                              $"{DevilCurrency.Format(job.amount)}  REROUTED FROM {job.fromBank}", ATMHackingUI.DimRedPublic);
             _ui.SetFooter("");
 
             // 入金側(CreditCash)が ATM の成功音を鳴らすので、専用音を指定した時だけ重ねる
-            PlaySe(authorizedSound);
+            PlaySe(authorizedSound, authorizedVolume);
             Award(job.amount);
             _successThisVisit = true;
 
@@ -786,8 +1065,10 @@ namespace App.ATM
         {
             _phase = HackPhase.Result;
             _ui.SetPhase(HackPhase.Result);
-            _ui.SetTitle("ACCESS DENIED", ATMHackingUI.Red);
-            _ui.SetStatus("CONNECTION TERMINATED BY HOST");
+            // 失敗表示も成功と同じく画面中央に大きく。文言は YAML(hackDenied) から読む
+            ApplyYamlHeadline("hackDenied", null,
+                              "ACCESS DENIED", ATMHackingUI.Red,
+                              "CONNECTION TERMINATED BY HOST", ATMHackingUI.DimRedPublic);
             _ui.SetFooter("");
 
             yield return FlashScreen(ATMHackingUI.Red, 0.7f);
@@ -796,6 +1077,11 @@ namespace App.ATM
 
         private IEnumerator ExitSequence()
         {
+            // ハッキング中の音（起動音・BGM）を消して、ATM のいつものループ音へ戻す
+            StopHackingLoop();
+            _controller.ResumeIdleLoop(hackingLoopFadeDuration);
+            Debug.Log("[ATMHackingMode] ハッキング画面を終了。ATM のループ音へ戻します");
+
             _ui.SetFlash(Color.black, 1f);
             yield return new WaitForSeconds(0.12f);
 
@@ -820,6 +1106,94 @@ namespace App.ATM
                 yield return null;
             }
             _ui.SetFlash(Color.clear, 0f);
+        }
+
+        /// <summary>
+        /// YAML の画面定義から「大見出し」と「その下の行」を反映する。
+        /// 1要素目を見出し、2要素目を下の行として扱い、それぞれ text / color / size を読む。
+        /// 画面定義が無い場合は引数の既定値をそのまま使うので、YAML を消しても動く。
+        ///
+        /// text 内で使えるトークン: {amount} {fromBank} {toBank} {difficulty}
+        /// </summary>
+        private void ApplyYamlHeadline(string screenId, HackTransferJob job,
+                                       string defaultTitle, Color defaultTitleColor,
+                                       string defaultStatus, Color defaultStatusColor)
+        {
+            List<YamlLine> lines = ReadYamlLines(screenId, job);
+
+            YamlLine titleLine = lines.Count > 0 ? lines[0] : null;
+            YamlLine statusLine = lines.Count > 1 ? lines[1] : null;
+
+            // 結果表示も画面中央に大きく。YAML の x/y でさらに微調整できる
+            _ui.SetHeadlineLayout(true,
+                                  titleLine != null ? titleLine.offset : Vector2.zero,
+                                  statusLine != null ? statusLine.offset : Vector2.zero);
+
+            _ui.SetTitle(titleLine != null ? titleLine.text : defaultTitle,
+                         titleLine != null ? titleLine.ResolveColor(defaultTitleColor) : defaultTitleColor,
+                         titleLine != null ? titleLine.sizePercent : 100f);
+
+            _ui.SetStatus(statusLine != null ? statusLine.text : defaultStatus,
+                          statusLine != null ? statusLine.ResolveColor(defaultStatusColor) : defaultStatusColor,
+                          statusLine != null ? statusLine.sizePercent : 100f);
+        }
+
+        /// <summary>YAML から読んだ1行ぶんの文言と見た目。</summary>
+        private class YamlLine
+        {
+            public string text = string.Empty;
+            public string colorCode;
+            public float sizePercent = 100f;
+
+            /// <summary>YAML の x/y による位置の微調整量。基準レイアウト(800x600)の単位。</summary>
+            public Vector2 offset;
+
+            /// <summary>色指定が無ければ渡された既定色を使う。</summary>
+            public Color ResolveColor(Color fallback) => ParseColor(colorCode, fallback);
+        }
+
+        /// <summary>
+        /// YAML の画面定義をそのまま行として読み出す。画像要素は無視する。
+        /// 定義が無ければ空を返すので、呼び出し側の既定値がそのまま使われる。
+        /// </summary>
+        private List<YamlLine> ReadYamlLines(string screenId, HackTransferJob job = null)
+        {
+            var lines = new List<YamlLine>();
+
+            ATMScreenRenderer renderer = _controller != null ? _controller.ScreenRenderer : null;
+            if (renderer == null || !renderer.TryGetElements(screenId, out List<ATMScreenElement> elements)) return lines;
+
+            foreach (ATMScreenElement element in elements)
+            {
+                if (element == null || element.IsImage) continue;
+
+                lines.Add(new YamlLine
+                {
+                    text = Substitute(element.Text, job),
+                    colorCode = element.Color,
+                    sizePercent = element.HasSize ? element.Size : 100f,
+                    offset = new Vector2(element.X, element.Y)
+                });
+            }
+            return lines;
+        }
+
+        /// <summary>YAML のテキストに含まれるトークンを実際の値へ置き換える。</summary>
+        private static string Substitute(string text, HackTransferJob job)
+        {
+            if (string.IsNullOrEmpty(text) || job == null) return text ?? string.Empty;
+
+            return text
+                .Replace("{amount}", DevilCurrency.Format(job.amount))
+                .Replace("{fromBank}", job.fromBank)
+                .Replace("{toBank}", job.toBank)
+                .Replace("{difficulty}", job.difficulty.ToString().ToUpperInvariant());
+        }
+
+        private static Color ParseColor(string html, Color fallback)
+        {
+            if (string.IsNullOrEmpty(html)) return fallback;
+            return ColorUtility.TryParseHtmlString(html, out Color parsed) ? parsed : fallback;
         }
 
         private HackDifficultySettings FindSettings(HackDifficulty difficulty)
@@ -848,7 +1222,126 @@ namespace App.ATM
         {
             if (clip == null) return;
             AudioSource source = _controller.Speaker;
-            if (source != null) source.PlayOneShot(clip, volume);
+            if (source != null) source.PlayOneShot(clip, Mathf.Clamp01(volume));
+        }
+
+        /// <summary>ピッチを変えてSEを鳴らす。ステージが上がるごとに音を高くするのに使う。</summary>
+        private void PlaySePitched(AudioClip clip, float volume, float pitch)
+        {
+            if (clip == null || _pitchedSource == null)
+            {
+                PlaySe(clip, volume);
+                return;
+            }
+
+            _pitchedSource.pitch = Mathf.Clamp(pitch, 0.1f, 3f);
+            _pitchedSource.PlayOneShot(clip, Mathf.Clamp01(volume));
+        }
+
+        // --- ハッキング中のループBGM ---
+
+        /// <summary>起動音を専用ソースで鳴らす。あとから重ねて消せるようにするため。</summary>
+        private void PlayBootSound(AudioClip clip)
+        {
+            if (clip == null || _bootSource == null) return;
+
+            _bootSource.clip = clip;
+            _bootSource.volume = Mathf.Clamp01(bootVolume);
+            _bootSource.Play();
+        }
+
+        /// <summary>
+        /// 指定秒だけ待ってから、起動音を消しつつハッキング用のループBGMを立ち上げる。
+        /// ループBGM未設定でも、起動音を消す処理は行う。
+        /// </summary>
+        private void StartHackingLoop(float delay)
+        {
+            if (_loopSource == null) return;
+
+            if (_loopRoutine != null) StopCoroutine(_loopRoutine);
+            _loopRoutine = StartCoroutine(StartHackingLoopRoutine(delay));
+        }
+
+        private IEnumerator StartHackingLoopRoutine(float delay)
+        {
+            if (delay > 0f) yield return new WaitForSeconds(delay);
+
+            // 起動演出の途中で抜けていたら鳴らさない
+            if (!IsActive)
+            {
+                _loopRoutine = null;
+                yield break;
+            }
+
+            // 起動音は重ねながら消す（長い起動音でもここで切り替わる）
+            if (_bootSource != null && _bootSource.isPlaying) StartCoroutine(FadeOutAndStop(_bootSource));
+
+            if (hackingLoopSound != null)
+            {
+                _loopSource.clip = hackingLoopSound;
+                _loopSource.volume = 0f;
+                _loopSource.Play();
+                yield return FadeSource(_loopSource, hackingLoopVolume);
+            }
+
+            _loopRoutine = null;
+        }
+
+        /// <summary>ハッキング用の音（ループBGMと起動音）をまとめてフェードアウトさせて止める。</summary>
+        private void StopHackingLoop()
+        {
+            if (_loopRoutine != null)
+            {
+                StopCoroutine(_loopRoutine);
+                _loopRoutine = null;
+            }
+
+            // 起動音がまだ鳴っていたらここで消す。ATM画面へ戻ったあとに残らないようにする
+            if (_bootSource != null && _bootSource.isPlaying) StartCoroutine(FadeOutAndStop(_bootSource));
+
+            if (_loopSource == null || !_loopSource.isPlaying) return;
+            _loopRoutine = StartCoroutine(StopHackingLoopRoutine());
+        }
+
+        private IEnumerator StopHackingLoopRoutine()
+        {
+            yield return FadeSource(_loopSource, 0f);
+            if (_loopSource != null) _loopSource.Stop();
+            _loopRoutine = null;
+        }
+
+        private IEnumerator FadeOutAndStop(AudioSource source)
+        {
+            yield return FadeSource(source, 0f);
+            if (source != null) source.Stop();
+        }
+
+        /// <summary>等パワー曲線で音量を変える。重ねて入れ替える時に音量が凹まないようにするため。</summary>
+        private IEnumerator FadeSource(AudioSource source, float targetVolume)
+        {
+            if (source == null) yield break;
+
+            float duration = Mathf.Max(0f, hackingLoopFadeDuration);
+            if (duration <= 0f)
+            {
+                source.volume = targetVolume;
+                yield break;
+            }
+
+            float startVolume = source.volume;
+            bool rising = targetVolume > startVolume;
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                float curve = rising ? Mathf.Sin(t * Mathf.PI * 0.5f) : 1f - Mathf.Cos(t * Mathf.PI * 0.5f);
+
+                source.volume = Mathf.Lerp(startVolume, targetVolume, curve);
+                yield return null;
+            }
+            source.volume = targetVolume;
         }
 
         private static Transform FindChildByName(Transform root, string targetName)

@@ -1103,13 +1103,13 @@ MonoBehaviour:
   audioSource: {fileID: 0}
   startupSound: {fileID: 8300000, guid: 8eb2923a32e613e4a87513372f6fdc1a, type: 3}
   shutdownSound: {fileID: 8300000, guid: d2996e056d02ac8428dee241d3d027ce, type: 3}
-  idleLoopSound: {fileID: 0}
+  idleLoopSound: {fileID: 8300000, guid: f5ad047d3eb431843b188b0ef1cbc6e2, type: 3}
   idleLoopVolume: 0.5
   idleLoopFadeDuration: 0.35
-  washSuccessSound: {fileID: 0}
-  keyClickSound: {fileID: 8300000, guid: 802e2d41a7954c749944acd59fb2a820, type: 3}
+  washSuccessSound: {fileID: 8300000, guid: 9d702a8250643b647a9ed2fca29307e8, type: 3}
+  keyClickSound: {fileID: 8300000, guid: 3170b36e7686aa6408a1a5dce8bae4b2, type: 3}
   selectSound: {fileID: 0}
-  confirmSound: {fileID: 8300000, guid: 66b4c8e28b6ca5e408a46b4b967e69e3, type: 3}
+  confirmSound: {fileID: 0}
   cancelSound: {fileID: 8300000, guid: e8bb408d8d8cf7b4c994cca55611f042, type: 3}
   electronicSoundVolume: 1
   keyButtons:
@@ -1129,6 +1129,15 @@ MonoBehaviour:
   - {fileID: 1245082941}
   - {fileID: 1770821104}
   - {fileID: 952858216}
+  passcodeMaskCharacter: '*'
+  passcodeEmptyCharacter: _
+  passcodeMaskVerticalOffset: -0.22
+  passcodeMaskSizePercent: 100
+  passcodeEmptyVerticalOffset: 0
+  passcodeEmptySizePercent: 100
+  passcodeAutoStartDelay: 0.45
+  passcodeAutoTypeInterval: 0.18
+  passcodeAutoConfirmDelay: 0.35
   launderingFeeRate: 0.1
   emissionMaterial: {fileID: 2100000, guid: 5976f6fbbfcd1f14cbef3a13e3c5398d, type: 2}
   emissionColor: {r: 0.67924523, g: 0.04165185, b: 0.04165185, a: 1}
@@ -1141,16 +1150,53 @@ MonoBehaviour:
   moneySmallPrefab: {fileID: 5693812434394980683, guid: f39190fd0e330954992c01a37ab32a28, type: 3}
   moneyBigThreshold: 10000
   moneyMiddleThreshold: 1000
+  countUpSoundInterval: 0.06
+  countUpSoundVolume: 0.3
   moneyPropUsePhysics: 0
   _spinboxAnchors:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
-  _spinboxGoldPos: {x: 4.94, y: -1.81}
-  _spinboxSilverPos: {x: 4.94, y: -3.52}
-  _spinboxBronzePos: {x: 4.94, y: -5.16}
+  _spinboxGoldPos: {x: 4.94, y: -0.47}
+  _spinboxSilverPos: {x: 4.94, y: -2.02}
+  _spinboxBronzePos: {x: 4.94, y: -3.58}
   _spinboxSize: {x: 0.88, y: 1.58}
   _spinboxFontSize: 0.51
+  _coinRows:
+  - label: GOLD
+    anchor: {fileID: 0}
+    position: {x: 26.6, y: -0.44}
+    size: {x: 109.6, y: 40}
+    textOffset: {x: 22.3, y: 0}
+    fontSize: 0.81
+    imageFile: gold.png
+    imageOffset: {x: -33.2, y: 0}
+    imageSize: {x: 1.27, y: 26}
+  - label: SILVER
+    anchor: {fileID: 0}
+    position: {x: 67.4, y: -1.94}
+    size: {x: 306.2, y: 40}
+    textOffset: {x: 79.8, y: 0}
+    fontSize: 0.81
+    imageFile: silver.png
+    imageOffset: {x: -74, y: 0}
+    imageSize: {x: 1.27, y: 26}
+  - label: BRONZE
+    anchor: {fileID: 0}
+    position: {x: 130.1, y: -3.5}
+    size: {x: 320, y: 40}
+    textOffset: {x: 24, y: 0}
+    fontSize: 0.81
+    imageFile: bronze.png
+    imageOffset: {x: -136.7, y: 0.07}
+    imageSize: {x: 1.27, y: 26}
+  _coinRowNormalColor: {r: 1, g: 1, b: 1, a: 1}
+  _coinRowSelectedColor: {r: 0.2, g: 1, b: 0.4, a: 1}
+  _confirmButtonAnchor: {fileID: 0}
+  _confirmButtonPos: {x: 4.72, y: -5.12}
+  _confirmButtonSize: {x: 2.18, y: 1.16}
+  _confirmButtonFontSize: 0.72
+  _confirmButtonLabel: SELL
 --- !u!4 &1177008531 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7718053816494518415, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
@@ -1171,7 +1217,7 @@ MonoBehaviour:
   triggerObject: {fileID: 1805605858}
   triggerObjectName: atm_design4
   blinkColor: {r: 1, g: 0.08, b: 0.08, a: 1}
-  blinkSpeed: 2.2
+  blinkSpeed: 1
   blinkIntensity: 3.5
   blinkOnlyWhileScreenActive: 1
   outlineColor: {r: 1, g: 0.1, b: 0.1, a: 1}
@@ -1199,22 +1245,26 @@ MonoBehaviour:
     layerLabels:
     - FIREWALL Lv.1
     - BANK ADMIN
-    safeZoneHalfWidth: 0.13
-    finalSafeZoneScale: 0.8
-    cursorSpeed: 0.7
-    finalCursorSpeedScale: 1.25
-    maxShake: 6
+    safeZoneHalfWidth: 0.18
+    finalSafeZoneScale: 0.4
+    cursorSpeed: 0.85
+    finalCursorSpeedScale: 1.3
+    maxShake: 8
+    timeLimit: 9
+    finalTimeLimitScale: 0.65
   - difficulty: 1
     label: NORMAL
     layerLabels:
     - FIREWALL Lv.1
     - FIREWALL Lv.2
     - BANK ADMIN
-    safeZoneHalfWidth: 0.115
-    finalSafeZoneScale: 0.72
-    cursorSpeed: 0.85
-    finalCursorSpeedScale: 1.45
-    maxShake: 10
+    safeZoneHalfWidth: 0.17
+    finalSafeZoneScale: 0.33
+    cursorSpeed: 1
+    finalCursorSpeedScale: 1.4
+    maxShake: 13
+    timeLimit: 8
+    finalTimeLimitScale: 0.58
   - difficulty: 2
     label: HARD
     layerLabels:
@@ -1222,11 +1272,14 @@ MonoBehaviour:
     - FIREWALL Lv.2
     - FIREWALL Lv.3
     - BANK ADMIN
-    safeZoneHalfWidth: 0.11
-    finalSafeZoneScale: 0.72
-    cursorSpeed: 0.95
-    finalCursorSpeedScale: 1.5
-    maxShake: 16
+    safeZoneHalfWidth: 0.16
+    finalSafeZoneScale: 0.3
+    cursorSpeed: 1.15
+    finalCursorSpeedScale: 1.45
+    maxShake: 20
+    timeLimit: 7
+    finalTimeLimitScale: 0.5
+  unlockMode: 0
   oneSuccessPerVisit: 1
   screenSize: {x: 11.3, y: 7.16}
   screenScale: 1.18
@@ -1241,11 +1294,35 @@ MonoBehaviour:
   minigameBarThickness: 1.42
   safeZoneThickness: 0.83
   safeZoneWidth: 0.502
-  triggerSound: {fileID: 0}
-  bootSound: {fileID: 0}
-  breachSound: {fileID: 0}
-  deniedSound: {fileID: 0}
-  authorizedSound: {fileID: 0}
+  minigameTitleSize: 100
+  minigameLayerTextSize: 145
+  minigameTimerTextSize: 130
+  bootBlackoutDuration: 0.2
+  bootWhiteFlashDuration: 0.2
+  bootBlackHoldDuration: 0.2
+  bootFlashDuration: 3
+  bootBlinkSpeed: 6.28
+  bootFlashStrength: 0.5
+  bootFlashColor: {r: 1, g: 0.16, b: 0.16, a: 1}
+  hackingLoopSound: {fileID: 8300000, guid: 0c5b8a6f19135184e93ee1b0ca45e073, type: 3}
+  hackingLoopVolume: 0.6
+  hackingLoopFadeDuration: 0.4
+  hackingLoopStartDelay: 0
+  triggerSound: {fileID: 8300000, guid: 9a0b971d12d233e4d96c47d297e46fd2, type: 3}
+  triggerVolume: 0.508
+  bootSound: {fileID: 8300000, guid: b9d8922dcac5d2c4eb711af8c85fcebc, type: 3}
+  bootVolume: 0.594
+  breachSound: {fileID: 8300000, guid: f858b0802c272c249b3a254ab3d51736, type: 3}
+  breachVolume: 0.602
+  deniedSound: {fileID: 8300000, guid: 6e9f320c00cfbd148b67b6b11f73f372, type: 3}
+  deniedVolume: 0.605
+  stageUpSound: {fileID: 8300000, guid: ab88e39ec64d4b44085b223d0a551b9f, type: 3}
+  stageUpVolume: 0.301
+  stageUpPitchStep: 0.12
+  stageDownSound: {fileID: 8300000, guid: 54cd55fe1b0852341883b985ec892a07, type: 3}
+  stageDownVolume: 0.5
+  authorizedSound: {fileID: 8300000, guid: f9e547ad660591d4486fd8d6b80819e4, type: 3}
+  authorizedVolume: 1
 --- !u!114 &1214958071 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7829022221041823055, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
@@ -1889,6 +1966,30 @@ PrefabInstance:
     - target: {fileID: 8802782059642492375, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
       propertyPath: m_Enabled
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9112404271761465081, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.105299994
+      objectReference: {fileID: 0}
+    - target: {fileID: 9112404271761465081, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.1981001
+      objectReference: {fileID: 0}
+    - target: {fileID: 9112404271761465081, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.65220016
+      objectReference: {fileID: 0}
+    - target: {fileID: 9112404271761465081, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.000000014901159
+      objectReference: {fileID: 0}
+    - target: {fileID: 9112404271761465081, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.9910544
+      objectReference: {fileID: 0}
+    - target: {fileID: 9112404271761465081, guid: 0df94298a4b152a4d81f73a2eee4659e, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0.13345896
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
