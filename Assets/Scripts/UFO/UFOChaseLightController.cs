@@ -73,6 +73,25 @@ public class UFOChaseLightController : MonoBehaviour
     [Tooltip("銅貨・銀貨・金貨を獲得した瞬間、通常ライト全体を今の色のまま一瞬点灯させておく時間（秒）")]
     [SerializeField, Min(0.05f)] private float coinCatchFlashDuration = 0.3f;
 
+    [Header("検索範囲・練習機設定")]
+    [Tooltip("UFOChaseLightUnitを検索するルート。実機・練習機など同じ種類の機体が複数シーンに存在する場合、" +
+             "必ずそれぞれの機体のルート（例: new_ufocatcher 1 / Practice_Cranegame）を設定すること。\n" +
+             "未設定の場合はシーン全体から検索する（従来動作。1台しか存在しない場合のみ安全）")]
+    [SerializeField] private Transform searchRoot;
+
+    [Tooltip("ON: 練習用UFOキャッチャー（Practice_Cranegame）側のインスタンスであることを示す。\n" +
+             "練習機にはルーレットの概念が無いため、ルーレット関連の演出（回転中の水色チェイス・当選後の\n" +
+             "水色点滅）は行わない。残り時間警告・獲得演出中の待避は、下のpracticeTutorialCrane/\n" +
+             "practiceItemGoalの参照を通じて実機と同じロジックで動作する")]
+    [SerializeField] private bool isPracticeInstance = false;
+
+    [Tooltip("Is Practice Instance が ON の時に参照する、練習機のセッション/タイマー管理コンポーネント。\n" +
+             "未設定の場合は残り時間警告なし・常時プレイ中扱いになる")]
+    [SerializeField] private TutorialCraneController practiceTutorialCrane;
+
+    [Tooltip("Is Practice Instance が ON の時に参照する、練習機の落とし口（時計・ブラックダイヤ獲得演出の検知用）")]
+    [SerializeField] private TutorialItemGoal practiceItemGoal;
+
     // UFOItemGoal.HandleItemDrop側から、銅貨/銀貨/金貨を獲得した瞬間に呼ばれる（インスタンス跨ぎでアクセスするためstatic）
     private static float s_coinCatchFlashTimer = 0f;
     private static float s_coinCatchFlashDuration = 0.3f;
@@ -90,8 +109,8 @@ public class UFOChaseLightController : MonoBehaviour
     private Dictionary<UFOChaseLightUnit.Position, List<Light>> _lightsByPosition;
     private Dictionary<UFOChaseLightUnit.Position, List<Renderer>> _renderersByPosition;
 
-    // 優先度（上ほど優先）: Deferred > RouletteWon > RouletteSpinning > CoinInsertFlash > WarningBlink/Chase > Off
-    private enum RegularLightMode { Off, CoinInsertFlash, Chase, WarningBlink, RouletteSpinning, RouletteWon, Deferred }
+    // 優先度（上ほど優先）: Deferred/PracticeItemFlash > RouletteWon > RouletteSpinning > CoinInsertFlash > WarningBlink/Chase > Off
+    private enum RegularLightMode { Off, CoinInsertFlash, Chase, WarningBlink, RouletteSpinning, RouletteWon, Deferred, PracticeItemFlash }
     private RegularLightMode _currentMode = RegularLightMode.Off;
     private Coroutine _routine;
 
@@ -122,7 +141,9 @@ public class UFOChaseLightController : MonoBehaviour
         _lightsByPosition = new Dictionary<UFOChaseLightUnit.Position, List<Light>>();
         _renderersByPosition = new Dictionary<UFOChaseLightUnit.Position, List<Renderer>>();
 
-        var units = FindObjectsByType<UFOChaseLightUnit>(FindObjectsSortMode.None);
+        UFOChaseLightUnit[] units = searchRoot != null
+            ? searchRoot.GetComponentsInChildren<UFOChaseLightUnit>(true)
+            : FindObjectsByType<UFOChaseLightUnit>(FindObjectsSortMode.None);
         foreach (var unit in units)
         {
             if (unit == null) continue;
@@ -211,6 +232,20 @@ public class UFOChaseLightController : MonoBehaviour
                     // 中途半端にRestoreAllColors()やenabled切り替えを行うと、演出側が点けた直後の色を
                     // 上書きして消してしまうため、意図的に何もしない
                     break;
+                case RegularLightMode.PracticeItemFlash:
+                    // 練習機の時計・ブラックダイヤ獲得演出。TutorialItemGoalは専用のflashLightsしか
+                    // 光らせないため、こちらでチェイスライト側の通常ライトをTutorialItemGoal.CurrentFlashColorで
+                    // 点灯させる（IsFlashingがfalseに戻るまで維持）。
+                    // パトランプはTutorialPatoLampControllerに完全に委ねるため触らない
+                    // （色を上書きすると、他モード同様に元の色へ戻す手段が無いまま固まってしまうため）
+                    RestoreAllColors();
+                    if (practiceItemGoal != null)
+                    {
+                        Color flashColor = practiceItemGoal.CurrentFlashColor;
+                        SetLightsForOrder(LeftOrder, normalOnly: true, on: true, overrideColor: flashColor);
+                        SetLightsForOrder(RightOrder, normalOnly: true, on: true, overrideColor: flashColor);
+                    }
+                    break;
                 case RegularLightMode.Off:
                 default:
                     RestoreAllColors();
@@ -232,6 +267,12 @@ public class UFOChaseLightController : MonoBehaviour
 
     private bool IsLowTime()
     {
+        if (isPracticeInstance)
+        {
+            return practiceTutorialCrane != null && practiceTutorialCrane.IsPlayingTutorial &&
+                   practiceTutorialCrane.RemainingTime > 0f && practiceTutorialCrane.RemainingTime <= lowTimeThresholdSeconds;
+        }
+
         var ctrl = UFOCameraController.Instance;
         return ctrl != null && UFOCameraController.IsPlaySessionActive &&
                ctrl.RemainingTime > 0f && ctrl.RemainingTime <= lowTimeThresholdSeconds;
@@ -239,6 +280,21 @@ public class UFOChaseLightController : MonoBehaviour
 
     private RegularLightMode DetermineRegularLightMode(bool lowTime)
     {
+        if (isPracticeInstance)
+        {
+            // Play2_tutorialのPlayが押され、BeginTutorialPlay()で操作が解禁されるまでは
+            // チェイスを開始しない（Yesを押しただけの時点ではまだ開始しない）
+            if (practiceTutorialCrane != null && !practiceTutorialCrane.AreControlsUnlocked) return RegularLightMode.Off;
+
+            // 練習機のTutorialItemGoalは実機のFlashLampsCoroutineと違い、チェイスライト側の物理ランプには
+            // 触れないため、獲得演出中はこちら側で同じランプをTutorialItemGoal.CurrentFlashColorで光らせる
+            if (practiceItemGoal != null && practiceItemGoal.IsFlashing) return RegularLightMode.PracticeItemFlash;
+            // 練習機にはルーレットの概念が無いため、上記・コイン獲得フラッシュ・残り時間警告(WarningBlink)
+            // 以外はチェイスを表示する
+            if (s_coinCatchFlashTimer > 0f) return RegularLightMode.CoinInsertFlash;
+            return lowTime ? RegularLightMode.WarningBlink : RegularLightMode.Chase;
+        }
+
         if (!UFOCameraController.IsPlaySessionActive) return RegularLightMode.Off;
 
         // ブラックダイヤ・時計等の獲得演出中は、UFOItemGoal.FlashLampsCoroutineに完全に委ねる

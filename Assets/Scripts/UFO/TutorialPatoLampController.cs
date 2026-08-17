@@ -57,12 +57,13 @@ public class TutorialPatoLampController : MonoBehaviour
             }
         }
 
-        // 状態が切り替わった場合のみ、ライトのオンオフを制御
-        if (shouldBeActive != _isActive)
-        {
-            _isActive = shouldBeActive;
-            SetLightsEnabled(_isActive);
-        }
+        // 状態を更新
+        _isActive = shouldBeActive;
+
+        // UFOChaseLightController（PracticeItemFlash等）が同じLightのenabledに触れる可能性があるため、
+        // 「切り替わった時だけ」反映する方式だと状態がズレて反映されなくなることがある。
+        // 安全のため毎フレーム現在の状態を強制的に反映させる
+        SetLightsEnabled(_isActive);
 
         // アクティブな間、Y軸で回転させ続ける
         if (_isActive && _patoinTransform != null)
