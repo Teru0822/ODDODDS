@@ -10,11 +10,14 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using MiniGames.Transitions;
-using UniRx;
-using UniRx.Triggers;
-using System.Data.Common;
 
-public class DebtCollectionManager : MonoBehaviour
+public enum Language
+{
+    JP,
+    EN
+}
+
+public class DebtCollectionManager : MonoBehaviour,ILanguage
 {
     public static DebtCollectionManager Instance;
     private bool _isStartDebtCollection = false;//現在、悪魔の取り立てが行われているか
@@ -139,6 +142,32 @@ public class DebtCollectionManager : MonoBehaviour
             Debug.Log("試しにイベント機能を使います。");
         }
 #endif
+    }
+
+    public void SettingLanguage(Language language)
+    {
+        if (language == Language.JP)
+        {
+            _mainSentence.font = _japaneseFontAsset;
+            _reduceMoneyCounter.font = _japaneseFontAsset;
+            _myMoneyCounter.font = _japaneseFontAsset;
+
+            _name.text = "アクマ";
+            _reduceMoneyMessage = "<size=50>請求金額</size>\n";
+            _myMoneyMessage = "<size=50>所持金</size>\n";
+            _characterSpeed = 0.1f;
+        }
+        else if(language == Language.EN)
+        {
+            _mainSentence.font = _englishFontAsset;
+            _reduceMoneyCounter.font = _englishFontAsset;
+            _myMoneyCounter.font = _englishFontAsset;
+
+            _name.text = "Demon";
+            _reduceMoneyMessage = "<size=50>Debt Amount</size>\n";
+            _myMoneyMessage = "<size=50>Money</size>\n";
+            _characterSpeed = 0.05f;
+        }
     }
 
     /// <summary>
@@ -478,11 +507,7 @@ public class DebtCollectionManager : MonoBehaviour
         Debug.Log("イベント無事終了");
     }
 
-    private enum Language
-    {
-        JP,
-        EN
-    }
+
 
     /// <summary>
     /// 下矢印を改行に変換する
@@ -636,7 +661,7 @@ public class DebtCollectionManager : MonoBehaviour
     {
         
         Sequence pinballsep = DOTween.Sequence();
-        pinballsep.Append(_background.DOFade(1, 0.5f).OnComplete(() => {_camera.transform.position = _demoPinballCameraFoots[0].position; _camera.transform.LookAt(_pinballCenter);}))
+        pinballsep.Append(_background.DOFade(1, 0.5f).OnComplete(() => {_camera.transform.position = _demoPinballCameraFoots[0].position; _camera.transform.LookAt(_pinballCenter);_camera.cullingMask &= ~(1 << LayerMask.NameToLayer("DemoLayer"));}))
         .AppendInterval(0.2f)
         .Append(_background.DOFade(0, 0.5f))
         .Append(_camera.transform.DOPath(
@@ -653,9 +678,10 @@ public class DebtCollectionManager : MonoBehaviour
         new[]
         {
             _demoPinballCameraFoots[4].position,
+            _demoPinballCameraFoots[5].position,
         },
         5f, PathType.CatmullRom).SetLookAt(_pinballCenter))
-        .Append(_background.DOFade(1, 0.5f).OnComplete(() => {_camera.transform.position = _demoCameraPosition.transform.position; _camera.transform.eulerAngles = _demoCameraPosition.transform.eulerAngles;}))
+        .Append(_background.DOFade(1, 0.5f).OnComplete(() => {_camera.transform.position = _demoCameraPosition.transform.position; _camera.transform.eulerAngles = _demoCameraPosition.transform.eulerAngles;_camera.cullingMask |= 1 << LayerMask.NameToLayer("DemoLayer");}))
         .AppendInterval(0.2f)
         .Append(_background.DOFade(0, 0.5f));
 
@@ -676,6 +702,7 @@ public class DebtCollectionManager : MonoBehaviour
         _demoPinballCameraFoots.Add(GameObject.Find("CinemachineCameraPoint3").transform);
         _demoPinballCameraFoots.Add(GameObject.Find("CinemachineCameraPoint4").transform);
         _demoPinballCameraFoots.Add(GameObject.Find("CinemachineCameraPoint5").transform);
+        _demoPinballCameraFoots.Add(GameObject.Find("CinemachineCameraPoint6").transform);
     }
 }
 

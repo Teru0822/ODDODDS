@@ -10,7 +10,7 @@ using UniRx;
 using UnityEngine.UI;
 
 
-public class GameUIManager : MonoBehaviour
+public class GameUIManager : MonoBehaviour,ILanguage
 {
     public static GameUIManager Instance { get; private set; }
 
@@ -38,6 +38,8 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] private TMP_Text _nextDebtTurnText;
     [SerializeField] private TMP_Text _moneyText;
     [SerializeField] private TMP_Text _unwashedMoneyText;
+    [SerializeField] private TMP_Text _currentTurnText;//「現在のターン」と表示するテキスト
+    [SerializeField] private TMP_Text _nextDebtText;//「次の取り立てまで」と表示するテキスト
 
     [Header("playerInfoPanel内のオブジェクト")]
     [SerializeField] private GameObject _playerInfoPanel;
@@ -87,6 +89,7 @@ public class GameUIManager : MonoBehaviour
 
 
     [Header("メニュー用のSettings")]
+    [SerializeField] private Language _language;
     [SerializeField] private InputActionReference _openMenuReference;//Tabキーを押したらメニュー表示
     [SerializeField] private SerializeDictionary<int, GameObject> _menuTitle = new SerializeDictionary<int, GameObject>();
     private MouseHoverOutline[] _mouseHoverOutlines;
@@ -367,6 +370,21 @@ public class GameUIManager : MonoBehaviour
                         item.IsOpenUI = false;
                 }
             }
+        }
+    }
+
+    public void SettingLanguage(Language language)
+    {
+        _language = language;
+        if(language == Language.JP)
+        {
+            _currentTurnText.text = "現在のターン";
+            _nextDebtText.text = "次の取り立てまで";
+        }
+        else if(language == Language.EN)
+        {
+            _currentTurnText.text = "Current Turn";
+            _nextDebtText.text = "Next collection";
         }
     }
 

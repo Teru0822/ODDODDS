@@ -71,6 +71,9 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
     ReactiveProperty<float> _leftDebtAmount = new ReactiveProperty<float>(10000000000);
     public IObservable<float> OnLeftDebtAmount { get { return _leftDebtAmount; } }
 
+    //データ収集用
+    private int _earnMoney;//稼いだ総額
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -165,6 +168,7 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
 
         Wallet.AddWashed(finalAmount);
         Debug.Log($"お金が増加しました: +{finalAmount} (現在: {Wallet.WashedAmount})");
+        _earnMoney += (int)finalAmount;
     }
 
     /// <summary>
@@ -230,6 +234,7 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
         saveData.nextDebtPrice = (int)_quotaAmount.Value;
         saveData.leftDebtAmount = (int)_leftDebtAmount.Value;
         saveData.debtClearTimes = _debtClearTimes;
+        saveData.earnMoney = _earnMoney;
     }
     public void ReadSaveData(RoguelikeSaveData saveData)
     {
@@ -262,6 +267,7 @@ public class MoneyManager : MonoBehaviour, IsaveDataProvider
 
         //借金の取り立てを耐えた回数を初期化
         _debtClearTimes = saveData.debtClearTimes;
+        _earnMoney = saveData.earnMoney;
 
         Debug.LogError(
         $@"===== MoneyManager Load Result=====
