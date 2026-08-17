@@ -157,8 +157,14 @@ public class Reticle : MonoBehaviour
 
     private void Update()
     {
+        // プレイヤーが自分で照準できない演出・操作中はレティクルを隠す。
+        // どのフラグも演出の終了時に false へ戻るので、終わればそのまま復帰する
         bool showReticle = true;
-        if (UFOCameraController.IsPlayingUfo || RewardSelectionUI.IsTypewriterUIShowing)
+        if (UFOCameraController.IsPlayingUfo
+            || RewardSelectionUI.IsTypewriterUIShowing
+            || App.ATM.ATMController.IsInteracting          // ATM 操作中
+            || VisitorSystem.IsTalkingWithVisitor           // インターホンで訪問者と対応中
+            || DebtCollectionManager.IsCollecting)          // 悪魔の取り立て中
         {
             showReticle = false;
         }
