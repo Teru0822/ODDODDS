@@ -6,7 +6,7 @@ public enum SkillType
     None = 0,
     PinBall = 1,
     FallBall = 2,
-    UFOcatcher = 3,
+    DevilCatcher = 3,
     Typewriter = 4,
 }
 public enum SkillId
@@ -25,7 +25,7 @@ public enum SkillId
     FallBall_ReduceEnemySpeed = 6,
     FallBall_Exhausted = 7,
     
-    // UFOcatcher
+    // DevilCatcher
     UFO_ArmLevel2 = 8,
     UFO_ArmLevel3 = 9,
     UFO_ArmLevelUltimate = 10,
@@ -52,7 +52,7 @@ public enum SkillId
     Typewriter_ExpandChoice1 = 29,  // 2択 → 3択
     Typewriter_ExpandChoice2 = 30,  // 3択 → 4択
 
-    // UFOcatcher (追加分)
+    // DevilCatcher (追加分)
     UFO_Unlock90Sec = 31,  // プレイ時間90秒をアンロック
     UFO_ShowDescentLaser = 32,  // アームの降下地点をわかるようにする
 }

@@ -77,7 +77,7 @@ public class RoguelikePanelManager : MonoBehaviour
             case 0: _selectedTypeText.text = "All";  break;
             case 1: _selectedTypeText.text = "PinBall"; break;
             case 2: _selectedTypeText.text = "FallBall"; break;
-            case 3: _selectedTypeText.text = "UFOcatcher"; break;
+            case 3: _selectedTypeText.text = "DevilCatcher"; break;
             default: break;
         }
         UpdateUI((SkillType)type);
