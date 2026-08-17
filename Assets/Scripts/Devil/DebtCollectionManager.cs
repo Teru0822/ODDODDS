@@ -56,6 +56,13 @@ public class DebtCollectionManager : MonoBehaviour
     private Dictionary<string, AudioClip> _clipDictionary = new Dictionary<string, AudioClip>();
     [SerializeField] private AudioClip _drumRoll;
 
+    [Header("テロップ表示設定")]
+    [Tooltip("悪魔のセリフテロップ（会話パネル・名前・本文）を表示するかどうか。" +
+             "オフの間はテロップの描画と文字送りのクリック待ちを飛ばし、" +
+             "カメラ移動・BGM・請求金額の演出・成否判定はそのまま進みます。" +
+             "再びセリフを出したくなったらここにチェックを入れるだけで元に戻ります。")]
+    [SerializeField] private bool _showConversationTelop = false;
+
     [Header("会話用の設定")]
     [SerializeField] private InputActionReference _clickReference;
     [SerializeField] private TMP_FontAsset _japaneseFontAsset;
@@ -299,7 +306,7 @@ public class DebtCollectionManager : MonoBehaviour
         SceneTransitionManager.Instance.ShowTurnTransition(
             _turnTransitionDuration,
             onDuringLoading: () => Debug.Log("Now Loading"),
-            onComplete:      () => {isFinishFade = true;_panel.SetActive(true);});
+            onComplete:      () => {isFinishFade = true;SetTelopPanelActive(true);});
 
         yield return new WaitForSeconds(1.0f);//大体Loading画面になったであろう時間まで待機
         _camera.transform.position = _cameraPosition.transform.position;
@@ -326,7 +333,7 @@ public class DebtCollectionManager : MonoBehaviour
             _previousMoneyValue = (int)MoneyManager.Instance.CurrentMoney;
 
             //ゲームオブジェクトの表示・非表示
-            _panel.SetActive(false);
+            SetTelopPanelActive(false);
             _reduceMoneyCounter.text = _reduceMoneyMessage + _previousDecreaseValue.ToString();
             _myMoneyCounter.text = _myMoneyMessage + _previousMoneyValue.ToString();
 
@@ -363,7 +370,7 @@ public class DebtCollectionManager : MonoBehaviour
                 string failKey = "fail_" + random.ToString("00");
 
                 //必要なオブジェクトをアクティブ
-                _panel.SetActive(true);
+                SetTelopPanelActive(true);
                 yield return StartCoroutine(TextSystem(failKey));
 
                 //TODO:アイテムでゲームオーバーを回避する
@@ -390,7 +397,7 @@ public class DebtCollectionManager : MonoBehaviour
                 string successKey = "success_" + random.ToString("00");
 
                 //必要なオブジェクトをアクティブ
-                _panel.SetActive(true);
+                SetTelopPanelActive(true);
                 yield return StartCoroutine(TextSystem(successKey));
             }
 
@@ -403,7 +410,7 @@ public class DebtCollectionManager : MonoBehaviour
         if(_demoGamePlay && MoneyManager.Instance.CurrentTurnCount != _demoGamePlayEndTurn)
         {
             //暗転を解除させる
-            _panel.SetActive(false);
+            SetTelopPanelActive(false);
             _isStartDebtCollection = false;
             
             SceneTransitionManager.Instance.ShowTurnTransition(
@@ -460,7 +467,7 @@ public class DebtCollectionManager : MonoBehaviour
             //最後まで遊んでくれてありがとう的な
             _background.sprite = _thxPlayDemoImage;
             _background.color = new Color(255,255,255,0);
-            _panel.SetActive(false);
+            SetTelopPanelActive(false);
             
             yield return _background.DOFade(1, 3.0f).WaitForCompletion();
             yield return _thxPlayDemoText.DOFade(1, 2.0f).WaitForCompletion();
@@ -504,6 +511,17 @@ public class DebtCollectionManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 会話テロップ用パネルの表示切り替え。_showConversationTelop がオフの間は常に非表示のままにする
+    /// </summary>
+    /// <param name="active">テロップを出したいか</param>
+    private void SetTelopPanelActive(bool active)
+    {
+        if (_panel == null) return;
+
+        _panel.SetActive(_showConversationTelop && active);
+    }
+
+    /// <summary>
     /// イベントキーの内容を基にテキストメッセージを書き換えていく
     /// </summary>
     /// <param name="key">イベントキー</param>
@@ -518,6 +536,13 @@ public class DebtCollectionManager : MonoBehaviour
         {
             _audioSource.clip = _clipDictionary[_conversations[key].bgmKey];
             _audioSource.Play();
+        }
+
+        //テロップ非表示中はBGMの切り替えだけ行い、セリフの描画と文字送り待ちは飛ばす
+        if (!_showConversationTelop)
+        {
+            _mainSentence.text = "";
+            yield break;
         }
 
         for (int i = 0; i < _conversations[key].lines.Length; i++)
@@ -568,9 +593,9 @@ public class DebtCollectionManager : MonoBehaviour
         {
             yield return TextSystemPlot("アクマ、お待たせしました。↓以前頼まれていたピンボール台の調整が終わりましたよ。", "???");
             //ToDo：ここでピンボールの出現演出を追加
-            _panel.SetActive(false);
+            SetTelopPanelActive(false);
             yield return demoSequence().WaitForCompletion();
-            _panel.SetActive(true);
+            SetTelopPanelActive(true);
             yield return TextSystemPlot("おぉ！よくできてんじゃねえカ！↓...前の台と外装が変わってねえカ？相変わらずいい趣味してるゼ。","アクマ");
             _faust.transform.DORotate(new Vector3(0,75,0), 0.5f);
             yield return TextSystemPlot("誉め言葉として受け取っておきます。して、そちらにいる御仁はどなたですか？","???");
@@ -583,9 +608,9 @@ public class DebtCollectionManager : MonoBehaviour
         {
             yield return TextSystemPlot("Demon, sorry to keep you waiting. ↓ I’ve finished the adjustments to the pinball machine you asked me to make earlier", "???");
             //ToDo：ここでピンボールの出現演出を追加
-            _panel.SetActive(false);
+            SetTelopPanelActive(false);
             yield return demoSequence().WaitForCompletion();
-            _panel.SetActive(true);
+            SetTelopPanelActive(true);
             yield return TextSystemPlot("Wow! You did a damn good job! ↓ ...Hold on, didn’t you change the exterior from the old machine? Still got some pretty good taste, I see.","Demon");
             _faust.transform.DORotate(new Vector3(0,75,0), 0.5f);
             yield return TextSystemPlot("I’ll take that as a compliment. Now then, who’s the gentleman standing over there?","???");
@@ -598,6 +623,13 @@ public class DebtCollectionManager : MonoBehaviour
 
     private IEnumerator TextSystemPlot(string text = "", string name = "")
     {
+        //テロップ非表示中はセリフを描画せず、そのまま次の演出へ進める
+        if (!_showConversationTelop)
+        {
+            _mainSentence.text = "";
+            yield break;
+        }
+
         //カメラ遷移を実施
         _name.text = name;
 
