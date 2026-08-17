@@ -73,6 +73,7 @@ public class SettingUIManager : MonoBehaviour
     [SerializeField] private TMP_Text _warningText;
     [SerializeField] private Button _yesButton;
     [SerializeField] private Button _noButton;
+    [SerializeField] private TMP_Dropdown _languageDropDown;
     private bool _isCantSettingUI = false;//SettingUIの表示・非表示ができない状態に設定するためのbool
     public bool IsCantSettingUI{private get{return _isCantSettingUI;} set{_isCantSettingUI = value;}}
 
@@ -92,11 +93,13 @@ public class SettingUIManager : MonoBehaviour
     [SerializeField] private TMP_Dropdown _antiAliasingDropDown;
     [SerializeField] private TMP_Dropdown _shadowDropDown;
     [SerializeField] private UniversalRenderPipelineAsset _urpAsset;
+
     private List<int> _availableRefreshRates = new() { 30,60,120,144,165,240};
     private Volume _volume;
     private ColorAdjustments _colorAdjustments;
     Camera _mainCamera;
     private UniversalAdditionalCameraData _cameraData;
+    private Language _language;
 
     [Header("UIのオブジェクト(Sound)")]
     [SerializeField] private Slider _bgmSlider;
@@ -190,7 +193,13 @@ public class SettingUIManager : MonoBehaviour
                 item.inputActionReference.action.bindings[(int)item._bindingIndex].effectivePath,
                 InputControlPath.HumanReadableStringOptions.OmitDevice);
             }
+        }
 
+        //UIの言語を変更する
+        var languages = InterfaceFinder.FindAllByInterface<ILanguage>();
+        foreach(var lan in languages)
+        {
+            lan.SettingLanguage(_language);
         }
     }
 
@@ -210,6 +219,7 @@ public class SettingUIManager : MonoBehaviour
 
         _yesButton.onClick.AddListener(() => _checkActionIndex = 0);
         _noButton.onClick.AddListener(() => _checkActionIndex = 1);
+        _languageDropDown.onValueChanged.AddListener(value => LanguageSetting(value));
 
         //グラフィック項目のリスナー追加
         _windowModeToggle.onValueChanged.AddListener(value => { if (value) Screen.fullScreen = false; Debug.Log("_windowModeToggle:" + value); });
@@ -250,6 +260,7 @@ public class SettingUIManager : MonoBehaviour
         //コモンのリスナー削除
         _resetButton.onClick.RemoveAllListeners();
         _backTitleButton.onClick.RemoveAllListeners();
+        _languageDropDown.onValueChanged.RemoveAllListeners();
 
         //グラフィック項目のリスナー削除
         _windowModeToggle.onValueChanged.RemoveAllListeners();
@@ -273,6 +284,22 @@ public class SettingUIManager : MonoBehaviour
         foreach (var keybindItem in _keybindItems)
         {
             keybindItem.button.onClick.RemoveAllListeners();
+        }
+    }
+
+    /// <summary>
+    /// 言語設定を変更させる
+    /// </summary>
+    /// <param name="value"></param>
+    private void LanguageSetting(int value)
+    {
+        _language = (Language)value;
+
+        //設定された言語をもとに全てのUIの言語を反映させる
+        var languages = InterfaceFinder.FindAllByInterface<ILanguage>();
+        foreach(var lan in languages)
+        {
+            lan.SettingLanguage(_language);
         }
     }
 

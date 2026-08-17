@@ -6,7 +6,7 @@ using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class RoguelikePanelManager : MonoBehaviour
+public class RoguelikePanelManager : MonoBehaviour,ILanguage
 {
     public static RoguelikePanelManager Instance;
     [Header("スキル表示用オブジェクト")]
@@ -24,6 +24,7 @@ public class RoguelikePanelManager : MonoBehaviour
 
     private Subject<RoguelikeManager> _initEvent = new Subject<RoguelikeManager>();
     public IObserver<RoguelikeManager> OnInitEvent { get { return _initEvent; } }
+    private Language _language;
 
     private void Awake()
     {
@@ -68,6 +69,11 @@ public class RoguelikePanelManager : MonoBehaviour
             int idx = i;
             _skillTypeButtons[i].onClick.AddListener(() => SetSkillTypeFilter(idx));
         }
+    }
+
+    public void SettingLanguage(Language language)
+    {
+        _language = language;
     }
 
     private void SetSkillTypeFilter(int type)
