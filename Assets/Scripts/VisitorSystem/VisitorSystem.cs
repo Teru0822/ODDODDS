@@ -57,6 +57,13 @@ public class VisitorInstance
 
 public class VisitorSystem : MonoBehaviour,IsaveDataProvider
 {
+    /// <summary>
+    /// インターホン越しの訪問者イベントが進行中か。
+    /// カメラがインターホンに固定されカーソルが解放されている間 true になる。
+    /// （呼び鈴が鳴っているだけの Calling 中はプレイヤーが自由に歩けるので false のまま）
+    /// </summary>
+    public static bool IsTalkingWithVisitor { get; private set; } = false;
+
     [SerializeField] private VisitorDataBase _visitorDataBase;
     [SerializeField] private SerializeDictionary<int, GameObject> _visitorPrefabs;
     [SerializeField] private Transform _firstCameraPosition;
@@ -111,6 +118,14 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
         catch (System.Exception)
         {
         }
+    }
+
+
+    private void OnDisable()
+    {
+        // 無効化・シーン破棄でコルーチンが止まってもフラグを残さない。
+        // true のままだとレティクルが非表示のままになる
+        IsTalkingWithVisitor = false;
     }
 
 
@@ -335,6 +350,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
     {
         //初期設定
         //アニメーション開始
+        IsTalkingWithVisitor = true;
         if (_fpController != null)
             _fpController.enabled = false;
 
@@ -582,6 +598,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
         _fpController.enabled = true;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+        IsTalkingWithVisitor = false;
     }
 
     /// <summary>

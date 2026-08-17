@@ -19,6 +19,11 @@ public class DebtCollectionManager : MonoBehaviour
     public static DebtCollectionManager Instance;
     private bool _isStartDebtCollection = false;//現在、悪魔の取り立てが行われているか
     public bool IsStartDebtCollection => _isStartDebtCollection;
+
+    /// <summary>
+    /// 取り立てイベントが進行中か。Instance が存在しないシーンからでも安全に参照できる
+    /// </summary>
+    public static bool IsCollecting => Instance != null && Instance._isStartDebtCollection;
     [Header("デモ版専用")]
     [SerializeField] private bool _demoGamePlay = false;
     [SerializeField] private int _demoGamePlayEndTurn = 12;

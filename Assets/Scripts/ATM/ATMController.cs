@@ -535,6 +535,9 @@ namespace App.ATM
             // コルーチンが途中で止まっても、紙幣と開いたままの排出口を残さない
             DespawnMoneyProp();
             if (atmDoor != null && _doorPosCached) atmDoor.localPosition = _doorClosedLocalPos;
+
+            // 操作中フラグも残さない。true のままだとレティクルが非表示のままになる
+            IsInteracting = false;
         }
 
         private void OnDestroy()
