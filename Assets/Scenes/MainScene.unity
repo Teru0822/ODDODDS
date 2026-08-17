@@ -7656,6 +7656,65 @@ Transform:
   m_Children: []
   m_Father: {fileID: 475886230}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: -60}
+--- !u!1 &1093635519
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1093635521}
+  - component: {fileID: 1093635520}
+  m_Layer: 0
+  m_Name: CursorManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1093635520
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1093635519}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00117f3d4cb17e847ab0ff889ce58564, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CursorStyleController
+  arrowTexture: {fileID: 2800000, guid: 2c296b2749b2e484c955a081607810d1, type: 3}
+  arrowHotspot: {x: 0, y: 0}
+  openHandTexture: {fileID: 0}
+  openHandHotspot: {x: 16, y: 16}
+  fistTexture: {fileID: 0}
+  fistHotspot: {x: 16, y: 16}
+  sizeMode: 1
+  cursorPixelSize: 32
+  cursorScale: 1
+  smoothScaling: 1
+  includeClickHandlers: 0
+  keepFistUntilRelease: 1
+  cursorMode: 0
+  persistAcrossScenes: 0
+  logOnStart: 1
+--- !u!4 &1093635521
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1093635519}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 8.28382, y: 7.89621, z: -13.34703}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1095661661
 GameObject:
   m_ObjectHideFlags: 0
@@ -15087,3 +15146,4 @@ SceneRoots:
   - {fileID: 1594442511}
   - {fileID: 868806848}
   - {fileID: 1973426564}
+  - {fileID: 1093635521}
