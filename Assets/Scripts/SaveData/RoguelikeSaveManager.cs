@@ -213,10 +213,23 @@ public static class RoguelikeSaveManager
     }
 
     /// <summary>
-    /// セーブデータを削除する (デバッグ用)
+    /// セーブデータを削除する(体験版で使う)
     /// </summary>
     public static void DeleteSaveData()
     {
+        #if UNITY_EDITOR
+        bool debugMode = EditorPrefs.GetBool(
+            "LFEngine_DebugMode",
+            false);
+
+        //DEBUG:デバッグするときの処理
+        if (debugMode)
+        {
+            Debug.LogError("デバッグモードなので、専用データは破壊できません。");
+            return;
+        }
+        #endif
+
         string path = GetSaveFilePath();
         if (File.Exists(path))
         {

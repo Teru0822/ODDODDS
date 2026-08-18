@@ -73,6 +73,10 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
     private ItemType _displayedType = ItemType.Consume;//表示させるアイテムの種類を決定する変数
     private ItemInstance _nowSelectedItem = null;
 
+    //データ収集
+    private int _getItemCount;//これまでアイテムを取得した数
+    private int _useItemCount;//これまでアイテムを使用した数
+
     private void Awake()
     {
         Instance = this;
@@ -171,6 +175,8 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
 
         saveData.ownedPermanentItems = permanentItemSaveData;
         saveData.ownedConsumeItems = consumeItemSaveData;
+        saveData.getItemCount = _getItemCount;
+        saveData.useItemCount = _useItemCount;
     }
 
     public void ReadSaveData(RoguelikeSaveData saveData)
@@ -199,6 +205,8 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
                 _ownedConsumeItems.Add(instance);
             }
         }
+        _getItemCount = saveData.getItemCount;
+        _useItemCount = saveData.useItemCount;
 
         Debug.LogWarning("[WriteSaveData] --- Owned Permanent Items Details ---");
         foreach (var item in _ownedItems)
@@ -364,7 +372,8 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
         {
             Debug.LogError(_nowSelectedItem.ItemName + "使用");
             EffectManager.Instance.AddEffect(effectId);
-            RemoveItem(_nowSelectedItem.Id,_nowSelectedItem.ItemType);            
+            RemoveItem(_nowSelectedItem.Id,_nowSelectedItem.ItemType);
+            _useItemCount++;   
         }
     }
 
@@ -438,6 +447,7 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
         }
 
         OnItemObtained?.Invoke(id);
+        _getItemCount += num;
         UpdateUI();
     }
 
