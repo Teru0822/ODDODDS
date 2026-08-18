@@ -2,24 +2,24 @@ using UnityEngine;
 
 /// <summary>
 /// 練習UFOキャッチャー（Practice_Cranegame）用のパトランプコントローラー。
-/// 実機のPatoLampControllerはUFOCameraController.Instance（実機の残り時間）を直接参照するため、
-/// 同じスクリプトを練習機側にそのまま付けると実機の残り時間で光ってしまう。
-/// こちらはTutorialCraneController側の残り時間を見て、練習機の残り時間が10秒以下になったときだけ
-/// 光る・回転するようにした練習機専用版。
+///
+/// パトランプのLight.enabled/色そのものは練習機側のUFOChaseLightControllerインスタンスが
+/// 一元管理しており（残り時間警告中以外は、コイン獲得フラッシュ・チェイス演出・獲得演出等で
+/// UFOChaseLightController自身がパトランプも含めて点灯を制御する）、このスクリプトは
+/// chaseLightController.IsWarningBlinkActive（残り時間警告中かどうか）だけを見て、
+/// trueの間だけ点灯・回転を担当する。それ以外の時間帯は一切手を出さないため、他の演出との
+/// 競合は起きない。
 ///
 /// 音は鳴らさない（パトランプは複数個所に配置されるため、ここで鳴らすと台数分重複してしまう。
 /// 実機がUFOCameraControllerに集約しているのと同じ理由で、音はTutorialCraneController側に集約する）。
 /// </summary>
 public class TutorialPatoLampController : MonoBehaviour
 {
-    [Tooltip("このパトランプが属する練習UFOキャッチャーのTutorialCraneController")]
-    [SerializeField] private TutorialCraneController tutorialCrane;
+    [Tooltip("このパトランプが属する練習UFOキャッチャーのUFOChaseLightController（練習機側インスタンス、Is Practice InstanceがON）")]
+    [SerializeField] private UFOChaseLightController chaseLightController;
 
     [Tooltip("回転速度 (度/秒)")]
     [SerializeField] private float rotationSpeed = 360f;
-
-    [Tooltip("残り時間が何秒以下になったらパトランプを作動させるか")]
-    [SerializeField] private float activateThresholdSeconds = 10f;
 
     private Transform _patoinTransform;
     private Light[] _lights;
@@ -42,28 +42,30 @@ public class TutorialPatoLampController : MonoBehaviour
 
         // 初期状態ではパトランプを消灯（光らないように）しておく
         SetLightsEnabled(false);
+
+        if (chaseLightController == null)
+        {
+            Debug.LogWarning($"[{gameObject.name}] Chase Light Controller が未設定です。インスペクターで練習機の UFOChaseLightController を設定してください。", this);
+        }
     }
 
     private void Update()
     {
-        bool shouldBeActive = false;
+        bool shouldBeActive = chaseLightController != null && chaseLightController.IsWarningBlinkActive;
 
-        if (tutorialCrane != null && tutorialCrane.IsPlayingTutorial)
+        if (shouldBeActive && !_isActive)
         {
-            float remaining = tutorialCrane.RemainingTime;
-            if (remaining > 0f && remaining <= activateThresholdSeconds)
-            {
-                shouldBeActive = true;
-            }
+            // 警告点滅が始まった瞬間だけ、こちらで点灯させる
+            _isActive = true;
+            SetLightsEnabled(true);
         }
-
-        // 状態を更新
-        _isActive = shouldBeActive;
-
-        // UFOChaseLightController（PracticeItemFlash等）が同じLightのenabledに触れる可能性があるため、
-        // 「切り替わった時だけ」反映する方式だと状態がズレて反映されなくなることがある。
-        // 安全のため毎フレーム現在の状態を強制的に反映させる
-        SetLightsEnabled(_isActive);
+        else if (!shouldBeActive && _isActive)
+        {
+            // 警告点滅が終わった後の消灯・別演出への切り替えは、常にUFOChaseLightController側の
+            // 各モードの遷移処理が責任を持って行う（PracticeItemFlash/CoinCatchFlash等が、警告点滅の
+            // 直後にパトランプも含めて自分で点灯させたい場合があるため、ここで消灯を上書きしない）
+            _isActive = false;
+        }
 
         // アクティブな間、Y軸で回転させ続ける
         if (_isActive && _patoinTransform != null)

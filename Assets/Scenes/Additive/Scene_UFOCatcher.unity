@@ -1384,9 +1384,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d30a7237c40941743b74772e9d10cfb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialPatoLampController
-  tutorialCrane: {fileID: 2006116701}
+  chaseLightController: {fileID: 1564303511}
   rotationSpeed: 260
-  activateThresholdSeconds: 10
 --- !u!1001 &319824169
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4321,9 +4320,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d30a7237c40941743b74772e9d10cfb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialPatoLampController
-  tutorialCrane: {fileID: 2006116701}
+  chaseLightController: {fileID: 1564303511}
   rotationSpeed: 260
-  activateThresholdSeconds: 10
 --- !u!1 &1007377252
 GameObject:
   m_ObjectHideFlags: 0
@@ -9284,9 +9282,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d30a7237c40941743b74772e9d10cfb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialPatoLampController
-  tutorialCrane: {fileID: 2006116701}
+  chaseLightController: {fileID: 1564303511}
   rotationSpeed: 260
-  activateThresholdSeconds: 10
 --- !u!1 &1632140608
 GameObject:
   m_ObjectHideFlags: 0
@@ -9823,9 +9820,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d30a7237c40941743b74772e9d10cfb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialPatoLampController
-  tutorialCrane: {fileID: 2006116701}
+  chaseLightController: {fileID: 1564303511}
   rotationSpeed: 260
-  activateThresholdSeconds: 10
 --- !u!1 &1708828700
 GameObject:
   m_ObjectHideFlags: 0
@@ -10122,9 +10118,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d30a7237c40941743b74772e9d10cfb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialPatoLampController
-  tutorialCrane: {fileID: 2006116701}
+  chaseLightController: {fileID: 1564303511}
   rotationSpeed: 260
-  activateThresholdSeconds: 10
 --- !u!1 &1750334085
 GameObject:
   m_ObjectHideFlags: 0
@@ -10398,9 +10393,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d30a7237c40941743b74772e9d10cfb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialPatoLampController
-  tutorialCrane: {fileID: 2006116701}
+  chaseLightController: {fileID: 1564303511}
   rotationSpeed: 260
-  activateThresholdSeconds: 10
 --- !u!1 &1755706112
 GameObject:
   m_ObjectHideFlags: 0
@@ -10791,9 +10785,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d30a7237c40941743b74772e9d10cfb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialPatoLampController
-  tutorialCrane: {fileID: 2006116701}
+  chaseLightController: {fileID: 1564303511}
   rotationSpeed: 260
-  activateThresholdSeconds: 10
 --- !u!1 &1876907245
 GameObject:
   m_ObjectHideFlags: 0
@@ -12674,9 +12667,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d30a7237c40941743b74772e9d10cfb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialPatoLampController
-  tutorialCrane: {fileID: 2006116701}
+  chaseLightController: {fileID: 1564303511}
   rotationSpeed: 260
-  activateThresholdSeconds: 10
 --- !u!1 &2066360340
 GameObject:
   m_ObjectHideFlags: 0
@@ -16408,8 +16400,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 880f7a8ae6d87e84ea924142b07285fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PatoLampController
+  chaseLightController: {fileID: 0}
   rotationSpeed: 260
-  _showDebugLogs: 0
 --- !u!33 &585491769483782009
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -17823,8 +17815,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 880f7a8ae6d87e84ea924142b07285fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PatoLampController
+  chaseLightController: {fileID: 0}
   rotationSpeed: 260
-  _showDebugLogs: 0
 --- !u!33 &935874564988309905
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -22485,8 +22477,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 880f7a8ae6d87e84ea924142b07285fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PatoLampController
+  chaseLightController: {fileID: 0}
   rotationSpeed: 260
-  _showDebugLogs: 0
 --- !u!65 &2070180198315107843
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -23063,8 +23055,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 880f7a8ae6d87e84ea924142b07285fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PatoLampController
+  chaseLightController: {fileID: 0}
   rotationSpeed: 260
-  _showDebugLogs: 0
 --- !u!4 &2208821678631073159
 Transform:
   m_ObjectHideFlags: 0
@@ -27196,8 +27188,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 880f7a8ae6d87e84ea924142b07285fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PatoLampController
+  chaseLightController: {fileID: 0}
   rotationSpeed: 260
-  _showDebugLogs: 0
 --- !u!33 &3377536365180410774
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -29404,8 +29396,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 880f7a8ae6d87e84ea924142b07285fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PatoLampController
+  chaseLightController: {fileID: 0}
   rotationSpeed: 260
-  _showDebugLogs: 0
 --- !u!33 &4020057204123114463
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -32131,9 +32123,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d30a7237c40941743b74772e9d10cfb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialPatoLampController
-  tutorialCrane: {fileID: 2006116701}
+  chaseLightController: {fileID: 0}
   rotationSpeed: 260
-  activateThresholdSeconds: 10
 --- !u!1 &4734482846944687859
 GameObject:
   m_ObjectHideFlags: 0
@@ -32689,9 +32680,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d30a7237c40941743b74772e9d10cfb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialPatoLampController
-  tutorialCrane: {fileID: 2006116701}
+  chaseLightController: {fileID: 0}
   rotationSpeed: 260
-  activateThresholdSeconds: 10
 --- !u!108 &4874894087707932179
 Light:
   m_ObjectHideFlags: 0
@@ -34390,6 +34380,10 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 75f9f412341ca924ab2921e4345bb93b, type: 2}
+    - target: {fileID: 1213608510034690132, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: chaseLightController
+      value: 
+      objectReference: {fileID: 426471893}
     - target: {fileID: 1503717751264703810, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: m_LocalPosition.x
       value: 16.38
@@ -34462,6 +34456,18 @@ PrefabInstance:
       propertyPath: blackDiamondFlashColor.r
       value: 1.2
       objectReference: {fileID: 0}
+    - target: {fileID: 2068151412085444709, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: chaseLightController
+      value: 
+      objectReference: {fileID: 426471893}
+    - target: {fileID: 2144435575606988076, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: chaseLightController
+      value: 
+      objectReference: {fileID: 426471893}
+    - target: {fileID: 2208266077386690431, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: chaseLightController
+      value: 
+      objectReference: {fileID: 426471893}
     - target: {fileID: 2340481418031862546, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: m_IsActive
       value: 1
@@ -34502,6 +34508,10 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 75f9f412341ca924ab2921e4345bb93b, type: 2}
+    - target: {fileID: 6100550379594432483, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: chaseLightController
+      value: 
+      objectReference: {fileID: 426471893}
     - target: {fileID: 6118912396945488687, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -34514,10 +34524,22 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 75f9f412341ca924ab2921e4345bb93b, type: 2}
+    - target: {fileID: 7108853185383609051, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: chaseLightController
+      value: 
+      objectReference: {fileID: 426471893}
     - target: {fileID: 7399270163463822026, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 75f9f412341ca924ab2921e4345bb93b, type: 2}
+    - target: {fileID: 7415361078197434045, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: chaseLightController
+      value: 
+      objectReference: {fileID: 426471893}
+    - target: {fileID: 7662016283340775883, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: chaseLightController
+      value: 
+      objectReference: {fileID: 426471893}
     - target: {fileID: 7949359069841770545, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: displayStage
       value: 
@@ -36158,9 +36180,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d30a7237c40941743b74772e9d10cfb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialPatoLampController
-  tutorialCrane: {fileID: 2006116701}
+  chaseLightController: {fileID: 0}
   rotationSpeed: 260
-  activateThresholdSeconds: 10
 --- !u!4 &5904841221267606244
 Transform:
   m_ObjectHideFlags: 0
@@ -37379,9 +37400,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d30a7237c40941743b74772e9d10cfb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialPatoLampController
-  tutorialCrane: {fileID: 2006116701}
+  chaseLightController: {fileID: 0}
   rotationSpeed: 260
-  activateThresholdSeconds: 10
 --- !u!114 &6148532940158926670
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -45590,8 +45610,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 880f7a8ae6d87e84ea924142b07285fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PatoLampController
+  chaseLightController: {fileID: 0}
   rotationSpeed: 260
-  _showDebugLogs: 0
 --- !u!114 &7108853185464695030
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -45604,9 +45624,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d30a7237c40941743b74772e9d10cfb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialPatoLampController
-  tutorialCrane: {fileID: 2006116701}
+  chaseLightController: {fileID: 0}
   rotationSpeed: 260
-  activateThresholdSeconds: 10
 --- !u!33 &7122341123085578815
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -46955,8 +46974,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 880f7a8ae6d87e84ea924142b07285fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PatoLampController
+  chaseLightController: {fileID: 0}
   rotationSpeed: 260
-  _showDebugLogs: 0
 --- !u!114 &7415361078546168980
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -46969,9 +46988,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d30a7237c40941743b74772e9d10cfb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialPatoLampController
-  tutorialCrane: {fileID: 2006116701}
+  chaseLightController: {fileID: 0}
   rotationSpeed: 260
-  activateThresholdSeconds: 10
 --- !u!1 &7419810724687208899
 GameObject:
   m_ObjectHideFlags: 0
@@ -47956,9 +47974,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d30a7237c40941743b74772e9d10cfb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialPatoLampController
-  tutorialCrane: {fileID: 2006116701}
+  chaseLightController: {fileID: 0}
   rotationSpeed: 260
-  activateThresholdSeconds: 10
 --- !u!1 &7697733401022954375
 GameObject:
   m_ObjectHideFlags: 0
@@ -50935,9 +50952,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d30a7237c40941743b74772e9d10cfb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialPatoLampController
-  tutorialCrane: {fileID: 2006116701}
+  chaseLightController: {fileID: 0}
   rotationSpeed: 260
-  activateThresholdSeconds: 10
 --- !u!4 &8356967948188954283
 Transform:
   m_ObjectHideFlags: 0

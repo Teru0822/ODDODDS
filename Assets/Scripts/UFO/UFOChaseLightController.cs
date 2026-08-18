@@ -12,11 +12,14 @@ using UnityEngine;
 /// 同じprefabが何セットシーンに置かれていても、手動でLightをドラッグして配線する必要はない。
 ///
 /// 優先度は以下の順（上ほど優先）:
-/// 1. 残り時間が10秒を切ったら → パトランプには一切触らず PatoLampController 側の警告点灯・
-///    回転に完全に任せる。通常ライトはブラックダイヤ等の獲得演出中でなければ赤で点滅させる
-/// 2. ブラックダイヤ・時計・ルーレット(プレゼントボックス)獲得演出中（UFOItemGoal.IsFlashing）
-///    → 通常ライトのチェイス/点滅を消灯して待機（既存の獲得演出に任せる）
-/// 3. 上記以外（通常プレイ中）→ 指定順のチェイス演出（パトランプ含む）
+/// 1. ブラックダイヤ・時計獲得演出中（UFOItemGoal.IsFlashing）→ UFOItemGoal.CurrentFlashColorで
+///    パトランプ含め点灯（UFOItemGoal.FlashLampsCoroutine自体は別系統の壁掛けランプ類を担当する）
+/// 2. ルーレット当選〜配当完了 / ルーレット回転中 → 水色の点滅・チェイス
+/// 3. レバー/ボタン操作前 → 通常ライトのみ点灯（パトランプは触らない）
+/// 4. 残り時間が10秒を切ったら → パトランプには一切触らず PatoLampController 側の警告点灯・
+///    回転に完全に任せる。通常ライトは赤で点滅させる
+/// 5. 銅貨・銀貨・金貨を獲得した瞬間 → パトランプ含め今の色のまま一瞬点灯
+/// 6. 上記以外（通常プレイ中）→ 指定順のチェイス演出（パトランプ含む）
 /// </summary>
 public class UFOChaseLightController : MonoBehaviour
 {
@@ -97,6 +100,14 @@ public class UFOChaseLightController : MonoBehaviour
     private static float s_coinCatchFlashDuration = 0.3f;
 
     /// <summary>
+    /// 残り時間警告中（10秒未満で通常ライトを赤点滅させている間）かどうか。
+    /// PatoLampController / TutorialPatoLampControllerはこれだけを見て、trueの間だけ
+    /// パトランプの点灯・回転を担当する（それ以外の時間帯のパトランプの点灯・色は、
+    /// このUFOChaseLightController自身が一元管理するため、パトランプ側は一切手を出さない）
+    /// </summary>
+    public bool IsWarningBlinkActive => _currentMode == RegularLightMode.WarningBlink;
+
+    /// <summary>
     /// 銅貨・銀貨・金貨のいずれかを獲得した瞬間に呼び出す。通常ライト全体を今の色のまま
     /// 一瞬点灯させる（UFOItemGoal.HandleItemDropから呼ばれる）
     /// </summary>
@@ -109,8 +120,9 @@ public class UFOChaseLightController : MonoBehaviour
     private Dictionary<UFOChaseLightUnit.Position, List<Light>> _lightsByPosition;
     private Dictionary<UFOChaseLightUnit.Position, List<Renderer>> _renderersByPosition;
 
-    // 優先度（上ほど優先）: Deferred/PracticeItemFlash > RouletteWon > RouletteSpinning > CoinInsertFlash > WarningBlink/Chase > Off
-    private enum RegularLightMode { Off, CoinInsertFlash, Chase, WarningBlink, RouletteSpinning, RouletteWon, Deferred, PracticeItemFlash }
+    // 優先度（上ほど優先）: Deferred/PracticeItemFlash > RouletteWon > RouletteSpinning >
+    //                    CoinInsertFlash(レバー待ち) > WarningBlink > CoinCatchFlash(コイン獲得) > Chase > Off
+    private enum RegularLightMode { Off, CoinCatchFlash, Chase, WarningBlink, CoinInsertFlash, RouletteSpinning, RouletteWon, Deferred, PracticeItemFlash }
     private RegularLightMode _currentMode = RegularLightMode.Off;
     private Coroutine _routine;
 
@@ -193,16 +205,19 @@ public class UFOChaseLightController : MonoBehaviour
             switch (desiredMode)
             {
                 case RegularLightMode.CoinInsertFlash:
-                    // 2つの状況で使う共通の見た目（通常ライトだけを今の色のまま点ける）:
-                    // ①コイン投入直後〜レバー/ボタン操作までの間 ②銅貨・銀貨・金貨を獲得した瞬間の一瞬フラッシュ
-                    // パトランプはPatoLampControllerに委ねるため触らない方針だが、Chase中の「パトランプの番」で
-                    // enabled=trueのまま切り替わってくると、RestoreAllColors()で色だけ本来の色(赤)に戻り、
-                    // 点いたまま赤く見えてしまう。それを防ぐため、ここで明示的に消灯しておく
+                    // コイン投入直後〜レバー/ボタン操作までの間、通常ライトだけを今の色のまま点けておく。
+                    // パトランプはIsWarningBlinkActiveがfalseの間PatoLampController側が触らないので、
+                    // ここでは何もしなければ自然に消灯したままになる
                     RestoreAllColors();
                     SetLightsForOrder(LeftOrder, normalOnly: true, on: true);
                     SetLightsForOrder(RightOrder, normalOnly: true, on: true);
-                    SetLightsForOrder(LeftOrder, normalOnly: false, on: false, patrolOnly: true);
-                    SetLightsForOrder(RightOrder, normalOnly: false, on: false, patrolOnly: true);
+                    break;
+                case RegularLightMode.CoinCatchFlash:
+                    // 銅貨・銀貨・金貨を獲得した瞬間の一瞬フラッシュ。通常ライトは今の色のまま点灯し、
+                    // パトランプはChaseと同じく素の色（赤）ではなく、直前の通常ライトの色を引き継いで点灯する
+                    RestoreAllColors();
+                    ApplyAllOnWithPatrolInheritedColor(LeftOrder);
+                    ApplyAllOnWithPatrolInheritedColor(RightOrder);
                     break;
                 case RegularLightMode.Chase:
                     RestoreAllColors();
@@ -227,37 +242,33 @@ public class UFOChaseLightController : MonoBehaviour
                     _routine = StartCoroutine(RouletteBlinkRoutine());
                     break;
                 case RegularLightMode.Deferred:
-                    // ブラックダイヤ・時計等の獲得演出中（UFOItemGoal.FlashLampsCoroutineが同じ
-                    // Light/Rendererを直接操作している）。ここでは一切手を出さず完全に委ねる。
-                    // 中途半端にRestoreAllColors()やenabled切り替えを行うと、演出側が点けた直後の色を
-                    // 上書きして消してしまうため、意図的に何もしない
+                    // ブラックダイヤ・時計等の獲得演出中。UFOItemGoal.FlashLampsCoroutineは
+                    // "InsertableItem"タグの壁掛けランプ類（industrial_wall_lamp等）を直接光らせるが、
+                    // bottom_lump/PatoLamp側の物理ランプには触れないため、こちらでUFOItemGoal.CurrentFlashColorを
+                    // 使って同時に点灯させる（パトランプ含む。IsFlashingがfalseに戻るまで維持）
+                    RestoreAllColors();
+                    SetLightsForOrder(LeftOrder, normalOnly: false, on: true, overrideColor: UFOItemGoal.CurrentFlashColor);
+                    SetLightsForOrder(RightOrder, normalOnly: false, on: true, overrideColor: UFOItemGoal.CurrentFlashColor);
                     break;
                 case RegularLightMode.PracticeItemFlash:
                     // 練習機の時計・ブラックダイヤ獲得演出。TutorialItemGoalは専用のflashLightsしか
-                    // 光らせないため、こちらでチェイスライト側の通常ライトをTutorialItemGoal.CurrentFlashColorで
-                    // 点灯させる（IsFlashingがfalseに戻るまで維持）。
-                    // パトランプはTutorialPatoLampControllerに完全に委ねるため触らない
-                    // （色を上書きすると、他モード同様に元の色へ戻す手段が無いまま固まってしまうため）
+                    // 光らせないため、こちらでチェイスライト側の物理ランプ（パトランプ含む）を
+                    // TutorialItemGoal.CurrentFlashColorで点灯させる（IsFlashingがfalseに戻るまで維持）
                     RestoreAllColors();
                     if (practiceItemGoal != null)
                     {
                         Color flashColor = practiceItemGoal.CurrentFlashColor;
-                        SetLightsForOrder(LeftOrder, normalOnly: true, on: true, overrideColor: flashColor);
-                        SetLightsForOrder(RightOrder, normalOnly: true, on: true, overrideColor: flashColor);
+                        SetLightsForOrder(LeftOrder, normalOnly: false, on: true, overrideColor: flashColor);
+                        SetLightsForOrder(RightOrder, normalOnly: false, on: true, overrideColor: flashColor);
                     }
                     break;
                 case RegularLightMode.Off:
                 default:
+                    // パトランプもここで一律消灯してよい（IsWarningBlinkActiveがfalseになるため、
+                    // PatoLampController側も自然に手を引く。競合の心配はない）
                     RestoreAllColors();
-                    SetLightsForOrder(LeftOrder, normalOnly: true, on: false);
-                    SetLightsForOrder(RightOrder, normalOnly: true, on: false);
-                    // lowTimeでなければパトランプも消灯する（プレイ終了/演出待機時のリセット）。
-                    // lowTime中は絶対に触らずPatoLampControllerに委ねる
-                    if (!lowTime)
-                    {
-                        SetLightsForOrder(LeftOrder, normalOnly: false, on: false, patrolOnly: true);
-                        SetLightsForOrder(RightOrder, normalOnly: false, on: false, patrolOnly: true);
-                    }
+                    SetLightsForOrder(LeftOrder, normalOnly: false, on: false);
+                    SetLightsForOrder(RightOrder, normalOnly: false, on: false);
                     break;
             }
 
@@ -289,10 +300,10 @@ public class UFOChaseLightController : MonoBehaviour
             // 練習機のTutorialItemGoalは実機のFlashLampsCoroutineと違い、チェイスライト側の物理ランプには
             // 触れないため、獲得演出中はこちら側で同じランプをTutorialItemGoal.CurrentFlashColorで光らせる
             if (practiceItemGoal != null && practiceItemGoal.IsFlashing) return RegularLightMode.PracticeItemFlash;
-            // 練習機にはルーレットの概念が無いため、上記・コイン獲得フラッシュ・残り時間警告(WarningBlink)
-            // 以外はチェイスを表示する
-            if (s_coinCatchFlashTimer > 0f) return RegularLightMode.CoinInsertFlash;
-            return lowTime ? RegularLightMode.WarningBlink : RegularLightMode.Chase;
+            // 残り時間警告(赤)は、コイン獲得の一瞬フラッシュよりも優先する
+            if (lowTime) return RegularLightMode.WarningBlink;
+            if (s_coinCatchFlashTimer > 0f) return RegularLightMode.CoinCatchFlash;
+            return RegularLightMode.Chase;
         }
 
         if (!UFOCameraController.IsPlaySessionActive) return RegularLightMode.Off;
@@ -306,11 +317,14 @@ public class UFOChaseLightController : MonoBehaviour
         if (RouletteController.Instance != null && RouletteController.Instance.IsSpinning) return RegularLightMode.RouletteSpinning;
 
         // レバー/ボタンを実際に操作してタイマーが始まるまでは、チェイスは開始せず、
-        // コイン投入時に点いた通常ライトをそのまま点けたままにしておく。
-        // また、銅貨・銀貨・金貨を獲得した瞬間も、同じ「通常ライト全体を今の色で点灯」演出を一瞬流用する
-        if (!UFOCameraController.IsTimerStarted || s_coinCatchFlashTimer > 0f) return RegularLightMode.CoinInsertFlash;
+        // コイン投入時に点いた通常ライトをそのまま点けたままにしておく
+        if (!UFOCameraController.IsTimerStarted) return RegularLightMode.CoinInsertFlash;
 
-        return lowTime ? RegularLightMode.WarningBlink : RegularLightMode.Chase;
+        // 残り時間警告(赤)は、銅貨・銀貨・金貨を獲得した際の一瞬フラッシュよりも優先する
+        if (lowTime) return RegularLightMode.WarningBlink;
+        if (s_coinCatchFlashTimer > 0f) return RegularLightMode.CoinCatchFlash;
+
+        return RegularLightMode.Chase;
     }
 
     private IEnumerator ChaseRoutine()
@@ -363,6 +377,26 @@ public class UFOChaseLightController : MonoBehaviour
             else
             {
                 SetPositionOnOff(order[i].pos, isCurrent);
+            }
+        }
+    }
+
+    /// <summary>
+    /// order内の全ポジションを点灯させる。通常ライトは今の色のまま、パトランプはChaseの
+    /// パトランプ演出と同じく素の色ではなく直前の通常ライトの色を引き継ぐ（CoinCatchFlash用）
+    /// </summary>
+    private void ApplyAllOnWithPatrolInheritedColor((UFOChaseLightUnit.Position pos, bool isPatrolLamp)[] order)
+    {
+        for (int i = 0; i < order.Length; i++)
+        {
+            if (order[i].isPatrolLamp)
+            {
+                Color inheritedColor = GetPrecedingNormalColor(order, i);
+                SetPositionOnOffWithColor(order[i].pos, true, inheritedColor);
+            }
+            else
+            {
+                SetPositionOnOff(order[i].pos, true);
             }
         }
     }

@@ -35,6 +35,11 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
     /// </summary>
     public static bool IsFlashing { get; private set; } = false;
 
+    /// <summary>IsFlashing中に使っている色（時計・ブラックダイヤ獲得時の色）。FlashLampsCoroutineが
+    /// 対象にしている"InsertableItem"タグの壁掛けランプ類とは別に、UFOChaseLightControllerが
+    /// bottom_lump/PatoLamp側の物理ランプをこの色で同時に光らせるために参照する</summary>
+    public static Color CurrentFlashColor { get; private set; }
+
     /// <summary>
     /// ルーレット当選が確定してから、報酬アイテムの降雨が終わるまでtrue。
     /// UFOChaseLightControllerが「当選〜配当完了までライトを水色で点滅させる」判定に使う。
@@ -815,6 +820,7 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
 
     private void TriggerLampFlash(Color color, bool isBlink)
     {
+        CurrentFlashColor = color;
         IsFlashing = true; // 演出開始
         if (_lampCoroutine != null)
         {
