@@ -215,6 +215,10 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
         OnButtonPressed?.Invoke(buttonType);
     }
 
+    /// <summary>Play2_tutorialのPlayが押され、BeginTutorialPlay()で操作が解禁されたかどうか
+    /// （UFOChaseLightControllerが、練習機のチェイス演出を開始してよいかの判定に使う）</summary>
+    public bool AreControlsUnlocked => _controlsUnlocked;
+
     /// <summary>入力種別に関わらず共通の基礎条件（プレイ中・操作解禁済み・タイマー残あり）。
     /// レバー/ボタン/カメラ切り替えはこれに加えて、それぞれ独立したallowedフラグを見る</summary>
     private bool BaseControlActive => IsPlayingTutorial && _controlsUnlocked && _playTimer > 0f;

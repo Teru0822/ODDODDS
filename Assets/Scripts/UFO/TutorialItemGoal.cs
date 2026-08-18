@@ -44,6 +44,13 @@ public class TutorialItemGoal : MonoBehaviour
     /// <summary>アイテムが落とし口に入った瞬間に発火する（チュートリアルステップの進行検知等に使う）</summary>
     public event System.Action<UFOItemType> OnItemDropped;
 
+    /// <summary>時計・ブラックダイヤ等の獲得ランプ演出中かどうか（練習機用UFOChaseLightControllerが参照する）</summary>
+    public bool IsFlashing { get; private set; }
+
+    /// <summary>IsFlashing中に使っている色（練習機用UFOChaseLightControllerが、チェイスライト側の
+    /// 物理ランプをこの色で光らせるために参照する）</summary>
+    public Color CurrentFlashColor { get; private set; }
+
     private Coroutine _flashCoroutine;
 
     private void OnTriggerEnter(Collider other)
@@ -76,16 +83,18 @@ public class TutorialItemGoal : MonoBehaviour
         {
             case UFOItemType.Watch:
                 PlaySound(watchGetSound != null ? watchGetSound : coinGetSound);
-                FlashLights(watchFlashColor);
+                FlashLights(watchFlashColor, isGetEffect: true);
                 tutorialCrane?.AddPlayTime(watchTimeExtension);
                 break;
             case UFOItemType.BlackDiamond:
                 PlaySound(blackDiamondGetSound != null ? blackDiamondGetSound : coinGetSound);
-                FlashLights(blackDiamondFlashColor);
+                FlashLights(blackDiamondFlashColor, isGetEffect: true);
                 break;
             default:
                 PlaySound(coinGetSound);
-                FlashLights(coinFlashColor);
+                FlashLights(coinFlashColor, isGetEffect: false);
+                // 練習機のチェイスライトも、実機の銅貨・銀貨・金貨獲得時と同じ一瞬フラッシュを行う
+                UFOChaseLightController.TriggerCoinCatchFlash();
                 break;
         }
 
@@ -117,31 +126,47 @@ public class TutorialItemGoal : MonoBehaviour
         audioSource.PlayOneShot(clip);
     }
 
-    private void FlashLights(Color color)
+    /// <summary>
+    /// isGetEffect: true の場合、時計/ブラックダイヤ獲得演出として IsFlashing を演出中のみ true にする
+    /// （練習機用UFOChaseLightControllerが、この間はチェイス演出を止めて待機する判定に使う）
+    /// </summary>
+    private void FlashLights(Color color, bool isGetEffect)
     {
-        if (flashLights == null || flashLights.Length == 0) return;
-
         if (_flashCoroutine != null)
         {
             StopCoroutine(_flashCoroutine);
         }
-        _flashCoroutine = StartCoroutine(FlashLightsRoutine(color));
+        _flashCoroutine = StartCoroutine(FlashLightsRoutine(color, isGetEffect));
     }
 
-    private IEnumerator FlashLightsRoutine(Color color)
+    private IEnumerator FlashLightsRoutine(Color color, bool isGetEffect)
     {
-        foreach (var light in flashLights)
+        if (isGetEffect)
         {
-            if (light == null) continue;
-            light.color = color;
-            light.enabled = true;
+            CurrentFlashColor = color;
+            IsFlashing = true;
+        }
+
+        if (flashLights != null)
+        {
+            foreach (var light in flashLights)
+            {
+                if (light == null) continue;
+                light.color = color;
+                light.enabled = true;
+            }
         }
 
         yield return new WaitForSeconds(flashDuration);
 
-        foreach (var light in flashLights)
+        if (flashLights != null)
         {
-            if (light != null) light.enabled = false;
+            foreach (var light in flashLights)
+            {
+                if (light != null) light.enabled = false;
+            }
         }
+
+        if (isGetEffect) IsFlashing = false;
     }
 }
