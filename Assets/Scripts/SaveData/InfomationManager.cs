@@ -6,7 +6,7 @@ using UnityEngine;
 public class InfomationManager : MonoBehaviour, IsaveDataProvider
 {
     private float _playTimer;
-    private bool _isStopTimer = false;
+    private bool _isStopTimer = true;
     public bool IsStopTimer{get{return _isStopTimer;}set{_isStopTimer = value;}}
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -25,5 +25,6 @@ public class InfomationManager : MonoBehaviour, IsaveDataProvider
     public void ReadSaveData(RoguelikeSaveData data)
     {
         _playTimer = data.playTime;
+        _isStopTimer = false;
     }
 }

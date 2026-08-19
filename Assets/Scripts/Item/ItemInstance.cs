@@ -21,6 +21,7 @@ public class ItemInstance
     public string ItemName => master.itemName;
     public Sprite ItemIcon => master.iconImage;
     public string ItemDescription => master.description;
+    public string ItemDescription_en => master.description_en;
     public GameObject PrefabData=> master.prefabData;
     public ItemType ItemType=> master.itemType;
     public ItemCategory ItemCategory=> master.itemCategory;

@@ -111,6 +111,7 @@ public class SettingUIManager : MonoBehaviour
     [SerializeField] private AudioClip _tryVoice;
     [SerializeField] private Toggle _soundPitchOnToggle;
     [SerializeField] private Toggle _soundPitchOffToggle;
+    [SerializeField] private List<AudioSource> _audioSources = new List<AudioSource>();
 
     [Header("UIのオブジェクト(KeyBind)")]
     [SerializeField] private List<KeyBindItem> _keybindItems;
@@ -197,10 +198,14 @@ public class SettingUIManager : MonoBehaviour
 
         //UIの言語を変更する
         var languages = InterfaceFinder.FindAllByInterface<ILanguage>();
+        Debug.Log(languages.Count());
         foreach(var lan in languages)
         {
             lan.SettingLanguage(_language);
         }
+
+        //音声関連の初期化を行う
+        _audioSources = FindObjectsByType<AudioSource>(FindObjectsSortMode.InstanceID).ToList();
     }
 
     public void OnEnable()
@@ -784,6 +789,7 @@ public class SettingUIManager : MonoBehaviour
 
 
     /*--- ここからはサウンド用の設定項目に関する関数 ---------*/
+    
     public void ChangeBgmVolume(float value)
     {
         //TODO:処理を実装する

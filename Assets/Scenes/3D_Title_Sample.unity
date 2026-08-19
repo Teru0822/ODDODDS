@@ -2142,6 +2142,13 @@ MonoBehaviour:
       Value: FALLBALL
     - Key: 2
       Value: UFOCATCHER
+  _language: 0
+  _playTimeText: {fileID: 0}
+  _surviveTurnText: {fileID: 0}
+  _earnMoneyCountText: {fileID: 0}
+  _getItemCountText: {fileID: 0}
+  _useItemCountText: {fileID: 0}
+  _tradeVisitorCountText: {fileID: 0}
 --- !u!224 &318497138
 RectTransform:
   m_ObjectHideFlags: 0
@@ -7137,6 +7144,7 @@ MonoBehaviour:
     - Key: Fail_BGM
       Value: {fileID: 8300000, guid: 4996952a8d3ce5241a856bc8062cf453, type: 3}
   _drumRoll: {fileID: 8300000, guid: 9d702a8250643b647a9ed2fca29307e8, type: 3}
+  _showConversationTelop: 0
   _clickReference: {fileID: 3001919216989983466, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   _japaneseFontAsset: {fileID: 11400000, guid: db53d28994659044699b53953fd11835, type: 2}
   _englishFontAsset: {fileID: 11400000, guid: db53d28994659044699b53953fd11835, type: 2}
@@ -9873,6 +9881,65 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: a1930b8ea538cc9488e1ce84c77388d9, type: 3}
   m_PrefabInstance: {fileID: 755862618}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1700100001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1700100004}
+  - component: {fileID: 1700100014}
+  m_Layer: 0
+  m_Name: CursorManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1700100004
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1700100001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1700100014
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1700100001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00117f3d4cb17e847ab0ff889ce58564, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CursorStyleController
+  arrowTexture: {fileID: 2800000, guid: 2c296b2749b2e484c955a081607810d1, type: 3}
+  arrowHotspot: {x: 0, y: 0}
+  openHandTexture: {fileID: 0}
+  openHandHotspot: {x: 16, y: 16}
+  fistTexture: {fileID: 0}
+  fistHotspot: {x: 16, y: 16}
+  sizeMode: 1
+  cursorPixelSize: 32
+  cursorScale: 1
+  smoothScaling: 1
+  includeClickHandlers: 0
+  keepFistUntilRelease: 1
+  cursorMode: 1
+  persistAcrossScenes: 1
+  logOnStart: 1
 --- !u!1 &1701525483
 GameObject:
   m_ObjectHideFlags: 0
@@ -12836,65 +12903,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3c52acb0342c2af45a56b505e10414d0, type: 3}
---- !u!1 &1700100001
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1700100004}
-  - component: {fileID: 1700100014}
-  m_Layer: 0
-  m_Name: CursorManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1700100004
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1700100001}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1700100014
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1700100001}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 00117f3d4cb17e847ab0ff889ce58564, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CursorStyleController
-  arrowTexture: {fileID: 2800000, guid: 2c296b2749b2e484c955a081607810d1, type: 3}
-  arrowHotspot: {x: 0, y: 0}
-  openHandTexture: {fileID: 0}
-  openHandHotspot: {x: 16, y: 16}
-  fistTexture: {fileID: 0}
-  fistHotspot: {x: 16, y: 16}
-  sizeMode: 1
-  cursorPixelSize: 32
-  cursorScale: 1
-  smoothScaling: 1
-  includeClickHandlers: 0
-  keepFistUntilRelease: 1
-  cursorMode: 1
-  persistAcrossScenes: 1
-  logOnStart: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

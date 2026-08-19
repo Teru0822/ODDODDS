@@ -34,6 +34,7 @@ public class EffectInstance
     public string EffectName => master.effectName;
     public Sprite EffectIcon => master.effectIcon;
     public string EffectDescription => master.description;
+    public string EffectDescription_en => master.description_en;
     public EffectType EffectType => master.effectType;
 
     public EffectSaveData CreateEffectSaveData()
@@ -46,7 +47,7 @@ public class EffectInstance
     }
 }
 
-public class EffectManager : MonoBehaviour, IsaveDataProvider
+public class EffectManager : MonoBehaviour, IsaveDataProvider, ILanguage
 {
     public static EffectManager Instance;
     [SerializeField] private GameUIManager _gameUIManager;
@@ -58,6 +59,8 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider
     [SerializeField] private TMP_Text _effectTurnText;
     [SerializeField] private TMP_Text _effectExplainText;
     ReactiveCollection<EffectInstance> _ownedEffects = new ReactiveCollection<EffectInstance>();//エフェクトの情報を保持したものを集めたリスト
+
+    private Language _language;
     void Awake()
     {
         if(Instance == null)
@@ -129,6 +132,11 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider
             AddEffect(random);
         }
 #endif
+    }
+
+    public void SettingLanguage(Language language)
+    {
+        _language = language;
     }
 
     public void WriteSaveData(RoguelikeSaveData saveData)
@@ -237,7 +245,11 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider
 
         if (_effectExplainText != null)
         {
-            _effectExplainText.text = effect.EffectDescription.ToString();
+            if(_language == Language.JP)
+                _effectExplainText.text = effect.EffectDescription.ToString();
+            else if(_language == Language.EN)
+                _effectExplainText.text = effect.EffectDescription_en.ToString();
+
             _effectExplainText.gameObject.SetActive(true);
         }
     }
