@@ -288,15 +288,20 @@ public class TypewriterInteractable : InteractableHighlight
 
         yield return new WaitForSeconds(0.5f);
 
-        if(MoneyManager.Instance.NextDebtCollectionTurnCount == 0)
+        var moneyMgr = MoneyManager.Instance;
+        if (moneyMgr == null)
+        {
+            Debug.LogError("[TypewriterInteractable] MoneyManager が見つかりません。ターン処理をスキップします", this);
+        }
+        else if(moneyMgr.NextDebtCollectionTurnCount == 0)
         {
             yield return new WaitForSeconds(3.0f);
             if(_debtCollectionManager == null)
                 _debtCollectionManager = FindFirstObjectByType<DebtCollectionManager>();
 
-            if(_debtCollectionManager != null && MoneyManager.Instance.DebtClearTimes == 0)
+            if(_debtCollectionManager != null && moneyMgr.DebtClearTimes == 0)
                 _debtCollectionManager.StartConversationCoroutine("Conversation_00");
-            else if(_debtCollectionManager != null && MoneyManager.Instance.DebtClearTimes != 0)
+            else if(_debtCollectionManager != null && moneyMgr.DebtClearTimes != 0)
                 _debtCollectionManager.StartConversationCoroutine();
             else
                 Debug.LogError("[TypewriterInteractable] DebtCollectionManager が見つかりません", this);
