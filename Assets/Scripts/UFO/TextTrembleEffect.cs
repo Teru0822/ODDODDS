@@ -22,16 +22,43 @@ public class TextTrembleEffect : MonoBehaviour
     [Tooltip("隣の文字とどれだけ震えのタイミングをずらすか（バラバラ感を出す）")]
     [SerializeField] private float characterOffset = 4f;
 
+    [Header("親の揺れの影響を受けない設定")]
+    [Tooltip("揺れている親（Panel等、ImageTrembleEffectで揺れている場合）を指定すると、その親が" +
+             "今のフレームでどれだけ動いたかをローカル座標のまま差し引いて、テキストブロック自体は" +
+             "親の動きに引きずられず本来の位置に留まる（文字ごとの震えは従来通りそのまま効く）")]
+    [SerializeField] private ImageTrembleEffect parentTremble;
+
     private TMP_Text _text;
+    private RectTransform _rect;
+    private Vector2 _originalAnchoredPosition;
+    private Quaternion _originalRotation;
 
     private void Awake()
     {
         _text = GetComponent<TMP_Text>();
+        _rect = GetComponent<RectTransform>();
+        if (_rect != null)
+        {
+            _originalAnchoredPosition = _rect.anchoredPosition;
+            _originalRotation = _rect.localRotation;
+        }
     }
 
     private void Update()
     {
         AnimateTremble();
+    }
+
+    private void LateUpdate()
+    {
+        if (parentTremble == null || _rect == null) return;
+
+        // 親（Panel等）のUpdate()はこのLateUpdate()より必ず先に終わっている（Unityの実行順の保証）。
+        // 親の「このフレームの揺れ量」をローカル座標のまま差し引くことで、テキストブロック自体は
+        // 親の動きに引きずられず本来の位置に留まる。文字ごとの震え（メッシュ頂点）はテキストの
+        // ローカル空間で完結しているため影響を受けない。ワールド座標には一切触れない。
+        _rect.anchoredPosition = _originalAnchoredPosition - parentTremble.CurrentPositionDelta;
+        _rect.localRotation = _originalRotation * Quaternion.Euler(0f, 0f, -parentTremble.CurrentRotationDeltaDegrees);
     }
 
     private void AnimateTremble()

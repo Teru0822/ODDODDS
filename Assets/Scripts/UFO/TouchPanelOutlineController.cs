@@ -36,9 +36,6 @@ public class TouchPanelOutlineController : MonoBehaviour
         [Tooltip("outline が未設定の場合に Play_Canvas 直下から検索するパス（例: 'Panel_30' や 'Quit/Button'）")]
         public string playCanvasPath;
 
-        [Tooltip("アウトラインが表示された瞬間（ホバー開始時）に再生する SE。未設定なら無音")]
-        public AudioClip hoverEnterClip;
-
         [Tooltip("選択された時に Play_Canvas2 側のテキストへ反映する内容（30/60/90 のみ使用）")]
         [TextArea]
         public string resultText;
@@ -74,11 +71,6 @@ public class TouchPanelOutlineController : MonoBehaviour
 
     [Tooltip("Raycast の最大距離 (m)")]
     [SerializeField] private float maxDistance = 50f;
-
-    [Header("ホバー SE")]
-    [Range(0f, 5f)]
-    [Tooltip("SE のボリューム（1 を超えるとブースト）")]
-    [SerializeField] private float hoverVolume = 1f;
 
     [Header("判定対象 (Play)")]
     [SerializeField] private TouchTarget touch30 = new TouchTarget { touchAreaName = "Play/30", playCanvasPath = "Panel_30", resultText = "              30秒\n1500 Devil Coins", durationSeconds = 30f, durationCost = 1500f };
@@ -424,7 +416,7 @@ public class TouchPanelOutlineController : MonoBehaviour
             // ホバー開始の瞬間（未ホバー → ホバー）にだけ SE を鳴らす
             if (isHovered && !t.wasHovered)
             {
-                PlayOneShot(t.hoverEnterClip, hoverVolume);
+                UFOSEManager.Instance?.PlayTouchHover();
             }
             t.wasHovered = isHovered;
         }
@@ -511,7 +503,14 @@ public class TouchPanelOutlineController : MonoBehaviour
                 }
                 else if (touchNo.touchArea != null && hitArea == touchNo.touchArea)
                 {
-                    HandleTutorialNoClicked();
+                    if (touchNo.isLocked)
+                    {
+                        HandleLockedClicked(touchNo);
+                    }
+                    else
+                    {
+                        HandleTutorialNoClicked();
+                    }
                 }
             }
         }
@@ -741,7 +740,14 @@ public class TouchPanelOutlineController : MonoBehaviour
     /// </summary>
     private void HandleLockedClicked(TouchTarget target)
     {
-        UFOSEManager.Instance?.PlayTouchLocked();
+        if (target == touchNo)
+        {
+            UFOSEManager.Instance?.PlayTouchNoLocked();
+        }
+        else
+        {
+            UFOSEManager.Instance?.PlayTouchLocked();
+        }
 
         if (target.outline != null)
         {
@@ -948,11 +954,6 @@ public class TouchPanelOutlineController : MonoBehaviour
         if (_play2Group != null) _play2Group.gameObject.SetActive(group == PanelGroup.Play2);
         if (_playTutorialGroup != null) _playTutorialGroup.gameObject.SetActive(group == PanelGroup.PlayTutorial);
         if (_play2TutorialGroup != null) _play2TutorialGroup.gameObject.SetActive(group == PanelGroup.Play2Tutorial);
-    }
-
-    private void PlayOneShot(AudioClip clip, float volume)
-    {
-        UFOSEManager.Instance?.PlayOneShot(clip, volume);
     }
 
     private void OnDisable()

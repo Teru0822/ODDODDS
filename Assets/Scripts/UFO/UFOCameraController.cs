@@ -13,6 +13,11 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
     public static event System.Action<bool> OnUfoModeChanged;
     public static event System.Action OnCoinInserted;
     public static event System.Action OnAllCoinsInserted;
+    /// <summary>プレイセッション中、初めてレバー/ボタンが操作された瞬間に1回だけ発火</summary>
+    public static event System.Action OnControlInputUsed;
+    /// <summary>残り時間10秒未満の警告状態に入った/抜けた瞬間に発火（true: 入った / false: 抜けた）。
+    /// 警告音（UFOSEManager.StartLowTimeWarning）と全く同じタイミング・条件で発火する</summary>
+    public static event System.Action<bool> OnLowTimeWarningChanged;
     public static event System.Action<UfoSubCameraState> OnSubCameraChanged;
     public static bool IsPlaySessionActive { get; private set; } = false;
     /// <summary>IsPlaySessionActive が変化した時に発火（true: Play_Canvas2 の Play を押して実際にプレイ開始 / false: セッション終了）</summary>
@@ -267,6 +272,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
         if (_timerStarted) return;
         _timerStarted = true;
         Debug.Log("[UFOCameraController] レバー/ボタン操作を検知しました。タイマーのカウントダウンを開始します。");
+        OnControlInputUsed?.Invoke();
     }
 
     /// <summary>
@@ -771,6 +777,9 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
                 UFOSEManager.Instance?.PlayRealLightFlicker();
             }
 
+            // ライトが点灯している間ずっと流す環境音もここで開始する
+            UFOSEManager.Instance?.StartAmbientLoop();
+
             if (_playLightFlickerCoroutine != null) StopCoroutine(_playLightFlickerCoroutine);
             _playLightFlickerCoroutine = StartCoroutine(PlayLightOnFlickerCoroutine());
         }
@@ -792,6 +801,10 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
             {
                 UFOSEManager.Instance?.PlayRealLightOff();
             }
+
+            // ライト点灯中ずっと流していた環境音もここで止める
+            UFOSEManager.Instance?.StopAmbientLoop();
+
             Debug.Log("[UFOCameraController] ライトを消灯しました。");
         }
     }
@@ -1288,6 +1301,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
             {
                 _hasPlayedLowTimeWarning = true;
                 UFOSEManager.Instance?.StartLowTimeWarning(isPractice: false);
+                OnLowTimeWarningChanged?.Invoke(true);
             }
         }
         else
@@ -1298,6 +1312,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
             {
                 _hasPlayedLowTimeWarning = false;
                 UFOSEManager.Instance?.StopLowTimeWarning(isPractice: false);
+                OnLowTimeWarningChanged?.Invoke(false);
             }
         }
     }
