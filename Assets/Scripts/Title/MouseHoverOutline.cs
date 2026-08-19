@@ -150,7 +150,8 @@ public class MouseHoverOutline : MonoBehaviour
         return GameUIManager.IsMenuOpen
             || SettingUIManager.IsMenuOpen
             || RewardSelectionUI.IsTypewriterUIShowing
-            || TypewriterInteractable.IsAnyBusy;
+            || TypewriterInteractable.IsAnyBusy
+            || (SceneTransitionManager.Instance != null && SceneTransitionManager.Instance.IsTransitioning);
     }
     
 

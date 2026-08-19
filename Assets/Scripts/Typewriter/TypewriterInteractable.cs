@@ -144,6 +144,7 @@ public class TypewriterInteractable : InteractableHighlight
     public override bool IsInteractable(CupPickupController pickup)
     {
         if (_busy) return false;
+        if (SceneTransitionManager.Instance != null && SceneTransitionManager.Instance.IsTransitioning) return false;
         if (controller != null && controller.IsTyping) return false;
         if (selectionUI != null && selectionUI.IsActive) return false;
         // Bin 保持中はインタラクト不可 (他の操作と競合させない)
