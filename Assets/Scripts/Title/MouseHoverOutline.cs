@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using MiniGames.Transitions;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
@@ -150,7 +151,8 @@ public class MouseHoverOutline : MonoBehaviour
         return GameUIManager.IsMenuOpen
             || SettingUIManager.IsMenuOpen
             || RewardSelectionUI.IsTypewriterUIShowing
-            || TypewriterInteractable.IsAnyBusy;
+            || TypewriterInteractable.IsAnyBusy
+            || (SceneTransitionManager.Instance != null && SceneTransitionManager.Instance.IsTransitioning);
     }
     
 

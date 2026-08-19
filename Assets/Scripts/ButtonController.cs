@@ -25,9 +25,6 @@ public class ButtonController : MonoBehaviour
     public float pressSpeed = 20f;
 
     [Header("効果音")]
-    [Tooltip("再生用のAudioSource。未設定の場合は自動でGetComponentします")]
-    [SerializeField] private AudioSource audioSource;
-
     [Tooltip("ボタンを押したときの効果音")]
     [SerializeField] private AudioClip clickSound;
 
@@ -50,11 +47,6 @@ public class ButtonController : MonoBehaviour
         _originalLocalPos = transform.localPosition;
         _collider         = GetComponent<Collider>();
         _controlSource    = controlSourceOverride as ICraneControlSource;
-
-        if (audioSource == null)
-        {
-            audioSource = GetComponent<AudioSource>();
-        }
     }
 
     private bool IsPlaying => _controlSource != null ? _controlSource.IsPlayingCrane : UFOCameraController.IsPlayingUfo;
@@ -163,19 +155,6 @@ public class ButtonController : MonoBehaviour
 
     private void PlaySound(AudioClip clip)
     {
-        if (clip != null)
-        {
-            if (audioSource == null)
-            {
-                audioSource = GetComponent<AudioSource>();
-                if (audioSource == null)
-                {
-                    audioSource = gameObject.AddComponent<AudioSource>();
-                    audioSource.playOnAwake = false;
-                    audioSource.spatialBlend = 0f; // 2D音響にして距離減衰を無視する
-                }
-            }
-            audioSource.PlayOneShot(clip, soundVolume);
-        }
+        UFOSEManager.Instance?.PlayOneShot(clip, soundVolume);
     }
 }

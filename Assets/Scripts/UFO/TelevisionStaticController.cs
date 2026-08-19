@@ -76,29 +76,9 @@ public class TelevisionStaticController : MonoBehaviour
     [SerializeField, Min(0f)] private double videoStartOffsetSeconds = 1.0;
 
     [Header("砂嵐 SE")]
-    [Tooltip("SE 再生用の AudioSource。未設定なら自身に AddComponent して使う")]
-    [SerializeField] private AudioSource staticAudioSource;
-
-    [Tooltip("砂嵐（Canvas 切り替え時の演出）中に鳴らす SE")]
-    [SerializeField] private AudioClip staticSound;
-
-    [Range(0f, 5f)]
-    [Tooltip("砂嵐 SE のボリューム（1 を超えるとブースト）")]
-    [SerializeField] private float staticVolume = 1f;
-
-    [Tooltip("砂嵐の表示時間（staticDuration）に合わせてループ再生するか。false の場合は開始時に一度だけ再生する")]
+    [Tooltip("砂嵐の表示時間（staticDuration）に合わせてループ再生するか。false の場合は開始時に一度だけ再生する。" +
+             "実際のクリップ・音量はUFOSEManagerで一元管理")]
     [SerializeField] private bool loopStaticSound = true;
-
-    [Header("Tutorial_Canvas 表示中の砂嵐ループ音")]
-    [Tooltip("Tutorial_Canvas表示中、ずっとループ再生する専用AudioSource。未設定なら自身にAddComponentして使う")]
-    [SerializeField] private AudioSource tutorialStaticLoopAudioSource;
-
-    [Tooltip("Tutorial_Canvas表示中にループ再生するSE。未設定ならstaticSoundを代用する")]
-    [SerializeField] private AudioClip tutorialStaticLoopSound;
-
-    [Range(0f, 5f)]
-    [Tooltip("Tutorial_Canvasループ音のボリューム")]
-    [SerializeField] private float tutorialStaticLoopVolume = 0.5f;
 
     private bool _wasTutorialCanvasActive;
 
@@ -186,27 +166,7 @@ public class TelevisionStaticController : MonoBehaviour
     /// </summary>
     private void SetTutorialStaticLoopActive(bool active)
     {
-        AudioClip clip = tutorialStaticLoopSound != null ? tutorialStaticLoopSound : staticSound;
-        if (clip == null) return;
-
-        if (tutorialStaticLoopAudioSource == null)
-        {
-            tutorialStaticLoopAudioSource = gameObject.AddComponent<AudioSource>();
-            tutorialStaticLoopAudioSource.playOnAwake = false;
-            tutorialStaticLoopAudioSource.spatialBlend = 0f;
-        }
-
-        if (active)
-        {
-            tutorialStaticLoopAudioSource.clip = clip;
-            tutorialStaticLoopAudioSource.loop = true;
-            tutorialStaticLoopAudioSource.volume = tutorialStaticLoopVolume;
-            tutorialStaticLoopAudioSource.Play();
-        }
-        else
-        {
-            tutorialStaticLoopAudioSource.Stop();
-        }
+        UFOSEManager.Instance?.SetTutorialStaticLoopActive(active);
     }
 
     /// <summary>
@@ -597,27 +557,20 @@ public class TelevisionStaticController : MonoBehaviour
 
     private void PlayStaticSound(bool active)
     {
-        if (staticSound == null) return;
-
-        EnsureStaticAudioSource();
-
         if (active)
         {
             if (loopStaticSound)
             {
-                staticAudioSource.clip = staticSound;
-                staticAudioSource.loop = true;
-                staticAudioSource.volume = staticVolume;
-                staticAudioSource.Play();
+                UFOSEManager.Instance?.StartTelevisionStaticLoop();
             }
             else
             {
-                staticAudioSource.PlayOneShot(staticSound, staticVolume);
+                UFOSEManager.Instance?.PlayTelevisionStaticOneShot();
             }
         }
         else if (loopStaticSound)
         {
-            staticAudioSource.Stop();
+            UFOSEManager.Instance?.StopTelevisionStaticLoop();
         }
     }
 
@@ -638,17 +591,6 @@ public class TelevisionStaticController : MonoBehaviour
     {
         if (vp == null) return;
         vp.time = videoStartOffsetSeconds;
-    }
-
-    private void EnsureStaticAudioSource()
-    {
-        if (staticAudioSource == null) staticAudioSource = GetComponent<AudioSource>();
-        if (staticAudioSource == null)
-        {
-            staticAudioSource = gameObject.AddComponent<AudioSource>();
-            staticAudioSource.playOnAwake = false;
-            staticAudioSource.spatialBlend = 0f; // 2D再生
-        }
     }
 
     // --- コンテキストメニュー / テスト用メソッド ---

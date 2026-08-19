@@ -10,7 +10,7 @@ using UniRx;
 using UnityEngine.UI;
 
 
-public class GameUIManager : MonoBehaviour
+public class GameUIManager : MonoBehaviour,ILanguage
 {
     public static GameUIManager Instance { get; private set; }
 
@@ -87,6 +87,7 @@ public class GameUIManager : MonoBehaviour
 
 
     [Header("メニュー用のSettings")]
+    [SerializeField] private Language _language;
     [SerializeField] private InputActionReference _openMenuReference;//Tabキーを押したらメニュー表示
     [SerializeField] private SerializeDictionary<int, GameObject> _menuTitle = new SerializeDictionary<int, GameObject>();
     private MouseHoverOutline[] _mouseHoverOutlines;
@@ -369,6 +370,12 @@ public class GameUIManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    public void SettingLanguage(Language language)
+    {
+        _language = language;
+
     }
 
     /// <summary>

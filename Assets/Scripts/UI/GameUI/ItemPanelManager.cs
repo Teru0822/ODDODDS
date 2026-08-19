@@ -42,12 +42,13 @@ public enum ItemCategory
 /// <summary>
 /// アイテムパネルの表示およびアイテム所持状況の永続化を管理するクラス
 /// </summary>
-public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
+public class ItemPanelManager : MonoBehaviour, IsaveDataProvider,ILanguage
 {
     public static ItemPanelManager Instance { get; private set; }
 
     /// <summary>AddItem でアイテムが追加されたときに発火。引数はアイテムID。</summary>
     public static event System.Action<int> OnItemObtained;
+    private Language _language;
 
     [Header("アイテム表示用オブジェクト")]
     [SerializeField] private ItemDataBase _itemDataBase;
@@ -72,6 +73,10 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
     [SerializeField] private GameUIManager _gameUIManager;
     private ItemType _displayedType = ItemType.Consume;//表示させるアイテムの種類を決定する変数
     private ItemInstance _nowSelectedItem = null;
+
+    //データ収集
+    private int _getItemCount;//これまでアイテムを取得した数
+    private int _useItemCount;//これまでアイテムを使用した数
 
     private void Awake()
     {
@@ -139,6 +144,11 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
         _useButton.gameObject.SetActive(false);
     }
 
+    public void SettingLanguage(Language language)
+    {
+        _language = language;
+    }
+    
     private void Update()
     {
 #if UNITY_EDITOR
@@ -171,6 +181,8 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
 
         saveData.ownedPermanentItems = permanentItemSaveData;
         saveData.ownedConsumeItems = consumeItemSaveData;
+        saveData.getItemCount = _getItemCount;
+        saveData.useItemCount = _useItemCount;
     }
 
     public void ReadSaveData(RoguelikeSaveData saveData)
@@ -199,6 +211,8 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
                 _ownedConsumeItems.Add(instance);
             }
         }
+        _getItemCount = saveData.getItemCount;
+        _useItemCount = saveData.useItemCount;
 
         Debug.LogWarning("[WriteSaveData] --- Owned Permanent Items Details ---");
         foreach (var item in _ownedItems)
@@ -308,7 +322,11 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
 
         if (_detailDescriptionText != null)
         {
-            _detailDescriptionText.text = item.ItemDescription;
+            if(_language == Language.JP)
+                _detailDescriptionText.text = item.ItemDescription;
+            else if(_language == Language.EN)
+                _detailDescriptionText.text = item.ItemDescription_en;
+
             _detailDescriptionText.gameObject.SetActive(true);
         }
 
@@ -364,7 +382,8 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
         {
             Debug.LogError(_nowSelectedItem.ItemName + "使用");
             EffectManager.Instance.AddEffect(effectId);
-            RemoveItem(_nowSelectedItem.Id,_nowSelectedItem.ItemType);            
+            RemoveItem(_nowSelectedItem.Id,_nowSelectedItem.ItemType);
+            _useItemCount++;   
         }
     }
 
@@ -438,6 +457,7 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
         }
 
         OnItemObtained?.Invoke(id);
+        _getItemCount += num;
         UpdateUI();
     }
 

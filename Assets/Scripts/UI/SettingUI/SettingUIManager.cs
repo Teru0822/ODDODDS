@@ -13,6 +13,7 @@ using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using static UnityEngine.InputSystem.InputActionRebindingExtensions;
+using UnityEngine.Localization.Settings;
 
 public enum ScreenSize
 {
@@ -92,11 +93,13 @@ public class SettingUIManager : MonoBehaviour
     [SerializeField] private TMP_Dropdown _antiAliasingDropDown;
     [SerializeField] private TMP_Dropdown _shadowDropDown;
     [SerializeField] private UniversalRenderPipelineAsset _urpAsset;
+
     private List<int> _availableRefreshRates = new() { 30,60,120,144,165,240};
     private Volume _volume;
     private ColorAdjustments _colorAdjustments;
     Camera _mainCamera;
     private UniversalAdditionalCameraData _cameraData;
+    private Language _language;
 
     [Header("UIのオブジェクト(Sound)")]
     [SerializeField] private Slider _bgmSlider;
@@ -108,6 +111,7 @@ public class SettingUIManager : MonoBehaviour
     [SerializeField] private AudioClip _tryVoice;
     [SerializeField] private Toggle _soundPitchOnToggle;
     [SerializeField] private Toggle _soundPitchOffToggle;
+    [SerializeField] private List<AudioSource> _audioSources = new List<AudioSource>();
 
     [Header("UIのオブジェクト(KeyBind)")]
     [SerializeField] private List<KeyBindItem> _keybindItems;
@@ -116,6 +120,10 @@ public class SettingUIManager : MonoBehaviour
     private PlayerInput _myPlayerInput;
     private FirstPersonController _fpsController;
     private InputActionRebindingExtensions.RebindingOperation _rebindingOperation;
+
+    [Header("UIのオブジェクト(Other)")]
+
+    [SerializeField] private TMP_Dropdown _languageDropDown;
 
 
     private MouseHoverOutline[] _mouseHoverOutlines;
@@ -190,8 +198,18 @@ public class SettingUIManager : MonoBehaviour
                 item.inputActionReference.action.bindings[(int)item._bindingIndex].effectivePath,
                 InputControlPath.HumanReadableStringOptions.OmitDevice);
             }
-
         }
+
+        //UIの言語を変更する
+        var languages = InterfaceFinder.FindAllByInterface<ILanguage>();
+        Debug.Log(languages.Count());
+        foreach(var lan in languages)
+        {
+            lan.SettingLanguage(_language);
+        }
+
+        //音声関連の初期化を行う
+        _audioSources = FindObjectsByType<AudioSource>(FindObjectsSortMode.InstanceID).ToList();
     }
 
     public void OnEnable()
@@ -210,6 +228,7 @@ public class SettingUIManager : MonoBehaviour
 
         _yesButton.onClick.AddListener(() => _checkActionIndex = 0);
         _noButton.onClick.AddListener(() => _checkActionIndex = 1);
+        _languageDropDown.onValueChanged.AddListener(value => LanguageSetting(value));
 
         //グラフィック項目のリスナー追加
         _windowModeToggle.onValueChanged.AddListener(value => { if (value) Screen.fullScreen = false; Debug.Log("_windowModeToggle:" + value); });
@@ -250,6 +269,7 @@ public class SettingUIManager : MonoBehaviour
         //コモンのリスナー削除
         _resetButton.onClick.RemoveAllListeners();
         _backTitleButton.onClick.RemoveAllListeners();
+        _languageDropDown.onValueChanged.RemoveAllListeners();
 
         //グラフィック項目のリスナー削除
         _windowModeToggle.onValueChanged.RemoveAllListeners();
@@ -274,6 +294,28 @@ public class SettingUIManager : MonoBehaviour
         {
             keybindItem.button.onClick.RemoveAllListeners();
         }
+    }
+
+    /// <summary>
+    /// 言語設定を変更させる
+    /// </summary>
+    /// <param name="value"></param>
+    private void LanguageSetting(int value)
+    {
+        _language = (Language)value;
+        Debug.LogError(_language);
+
+        //設定された言語をもとに全てのUIの言語を反映させる
+        var languages = InterfaceFinder.FindAllByInterface<ILanguage>();
+        foreach(var lan in languages)
+        {
+            lan.SettingLanguage(_language);
+        }
+
+        var locales = LocalizationSettings.AvailableLocales.Locales;
+        Debug.Log(locales[0]);
+        Debug.Log(locales[1]);
+        LocalizationSettings.SelectedLocale = locales[value];
     }
 
     private void OnApplicationQuit()
@@ -757,6 +799,7 @@ public class SettingUIManager : MonoBehaviour
 
 
     /*--- ここからはサウンド用の設定項目に関する関数 ---------*/
+    
     public void ChangeBgmVolume(float value)
     {
         //TODO:処理を実装する

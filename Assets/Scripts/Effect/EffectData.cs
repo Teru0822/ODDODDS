@@ -9,6 +9,7 @@ public class EffectData  : ScriptableObject
     public bool isInfinity = false;//効果が永続するものならTrue
     public string effectName;//名前
     public string description;//説明
+    public string description_en;//説明(英語)
     public Sprite effectIcon;//アイテムの画像
     public EffectType effectType;//エフェクトの種類：バフかデバフか
 }

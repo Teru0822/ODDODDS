@@ -17,6 +17,7 @@ public class ItemData : ScriptableObject
     public int id; //アイテムのID
     public string itemName;//名前
     public string description;//説明
+    public string description_en;//説明(英語)
     public Sprite iconImage;//アイテムの画像（入手済み・カラー）
     public Sprite silhouetteImage;//アイテムの画像（未入手・シルエット）
     public GameObject prefabData;//生成するオブジェクト

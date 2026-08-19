@@ -35,6 +35,11 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
     /// </summary>
     public static bool IsFlashing { get; private set; } = false;
 
+    /// <summary>IsFlashing中に使っている色（時計・ブラックダイヤ獲得時の色）。FlashLampsCoroutineが
+    /// 対象にしている"InsertableItem"タグの壁掛けランプ類とは別に、UFOChaseLightControllerが
+    /// bottom_lump/PatoLamp側の物理ランプをこの色で同時に光らせるために参照する</summary>
+    public static Color CurrentFlashColor { get; private set; }
+
     /// <summary>
     /// ルーレット当選が確定してから、報酬アイテムの降雨が終わるまでtrue。
     /// UFOChaseLightControllerが「当選〜配当完了までライトを水色で点滅させる」判定に使う。
@@ -50,25 +55,22 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
     public static Color RouletteChaseColor =>
         Instance != null ? Instance.rouletteFlashColor : new Color(0.3f, 0.85f, 1f, 1f) * 2f;
 
+    /// <summary>
+    /// IsFlashing / IsRouletteRewardPending を強制的にfalseへ戻す（新しいプレイセッション開始時に呼ぶ）。
+    /// 演出中にターン切り替え等でUFOItemGoalのGameObjectが破棄されると、その演出コルーチン
+    /// （FlashLampsCoroutine / ProcessRouletteQueueRoutine）が最後まで実行されずに中断され、
+    /// static かつ private set のこれらのフラグがtrueのまま復帰できなくなることがある
+    /// （例: ブラックダイヤ獲得直後にターンが切り替わると、次のターンでもずっと紫のまま固まる）。
+    /// 新しいセッションの開始時に必ずこれを呼び、フラグが変な状態のまま持ち越されないようにする
+    /// </summary>
+    public static void ResetStuckFlashState()
+    {
+        IsFlashing = false;
+        IsRouletteRewardPending = false;
+    }
 
 
 
-    [Header("効果音")]
-    [Tooltip("再生用のAudioSource。未設定の場合は自動でGetComponentします")]
-    [SerializeField] private AudioSource audioSource;
-
-    [Tooltip("コイン獲得時の効果音")]
-    [SerializeField] private AudioClip coinGetSound;
-
-    [Tooltip("時計獲得時の効果音（未設定の場合はコインと同じ音が鳴ります）")]
-    [SerializeField] private AudioClip watchGetSound;
-
-    [Tooltip("ブラックダイヤモンド獲得時の効果音（未設定の場合はコインと同じ音が鳴ります）")]
-    [SerializeField] private AudioClip blackDiamondGetSound;
-
-    [Tooltip("効果音の音量調整 (1.0より大きい値で音量増幅可能)")]
-    [Range(0f, 10f)]
-    [SerializeField] private float soundVolume = 1.0f;
 
     [Header("時計効果")]
     [Tooltip("時計を落とし口に入れたときにUFOキャッチャーの残り時間を何秒延長するか")]
@@ -226,11 +228,6 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
 
     private void Start()
     {
-        // AudioSourceの自動取得
-        if (audioSource == null)
-        {
-            audioSource = GetComponent<AudioSource>();
-        }
 
         // ルーレットのイベント購読
         if (rouletteController != null)
@@ -727,7 +724,7 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
                     _sessionBronzeCoins++;
                     Debug.Log($"[獲得] 銅貨！ (今回セッション累計: 銅{_sessionBronzeCoins})");
                     // コイン獲得音の再生
-                    PlaySound(coinGetSound);
+                    UFOSEManager.Instance?.PlayRealCoinGet();
                     UFODrawerRewardDisplay.Instance?.AddItem(UFODrawerRewardDisplay.RewardItemType.Bronze);
                     UFOChaseLightController.TriggerCoinCatchFlash();
                     break;
@@ -735,7 +732,7 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
                     _sessionSilverCoins++;
                     Debug.Log($"[獲得] 銀貨！ (今回セッション累計: 銀{_sessionSilverCoins})");
                     // コイン獲得音の再生
-                    PlaySound(coinGetSound);
+                    UFOSEManager.Instance?.PlayRealCoinGet();
                     UFODrawerRewardDisplay.Instance?.AddItem(UFODrawerRewardDisplay.RewardItemType.Silver);
                     UFOChaseLightController.TriggerCoinCatchFlash();
                     break;
@@ -743,7 +740,7 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
                     _sessionGoldCoins++;
                     Debug.Log($"[獲得] 金貨！ (今回セッション累計: 金{_sessionGoldCoins})");
                     // コイン獲得音の再生
-                    PlaySound(coinGetSound);
+                    UFOSEManager.Instance?.PlayRealCoinGet();
                     UFODrawerRewardDisplay.Instance?.AddItem(UFODrawerRewardDisplay.RewardItemType.Gold);
                     UFOChaseLightController.TriggerCoinCatchFlash();
                     break;
@@ -761,7 +758,7 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
                     }
 
                     // 時計獲得音の再生（未設定ならコイン音で代用）
-                    PlaySound(watchGetSound != null ? watchGetSound : coinGetSound);
+                    UFOSEManager.Instance?.PlayRealWatchGet();
 
                     // ランプを時計用の色に光らせる（常灯）
                     TriggerLampFlash(lampFlashColor, false);
@@ -769,7 +766,7 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
                 case UFOItemType.BlackDiamond:
                     _sessionBlackDiamonds++;
                     Debug.Log($"[獲得] BlackDiamond！ (今回セッション累計: 黒{_sessionBlackDiamonds})");
-                    PlaySound(blackDiamondGetSound != null ? blackDiamondGetSound : coinGetSound);
+                    UFOSEManager.Instance?.PlayRealBlackDiamondGet();
                     UFODrawerRewardDisplay.Instance?.AddItem(UFODrawerRewardDisplay.RewardItemType.BlackDiamond);
 
                     if (_blackDiamondItem != null && ItemPanelManager.Instance != null)
@@ -792,29 +789,9 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
         }
     }
 
-    /// <summary>
-    /// 効果音を再生するヘルパー関数
-    /// </summary>
-    private void PlaySound(AudioClip clip)
-    {
-        if (clip != null)
-        {
-            if (audioSource == null)
-            {
-                audioSource = GetComponent<AudioSource>();
-                if (audioSource == null)
-                {
-                    audioSource = gameObject.AddComponent<AudioSource>();
-                    audioSource.playOnAwake = false;
-                    audioSource.spatialBlend = 0f; // 2D音響にして距離減衰を無視する
-                }
-            }
-            audioSource.PlayOneShot(clip, soundVolume);
-        }
-    }
-
     private void TriggerLampFlash(Color color, bool isBlink)
     {
+        CurrentFlashColor = color;
         IsFlashing = true; // 演出開始
         if (_lampCoroutine != null)
         {
@@ -840,8 +817,8 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
         }
         Debug.Log($"[獲得] RouletteItem (トリガー実行)！ (未洗浄メダル総額: {unwashedMoney}円)");
 
-        // コイン獲得音の再生
-        PlaySound(coinGetSound);
+        // ルーレットアイテム投入音の再生
+        UFOSEManager.Instance?.PlayRealRouletteItemGet();
 
         if (rouletteController == null)
         {

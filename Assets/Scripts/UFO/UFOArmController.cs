@@ -63,6 +63,11 @@ public class UFOArmController : MonoBehaviour
     [Tooltip("Raycastの最大距離（m）")]
     public float descentLaserMaxDistance = 20f;
 
+    // 掴んだコインがClawCarrierZone内にあるとマーカーがそこで止まってしまうため、
+    // Raycastを複数ヒット取得できるようにするバッファ（毎フレームのGCアロケーションを防ぐ）
+    private readonly RaycastHit[] _descentLaserHitBuffer = new RaycastHit[16];
+    private UFOClawCarrier _cachedClawCarrier;
+
     // ─────────────────────────────────────
     [Header("爪（finger）設定")]
     [Tooltip("finger.001〜.004 を配列に設定してください")]
@@ -167,9 +172,7 @@ public class UFOArmController : MonoBehaviour
     public float magnetForce = 50f;
 
     [Header("【新規】降下衝突時のコインがさがさ効果音")]
-    [Tooltip("アームがコインの山に衝突した時のがさがさ音")]
-    [SerializeField] private AudioClip descentRustleSound;
-    [Tooltip("がさがさ音の最大音量 (1.0より大きい値で音量増幅可能)")]
+    [Tooltip("がさがさ音の最大音量 (1.0より大きい値で音量増幅可能)。実際のクリップはUFOSEManagerで一元管理")]
     [Range(0f, 10f)]
     [SerializeField] private float rustleVolume = 0.8f;
     [Tooltip("がさがさ音を鳴らすために必要な最低コイン枚数")]
@@ -182,42 +185,11 @@ public class UFOArmController : MonoBehaviour
     [Range(1, 4)]
     [SerializeField] private int volumeBoost = 1;
 
-    [Header("【新規】アーム移動音")]
-    [Tooltip("アームが動いている間（XZ移動・下降・上昇中）ループ再生する音1")]
-    [SerializeField] private AudioClip armMoveLoopSound;
-    [Tooltip("音1の音量")]
-    [Range(0f, 10f)]
-    [SerializeField] private float armMoveVolume = 1.0f;
-    [Tooltip("上のループ音専用のAudioSource。未設定なら自動生成します")]
-    [SerializeField] private AudioSource armMoveLoopAudioSource;
-
-    [Tooltip("アームが動いている間、音1と同時にループ再生する音2（任意）")]
-    [SerializeField] private AudioClip armMoveLoopSound2;
-    [Tooltip("音2の音量")]
-    [Range(0f, 10f)]
-    [SerializeField] private float armMoveVolume2 = 1.0f;
-    [Tooltip("音2専用のAudioSource。未設定なら自動生成します")]
-    [SerializeField] private AudioSource armMoveLoopAudioSource2;
-
-    [Tooltip("アームが動き始めた瞬間に鳴らす音")]
-    [SerializeField] private AudioClip armMoveStartSound;
-    [Tooltip("開始音の音量")]
-    [Range(0f, 10f)]
-    [SerializeField] private float armMoveStartVolume = 1.0f;
-
-    [Tooltip("アームが止まった瞬間に鳴らす音")]
-    [SerializeField] private AudioClip armMoveStopSound;
-    [Tooltip("停止音の音量")]
-    [Range(0f, 10f)]
-    [SerializeField] private float armMoveStopVolume = 1.0f;
-
     private bool _wasArmMoving = false;
 
     [Header("【デバッグ設定】")]
     [Tooltip("オンにすると、アームの揺れ（Sway）を完全に無効化（揺れなし）にします")]
     [SerializeField] private bool disableSway = false;
-
-    private AudioSource _audioSourceForJingle;
 
     // ─────────────────────────────────────
     // 内部状態
@@ -646,83 +618,16 @@ public class UFOArmController : MonoBehaviour
 
         if (isMoving && !_wasArmMoving)
         {
-            PlayArmMoveOneShot(armMoveStartSound, armMoveStartVolume);
-            StartArmMoveLoop();
+            UFOSEManager.Instance?.PlayArmMoveStart();
+            UFOSEManager.Instance?.StartArmMoveLoop();
         }
         else if (!isMoving && _wasArmMoving)
         {
-            StopArmMoveLoop();
-            PlayArmMoveOneShot(armMoveStopSound, armMoveStopVolume);
+            UFOSEManager.Instance?.StopArmMoveLoop();
+            UFOSEManager.Instance?.PlayArmMoveStop();
         }
 
         _wasArmMoving = isMoving;
-    }
-
-    private void StartArmMoveLoop()
-    {
-        if (armMoveLoopSound != null)
-        {
-            EnsureArmMoveLoopAudioSource();
-            armMoveLoopAudioSource.clip = armMoveLoopSound;
-            armMoveLoopAudioSource.loop = true;
-            armMoveLoopAudioSource.volume = armMoveVolume;
-            armMoveLoopAudioSource.Play();
-        }
-
-        if (armMoveLoopSound2 != null)
-        {
-            EnsureArmMoveLoopAudioSource2();
-            armMoveLoopAudioSource2.clip = armMoveLoopSound2;
-            armMoveLoopAudioSource2.loop = true;
-            armMoveLoopAudioSource2.volume = armMoveVolume2;
-            armMoveLoopAudioSource2.Play();
-        }
-    }
-
-    private void StopArmMoveLoop()
-    {
-        if (armMoveLoopAudioSource != null) armMoveLoopAudioSource.Stop();
-        if (armMoveLoopAudioSource2 != null) armMoveLoopAudioSource2.Stop();
-    }
-
-    private void PlayArmMoveOneShot(AudioClip clip, float volume)
-    {
-        if (clip == null) return;
-
-        if (_audioSourceForJingle == null)
-        {
-            _audioSourceForJingle = GetComponent<AudioSource>();
-            if (_audioSourceForJingle == null)
-            {
-                _audioSourceForJingle = gameObject.AddComponent<AudioSource>();
-                _audioSourceForJingle.playOnAwake = false;
-                _audioSourceForJingle.spatialBlend = 0f;
-            }
-        }
-
-        _audioSourceForJingle.PlayOneShot(clip, volume);
-    }
-
-    private void EnsureArmMoveLoopAudioSource()
-    {
-        if (armMoveLoopAudioSource != null) return;
-
-        GameObject go = new GameObject("ArmMoveLoopAudioSource");
-        go.transform.SetParent(transform, false);
-        armMoveLoopAudioSource = go.AddComponent<AudioSource>();
-        armMoveLoopAudioSource.playOnAwake = false;
-        armMoveLoopAudioSource.spatialBlend = 0f;
-    }
-
-    private void EnsureArmMoveLoopAudioSource2()
-    {
-        if (armMoveLoopAudioSource2 != null) return;
-
-        GameObject go = new GameObject("ArmMoveLoopAudioSource2");
-        go.transform.SetParent(transform, false);
-        armMoveLoopAudioSource2 = go.AddComponent<AudioSource>();
-        armMoveLoopAudioSource2.playOnAwake = false;
-        armMoveLoopAudioSource2.spatialBlend = 0f;
     }
 
     /// <summary>
@@ -861,18 +766,75 @@ public class UFOArmController : MonoBehaviour
         // 実際の降下はワールド座標でまっすぐ下に落ちる動きなので、Raycastの向きは単純に真下でよい
         // （揺れの傾きに沿わせると、実際の降下地点とズレたマーカー位置になってしまう）。
         // 揺れの反映は「原点（爪の現在位置）」の方だけで十分。
-        if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, descentLaserMaxDistance, descentLaserLayerMask, QueryTriggerInteraction.Ignore))
+        //
+        // 爪がコインを掴んでいる間は、そのコインがClawCarrierZone（UFOClawCarrierが付いた領域）の
+        // 内側に来るため、素直にRaycastすると掴んだコイン自体にマーカーが当たってしまう。
+        // ここでは名前・パス検索は行わず、現在有効なUFOClawCarrierコンポーネントの位置・サイズから
+        // その領域を判定し、領域内のヒットは透過して地面まで貫通させる（アーム強化でstructure_lv1/2/3が
+        // 切り替わっても、コンポーネントの存在で追従するためパスの書き換えは不要）。
+        BoxCollider clawCarrierZone = GetActiveClawCarrierCollider();
+
+        int hitCount = Physics.RaycastNonAlloc(origin, Vector3.down, _descentLaserHitBuffer, descentLaserMaxDistance, descentLaserLayerMask, QueryTriggerInteraction.Ignore);
+
+        bool foundHit = false;
+        RaycastHit closestValidHit = default;
+        float closestDistance = float.MaxValue;
+
+        for (int i = 0; i < hitCount; i++)
+        {
+            RaycastHit candidate = _descentLaserHitBuffer[i];
+
+            if (clawCarrierZone != null && IsPointInsideBox(candidate.point, clawCarrierZone))
+            {
+                continue;
+            }
+
+            if (candidate.distance < closestDistance)
+            {
+                closestDistance = candidate.distance;
+                closestValidHit = candidate;
+                foundHit = true;
+            }
+        }
+
+        if (foundHit)
         {
             descentLaserMarker.gameObject.SetActive(true);
             // 地面に埋まらないよう、法線方向にわずかに浮かせる
-            descentLaserMarker.position = hit.point + hit.normal * (descentLaserMarkerThickness * 0.5f);
+            descentLaserMarker.position = closestValidHit.point + closestValidHit.normal * (descentLaserMarkerThickness * 0.5f);
             // 円柱のローカルY軸（上面・底面の向き）を、当たった面の法線に合わせる
-            descentLaserMarker.rotation = Quaternion.FromToRotation(Vector3.up, hit.normal);
+            descentLaserMarker.rotation = Quaternion.FromToRotation(Vector3.up, closestValidHit.normal);
         }
         else
         {
             descentLaserMarker.gameObject.SetActive(false);
         }
+    }
+
+    /// <summary>
+    /// 現在有効なClawCarrierZoneのBoxColliderを取得する。パス文字列ではなくUFOClawCarrier
+    /// コンポーネントの存在で判定するため、アーム強化でstructure_lv1→lv2→lv3と対象が
+    /// 切り替わっても、armRoot配下を探し直すだけで自動的に追従する。
+    /// </summary>
+    private BoxCollider GetActiveClawCarrierCollider()
+    {
+        if (_cachedClawCarrier == null || !_cachedClawCarrier.isActiveAndEnabled)
+        {
+            Transform searchRoot = armRoot != null ? armRoot : transform;
+            _cachedClawCarrier = searchRoot.GetComponentInChildren<UFOClawCarrier>(true);
+        }
+
+        return _cachedClawCarrier != null ? _cachedClawCarrier.GetComponent<BoxCollider>() : null;
+    }
+
+    /// <summary>ワールド座標の点が、指定したBoxColliderの領域内（回転・スケール込み）にあるかを判定する。</summary>
+    private static bool IsPointInsideBox(Vector3 worldPoint, BoxCollider box)
+    {
+        Vector3 localPoint = box.transform.InverseTransformPoint(worldPoint) - box.center;
+        Vector3 halfSize = box.size * 0.5f;
+        return Mathf.Abs(localPoint.x) <= halfSize.x
+            && Mathf.Abs(localPoint.y) <= halfSize.y
+            && Mathf.Abs(localPoint.z) <= halfSize.z;
     }
 
     void UpdateColliderStateForSpawning()
@@ -1644,7 +1606,6 @@ public class UFOArmController : MonoBehaviour
     /// </summary>
     private void PlayDescentRustleSound()
     {
-        if (descentRustleSound == null) return;
         if (fingerParts == null || fingerParts.Length == 0 || fingerParts[0] == null) return;
 
         // 爪の中心点（底付近）を取得
@@ -1670,25 +1631,10 @@ public class UFOArmController : MonoBehaviour
             // 例：minCoinsForRustle枚で最小、10枚以上で最大音量
             float coinFactor = Mathf.Clamp01((float)(coinCount - minCoinsForRustle) / (10f - minCoinsForRustle));
             float volume = Mathf.Lerp(rustleVolume * 0.3f, rustleVolume, coinFactor);
+            float pitch = Random.Range(0.9f, 1.1f);
 
-            if (_audioSourceForJingle == null)
-            {
-                _audioSourceForJingle = GetComponent<AudioSource>();
-                if (_audioSourceForJingle == null)
-                {
-                    _audioSourceForJingle = gameObject.AddComponent<AudioSource>();
-                    _audioSourceForJingle.playOnAwake = false;
-                    _audioSourceForJingle.spatialBlend = 0f;
-                }
-            }
-
-            _audioSourceForJingle.pitch = Random.Range(0.9f, 1.1f);
-            
             // volumeBoostの回数だけ重ねて再生して音量を限界突破
-            for (int i = 0; i < volumeBoost; i++)
-            {
-                _audioSourceForJingle.PlayOneShot(descentRustleSound, volume);
-            }
+            UFOSEManager.Instance?.PlayArmDescentRustle(volume, pitch, volumeBoost);
             Debug.Log($"[UFOArmController] コインの山に衝突！がさがさ音を再生。枚数: {coinCount}, 音量: {volume:F2}, 重ね数: {volumeBoost}");
         }
         else
