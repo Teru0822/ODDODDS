@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using MiniGames.Transitions;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
