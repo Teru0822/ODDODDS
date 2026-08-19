@@ -81,13 +81,13 @@ public class BookUIController : MonoBehaviour
     [SerializeField] private bool _prevButtonOnLeftPage = false;
 
     [Tooltip("「<」の位置。ページ内の割合 (0,0)=左下 (1,1)=右上")]
-    [SerializeField] private Vector2 _prevButtonAnchor = new Vector2(0.35f, 0.05f);
+    [SerializeField] private Vector2 _prevButtonAnchor = new Vector2(0.28f, 0.05f);
 
     [Tooltip("「>」を左ページに置く。オフなら右ページ")]
     [SerializeField] private bool _nextButtonOnLeftPage = false;
 
     [Tooltip("「>」の位置。ページ内の割合")]
-    [SerializeField] private Vector2 _nextButtonAnchor = new Vector2(0.65f, 0.05f);
+    [SerializeField] private Vector2 _nextButtonAnchor = new Vector2(0.72f, 0.05f);
 
     [Tooltip("ページ番号を表示する")]
     [SerializeField] private bool _showPageNumber = true;
@@ -446,8 +446,9 @@ public class BookUIController : MonoBehaviour
         if (_pageNumberText != null)
         {
             _pageNumberText.gameObject.SetActive(_showPageNumber);
+            // 幅を絞って左右のボタンと重ならないようにする
             PlaceNavItem(_pageNumberText.rectTransform, _pageNumberOnLeftPage,
-                         _pageNumberAnchor, new Vector2(220f, 70f));
+                         _pageNumberAnchor, new Vector2(150f, 70f));
         }
     }
 
@@ -485,9 +486,28 @@ public class BookUIController : MonoBehaviour
         }
 
         _spreadIndex = index;
-        if (_pageNumberText != null) _pageNumberText.text = $"{index + 1} / {_spreads.Count}";
+        if (_pageNumberText != null)
+        {
+            _pageNumberText.text = $"{index + 1} / {_spreads.Count}";
+            DisableRaycastRecursive(_pageNumberText);
+        }
 
         RefreshCurrentSpread();
+    }
+
+    /// <summary>
+    /// TextMeshPro はフォントのフォールバックが起きると TMP SubMesh を子として自動生成し、
+    /// その raycastTarget は既定で true になる。最前面のページ番号がこれを持つと、
+    /// 重なった範囲の左右矢印のクリックを吸ってしまうため、子ごと無効化する。
+    /// </summary>
+    private static void DisableRaycastRecursive(TextMeshProUGUI text)
+    {
+        if (text == null) return;
+
+        foreach (var graphic in text.GetComponentsInChildren<Graphic>(true))
+        {
+            if (graphic != null) graphic.raycastTarget = false;
+        }
     }
 
     private void RefreshCurrentSpread()
