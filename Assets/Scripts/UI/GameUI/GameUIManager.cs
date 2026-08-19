@@ -38,8 +38,11 @@ public class GameUIManager : MonoBehaviour,ILanguage
     [SerializeField] private TMP_Text _nextDebtTurnText;
     [SerializeField] private TMP_Text _moneyText;
     [SerializeField] private TMP_Text _unwashedMoneyText;
+
+    /*今後はLocalize機能を使って実装予定*/
     [SerializeField] private TMP_Text _currentTurnText;//「現在のターン」と表示するテキスト
     [SerializeField] private TMP_Text _nextDebtText;//「次の取り立てまで」と表示するテキスト
+    [SerializeField] private TMP_Text _unwashedCoinText;//「次の取り立てまで」と表示するテキスト
 
     [Header("playerInfoPanel内のオブジェクト")]
     [SerializeField] private GameObject _playerInfoPanel;
@@ -53,6 +56,12 @@ public class GameUIManager : MonoBehaviour,ILanguage
     [SerializeField] private TMP_Text _playerNameText;
     [SerializeField] private TMP_Text _leftDebtMoneyText;
     [SerializeField] private TMP_Text _nextQuotaText;
+
+    /*今後はLocalize機能を使って実装予定*/
+    [SerializeField] private TMP_Text _promissoryNoteText;//借用書のタイトル
+    [SerializeField] private TMP_Text _promissoryNoteDebtCountText;//借金の残金
+    [SerializeField] private TMP_Text _promissoryNoteNextDebtText;//次の取り立てでとられる金額
+    [SerializeField] private TMP_Text _promissoryNoteLastText;//「頂戴する」って意味のテキスト
 
     [Header("itemPanel内のオブジェクト")]
     [SerializeField] private GameObject _itemPanel;
@@ -380,11 +389,21 @@ public class GameUIManager : MonoBehaviour,ILanguage
         {
             _currentTurnText.text = "現在のターン";
             _nextDebtText.text = "次の取り立てまで";
+            _unwashedCoinText.text = "未洗浄コイン所持数";
+            _promissoryNoteText.text = "借用書";
+            _promissoryNoteDebtCountText.text = "残金";
+            _promissoryNoteNextDebtText.text = "次の取り立てでは";
+            _promissoryNoteLastText.text = "頂戴いたします。";
         }
         else if(language == Language.EN)
         {
             _currentTurnText.text = "Current Turn";
             _nextDebtText.text = "Next collection";
+            _unwashedCoinText.text = "Unwashed coin Counter";
+            _promissoryNoteText.text = "Promissory Note";
+            _promissoryNoteDebtCountText.text = "Balance";
+            _promissoryNoteNextDebtText.text = "At the next collection, I’ll be taking...";
+            _promissoryNoteLastText.text = "";
         }
     }
 

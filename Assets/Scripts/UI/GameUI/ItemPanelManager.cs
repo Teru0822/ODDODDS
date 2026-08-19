@@ -42,12 +42,13 @@ public enum ItemCategory
 /// <summary>
 /// アイテムパネルの表示およびアイテム所持状況の永続化を管理するクラス
 /// </summary>
-public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
+public class ItemPanelManager : MonoBehaviour, IsaveDataProvider,ILanguage
 {
     public static ItemPanelManager Instance { get; private set; }
 
     /// <summary>AddItem でアイテムが追加されたときに発火。引数はアイテムID。</summary>
     public static event System.Action<int> OnItemObtained;
+    private Language _language;
 
     [Header("アイテム表示用オブジェクト")]
     [SerializeField] private ItemDataBase _itemDataBase;
@@ -143,6 +144,11 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
         _useButton.gameObject.SetActive(false);
     }
 
+    public void SettingLanguage(Language language)
+    {
+        _language = language;
+    }
+    
     private void Update()
     {
 #if UNITY_EDITOR
@@ -316,7 +322,11 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider
 
         if (_detailDescriptionText != null)
         {
-            _detailDescriptionText.text = item.ItemDescription;
+            if(_language == Language.JP)
+                _detailDescriptionText.text = item.ItemDescription;
+            else if(_language == Language.EN)
+                _detailDescriptionText.text = item.ItemDescription_en;
+
             _detailDescriptionText.gameObject.SetActive(true);
         }
 

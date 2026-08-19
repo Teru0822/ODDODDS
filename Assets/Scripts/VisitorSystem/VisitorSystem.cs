@@ -55,7 +55,7 @@ public class VisitorInstance
     }
 }
 
-public class VisitorSystem : MonoBehaviour,IsaveDataProvider
+public class VisitorSystem : MonoBehaviour,IsaveDataProvider,ILanguage
 {
     /// <summary>
     /// インターホン越しの訪問者イベントが進行中か。
@@ -68,6 +68,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
     [SerializeField] private SerializeDictionary<int, GameObject> _visitorPrefabs;
     [SerializeField] private Transform _firstCameraPosition;
     private GameObject _visitor;
+    private Language _language;
     private List<VisitorInstance> _visitorInstances = new List<VisitorInstance>();
     private ReactiveProperty<VisitorInstance> _nowSelectedVisitorInstance = new ReactiveProperty<VisitorInstance>(null);
     public IObservable<VisitorInstance> OnSelectVisitorInstance => _nowSelectedVisitorInstance;
@@ -126,6 +127,11 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
         // 無効化・シーン破棄でコルーチンが止まってもフラグを残さない。
         // true のままだとレティクルが非表示のままになる
         IsTalkingWithVisitor = false;
+    }
+
+    public void SettingLanguage(Language language)
+    {
+        _language = language;
     }
 
 
@@ -328,7 +334,8 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
     [SerializeField] private ItemPanelManager _itemPanelManager;
     [SerializeField] private EffectManager _effectManager;
 
-    [SerializeField] private SerializeDictionary<string, string[]> _otherLines;//主人公の会話データを格納
+    [Tooltip("key:会話のキー, value:会話のコンテナの配列（日本語と英語）")]
+    [SerializeField] private SerializeDictionary<string, VisitorConversationContainer[]> _otherLines = new SerializeDictionary<string, VisitorConversationContainer[]>();
 
     [Header("取引アニメーション用")]
     [SerializeField] private Transform _cameraPosition;
@@ -685,7 +692,11 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
         for (int i = 0; i < contentContainer.Length; i++)
         {
             _conversationText.text = "";//テキストを消去
-            string sentence = AjustDownArrow(contentContainer[i].lineJp);
+            string sentence;
+            if(_language == Language.JP)
+                sentence = AjustDownArrow(contentContainer[i].lineJp);
+            else
+                sentence = AjustDownArrow(contentContainer[i].lineEn);
 
             //アニメーションを変化させる
 
@@ -730,13 +741,17 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider
         _visitorUI.SetActive(true);
         _nameText.text = "You";
 
-        string[] lines;
+        VisitorConversationContainer[] lines;
         _otherLines.TryGetValue(key, out lines);
 
         for (int i = 0; i < lines.Length; i++)
         {
             _conversationText.text = "";//テキストを消去
-            string sentence = AjustDownArrow(lines[i]);
+            string sentence;
+            if(_language == Language.JP)
+                sentence = AjustDownArrow(lines[i].lineJp);
+            else
+                sentence = AjustDownArrow(lines[i].lineEn);
 
             //アニメーションを変化させる
 
