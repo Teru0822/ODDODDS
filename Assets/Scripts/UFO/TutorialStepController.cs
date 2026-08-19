@@ -203,14 +203,6 @@ public class TutorialStepController : MonoBehaviour
     [Tooltip("縮む時のイージング（0→1）")]
     [SerializeField] private AnimationCurve frameSnapCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
-    [Tooltip("SE 再生用の AudioSource。未設定なら自身に AddComponent して使う")]
-    [SerializeField] private AudioSource audioSource;
-
-    [Tooltip("枠線が縮みきって対象に吸い付いた瞬間に鳴らすSE。未設定なら無音")]
-    [SerializeField] private AudioClip frameSnapCompleteSound;
-
-    [SerializeField, Range(0f, 1f)] private float frameSnapCompleteVolume = 1f;
-
     [Tooltip("SEを鳴らすタイミング（縮み演出の進行度 0〜1）。1だと完全に縮みきった瞬間、" +
              "0.85等にすると縮みきる少し手前で鳴る")]
     [SerializeField, Range(0f, 1f)] private float frameSnapSoundTriggerProgress = 0.85f;
@@ -263,9 +255,6 @@ public class TutorialStepController : MonoBehaviour
     [Tooltip("1文字あたりの表示間隔（秒）。導入ツアーのテロップ（IntroTourTelop）と同じ「カタカタ」演出")]
     [SerializeField] private float messageCharacterInterval = 0.06f;
 
-    [Tooltip("1文字ごとに鳴らす効果音。未設定なら無音")]
-    [SerializeField] private AudioClip messageTypingSound;
-
     [Tooltip("文字送り音のピッチの最小値")]
     [SerializeField] private float messageTypingPitchMin = 0.6f;
 
@@ -274,10 +263,6 @@ public class TutorialStepController : MonoBehaviour
 
     [Tooltip("文字送り音が連続しすぎないための最低間隔（秒）")]
     [SerializeField] private float minMessageTypingInterval = 0.05f;
-
-    [Range(0f, 1f)]
-    [Tooltip("文字送り音の音量")]
-    [SerializeField] private float messageTypingVolume = 0.7f;
 
     [Tooltip("「Press Space」等の操作ガイド。文字を表示しきった後に表示する（IntroTourTelopの_advanceHintと同じ）。" +
              "画面左下など好きな位置にあらかじめ配置しておく。waitForExternalAction=ONのステップでは表示しない")]
@@ -350,7 +335,6 @@ public class TutorialStepController : MonoBehaviour
         {
             tutorialCrane = FindAnyObjectByType<TutorialCraneController>();
         }
-        EnsureAudioSource();
 
         // Glowはframe Borderの子として配置されている前提。中央固定サイズのアンカーのままだと
         // frameBorderが長方形・大きいサイズになってもGlowが追従せず一定の大きさのままになってしまうため、
@@ -468,23 +452,6 @@ public class TutorialStepController : MonoBehaviour
         }
     }
 
-    private void EnsureAudioSource()
-    {
-        if (audioSource == null) audioSource = GetComponent<AudioSource>();
-        if (audioSource == null)
-        {
-            audioSource = gameObject.AddComponent<AudioSource>();
-            audioSource.playOnAwake = false;
-            audioSource.spatialBlend = 0f;
-        }
-    }
-
-    private void PlayOneShot(AudioClip clip, float volume)
-    {
-        if (clip == null || audioSource == null) return;
-        audioSource.PlayOneShot(clip, volume);
-    }
-
     /// <summary>
     /// 先頭のステップからチュートリアル演出を開始する。
     /// </summary>
@@ -513,7 +480,6 @@ public class TutorialStepController : MonoBehaviour
         {
             StopCoroutine(_messageTypeCoroutine);
             _messageTypeCoroutine = null;
-            if (audioSource != null) audioSource.pitch = 1f;
         }
         SetAdvanceHintActive(false);
         SetMaskPanelsFullyDark(false);
@@ -785,7 +751,7 @@ public class TutorialStepController : MonoBehaviour
             if (!soundPlayed && t >= frameSnapSoundTriggerProgress)
             {
                 soundPlayed = true;
-                PlayOneShot(frameSnapCompleteSound, frameSnapCompleteVolume);
+                UFOSEManager.Instance?.PlayTutorialFrameSnap();
             }
 
             yield return null;
@@ -793,7 +759,7 @@ public class TutorialStepController : MonoBehaviour
 
         if (!soundPlayed)
         {
-            PlayOneShot(frameSnapCompleteSound, frameSnapCompleteVolume);
+            UFOSEManager.Instance?.PlayTutorialFrameSnap();
         }
 
         // スナップ完了後は、対象が動く場合に備えてそのままライブ追従を続ける
@@ -826,8 +792,6 @@ public class TutorialStepController : MonoBehaviour
             }
         }
 
-        if (audioSource != null) audioSource.pitch = 1f;
-
         // waitForExternalAction=ONのステップは操作待ちなので「Press Space」は出さない
         if (!step.waitForExternalAction)
         {
@@ -846,12 +810,11 @@ public class TutorialStepController : MonoBehaviour
 
     private void PlayTypingSound(char c)
     {
-        if (messageTypingSound == null || audioSource == null) return;
         if (c == ' ' || c == '\n' || c == '　') return;
         if (Time.time - _lastTypingSoundTime < minMessageTypingInterval) return;
 
-        audioSource.pitch = Random.Range(messageTypingPitchMin, messageTypingPitchMax);
-        audioSource.PlayOneShot(messageTypingSound, messageTypingVolume);
+        float pitch = Random.Range(messageTypingPitchMin, messageTypingPitchMax);
+        UFOSEManager.Instance?.PlayTutorialMessageTyping(pitch);
         _lastTypingSoundTime = Time.time;
     }
 
@@ -895,7 +858,6 @@ public class TutorialStepController : MonoBehaviour
         {
             StopCoroutine(_messageTypeCoroutine);
             _messageTypeCoroutine = null;
-            if (audioSource != null) audioSource.pitch = 1f;
         }
         SetAdvanceHintActive(false);
         SetMaskPanelsFullyDark(false);

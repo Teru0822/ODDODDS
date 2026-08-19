@@ -1740,7 +1740,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b0988c8d46b56941a7ffce0301d811f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UFOChaseLightController
-  stepInterval: 0.5
+  stepInterval: 0.15
   litCount: 1
   lowTimeThresholdSeconds: 10
   redBlinkInterval: 0.25
@@ -5218,13 +5218,7 @@ MonoBehaviour:
   staticDuration: 0.5
   keepVideoPlayingInBackground: 1
   videoStartOffsetSeconds: 1
-  staticAudioSource: {fileID: 0}
-  staticSound: {fileID: 8300000, guid: 39361cfbeab23314aba9cac3bfd0baf3, type: 3}
-  staticVolume: 1
   loopStaticSound: 1
-  tutorialStaticLoopAudioSource: {fileID: 0}
-  tutorialStaticLoopSound: {fileID: 8300000, guid: 39361cfbeab23314aba9cac3bfd0baf3, type: 3}
-  tutorialStaticLoopVolume: 0.3
 --- !u!1 &1165467552
 GameObject:
   m_ObjectHideFlags: 0
@@ -5764,7 +5758,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TouchPanelOutlineController
   rayCamera: {fileID: 0}
   maxDistance: 50
-  audioSource: {fileID: 0}
   hoverVolume: 1
   touch30:
     touchArea: {fileID: 1087585225}
@@ -5823,8 +5816,6 @@ MonoBehaviour:
     lockIndicator: {fileID: 0}
     lockIndicatorPath: 
   lockedOutlineColor: {r: 1, g: 0, b: 0, a: 0.5}
-  lockedSound: {fileID: 8300000, guid: fccc3e76f36eb2c4799d6ad28bd144cd, type: 3}
-  lockedVolume: 1
   lockedShakeStrength: 12
   lockedShakeDuration: 0.3
   touch2Play:
@@ -5969,12 +5960,8 @@ MonoBehaviour:
     lockIndicatorPath: 
   tutorialCrane: {fileID: 2006116701}
   tutorialStepController: {fileID: 1288152620}
-  selectSound: {fileID: 8300000, guid: 94826d03cfc2c8148be7e49800e98929, type: 3}
-  selectVolume: 1
   play2ResultText: {fileID: 0}
   playCanvas2TextPath: Text (TMP)
-  select2Sound: {fileID: 0}
-  select2Volume: 1
 --- !u!114 &1288152620
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6779,9 +6766,6 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  audioSource: {fileID: 0}
-  frameSnapCompleteSound: {fileID: 8300000, guid: d0890fb20bffc464dad3b7efa3c87c0d, type: 3}
-  frameSnapCompleteVolume: 1
   frameSnapSoundTriggerProgress: 0.068
   frameBorderImage: {fileID: 1297968556}
   pulseFrameBorder: 1
@@ -6798,11 +6782,9 @@ MonoBehaviour:
   messageBoxGap: 24
   messageBoxPadding: {x: 32, y: 20}
   messageCharacterInterval: 0.06
-  messageTypingSound: {fileID: 8300000, guid: d76fe7901f976e249aaada8403e9d911, type: 3}
   messageTypingPitchMin: 0.6
   messageTypingPitchMax: 0.8
   minMessageTypingInterval: 0.05
-  messageTypingVolume: 0.7
   advanceHint: {fileID: 197740667}
   advanceHintDelay: 0.3
   targetCamera: {fileID: 0}
@@ -7468,6 +7450,94 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1 &1360053389
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1360053391}
+  - component: {fileID: 1360053390}
+  m_Layer: 0
+  m_Name: UFOSEManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1360053390
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1360053389}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d62d1c4553551c94e93144333ebb6f9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UFOSEManager
+  realCoinInsertSound: {fileID: 8300000, guid: 6a57f5afcbbb6174abd5994aa03b54f9, type: 3}
+  realCoinInsertVolume: 2.75
+  realCoinGetSound: {fileID: 8300000, guid: 1844f9d577d01384a81bec1afd71b07b, type: 3}
+  realWatchGetSound: {fileID: 8300000, guid: abcdc67f5c71d744489b1fa432127422, type: 3}
+  realBlackDiamondGetSound: {fileID: 8300000, guid: 1fbebd194665c2f42879deab3512e212, type: 3}
+  realItemGetVolume: 1
+  realLowTimeWarningLoopSound: {fileID: 8300000, guid: 95831d7d112bdea4281e9151acbddc29, type: 3}
+  realLowTimeWarningVolume: 0.62
+  realLightFlickerSound: {fileID: 8300000, guid: 4f319739c1eb21f46b9354431580df6d, type: 3}
+  realLightFlickerVolume: 0.314
+  realLightOffSound: {fileID: 8300000, guid: 4e56454f649254a4cbb9af34af19ba36, type: 3}
+  realLightOffVolume: 6.02
+  armDescentRustleSound: {fileID: 0}
+  armMoveLoopSound: {fileID: 8300000, guid: 4f20f946064e39a40911467daf930332, type: 3}
+  armMoveVolume: 5.8
+  armMoveLoopSound2: {fileID: 8300000, guid: 880348c9c4f26334aaff8bff55e49320, type: 3}
+  armMoveVolume2: 1.26
+  armMoveStartSound: {fileID: 8300000, guid: 528c1bdaf864f044ea8400ef9870f658, type: 3}
+  armMoveStartVolume: 3.8
+  armMoveStopSound: {fileID: 8300000, guid: 528c1bdaf864f044ea8400ef9870f658, type: 3}
+  armMoveStopVolume: 3.8
+  practiceCoinInsertSound: {fileID: 8300000, guid: 6a57f5afcbbb6174abd5994aa03b54f9, type: 3}
+  practiceCoinInsertVolume: 2.75
+  practiceCoinGetSound: {fileID: 8300000, guid: 1844f9d577d01384a81bec1afd71b07b, type: 3}
+  practiceWatchGetSound: {fileID: 8300000, guid: abcdc67f5c71d744489b1fa432127422, type: 3}
+  practiceBlackDiamondGetSound: {fileID: 8300000, guid: 293627995fffe3849badfeea4dc956a6, type: 3}
+  practiceItemGetVolume: 1
+  practiceLowTimeWarningLoopSound: {fileID: 8300000, guid: 95831d7d112bdea4281e9151acbddc29, type: 3}
+  practiceLowTimeWarningVolume: 0.62
+  tutorialFrameSnapSound: {fileID: 8300000, guid: d0890fb20bffc464dad3b7efa3c87c0d, type: 3}
+  tutorialFrameSnapVolume: 1
+  tutorialMessageTypingSound: {fileID: 8300000, guid: d76fe7901f976e249aaada8403e9d911, type: 3}
+  tutorialMessageTypingVolume: 0.7
+  touchSelectSound: {fileID: 8300000, guid: 94826d03cfc2c8148be7e49800e98929, type: 3}
+  touchSelectVolume: 1
+  touchSelect2Sound: {fileID: 8300000, guid: 94826d03cfc2c8148be7e49800e98929, type: 3}
+  touchSelect2Volume: 1
+  touchLockedSound: {fileID: 8300000, guid: fccc3e76f36eb2c4799d6ad28bd144cd, type: 3}
+  touchLockedVolume: 1
+  televisionStaticSound: {fileID: 8300000, guid: 39361cfbeab23314aba9cac3bfd0baf3, type: 3}
+  televisionStaticVolume: 1
+  tutorialStaticLoopSound: {fileID: 8300000, guid: 39361cfbeab23314aba9cac3bfd0baf3, type: 3}
+  tutorialStaticLoopVolume: 0.3
+  oneShotSource: {fileID: 0}
+--- !u!4 &1360053391
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1360053389}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1363419995
 GameObject:
   m_ObjectHideFlags: 0
@@ -12208,9 +12278,6 @@ MonoBehaviour:
   tutorialCameraPos: {fileID: 101501359}
   fpController: {fileID: 0}
   tutorialDuration: 30
-  warningAudioSource: {fileID: 0}
-  lowTimeWarningSound: {fileID: 8300000, guid: 95831d7d112bdea4281e9151acbddc29, type: 3}
-  warningSoundVolume: 0.62
   loadingMinimumDuration: 1
   televisionAnimator: {fileID: 1153044095}
   televisionStaticController: {fileID: 1153044099}
@@ -28781,10 +28848,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 14af4bb84f9bda74babaa2ddd883cda3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialItemGoal
-  audioSource: {fileID: 0}
-  coinGetSound: {fileID: 8300000, guid: 1844f9d577d01384a81bec1afd71b07b, type: 3}
-  watchGetSound: {fileID: 8300000, guid: abcdc67f5c71d744489b1fa432127422, type: 3}
-  blackDiamondGetSound: {fileID: 8300000, guid: 293627995fffe3849badfeea4dc956a6, type: 3}
   flashLights: []
   coinFlashColor: {r: 0.8, g: 0.67058825, b: 0.36862746, a: 1}
   watchFlashColor: {r: 0, g: 0.7490196, b: 0, a: 1}
@@ -33311,7 +33374,6 @@ MonoBehaviour:
   buttonType: 2
   pressDepth: 0.05
   pressSpeed: 20
-  audioSource: {fileID: 0}
   clickSound: {fileID: 0}
   soundVolume: 1
   controlSourceOverride: {fileID: 2006116701}
@@ -33977,7 +34039,6 @@ MonoBehaviour:
   buttonType: 0
   pressDepth: 0.05
   pressSpeed: 20
-  audioSource: {fileID: 0}
   clickSound: {fileID: 8300000, guid: 4bbcb5e1c055b7b49b638217bd9eb11a, type: 3}
   soundVolume: 1
   controlSourceOverride: {fileID: 2006116701}
@@ -34346,7 +34407,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 75f9f412341ca924ab2921e4345bb93b, type: 2}
     - target: {fileID: 624050841089503498, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: isUnlocked
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 624050841089503498, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: blinkInterval
@@ -34472,6 +34533,22 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 2361784797221088014, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_Size.y
+      value: 0.72947496
+      objectReference: {fileID: 0}
+    - target: {fileID: 2361784797221088014, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_Center.x
+      value: -0.04384561
+      objectReference: {fileID: 0}
+    - target: {fileID: 2361784797221088014, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_Center.y
+      value: -0.18293056
+      objectReference: {fileID: 0}
+    - target: {fileID: 2361784797221088014, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_Center.z
+      value: -0.01854058
+      objectReference: {fileID: 0}
     - target: {fileID: 2388620556845820680, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -34536,6 +34613,10 @@ PrefabInstance:
       propertyPath: chaseLightController
       value: 
       objectReference: {fileID: 426471893}
+    - target: {fileID: 7516722043646146397, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: triggerCoinAnimation
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7662016283340775883, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: chaseLightController
       value: 
@@ -37477,7 +37558,6 @@ MonoBehaviour:
   buttonType: 1
   pressDepth: 0.05
   pressSpeed: 20
-  audioSource: {fileID: 0}
   clickSound: {fileID: 8300000, guid: 4bbcb5e1c055b7b49b638217bd9eb11a, type: 3}
   soundVolume: 1
   controlSourceOverride: {fileID: 2006116701}
@@ -47390,13 +47470,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e5cf8bea008cc7e4387e30b5e556cdfd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriggerSoundPlayer
-  soundClip: {fileID: 8300000, guid: 6a57f5afcbbb6174abd5994aa03b54f9, type: 3}
-  audioSource: {fileID: 0}
-  volume: 2.75
-  spatialBlend: 0
+  isPracticeInstance: 1
+  tutorialCrane: {fileID: 2006116701}
   requiredTag: coin
   playOnlyOnce: 0
-  triggerCoinAnimation: 0
+  triggerCoinAnimation: 1
 --- !u!4 &7518568085696272449
 Transform:
   m_ObjectHideFlags: 0
@@ -47551,21 +47629,10 @@ MonoBehaviour:
   isMagnetMode: 0
   magnetRadius: 3
   magnetForce: 200
-  descentRustleSound: {fileID: 0}
   rustleVolume: 0.8
   minCoinsForRustle: 3
   rustleDetectRadius: 1.5
   volumeBoost: 1
-  armMoveLoopSound: {fileID: 8300000, guid: 4f20f946064e39a40911467daf930332, type: 3}
-  armMoveVolume: 5.8
-  armMoveLoopAudioSource: {fileID: 0}
-  armMoveLoopSound2: {fileID: 8300000, guid: 880348c9c4f26334aaff8bff55e49320, type: 3}
-  armMoveVolume2: 1.26
-  armMoveLoopAudioSource2: {fileID: 0}
-  armMoveStartSound: {fileID: 8300000, guid: 528c1bdaf864f044ea8400ef9870f658, type: 3}
-  armMoveStartVolume: 3.8
-  armMoveStopSound: {fileID: 0}
-  armMoveStopVolume: 3.8
   disableSway: 0
 --- !u!59 &7594086465016986498
 HingeJoint:
@@ -51622,10 +51689,6 @@ MonoBehaviour:
   postRouletteRainExitDelay: 2
   debugAllowInterruptDuringPlay: 1
   keepLightsOnAtStart: 0
-  audioSource: {fileID: 0}
-  coinInsertSound: {fileID: 0}
-  lowTimeWarningSound: {fileID: 8300000, guid: 95831d7d112bdea4281e9151acbddc29, type: 3}
-  soundVolume: 0.62
   interactionDistance: 3
   ufoCenterTransform: {fileID: 0}
   machineHover: {fileID: 0}
@@ -51666,10 +51729,6 @@ MonoBehaviour:
   targetLights: []
   coinInsertionLights:
   - {fileID: 8313507457406348240}
-  lightFlickerSound: {fileID: 8300000, guid: 4f319739c1eb21f46b9354431580df6d, type: 3}
-  lightFlickerVolume: 0.314
-  lightOffSound: {fileID: 8300000, guid: 4e56454f649254a4cbb9af34af19ba36, type: 3}
-  lightOffVolume: 6.02
 --- !u!1 &8535679992391708809
 GameObject:
   m_ObjectHideFlags: 0
@@ -53350,10 +53409,11 @@ MonoBehaviour:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
+  - {fileID: 1360053391}
   - {fileID: 5351351319220983938}
+  - {fileID: 1632140609}
+  - {fileID: 432966208}
   - {fileID: 1153044093}
   - {fileID: 1288152618}
   - {fileID: 1214303395}
   - {fileID: 2066360344}
-  - {fileID: 1632140609}
-  - {fileID: 432966208}

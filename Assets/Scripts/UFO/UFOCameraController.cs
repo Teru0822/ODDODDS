@@ -75,17 +75,6 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
              "OFF (本番用): 通常通り、開始時は消灯し、プレイ開始時にのみ点灯します。")]
     [SerializeField] private bool keepLightsOnAtStart = false;
 
-    [Header("Audio Settings")]
-    [Tooltip("再生用のAudioSource。未設定の場合は自動でGetComponentします")]
-    [SerializeField] private AudioSource audioSource;
-    [Tooltip("コイン投入時（ゲーム開始時）の効果音")]
-    [SerializeField] private AudioClip coinInsertSound;
-    [Tooltip("残り10秒を切ったとき（警告時）の効果音")]
-    [SerializeField] private AudioClip lowTimeWarningSound;
-    [Tooltip("効果音の音量調整 (1.0より大きい値で音量増幅可能)")]
-    [Range(0f, 10f)]
-    [SerializeField] private float soundVolume = 1.0f;
-
     [Header("Interaction Settings")]
     [Tooltip("Interaction distance to start playing")]
     [SerializeField] private float interactionDistance = 3.5f;
@@ -141,61 +130,6 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
     [Header("Coin Insertion Light Settings")]
     [Tooltip("コイン投入中のみ点灯する追加のライトオブジェクト群")]
     [SerializeField] private GameObject[] coinInsertionLights;
-
-    [Header("Light Audio Settings")]
-    [Tooltip("ライト点滅時のチカッという音")]
-    [SerializeField] private AudioClip lightFlickerSound;
-    [Tooltip("点滅（起動）音の音量")]
-    [SerializeField] [Range(0f, 10f)] private float lightFlickerVolume = 0.5f;
-    [Tooltip("ライト消灯時のカチッという音")]
-    [SerializeField] private AudioClip lightOffSound;
-    [Tooltip("消灯音の音量")]
-    [SerializeField] [Range(0f, 10f)] private float lightOffVolume = 0.5f;
-
-    /// <summary>
-    /// 指定された効果音を筐体メインのaudioSourceの位置から、末尾を指定秒数カットした状態で2D再生します。
-    /// </summary>
-    private void PlayLightSoundWithTailCut(AudioClip clip, float volume, float cutDuration)
-    {
-        if (clip == null) return;
-
-        // メインスピーカーのGameObjectを親にして、一時的な再生オブジェクトを作成（一箇所再生を維持）
-        GameObject tempAudioObj = new GameObject("TempLightAudioSource");
-        if (audioSource != null)
-        {
-            tempAudioObj.transform.SetParent(audioSource.transform, false);
-        }
-        else
-        {
-            tempAudioObj.transform.SetParent(transform, false);
-        }
-
-        AudioSource tempSource = tempAudioObj.AddComponent<AudioSource>();
-        tempSource.clip = clip;
-        tempSource.volume = volume;
-        tempSource.spatialBlend = 0.0f; // 2D再生
-        tempSource.playOnAwake = false;
-        tempSource.loop = false;
-
-        tempSource.Play();
-
-        // (効果音の長さ - カット秒数) 秒だけ再生して停止・破棄する
-        float playDuration = Mathf.Max(0f, clip.length - cutDuration);
-        StartCoroutine(StopAndDestroyAudioCoroutine(tempAudioObj, tempSource, playDuration));
-    }
-
-    private System.Collections.IEnumerator StopAndDestroyAudioCoroutine(GameObject audioObj, AudioSource source, float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        if (source != null)
-        {
-            source.Stop();
-        }
-        if (audioObj != null)
-        {
-            Destroy(audioObj);
-        }
-    }
 
     /// <summary>
     /// 現在スポットライトおよび連動ライトが有効（点灯）になっているかどうか
@@ -389,12 +323,6 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
         // =======================
 
         SetupDynamicCameras();
-
-        // AudioSourceの自動取得
-        if (audioSource == null)
-        {
-            audioSource = GetComponent<AudioSource>();
-        }
 
         // 開始時はUFOプレイモードではない状態にする（実際のセッション終了ではないのでイベント通知はしない）
         SetUfoMode(false, notifyListeners: false);
@@ -666,6 +594,11 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
         OnPlaySessionActiveChanged?.Invoke(true);
         _hasPlayedLowTimeWarning = false; // 新規セッション開始時に警告音再生フラグをリセット
 
+        // 前回のプレイで獲得演出（時計・ブラックダイヤ等）やルーレット配当待ちの最中に
+        // ターンが切り替わった場合、演出コルーチンが中断されIsFlashing等がtrueのまま
+        // 固まっている可能性があるため、新しいセッション開始時に必ず強制リセットする
+        UFOItemGoal.ResetStuckFlashState();
+
         // アニメーション（コイン投入 → television 移動）完了までレバー/ボタン操作を禁止し、
         // 実際に操作されるまではタイマーも進めない
         _controlsUnlocked = false;
@@ -675,12 +608,11 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
         SetCoinInsertionLightsActive(true);
 
         // コイン投入演出の開始（カウンターをリセットして1枚目を投入。完了時に television がゴール座標へ移動する）
+        // コイン投入音自体は、実際にコインが投入口のトリガーに落ちた瞬間にTriggerSoundPlayer側が鳴らすため、
+        // ここでは鳴らさない（ここでも鳴らすと二重再生になる）
         _triggeredCoinCount = 0;
         _completedCoinAnimationCount = 0;
         TriggerCoinInsertionAnimation();
-
-        // コイン投入音の再生
-        PlaySound(coinInsertSound);
 
         // カメラ切り替え（Q/E）を解禁したうえで、Back状態への切り替えを発火させ、
         // 砂嵐を挟んで Play_Canvas2 から TelevisionB_Canvas（Backカメラ映像）へ表示を切り替える
@@ -834,9 +766,9 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
             CacheOriginalLightIntensities(); // 元の強度をキャッシュ
 
             // ライト点滅開始の最初のタイミングで、起動音を末尾0.4秒カットして一度だけ流す
-            if (playSound && lightFlickerSound != null)
+            if (playSound)
             {
-                PlayLightSoundWithTailCut(lightFlickerSound, lightFlickerVolume, 0.4f);
+                UFOSEManager.Instance?.PlayRealLightFlicker();
             }
 
             if (_playLightFlickerCoroutine != null) StopCoroutine(_playLightFlickerCoroutine);
@@ -856,9 +788,9 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
             ApplyRawLightsState(false);
 
             // 消灯音の再生（カットなしで最後まで流す）
-            if (playSound && lightOffSound != null)
+            if (playSound)
             {
-                PlayLightSoundWithTailCut(lightOffSound, lightOffVolume, 0f);
+                UFOSEManager.Instance?.PlayRealLightOff();
             }
             Debug.Log("[UFOCameraController] ライトを消灯しました。");
         }
@@ -1355,41 +1287,17 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
             if (!_hasPlayedLowTimeWarning)
             {
                 _hasPlayedLowTimeWarning = true;
-                if (lowTimeWarningSound != null)
-                {
-                    if (audioSource == null)
-                    {
-                        audioSource = GetComponent<AudioSource>();
-                        if (audioSource == null)
-                        {
-                            audioSource = gameObject.AddComponent<AudioSource>();
-                            audioSource.playOnAwake = false;
-                            audioSource.spatialBlend = 0f;
-                        }
-                    }
-                    if (audioSource != null)
-                    {
-                        audioSource.clip = lowTimeWarningSound;
-                        audioSource.loop = true;
-                        audioSource.volume = soundVolume;
-                        audioSource.Play();
-                    }
-                }
+                UFOSEManager.Instance?.StartLowTimeWarning(isPractice: false);
             }
         }
         else
         {
             // フラグがONであるか、または実際に警告音が再生中の場合は確実に停止処理を実行
-            bool isActuallyPlayingWarning = audioSource != null && audioSource.isPlaying && audioSource.clip == lowTimeWarningSound;
+            bool isActuallyPlayingWarning = UFOSEManager.Instance != null && UFOSEManager.Instance.IsLowTimeWarningActive(isPractice: false);
             if (_hasPlayedLowTimeWarning || isActuallyPlayingWarning)
             {
                 _hasPlayedLowTimeWarning = false;
-                if (audioSource != null && audioSource.clip == lowTimeWarningSound)
-                {
-                    audioSource.Stop();
-                    audioSource.clip = null;
-                    audioSource.loop = false;
-                }
+                UFOSEManager.Instance?.StopLowTimeWarning(isPractice: false);
             }
         }
     }
@@ -1404,24 +1312,6 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
         if (machineHover != null)
         {
             machineHover.OnClicked -= OnMachineClicked;
-        }
-    }
-
-    private void PlaySound(AudioClip clip)
-    {
-        if (clip != null)
-        {
-            if (audioSource == null)
-            {
-                audioSource = GetComponent<AudioSource>();
-                if (audioSource == null)
-                {
-                    audioSource = gameObject.AddComponent<AudioSource>();
-                    audioSource.playOnAwake = false;
-                    audioSource.spatialBlend = 0f; // 2D音響にして距離減衰を無視する
-                }
-            }
-            audioSource.PlayOneShot(clip, soundVolume);
         }
     }
 

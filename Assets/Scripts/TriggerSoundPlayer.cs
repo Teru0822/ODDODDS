@@ -1,25 +1,22 @@
 using UnityEngine;
 
 /// <summary>
-/// Triggerコライダーにオブジェクトが侵入した際に、指定された効果音を再生するスクリプト。
+/// コイン投入口のTriggerコライダーにコインが侵入した際に、コイン投入音を再生するスクリプト。
+/// 実機・練習機どちらのコイン投入口にも配置できる（isPracticeInstanceで切り替え）。
+/// 再生するクリップ自体はUFOSEManager側で一元管理しており（実機:realCoinInsertSound /
+/// 練習機:practiceCoinInsertSound）、このスクリプトはトリガー検知と再生先の切り替えだけを担当する。
 /// </summary>
 [RequireComponent(typeof(Collider))]
 public class TriggerSoundPlayer : MonoBehaviour
 {
-    [Header("オーディオ設定")]
-    [Tooltip("再生する効果音（AudioClip）")]
-    [SerializeField] private AudioClip soundClip;
+    [Header("対象機体")]
+    [Tooltip("練習機（Practice_Cranegame）側のコイン投入口の場合はON。実機側はOFFのままにする。" +
+             "UFOSEManagerでの再生先クリップと、連動するコイン投入アニメーションの呼び出し先が" +
+             "実機/練習機のどちらになるかがこれで切り替わるため、実機・練習機の演出が競合しない")]
+    [SerializeField] private bool isPracticeInstance = false;
 
-    [Tooltip("再生に使用するAudioSource。未設定の場合は自動取得/追加されます")]
-    [SerializeField] private AudioSource audioSource;
-
-    [Tooltip("効果音の音量 (1.0より大きい値で音量増幅可能)")]
-    [Range(0f, 10f)]
-    [SerializeField] private float volume = 1.0f;
-
-    [Tooltip("3Dサウンドのブレンド率 (0 = 完全な2Dで距離減衰なし、1 = 完全な3D立体音響)")]
-    [Range(0f, 1f)]
-    [SerializeField] private float spatialBlend = 0.0f;
+    [Tooltip("練習機側のコイン投入アニメーションを起動するコントローラー（isPracticeInstance時のみ使用）")]
+    [SerializeField] private TutorialCraneController tutorialCrane;
 
     [Header("トリガー条件設定")]
     [Tooltip("特定のタグが付いたオブジェクトのみ音を鳴らす場合に指定します（空欄の場合は何が侵入しても再生されます）")]
@@ -29,7 +26,7 @@ public class TriggerSoundPlayer : MonoBehaviour
     [SerializeField] private bool playOnlyOnce = false;
 
     [Header("連動演出設定")]
-    [Tooltip("音再生時にUFOCameraControllerのコイン投入演出を連動して開始させるか")]
+    [Tooltip("音再生時に、対応する機体（実機/練習機）のコイン投入演出を連動して開始させるか")]
     [SerializeField] private bool triggerCoinAnimation = true;
 
     private bool _hasPlayed = false;
@@ -43,79 +40,50 @@ public class TriggerSoundPlayer : MonoBehaviour
         {
             Debug.LogWarning($"[{gameObject.name}] コライダーの 'Is Trigger' が無効になっています。Triggerイベントを発生させるために有効にしてください。");
         }
-
-        // AudioSource がない場合は自動的に取得/追加する
-        if (audioSource == null)
-        {
-            audioSource = GetComponent<AudioSource>();
-            if (audioSource == null)
-            {
-                audioSource = gameObject.AddComponent<AudioSource>();
-                audioSource.playOnAwake = false;
-            }
-        }
-
-        // 音量減衰に影響する 2D/3D 設定を適用
-        if (audioSource != null)
-        {
-            audioSource.spatialBlend = spatialBlend;
-        }
     }
 
     private void OnTriggerEnter(Collider other)
     {
         if (other == null) return;
-        Debug.Log($"[TriggerSoundPlayer][DIAG] {gameObject.name}: OnTriggerEnter検知 other={other.name}, tag={other.tag}, requiredTag={requiredTag}, playOnlyOnce={playOnlyOnce}, hasPlayed={_hasPlayed}");
         if (playOnlyOnce && _hasPlayed) return;
 
         // 破棄された無効なコライダー参照をリストからクリーンアップ
         _activeColliders.RemoveWhere(c => c == null);
 
         // すでに検知済みの同一コライダーはスキップ
-        if (_activeColliders.Contains(other))
-        {
-            Debug.Log($"[TriggerSoundPlayer][DIAG] {gameObject.name}: 既に_activeColliders登録済みのためスキップ (other={other.name}, 現在の登録数={_activeColliders.Count})");
-            return;
-        }
+        if (_activeColliders.Contains(other)) return;
 
         // タグによる侵入制限があるかチェック
-        if (!string.IsNullOrEmpty(requiredTag))
+        if (!string.IsNullOrEmpty(requiredTag) && !other.CompareTag(requiredTag))
         {
-            if (!other.CompareTag(requiredTag))
-            {
-                Debug.Log($"[TriggerSoundPlayer][DIAG] {gameObject.name}: タグ不一致のためスキップ (other.tag={other.tag})");
-                return; // タグが一致しない場合は処理スキップ
-            }
+            return; // タグが一致しない場合は処理スキップ
         }
 
-        // 音声の再生
-        if (soundClip != null && audioSource != null)
+        // コイン投入音の再生（実機/練習機どちらの機体かでUFOSEManager側の再生先が切り替わる）
+        UFOSEManager.Instance?.PlayCoinInsert(isPracticeInstance);
+        _hasPlayed = true;
+
+        // 検知済みリストに登録
+        _activeColliders.Add(other);
+
+        // 対応する機体のコイン投入演出を連動トリガー（実機/練習機を取り違えないよう、
+        // isPracticeInstanceに応じて呼び出し先を完全に分離している）
+        if (triggerCoinAnimation)
         {
-            audioSource.PlayOneShot(soundClip, volume);
-            _hasPlayed = true;
-
-            // 検知済みリストに登録
-            _activeColliders.Add(other);
-
-            // UFOキャッチャーのコイン投入演出を連動トリガー
-            Debug.Log($"[TriggerSoundPlayer][DIAG] {gameObject.name}: 音声再生・検知済み登録が完了。triggerCoinAnimation={triggerCoinAnimation}, UFOCameraController.Instance={(UFOCameraController.Instance != null ? UFOCameraController.Instance.gameObject.name + " (id=" + UFOCameraController.Instance.GetInstanceID() + ")" : "null")}");
-            if (triggerCoinAnimation && UFOCameraController.Instance != null)
+            if (isPracticeInstance)
+            {
+                tutorialCrane?.TriggerCoinInsertionAnimationTutorial();
+            }
+            else if (UFOCameraController.Instance != null)
             {
                 UFOCameraController.Instance.TriggerCoinInsertionAnimation();
             }
-
-            if (playOnlyOnce)
-            {
-                // 一度のみ再生の場合はイベント後に本スクリプトを無効化する
-                this.enabled = false;
-            }
         }
-        else
+
+        if (playOnlyOnce)
         {
-            if (soundClip == null)
-            {
-                Debug.LogWarning($"[{gameObject.name}] 再生用の 'Sound Clip' がアタッチされていません。");
-            }
+            // 一度のみ再生の場合はイベント後に本スクリプトを無効化する
+            this.enabled = false;
         }
     }
 
