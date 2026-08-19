@@ -319,6 +319,7 @@ public class RewardSelectionUI : MonoBehaviour
         uiRoot.SetActive(true);
         IsTypewriterUIShowing = true;
         OnTypewriterUIChanged?.Invoke(true);
+        App.Input.GameInputGate.CaptureEscape(this);
 
         _prevLockState = Cursor.lockState;
         _prevCursorVisible = Cursor.visible;
@@ -731,6 +732,7 @@ public class RewardSelectionUI : MonoBehaviour
         StopPreview();
         IsTypewriterUIShowing = false;
         OnTypewriterUIChanged?.Invoke(false);
+        App.Input.GameInputGate.ReleaseEscape(this);
     }
 
     private void OnOptionClicked(int index)
