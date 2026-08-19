@@ -32,17 +32,37 @@ public class UFOSEManager : MonoBehaviour
     [SerializeField] private AudioClip realWatchGetSound;
     [Tooltip("未設定の場合はコイン獲得音で代用します")]
     [SerializeField] private AudioClip realBlackDiamondGetSound;
+    [Tooltip("ルーレットアイテム（プレゼントボックス等）投入時の効果音。未設定の場合はコイン獲得音で代用します")]
+    [SerializeField] private AudioClip realRouletteItemGetSound;
     [SerializeField, Range(0f, 10f)] private float realItemGetVolume = 1f;
 
     [Header("=== 実機：残り時間警告（10秒未満） ===")]
     [SerializeField] private AudioClip realLowTimeWarningLoopSound;
     [SerializeField, Range(0f, 10f)] private float realLowTimeWarningVolume = 1f;
 
+    [Header("=== 実機：ルーレット ===")]
+    [Tooltip("ルーレットが回転している間ループ再生する音")]
+    [SerializeField] private AudioClip rouletteSpinLoopSound;
+    [SerializeField, Range(0f, 10f)] private float rouletteSpinVolume = 1f;
+    [Tooltip("ルーレットが回り終わって当選が確定した瞬間に鳴らす音（下のハズレスロット以外の通常当選時）")]
+    [SerializeField] private AudioClip rouletteWinSound;
+    [SerializeField, Range(0f, 10f)] private float rouletteWinVolume = 1f;
+    [Tooltip("この番号のスロット（RouletteControllerのslots配列のElement番号と同じ、0始まり）が" +
+             "当選した時はハズレ扱いとし、下のLoseSoundを鳴らす。デフォルトは1（Element1）")]
+    [SerializeField] private int rouletteLoseSlotIndex = 1;
+    [Tooltip("上のスロットが当選（＝ハズレ）した時の専用サウンド。未設定なら通常のrouletteWinSoundを使う")]
+    [SerializeField] private AudioClip rouletteLoseSound;
+
     [Header("=== 実機：ライト演出 ===")]
     [SerializeField] private AudioClip realLightFlickerSound;
     [SerializeField, Range(0f, 10f)] private float realLightFlickerVolume = 0.5f;
     [SerializeField] private AudioClip realLightOffSound;
     [SerializeField, Range(0f, 10f)] private float realLightOffVolume = 0.5f;
+
+    [Header("=== 実機：環境音 ===")]
+    [Tooltip("ライトが点灯している間（クレーンゲーム稼働中）ループ再生する環境音")]
+    [SerializeField] private AudioClip ambientLoopSound;
+    [SerializeField, Range(0f, 10f)] private float ambientVolume = 1f;
 
     [Header("=== 実機：アーム ===")]
     [SerializeField] private AudioClip armDescentRustleSound;
@@ -81,6 +101,17 @@ public class UFOSEManager : MonoBehaviour
     // ============================================================
     // 共通 (Shared)
     // ============================================================
+    [Header("=== 共通：コイン衝突音（CoinImpactSoundManagerが速度に応じた音量で再生） ===")]
+    [Tooltip("コインが床に落ちた時の効果音（床は鉄板を想定）。複数登録すると毎回ランダムに1つ選ばれる" +
+             "（同じ音の連打感を減らすため、バリエーションがあるならなるべく複数登録する）")]
+    [SerializeField] private AudioClip[] floorImpactSounds;
+    [SerializeField, Range(0f, 10f)] private float floorImpactVolume = 1f;
+    [Tooltip("コイン同士がぶつかった時の効果音。複数登録すると毎回ランダムに1つ選ばれる")]
+    [SerializeField] private AudioClip[] coinImpactSounds;
+    [SerializeField, Range(0f, 10f)] private float coinImpactVolume = 1f;
+    [Tooltip("衝突音のピッチ（高低）をこの範囲でランダムに変化させ、単調な連打感を減らす")]
+    [SerializeField] private Vector2 impactPitchRange = new Vector2(0.9f, 1.1f);
+
     [Header("=== 共通：タッチパネル（実機/練習機どちらのパネルでも使用） ===")]
     [SerializeField] private AudioClip touchSelectSound;
     [SerializeField, Range(0f, 10f)] private float touchSelectVolume = 1f;
@@ -88,6 +119,14 @@ public class UFOSEManager : MonoBehaviour
     [SerializeField, Range(0f, 10f)] private float touchSelect2Volume = 1f;
     [SerializeField] private AudioClip touchLockedSound;
     [SerializeField, Range(0f, 10f)] private float touchLockedVolume = 1f;
+    [Tooltip("チュートリアル開始確認（Tutorial_CanvasのYes/No）で「いいえ」を押した時専用の拒否SE。" +
+             "60/90等の通常ロック（touchLockedSound）とは別の音にしたい場合はここに設定する")]
+    [SerializeField] private AudioClip touchNoLockedSound;
+    [SerializeField, Range(0f, 10f)] private float touchNoLockedVolume = 1f;
+    [Tooltip("タッチパネルの各項目にアウトラインが表示された瞬間（ホバー開始時）に鳴らすSE。" +
+             "全項目で同じ音を使う前提で一元化している")]
+    [SerializeField] private AudioClip touchHoverSound;
+    [SerializeField, Range(0f, 10f)] private float touchHoverVolume = 1f;
 
     [Header("=== 共通：テレビ砂嵐 ===")]
     [Tooltip("カメラ切り替え時などに単発/ループで鳴らす砂嵐SE")]
@@ -114,6 +153,8 @@ public class UFOSEManager : MonoBehaviour
     private bool? _warningLoopOwnerIsPractice;
     private AudioSource _armMoveLoopSource;
     private AudioSource _armMoveLoopSource2;
+    private AudioSource _rouletteSpinLoopSource;
+    private AudioSource _ambientLoopSource;
     private AudioSource _televisionStaticLoopSource;
     private AudioSource _tutorialStaticLoopSource;
 
@@ -217,6 +258,7 @@ public class UFOSEManager : MonoBehaviour
     public void PlayRealCoinGet() => PlayOneShot(realCoinGetSound, realItemGetVolume);
     public void PlayRealWatchGet() => PlayOneShot(realWatchGetSound != null ? realWatchGetSound : realCoinGetSound, realItemGetVolume);
     public void PlayRealBlackDiamondGet() => PlayOneShot(realBlackDiamondGetSound != null ? realBlackDiamondGetSound : realCoinGetSound, realItemGetVolume);
+    public void PlayRealRouletteItemGet() => PlayOneShot(realRouletteItemGetSound != null ? realRouletteItemGetSound : realCoinGetSound, realItemGetVolume);
 
     // ============================================================
     // 実機/練習機 共通：残り時間警告（実機・練習機は同時に鳴らないため1チャンネルを共有する）
@@ -256,10 +298,60 @@ public class UFOSEManager : MonoBehaviour
     }
 
     // ============================================================
+    // 実機：ルーレット
+    // ============================================================
+    public void StartRouletteSpinLoop()
+    {
+        if (rouletteSpinLoopSound == null) return;
+        EnsureLoopSource(ref _rouletteSpinLoopSource, "RouletteSpinLoopAudioSource");
+        _rouletteSpinLoopSource.clip = rouletteSpinLoopSound;
+        _rouletteSpinLoopSource.loop = true;
+        _rouletteSpinLoopSource.volume = rouletteSpinVolume;
+        _rouletteSpinLoopSource.Play();
+    }
+
+    public void StopRouletteSpinLoop()
+    {
+        if (_rouletteSpinLoopSource != null) _rouletteSpinLoopSource.Stop();
+    }
+
+    /// <summary>当選スロット番号を渡すと、それがrouletteLoseSlotIndex（デフォルトElement1＝ハズレ）と
+    /// 一致する場合だけLoseSoundを鳴らす。それ以外（番号を渡さない場合も含む）は通常の当選音を鳴らす</summary>
+    public void PlayRouletteResult(int winningIndex = -1)
+    {
+        if (winningIndex == rouletteLoseSlotIndex && rouletteLoseSound != null)
+        {
+            PlayOneShot(rouletteLoseSound, rouletteWinVolume);
+        }
+        else
+        {
+            PlayOneShot(rouletteWinSound, rouletteWinVolume);
+        }
+    }
+
+    // ============================================================
     // 実機：ライト演出
     // ============================================================
     public void PlayRealLightFlicker() => PlayWithTailCut(realLightFlickerSound, realLightFlickerVolume, 0.4f);
     public void PlayRealLightOff() => PlayWithTailCut(realLightOffSound, realLightOffVolume, 0f);
+
+    // ============================================================
+    // 実機：環境音
+    // ============================================================
+    public void StartAmbientLoop()
+    {
+        if (ambientLoopSound == null) return;
+        EnsureLoopSource(ref _ambientLoopSource, "AmbientLoopAudioSource");
+        _ambientLoopSource.clip = ambientLoopSound;
+        _ambientLoopSource.loop = true;
+        _ambientLoopSource.volume = ambientVolume;
+        _ambientLoopSource.Play();
+    }
+
+    public void StopAmbientLoop()
+    {
+        if (_ambientLoopSource != null) _ambientLoopSource.Stop();
+    }
 
     // ============================================================
     // 実機：アーム
@@ -322,11 +414,37 @@ public class UFOSEManager : MonoBehaviour
     public void PlayTutorialMessageTyping(float pitch) => PlayOneShotWithPitch(tutorialMessageTypingSound, tutorialMessageTypingVolume, pitch);
 
     // ============================================================
+    // 共通：コイン衝突音
+    // ============================================================
+
+    /// <summary>volumeFactor: 0〜1。CoinImpactSoundManagerが衝突速度から算出した音量係数</summary>
+    public void PlayFloorImpact(float volumeFactor)
+    {
+        float pitch = Random.Range(impactPitchRange.x, impactPitchRange.y);
+        PlayOneShotWithPitch(PickRandomClip(floorImpactSounds), floorImpactVolume * Mathf.Clamp01(volumeFactor), pitch);
+    }
+
+    /// <summary>volumeFactor: 0〜1。CoinImpactSoundManagerが衝突速度から算出した音量係数</summary>
+    public void PlayCoinImpact(float volumeFactor)
+    {
+        float pitch = Random.Range(impactPitchRange.x, impactPitchRange.y);
+        PlayOneShotWithPitch(PickRandomClip(coinImpactSounds), coinImpactVolume * Mathf.Clamp01(volumeFactor), pitch);
+    }
+
+    private static AudioClip PickRandomClip(AudioClip[] clips)
+    {
+        if (clips == null || clips.Length == 0) return null;
+        return clips[Random.Range(0, clips.Length)];
+    }
+
+    // ============================================================
     // 共通：タッチパネル
     // ============================================================
     public void PlayTouchSelect() => PlayOneShot(touchSelectSound, touchSelectVolume);
     public void PlayTouchSelect2() => PlayOneShot(touchSelect2Sound, touchSelect2Volume);
     public void PlayTouchLocked() => PlayOneShot(touchLockedSound, touchLockedVolume);
+    public void PlayTouchNoLocked() => PlayOneShot(touchNoLockedSound, touchNoLockedVolume);
+    public void PlayTouchHover() => PlayOneShot(touchHoverSound, touchHoverVolume);
 
     // ============================================================
     // 共通：テレビ砂嵐

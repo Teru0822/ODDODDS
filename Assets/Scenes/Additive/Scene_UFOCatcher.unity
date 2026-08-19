@@ -2591,7 +2591,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0.24707438, y: -0.67669106, z: -0.2434738, w: 0.6494337}
   m_LocalPosition: {x: 5.782, y: 7.51, z: -12.324}
-  m_LocalScale: {x: 0.4855078, y: 0.11629, z: 2.9469}
+  m_LocalScale: {x: 0.7788679, y: 0.1461299, z: 2.9469}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2139508235}
@@ -3365,6 +3365,55 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 874908179}
   m_CullTransparentMesh: 1
+--- !u!1 &891194630
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 891194632}
+  - component: {fileID: 891194631}
+  m_Layer: 0
+  m_Name: CoinImpactSoundManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &891194631
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 891194630}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f50ddee6ab79ccc4c82f4cfaea10d985, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CoinImpactSoundManager
+  minVelocityThreshold: 0.5
+  maxVelocityForFullVolume: 5
+  perCoinCooldown: 0.25
+  maxSoundsPerWindow: 3
+  windowDuration: 0.1
+--- !u!4 &891194632
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 891194630}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &898318472
 GameObject:
   m_ObjectHideFlags: 0
@@ -3525,6 +3574,81 @@ Transform:
   - {fileID: 2132447523}
   m_Father: {fileID: 1288152618}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &912431470
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 912431471}
+  - component: {fileID: 912431473}
+  - component: {fileID: 912431472}
+  m_Layer: 17
+  m_Name: Rock_No
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &912431471
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 912431470}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.39999998, y: 0.39999998, z: 0.39999998}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 1599661883}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 2.6, y: 5.4}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &912431472
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 912431470}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: dce5f9d4bc0fd9e40a430f2ad551ee85, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &912431473
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 912431470}
+  m_CullTransparentMesh: 1
 --- !u!1 &924499142
 GameObject:
   m_ObjectHideFlags: 0
@@ -4426,7 +4550,7 @@ RectTransform:
   m_GameObject: {fileID: 1034135756}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0.03}
-  m_LocalScale: {x: 6, y: 6, z: 6}
+  m_LocalScale: {x: 9, y: 9, z: 9}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1880645340}
@@ -5758,13 +5882,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TouchPanelOutlineController
   rayCamera: {fileID: 0}
   maxDistance: 50
-  hoverVolume: 1
   touch30:
     touchArea: {fileID: 1087585225}
     touchAreaName: 30
     outline: {fileID: 0}
     playCanvasPath: Panel_30
-    hoverEnterClip: {fileID: 8300000, guid: 0d47aa5ef60e1224abda0e0568dd694b, type: 3}
     resultText: "              30\u79D2\n1500 Devil Coins"
     durationSeconds: 30
     durationCost: 1500
@@ -5778,7 +5900,6 @@ MonoBehaviour:
     touchAreaName: 60
     outline: {fileID: 0}
     playCanvasPath: Panel_60
-    hoverEnterClip: {fileID: 8300000, guid: 0d47aa5ef60e1224abda0e0568dd694b, type: 3}
     resultText: "              60\u79D2\n2500 Devil Coins"
     durationSeconds: 60
     durationCost: 2500
@@ -5792,7 +5913,6 @@ MonoBehaviour:
     touchAreaName: 90
     outline: {fileID: 0}
     playCanvasPath: Panel_90
-    hoverEnterClip: {fileID: 8300000, guid: 0d47aa5ef60e1224abda0e0568dd694b, type: 3}
     resultText: "              90\u79D2\n4000 Devil Coins"
     durationSeconds: 90
     durationCost: 4000
@@ -5806,7 +5926,6 @@ MonoBehaviour:
     touchAreaName: Quit
     outline: {fileID: 0}
     playCanvasPath: Quit/Button
-    hoverEnterClip: {fileID: 8300000, guid: 0d47aa5ef60e1224abda0e0568dd694b, type: 3}
     resultText: 
     durationSeconds: 0
     durationCost: 0
@@ -5823,7 +5942,6 @@ MonoBehaviour:
     touchAreaName: Play2/Play
     outline: {fileID: 0}
     playCanvasPath: Play
-    hoverEnterClip: {fileID: 8300000, guid: 0d47aa5ef60e1224abda0e0568dd694b, type: 3}
     resultText: 
     durationSeconds: 0
     durationCost: 0
@@ -5837,7 +5955,6 @@ MonoBehaviour:
     touchAreaName: Play2/Back
     outline: {fileID: 0}
     playCanvasPath: Back
-    hoverEnterClip: {fileID: 8300000, guid: 0d47aa5ef60e1224abda0e0568dd694b, type: 3}
     resultText: 
     durationSeconds: 0
     durationCost: 0
@@ -5851,7 +5968,6 @@ MonoBehaviour:
     touchAreaName: Tutorial/Yes
     outline: {fileID: 0}
     playCanvasPath: Yes
-    hoverEnterClip: {fileID: 8300000, guid: 0d47aa5ef60e1224abda0e0568dd694b, type: 3}
     resultText: 
     durationSeconds: 0
     durationCost: 0
@@ -5865,13 +5981,12 @@ MonoBehaviour:
     touchAreaName: Tutorial/No
     outline: {fileID: 0}
     playCanvasPath: No
-    hoverEnterClip: {fileID: 8300000, guid: 0d47aa5ef60e1224abda0e0568dd694b, type: 3}
     resultText: 
     durationSeconds: 0
     durationCost: 0
     useCanvas2: 0
     useTutorialCanvas: 1
-    isLocked: 0
+    isLocked: 1
     lockIndicator: {fileID: 0}
     lockIndicatorPath: 
   touchQuitTutorial:
@@ -5879,7 +5994,6 @@ MonoBehaviour:
     touchAreaName: Play_tutorial/Quit
     outline: {fileID: 0}
     playCanvasPath: Quit/Button
-    hoverEnterClip: {fileID: 8300000, guid: 0d47aa5ef60e1224abda0e0568dd694b, type: 3}
     resultText: 
     durationSeconds: 0
     durationCost: 0
@@ -5893,7 +6007,6 @@ MonoBehaviour:
     touchAreaName: Play_tutorial/30
     outline: {fileID: 0}
     playCanvasPath: Panel_30
-    hoverEnterClip: {fileID: 8300000, guid: 0d47aa5ef60e1224abda0e0568dd694b, type: 3}
     resultText: "              30\u79D2\n1500 Devil Coins"
     durationSeconds: 30
     durationCost: 1500
@@ -5907,7 +6020,6 @@ MonoBehaviour:
     touchAreaName: Play_tutorial/60
     outline: {fileID: 0}
     playCanvasPath: Panel_60
-    hoverEnterClip: {fileID: 8300000, guid: 0d47aa5ef60e1224abda0e0568dd694b, type: 3}
     resultText: 
     durationSeconds: 60
     durationCost: 2500
@@ -5921,7 +6033,6 @@ MonoBehaviour:
     touchAreaName: Play_tutorial/90
     outline: {fileID: 0}
     playCanvasPath: Panel_90
-    hoverEnterClip: {fileID: 8300000, guid: 0d47aa5ef60e1224abda0e0568dd694b, type: 3}
     resultText: 
     durationSeconds: 90
     durationCost: 4000
@@ -5935,7 +6046,6 @@ MonoBehaviour:
     touchAreaName: Play2_tutorial/Play
     outline: {fileID: 0}
     playCanvasPath: Play
-    hoverEnterClip: {fileID: 8300000, guid: 0d47aa5ef60e1224abda0e0568dd694b, type: 3}
     resultText: 
     durationSeconds: 0
     durationCost: 0
@@ -5949,7 +6059,6 @@ MonoBehaviour:
     touchAreaName: Play2_tutorial/Back
     outline: {fileID: 0}
     playCanvasPath: Back
-    hoverEnterClip: {fileID: 8300000, guid: 0d47aa5ef60e1224abda0e0568dd694b, type: 3}
     resultText: 
     durationSeconds: 0
     durationCost: 0
@@ -7120,6 +7229,57 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3919476651199985729, guid: 824a9e079cfbd9e46a3893be39e8ce1e, type: 3}
   m_PrefabInstance: {fileID: 1300359457}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1307067184
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1307067186}
+  - component: {fileID: 1307067185}
+  m_Layer: 0
+  m_Name: UFOBGMManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1307067185
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1307067184}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 115c14b668ba9754893f36c5f6bf1ff0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UFOBGMManager
+  bgmClip: {fileID: 8300000, guid: 2a09a69371ec139448aa493e26466f46, type: 3}
+  fastBgmClip: {fileID: 8300000, guid: 3e24cde4993e07545940246a009f47f3, type: 3}
+  bgmVolume: 0.406
+  fadeDuration: 1
+  speedCrossfadeDuration: 0.5
+  normalSource: {fileID: 0}
+  fastSource: {fileID: 0}
+--- !u!4 &1307067186
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1307067184}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1318579977
 GameObject:
   m_ObjectHideFlags: 0
@@ -7484,13 +7644,22 @@ MonoBehaviour:
   realCoinGetSound: {fileID: 8300000, guid: 1844f9d577d01384a81bec1afd71b07b, type: 3}
   realWatchGetSound: {fileID: 8300000, guid: abcdc67f5c71d744489b1fa432127422, type: 3}
   realBlackDiamondGetSound: {fileID: 8300000, guid: 1fbebd194665c2f42879deab3512e212, type: 3}
+  realRouletteItemGetSound: {fileID: 8300000, guid: 4adeb4a3f2c13ae4ab99e1a12f1b0cd6, type: 3}
   realItemGetVolume: 1
   realLowTimeWarningLoopSound: {fileID: 8300000, guid: 95831d7d112bdea4281e9151acbddc29, type: 3}
   realLowTimeWarningVolume: 0.62
+  rouletteSpinLoopSound: {fileID: 8300000, guid: 54911b59815f05e4682a4d50bd22a3c2, type: 3}
+  rouletteSpinVolume: 1
+  rouletteWinSound: {fileID: 8300000, guid: eb6dbd6dc5a533a4aa7411d7b083a991, type: 3}
+  rouletteWinVolume: 1
+  rouletteLoseSlotIndex: 1
+  rouletteLoseSound: {fileID: 8300000, guid: 3a5027387a89518488a5a2e37134724a, type: 3}
   realLightFlickerSound: {fileID: 8300000, guid: 4f319739c1eb21f46b9354431580df6d, type: 3}
   realLightFlickerVolume: 0.314
   realLightOffSound: {fileID: 8300000, guid: 4e56454f649254a4cbb9af34af19ba36, type: 3}
   realLightOffVolume: 6.02
+  ambientLoopSound: {fileID: 8300000, guid: e48a9cd073793ed4c93425bbaf6c172b, type: 3}
+  ambientVolume: 3.5
   armDescentRustleSound: {fileID: 0}
   armMoveLoopSound: {fileID: 8300000, guid: 4f20f946064e39a40911467daf930332, type: 3}
   armMoveVolume: 5.8
@@ -7512,12 +7681,21 @@ MonoBehaviour:
   tutorialFrameSnapVolume: 1
   tutorialMessageTypingSound: {fileID: 8300000, guid: d76fe7901f976e249aaada8403e9d911, type: 3}
   tutorialMessageTypingVolume: 0.7
+  floorImpactSound: {fileID: 8300000, guid: 37cd3fcaf9a17c94c921d124d2580449, type: 3}
+  floorImpactVolume: 1
+  coinImpactSound: {fileID: 8300000, guid: 8c1f93ac5fbe25b458c0b2aca3361b46, type: 3}
+  coinImpactVolume: 1
+  impactPitchRange: {x: 0.9, y: 1.1}
   touchSelectSound: {fileID: 8300000, guid: 94826d03cfc2c8148be7e49800e98929, type: 3}
   touchSelectVolume: 1
   touchSelect2Sound: {fileID: 8300000, guid: 94826d03cfc2c8148be7e49800e98929, type: 3}
   touchSelect2Volume: 1
   touchLockedSound: {fileID: 8300000, guid: fccc3e76f36eb2c4799d6ad28bd144cd, type: 3}
   touchLockedVolume: 1
+  touchNoLockedSound: {fileID: 8300000, guid: 5066fccc65ef56d4f9323dbf41d7f471, type: 3}
+  touchNoLockedVolume: 1
+  touchHoverSound: {fileID: 8300000, guid: 0d47aa5ef60e1224abda0e0568dd694b, type: 3}
+  touchHoverVolume: 1
   televisionStaticSound: {fileID: 8300000, guid: 39361cfbeab23314aba9cac3bfd0baf3, type: 3}
   televisionStaticVolume: 1
   tutorialStaticLoopSound: {fileID: 8300000, guid: 39361cfbeab23314aba9cac3bfd0baf3, type: 3}
@@ -8451,6 +8629,7 @@ GameObject:
   - component: {fileID: 1526946105}
   - component: {fileID: 1526946107}
   - component: {fileID: 1526946106}
+  - component: {fileID: 1526946108}
   m_Layer: 17
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -8577,6 +8756,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1526946104}
   m_CullTransparentMesh: 1
+--- !u!114 &1526946108
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1526946104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49acec6c54cde43428b9152331260b92, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextTrembleEffect
+  angle: 6
+  positionAmount: 6
+  speed: 5
+  characterOffset: 4
+  parentTremble: {fileID: 1599661888}
 --- !u!1001 &1545988590
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8780,7 +8976,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1569405593
 Transform:
   m_ObjectHideFlags: 0
@@ -8789,13 +8985,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1569405592}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.24707438, y: -0.67669106, z: -0.2434738, w: 0.6494337}
-  m_LocalPosition: {x: 5.857, y: 7.446, z: -12.693}
-  m_LocalScale: {x: 0.4855078, y: 0.11629, z: 2.9469}
+  m_LocalRotation: {x: -0.45966846, y: -0.554672, z: -0.011620805, w: 0.6934759}
+  m_LocalPosition: {x: 6.373, y: 8.042, z: -12.795}
+  m_LocalScale: {x: 0.3679517, y: 0.11629, z: 2.9469}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2139508235}
-  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -40.574, y: -92.861, z: 40.551}
 --- !u!212 &1569405594
 SpriteRenderer:
   serializedVersion: 2
@@ -9010,13 +9206,14 @@ GameObject:
   - component: {fileID: 1599661886}
   - component: {fileID: 1599661885}
   - component: {fileID: 1599661884}
+  - component: {fileID: 1599661888}
   m_Layer: 17
   m_Name: No
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1599661883
 RectTransform:
   m_ObjectHideFlags: 0
@@ -9024,17 +9221,19 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1599661882}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: -0.34646085, w: 0.93806446}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 6, y: 6, z: 6}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1526946105}
+  - {fileID: 912431471}
+  - {fileID: 1954956542}
   m_Father: {fileID: 1443746183}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -40.542}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 439, y: -408}
+  m_AnchoredPosition: {x: 492.2, y: 626.4}
   m_SizeDelta: {x: 100, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1599661884
@@ -9134,6 +9333,27 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1599661882}
   m_CullTransparentMesh: 1
+--- !u!114 &1599661888
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1599661882}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfc512432aaa6354c99daaae6e05bbe4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImageTrembleEffect
+  enableTremble: 1
+  angle: 6
+  positionAmount: 6
+  speed: 5
+  enableFlicker: 0
+  visibleDurationRange: {x: 0.3, y: 1.2}
+  hiddenDurationRange: {x: 0.03, y: 0.15}
+  hiddenAlpha: 0
+  parentTremble: {fileID: 0}
 --- !u!1 &1614547069
 GameObject:
   m_ObjectHideFlags: 0
@@ -11148,6 +11368,7 @@ MonoBehaviour:
   positionAmount: 6
   speed: 5
   characterOffset: 4
+  parentTremble: {fileID: 0}
 --- !u!1001 &1885820926
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -11694,6 +11915,103 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4561945628273268357, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
   m_PrefabInstance: {fileID: 5351351319220983938}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1954956541
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1954956542}
+  - component: {fileID: 1954956544}
+  - component: {fileID: 1954956543}
+  - component: {fileID: 1954956545}
+  m_Layer: 17
+  m_Name: Hack_noin
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1954956542
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1954956541}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.3, y: 0.3, z: 0.3}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 1599661883}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 1.2, y: -1}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1954956543
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1954956541}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: e6cd8998560cfa3408d9ed51214b03b7, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1954956544
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1954956541}
+  m_CullTransparentMesh: 1
+--- !u!114 &1954956545
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1954956541}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfc512432aaa6354c99daaae6e05bbe4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImageTrembleEffect
+  enableTremble: 1
+  angle: 8
+  positionAmount: 7
+  speed: 7
+  enableFlicker: 1
+  visibleDurationRange: {x: 0.3, y: 1.2}
+  hiddenDurationRange: {x: 0.03, y: 0.15}
+  hiddenAlpha: 0.119
+  parentTremble: {fileID: 1599661888}
 --- !u!1 &1957663249
 GameObject:
   m_ObjectHideFlags: 0
@@ -13027,6 +13345,7 @@ MonoBehaviour:
   positionAmount: 6
   speed: 5
   characterOffset: 4
+  parentTremble: {fileID: 0}
 --- !u!1 &2104767980
 GameObject:
   m_ObjectHideFlags: 0
@@ -53410,6 +53729,8 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1360053391}
+  - {fileID: 1307067186}
+  - {fileID: 891194632}
   - {fileID: 5351351319220983938}
   - {fileID: 1632140609}
   - {fileID: 432966208}

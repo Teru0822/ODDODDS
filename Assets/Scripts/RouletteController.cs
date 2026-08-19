@@ -418,6 +418,8 @@ public class RouletteController : MonoBehaviour
         float safeDuration = Mathf.Max(0.01f, spinDuration);
         float t = 0f;
 
+        UFOSEManager.Instance?.StartRouletteSpinLoop();
+
         while (t < 1f)
         {
             t += Time.deltaTime / safeDuration;
@@ -426,6 +428,8 @@ public class RouletteController : MonoBehaviour
             reelTransform.localEulerAngles = new Vector3(0f, 0f, angle);
             yield return null;
         }
+
+        UFOSEManager.Instance?.StopRouletteSpinLoop();
 
         // 浮動小数点誤差を消すハードスナップ
         reelTransform.localEulerAngles = new Vector3(0f, 0f, targetAngle);
@@ -441,6 +445,7 @@ public class RouletteController : MonoBehaviour
         Debug.Log($"[RouletteController] スピン完了 → 当選スロット [{winningIndex}] {label}");
 
         StartLightShow();
+        UFOSEManager.Instance?.PlayRouletteResult(winningIndex);
 
         OnSpinComplete.Invoke(winningIndex);
     }

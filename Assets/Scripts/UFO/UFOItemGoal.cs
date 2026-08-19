@@ -817,8 +817,8 @@ public class UFOItemGoal : MonoBehaviour, IsaveDataProvider
         }
         Debug.Log($"[獲得] RouletteItem (トリガー実行)！ (未洗浄メダル総額: {unwashedMoney}円)");
 
-        // コイン獲得音の再生
-        UFOSEManager.Instance?.PlayRealCoinGet();
+        // ルーレットアイテム投入音の再生
+        UFOSEManager.Instance?.PlayRealRouletteItemGet();
 
         if (rouletteController == null)
         {
