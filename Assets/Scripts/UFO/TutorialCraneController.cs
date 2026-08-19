@@ -28,17 +28,6 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
     [Tooltip("チュートリアルの制限時間（秒）")]
     [SerializeField] private float tutorialDuration = 30f;
 
-    [Header("残り時間警告音（実機のUFOCameraController.UpdateWarningSoundと同じ仕組み）")]
-    [Tooltip("パトランプは複数箇所に配置されるため、音はパトランプ側ではなくここに一元化して1回だけ鳴らす")]
-    [SerializeField] private AudioSource warningAudioSource;
-
-    [Tooltip("残り10秒を切った時にループ再生する警告音")]
-    [SerializeField] private AudioClip lowTimeWarningSound;
-
-    [Range(0f, 10f)]
-    [Tooltip("警告音のボリューム（1を超えるとブースト）")]
-    [SerializeField] private float warningSoundVolume = 1f;
-
     private bool _hasPlayedLowTimeWarning = false;
 
     [Header("チュートリアル開始時のローディング演出")]
@@ -386,37 +375,16 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
             if (!_hasPlayedLowTimeWarning)
             {
                 _hasPlayedLowTimeWarning = true;
-                if (lowTimeWarningSound != null)
-                {
-                    if (warningAudioSource == null)
-                    {
-                        warningAudioSource = GetComponent<AudioSource>();
-                        if (warningAudioSource == null)
-                        {
-                            warningAudioSource = gameObject.AddComponent<AudioSource>();
-                            warningAudioSource.playOnAwake = false;
-                            warningAudioSource.spatialBlend = 0f;
-                        }
-                    }
-                    warningAudioSource.clip = lowTimeWarningSound;
-                    warningAudioSource.loop = true;
-                    warningAudioSource.volume = warningSoundVolume;
-                    warningAudioSource.Play();
-                }
+                UFOSEManager.Instance?.StartLowTimeWarning(isPractice: true);
             }
         }
         else
         {
-            bool isActuallyPlayingWarning = warningAudioSource != null && warningAudioSource.isPlaying && warningAudioSource.clip == lowTimeWarningSound;
+            bool isActuallyPlayingWarning = UFOSEManager.Instance != null && UFOSEManager.Instance.IsLowTimeWarningActive(isPractice: true);
             if (_hasPlayedLowTimeWarning || isActuallyPlayingWarning)
             {
                 _hasPlayedLowTimeWarning = false;
-                if (warningAudioSource != null && warningAudioSource.clip == lowTimeWarningSound)
-                {
-                    warningAudioSource.Stop();
-                    warningAudioSource.clip = null;
-                    warningAudioSource.loop = false;
-                }
+                UFOSEManager.Instance?.StopLowTimeWarning(isPractice: true);
             }
         }
     }
@@ -625,6 +593,12 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
 
         IsPlayingTutorial = true;
         IsAnyTutorialPlaying = true;
+
+        // 前回のプレイで獲得演出（時計・ブラックダイヤ等）の最中に中断された場合、
+        // IsFlashingがtrueのまま固まっている可能性があるため、新しいセッション開始時に強制リセットする
+        EnsureItemGoal();
+        itemGoal?.ResetStuckFlashState();
+
         // ここではまだレバー/ボタン操作を解禁しない。Play_tutorial → Play2_tutorial のメニューを
         // 一通り見せてから、Play2_tutorial の Play が押された瞬間に BeginTutorialPlay() で解禁する
         // （実機が StartPlaySessionFromTelevision 直後は _controlsUnlocked = false で、

@@ -76,9 +76,6 @@ public class TouchPanelOutlineController : MonoBehaviour
     [SerializeField] private float maxDistance = 50f;
 
     [Header("ホバー SE")]
-    [Tooltip("SE 再生用の AudioSource。未設定なら自身に AddComponent して使う")]
-    [SerializeField] private AudioSource audioSource;
-
     [Range(0f, 5f)]
     [Tooltip("SE のボリューム（1 を超えるとブースト）")]
     [SerializeField] private float hoverVolume = 1f;
@@ -92,13 +89,6 @@ public class TouchPanelOutlineController : MonoBehaviour
     [Header("ロック中の選択 (拒否演出)")]
     [Tooltip("ロック中の 60 / 90 をホバーした時のアウトライン色")]
     [SerializeField] private Color lockedOutlineColor = new Color(1f, 0f, 0f, 0.5f);
-
-    [Tooltip("ロック中の 60 / 90 をクリックした時に鳴らす SE（共通）")]
-    [SerializeField] private AudioClip lockedSound;
-
-    [Range(0f, 5f)]
-    [Tooltip("拒否 SE のボリューム")]
-    [SerializeField] private float lockedVolume = 1f;
 
     [Tooltip("拒否演出（UIが揺れる）の振幅")]
     [SerializeField] private float lockedShakeStrength = 12f;
@@ -136,26 +126,11 @@ public class TouchPanelOutlineController : MonoBehaviour
     [SerializeField] private TutorialStepController tutorialStepController;
 
     [Header("選択 (クリック) → Play_Canvas2 遷移")]
-    [Tooltip("30 / 60 / 90 を左クリックで選択した瞬間に鳴らす SE（3つ共通）")]
-    [SerializeField] private AudioClip selectSound;
-
-    [Range(0f, 5f)]
-    [Tooltip("選択 SE のボリューム")]
-    [SerializeField] private float selectVolume = 1f;
-
     [Tooltip("選択結果（秒数 / Devil Coins）を表示する Play_Canvas2 側のテキスト。未設定なら playCanvas2TextPath から自動取得")]
     [SerializeField] private TextMeshProUGUI play2ResultText;
 
     [Tooltip("play2ResultText が未設定の場合に Play_Canvas2 直下から検索する名前")]
     [SerializeField] private string playCanvas2TextPath = "Text (TMP)";
-
-    [Header("選択 (クリック) → Play2 の Play / Back")]
-    [Tooltip("Play2 の Play / Back を左クリックで選択した瞬間に鳴らす SE（共通）")]
-    [SerializeField] private AudioClip select2Sound;
-
-    [Range(0f, 5f)]
-    [Tooltip("選択 SE のボリューム")]
-    [SerializeField] private float select2Volume = 1f;
 
     private enum PanelGroup { Tutorial, Play, Play2, PlayTutorial, Play2Tutorial }
 
@@ -189,8 +164,6 @@ public class TouchPanelOutlineController : MonoBehaviour
         };
         _selectableTargets = new[] { touch30, touch60, touch90 };
         _selectableTutorialTargets = new[] { touch30Tutorial, touch60Tutorial, touch90Tutorial };
-
-        EnsureAudioSource();
 
         _tvController = FindAnyObjectByType<TelevisionStaticController>();
         Canvas playCanvas = _tvController != null ? _tvController.PlayCanvas : null;
@@ -347,16 +320,6 @@ public class TouchPanelOutlineController : MonoBehaviour
         }
     }
 
-    private void EnsureAudioSource()
-    {
-        if (audioSource == null) audioSource = GetComponent<AudioSource>();
-        if (audioSource == null)
-        {
-            audioSource = gameObject.AddComponent<AudioSource>();
-            audioSource.playOnAwake = false;
-            audioSource.spatialBlend = 0f; // 2D再生
-        }
-    }
 
     /// <summary>
     /// TouchPanel の当たり判定用オブジェクトに Collider がなければ、SpriteRenderer のサイズに合わせて自動付与する。
@@ -602,7 +565,7 @@ public class TouchPanelOutlineController : MonoBehaviour
             GameUIManager.Instance.ShowMoneyCountPreview(target.durationCost);
         }
 
-        PlayOneShot(selectSound, selectVolume);
+        UFOSEManager.Instance?.PlayTouchSelect();
         HideAll();
         SetActiveGroup(PanelGroup.Play2);
 
@@ -639,7 +602,7 @@ public class TouchPanelOutlineController : MonoBehaviour
             GameUIManager.Instance.ShowMoneyCountPreview(target.durationCost);
         }
 
-        PlayOneShot(selectSound, selectVolume);
+        UFOSEManager.Instance?.PlayTouchSelect();
         HideAll();
         SetActiveGroup(PanelGroup.Play2Tutorial);
 
@@ -656,7 +619,7 @@ public class TouchPanelOutlineController : MonoBehaviour
     /// </summary>
     private void HandleTutorialYesClicked()
     {
-        PlayOneShot(selectSound, selectVolume);
+        UFOSEManager.Instance?.PlayTouchSelect();
         HideAll();
 
         if (_tvController != null && _tvController.TutorialCanvas != null)
@@ -700,7 +663,7 @@ public class TouchPanelOutlineController : MonoBehaviour
     /// </summary>
     private void HandlePlayTutorialQuitClicked()
     {
-        PlayOneShot(selectSound, selectVolume);
+        UFOSEManager.Instance?.PlayTouchSelect();
         HideAll();
 
         if (GameUIManager.Instance != null)
@@ -762,7 +725,7 @@ public class TouchPanelOutlineController : MonoBehaviour
     {
         _tutorialPending = false;
 
-        PlayOneShot(selectSound, selectVolume);
+        UFOSEManager.Instance?.PlayTouchSelect();
         HideAll();
         SetActiveGroup(PanelGroup.Play);
         RefreshLockIndicators(_selectableTargets);
@@ -778,7 +741,7 @@ public class TouchPanelOutlineController : MonoBehaviour
     /// </summary>
     private void HandleLockedClicked(TouchTarget target)
     {
-        PlayOneShot(lockedSound, lockedVolume);
+        UFOSEManager.Instance?.PlayTouchLocked();
 
         if (target.outline != null)
         {
@@ -839,7 +802,7 @@ public class TouchPanelOutlineController : MonoBehaviour
     /// </summary>
     private void HandlePlay2BackClicked()
     {
-        PlayOneShot(select2Sound, select2Volume);
+        UFOSEManager.Instance?.PlayTouchSelect2();
         ReturnToPlay1();
     }
 
@@ -862,7 +825,7 @@ public class TouchPanelOutlineController : MonoBehaviour
         {
             _hasStartedPlaySession = true;
 
-            PlayOneShot(select2Sound, select2Volume);
+            UFOSEManager.Instance?.PlayTouchSelect2();
             HideAll();
 
             // プレイ開始によりメニュー操作は終了するため、Play / Play2 どちらの当たり判定も無効化する
@@ -880,7 +843,7 @@ public class TouchPanelOutlineController : MonoBehaviour
     /// </summary>
     private void HandlePlay2PlayRejected()
     {
-        PlayOneShot(lockedSound, lockedVolume);
+        UFOSEManager.Instance?.PlayTouchLocked();
 
         if (touch2Play.outline != null)
         {
@@ -894,7 +857,7 @@ public class TouchPanelOutlineController : MonoBehaviour
     /// </summary>
     private void HandlePlay2TutorialBackClicked()
     {
-        PlayOneShot(select2Sound, select2Volume);
+        UFOSEManager.Instance?.PlayTouchSelect2();
         ReturnToPlayTutorial();
     }
 
@@ -912,7 +875,7 @@ public class TouchPanelOutlineController : MonoBehaviour
             tutorialStepController.NotifyStepActionPerformed();
         }
 
-        PlayOneShot(select2Sound, select2Volume);
+        UFOSEManager.Instance?.PlayTouchSelect2();
         HideAll();
 
         if (GameUIManager.Instance != null)
@@ -989,8 +952,7 @@ public class TouchPanelOutlineController : MonoBehaviour
 
     private void PlayOneShot(AudioClip clip, float volume)
     {
-        if (clip == null || audioSource == null) return;
-        audioSource.PlayOneShot(clip, volume);
+        UFOSEManager.Instance?.PlayOneShot(clip, volume);
     }
 
     private void OnDisable()

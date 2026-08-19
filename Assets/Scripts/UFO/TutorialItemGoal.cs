@@ -9,15 +9,6 @@ using UnityEngine;
 /// </summary>
 public class TutorialItemGoal : MonoBehaviour
 {
-    [Header("再生用")]
-    [Tooltip("未設定なら自動でGetComponent/AddComponentします")]
-    [SerializeField] private AudioSource audioSource;
-
-    [Header("効果音（種別ごと。未設定の種別はcoinGetSoundで代用）")]
-    [SerializeField] private AudioClip coinGetSound;
-    [SerializeField] private AudioClip watchGetSound;
-    [SerializeField] private AudioClip blackDiamondGetSound;
-
     [Header("ランプ演出（チュートリアル専用のLightのみを対象にする。実機のランプには一切触れない）")]
     [Tooltip("アイテム獲得時に点灯させるLight（任意・複数可）")]
     [SerializeField] private Light[] flashLights;
@@ -51,6 +42,16 @@ public class TutorialItemGoal : MonoBehaviour
     /// 物理ランプをこの色で光らせるために参照する）</summary>
     public Color CurrentFlashColor { get; private set; }
 
+    /// <summary>
+    /// IsFlashingを強制的にfalseへ戻す（新しい練習セッション開始時に呼ぶ）。演出中にGameObjectが
+    /// 破棄される等でFlashLightsRoutineが中断されると、IsFlashingがtrueのまま固まる可能性があるため、
+    /// セッション開始時に必ず呼んで持ち越されないようにする
+    /// </summary>
+    public void ResetStuckFlashState()
+    {
+        IsFlashing = false;
+    }
+
     private Coroutine _flashCoroutine;
 
     private void OnTriggerEnter(Collider other)
@@ -82,16 +83,16 @@ public class TutorialItemGoal : MonoBehaviour
         switch (item.itemType)
         {
             case UFOItemType.Watch:
-                PlaySound(watchGetSound != null ? watchGetSound : coinGetSound);
+                UFOSEManager.Instance?.PlayPracticeWatchGet();
                 FlashLights(watchFlashColor, isGetEffect: true);
                 tutorialCrane?.AddPlayTime(watchTimeExtension);
                 break;
             case UFOItemType.BlackDiamond:
-                PlaySound(blackDiamondGetSound != null ? blackDiamondGetSound : coinGetSound);
+                UFOSEManager.Instance?.PlayPracticeBlackDiamondGet();
                 FlashLights(blackDiamondFlashColor, isGetEffect: true);
                 break;
             default:
-                PlaySound(coinGetSound);
+                UFOSEManager.Instance?.PlayPracticeCoinGet();
                 FlashLights(coinFlashColor, isGetEffect: false);
                 // 練習機のチェイスライトも、実機の銅貨・銀貨・金貨獲得時と同じ一瞬フラッシュを行う
                 UFOChaseLightController.TriggerCoinCatchFlash();
@@ -107,23 +108,6 @@ public class TutorialItemGoal : MonoBehaviour
         }
 
         Destroy(item.gameObject);
-    }
-
-    private void PlaySound(AudioClip clip)
-    {
-        if (clip == null) return;
-
-        if (audioSource == null)
-        {
-            audioSource = GetComponent<AudioSource>();
-            if (audioSource == null)
-            {
-                audioSource = gameObject.AddComponent<AudioSource>();
-                audioSource.playOnAwake = false;
-                audioSource.spatialBlend = 0f;
-            }
-        }
-        audioSource.PlayOneShot(clip);
     }
 
     /// <summary>
