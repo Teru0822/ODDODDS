@@ -13,6 +13,7 @@ using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using static UnityEngine.InputSystem.InputActionRebindingExtensions;
+using UnityEngine.Localization.Settings;
 
 public enum ScreenSize
 {
@@ -73,7 +74,6 @@ public class SettingUIManager : MonoBehaviour
     [SerializeField] private TMP_Text _warningText;
     [SerializeField] private Button _yesButton;
     [SerializeField] private Button _noButton;
-    [SerializeField] private TMP_Dropdown _languageDropDown;
     private bool _isCantSettingUI = false;//SettingUIの表示・非表示ができない状態に設定するためのbool
     public bool IsCantSettingUI{private get{return _isCantSettingUI;} set{_isCantSettingUI = value;}}
 
@@ -120,6 +120,10 @@ public class SettingUIManager : MonoBehaviour
     private PlayerInput _myPlayerInput;
     private FirstPersonController _fpsController;
     private InputActionRebindingExtensions.RebindingOperation _rebindingOperation;
+
+    [Header("UIのオブジェクト(Other)")]
+
+    [SerializeField] private TMP_Dropdown _languageDropDown;
 
 
     private MouseHoverOutline[] _mouseHoverOutlines;
@@ -299,6 +303,7 @@ public class SettingUIManager : MonoBehaviour
     private void LanguageSetting(int value)
     {
         _language = (Language)value;
+        Debug.LogError(_language);
 
         //設定された言語をもとに全てのUIの言語を反映させる
         var languages = InterfaceFinder.FindAllByInterface<ILanguage>();
@@ -306,6 +311,11 @@ public class SettingUIManager : MonoBehaviour
         {
             lan.SettingLanguage(_language);
         }
+
+        var locales = LocalizationSettings.AvailableLocales.Locales;
+        Debug.Log(locales[0]);
+        Debug.Log(locales[1]);
+        LocalizationSettings.SelectedLocale = locales[value];
     }
 
     private void OnApplicationQuit()

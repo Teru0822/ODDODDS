@@ -13,8 +13,8 @@ using MiniGames.Transitions;
 
 public enum Language
 {
-    JP,
-    EN
+    JP = 0,
+    EN = 1,
 }
 
 public class DebtCollectionManager : MonoBehaviour,ILanguage
