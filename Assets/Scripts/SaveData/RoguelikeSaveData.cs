@@ -20,7 +20,7 @@ public class RoguelikeSaveData
     public int leftDebtAmount;//残りの借金の金額
     public int debtClearTimes;//借金の取り立てに何回耐えきったか
     public bool isWatchTour;//ツアーを一回みたか
-    public bool isFinishUfoCatcherInRound;//ラウンド内で、UFOキャッチャーをプレイし終わっているか
+    public bool isFinishDevilCatcherInRound;//ラウンド内で、デビルキャッチャーをプレイし終わっているか
     public VisitorSaveData remainVisitor = null;//前回、訪問者がいたままゲーム終了した時に、状況を復元する用の情報
     public int tradeTimes;//ゲーム内でトレードに応じた回数
     public float playTime;//ゲームプレイ時間
@@ -49,8 +49,8 @@ public class RoguelikeSaveData
     public List<RoguelikeSaveClass> roguelikeSaveDatas;
 
     //ーーー各遊技のローグライク要素をここに記述していくーーーー
-    //UFOキャッチャー
-    public bool isUfoCatcherUnlocked = false; // 例: UFOキャッチャーが解放されたかどうか
+    //デビルキャッチャー
+    public bool isDevilCatcherUnlocked = false; // 例: デビルキャッチャーが解放されたかどうか
 
     //鉄球落とし
     public bool isFallBallUnlocked = false;   // 例: 鉄球落としが解放されたかどうか
@@ -58,7 +58,7 @@ public class RoguelikeSaveData
     //ピンボール
     public bool isPinballUnlocked = false;    // 例: ピンボールが解放されたかどうか
 
-    //UFOキャッチャー・ルーレット特別演出（Element2 / Roulette03）
+    //デビルキャッチャー・ルーレット特別演出（Element2 / Roulette03）
     public bool isRouletteCandyObtained = false;    // candyを入手済みか
     public bool isRoulettePinballObtained = false;  // pinballを入手済みか
     public int rouletteSpinAttemptCount = 0;        // ルーレットを回した累計回数（特別演出スロットの保証抽選判定用。1,2回目は強制当選）

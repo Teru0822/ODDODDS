@@ -26,7 +26,6 @@ public class BookItemsPage : IBookPage
 
     private ItemData _selected;
 
-
     public void SetLocalize(Language language)
     {
         _language = language;
@@ -45,8 +44,6 @@ public class BookItemsPage : IBookPage
     {
         _palette = palette;
     }
-
-    public void SetLanguage(Language lang) { _language = lang; }
 
     public void Build(RectTransform left, RectTransform right)
     {

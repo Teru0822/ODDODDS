@@ -108,7 +108,7 @@ public static class RoguelikeSaveManager
         isUnlockMinigame : {saveData.isUnlockMinigame}
         isUnlockVisitor : {saveData.isUnlockVisitor}
 
-        isUfoCatcherUnlocked : {saveData.isUfoCatcherUnlocked}
+        isDevilCatcherUnlocked : {saveData.isDevilCatcherUnlocked}
         isFallBallUnlocked : {saveData.isFallBallUnlocked}
         isPinballUnlocked : {saveData.isPinballUnlocked}
 
@@ -180,7 +180,7 @@ public static class RoguelikeSaveManager
         isUnlockMinigame : {saveData.isUnlockMinigame}
         isUnlockVisitor : {saveData.isUnlockVisitor}
 
-        isUfoCatcherUnlocked : {saveData.isUfoCatcherUnlocked}
+        isDevilCatcherUnlocked : {saveData.isDevilCatcherUnlocked}
         isFallBallUnlocked : {saveData.isFallBallUnlocked}
         isPinballUnlocked : {saveData.isPinballUnlocked}
 

@@ -6,18 +6,18 @@
 - **シーンの分離**: `Main.unity` (統合用) は【担当D】のみが編集します。他の担当者は自身の専用テストシーン (`Test_A.unity` など) で開発・動作確認を行ってください。
 - **プレハブ化の徹底**: 全ての機能は独立した `Prefab` として作成し、機能を外部から呼び出せるようにしてください。
 - **スクリプトの疎結合**: 他システムへの参照が必要な場合は、直接参照（`GetComponent`など）を避け、可能な限り `Interface` やイベント駆動（`UnityEvent`, C# event）を使ってください。
-- **ディレクトリの分離**: 作業領域（Scripts, Prefabs, Materials等）を各担当の専用ディレクトリ（例: `Assets/App/UFOCatcher/`）内に収めてください。
+- **ディレクトリの分離**: 作業領域（Scripts, Prefabs, Materials等）を各担当の専用ディレクトリ（例: `Assets/App/DevilCatcher/`）内に収めてください。
 
 ---
 
 ## 未完了タスク（担当割り振り詳細）
 
-### [ ] 【担当A】UFOキャッチャー＆基本アイテム物理の開発 (Issue #1)
-**目的**: ゲームの最初のステップである、UFOキャッチャーの基本挙動とアイテムの物理シミュレーションを実装する。
+### [ ] 【担当A】デビルキャッチャー＆基本アイテム物理の開発 (Issue #1)
+**目的**: ゲームの最初のステップである、デビルキャッチャーの基本挙動とアイテムの物理シミュレーションを実装する。
 **コンフリクト回避ルール**:
-- **作業ディレクトリ**: `Assets/App/UFOCatcher/` 内ですべて対応
-- **テストシーン**: `Assets/App/UFOCatcher/Scenes/Test_UFOCatcher.unity`
-- **システム連携仕様**: `UFOCatcherController`（仮）を作成し、ゲーム開始メソッドと、把持結果（獲得アイテムのリスト等）を外部へ通知するイベント（`OnItemsCaught` など）を定義すること。
+- **作業ディレクトリ**: `Assets/App/DevilCatcher/` 内ですべて対応
+- **テストシーン**: `Assets/App/DevilCatcher/Scenes/Test_DevilCatcher.unity`
+- **システム連携仕様**: `DevilCatcherController`（仮）を作成し、ゲーム開始メソッドと、把持結果（獲得アイテムのリスト等）を外部へ通知するイベント（`OnItemsCaught` など）を定義すること。
 
 **タスク内容**:
 - [ ] UFOアームの操作コントローラーと把持判定の実装

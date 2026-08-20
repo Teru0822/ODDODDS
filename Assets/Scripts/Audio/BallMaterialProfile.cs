@@ -7,7 +7,7 @@ using UnityEngine;
 /// 例: Metal の index = 0 なら、SurfaceProfile.impactClips[0] が
 ///     「金属球がこの面に当たった時の音」を意味する。
 /// </summary>
-[CreateAssetMenu(menuName = "FeverCapital/Audio/Ball Material Profile", fileName = "BallMat_New")]
+[CreateAssetMenu(menuName = "OddOdds/Audio/Ball Material Profile", fileName = "BallMat_New")]
 public class BallMaterialProfile : ScriptableObject
 {
     [Tooltip("SurfaceProfile の配列における index。Metal=0, Wood=1, Glass=2 等。\nボール素材を追加する時はここを採番し、全 SurfaceProfile の配列サイズを揃える")]

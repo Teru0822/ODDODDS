@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
-/// Class to manage UFO Catcher camera switching and keyboard control modes.
+/// Class to manage Devil Catcher camera switching and keyboard control modes.
 /// </summary>
 public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraSource
 {
@@ -38,7 +38,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
     [Tooltip("Player's first-person camera")]
     [SerializeField] private Camera playerCamera;
 
-    [Tooltip("UFOキャッチャー正面視点の位置・向きを示すマーカー（Transformのみ、Cameraコンポーネントは不要）。" +
+    [Tooltip("デビルキャッチャー正面視点の位置・向きを示すマーカー（Transformのみ、Cameraコンポーネントは不要）。" +
              "UFOプレイ中はplayerCameraをこの位置までSlerpで動かして正面視点として使います")]
     [SerializeField] private Transform frontCameraPos;
 
@@ -60,7 +60,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
     }
 
     [Header("UI Settings")]
-    [Tooltip("UFO Catcher UI Canvas/Object to hide when not playing")]
+    [Tooltip("Devil Catcher UI Canvas/Object to hide when not playing")]
     [SerializeField] private GameObject ufoUiCanvas;
 
 
@@ -95,7 +95,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
     [SerializeField] private Transform ufoCenterTransform;
 
     [Header("Camera Transition Settings")]
-    [Tooltip("UFOキャッチャー台にアタッチした MouseHoverOutline。ホバー判定とクリック開始に使う")]
+    [Tooltip("デビルキャッチャー台にアタッチした MouseHoverOutline。ホバー判定とクリック開始に使う")]
     [SerializeField] private MouseHoverOutline machineHover;
 
     [Min(0.01f)]
@@ -136,7 +136,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
     [Tooltip("TriggerSoundPlayer反応時のコイン投入演出リピート回数")]
     [SerializeField] private int coinAnimationRepeatCount = 3;
 
-    [Tooltip("制御対象とするUFOキャッチャーのライトオブジェクト群（ヒエラルキーからアタッチします）")]
+    [Tooltip("制御対象とするデビルキャッチャーのライトオブジェクト群（ヒエラルキーからアタッチします）")]
     [SerializeField] private GameObject[] targetLights;
 
     [Header("Coin Insertion Light Settings")]
@@ -303,7 +303,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
 
     private void Start()
     {
-        // プレイヤーとUFOキャッチャーのアームコントローラーを自動検出
+        // プレイヤーとデビルキャッチャーのアームコントローラーを自動検出
         _fpController = FindAnyObjectByType<App.Player.FirstPersonController>();
         _ufoController = GetComponent<UFOArmController>();
         if (_ufoController == null)
@@ -359,7 +359,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
             machineHover.OnClicked += OnMachineClicked;
         }
 
-        // ラウンド（MoneyManager のターン）が進むたびに、UFOキャッチャーを再びプレイ可能にする。
+        // ラウンド（MoneyManager のターン）が進むたびに、デビルキャッチャーを再びプレイ可能にする。
         // MoneyManager は加法ロードされる別サブシーン側にいるため、MultiSceneLoader の非同期ロードが
         // 終わるまで Instance が null の可能性がある。Start() で直接 null チェックすると購読自体が
         // スキップされてしまうため、EffectManager と同様に Instance が現れるまで毎フレーム待ってから購読する。
@@ -459,7 +459,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
             if (_fpController == null) return;
         }
 
-        // プレイヤーの当たり判定（CharacterControllerのカプセル体）の表面とUFOキャッチャー中心との最短距離を計算
+        // プレイヤーの当たり判定（CharacterControllerのカプセル体）の表面とデビルキャッチャー中心との最短距離を計算
         float distance = GetDistanceToPlayer(_fpController, ufoCenterTransform.position);
         bool isClose = distance <= interactionDistance;
 
@@ -522,13 +522,13 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
                         OnPlaySessionActiveChanged?.Invoke(false);
                         // 遷移中（UFOプレイモード中）はライトをつけたままにするため、ここでの自動消灯は行いません
                         _destroyedCoinCount = 0; // 反応数をリセット
-                        Debug.Log("[UFOCameraController] UFO Catcher play session expired. Coin count reset.");
+                        Debug.Log("[UFOCameraController] Devil Catcher play session expired. Coin count reset.");
 
                         // もう追加でプレイできる回数が残っていなければ、自動でプレイヤー視点へ戻る
                         // （これにより OnUfoModeChanged(false) が発火し、獲得コイン・ダイヤの加算も確定する）
                         if (_paymentCount >= maxPlayCount)
                         {
-                            Debug.Log("[UFOCameraController] 残りプレイ回数が0のため、自動的にUFOキャッチャーを終了します。");
+                            Debug.Log("[UFOCameraController] 残りプレイ回数が0のため、自動的にデビルキャッチャーを終了します。");
                             StartCoroutine(ExitAfterRouletteRainRoutine());
                         }
                     }
@@ -563,7 +563,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
     }
 
     /// <summary>
-    /// UFOキャッチャーの残り時間を seconds 秒延長する。
+    /// デビルキャッチャーの残り時間を seconds 秒延長する。
     /// スキルアイテム（時計）取得時などから呼び出す。
     /// </summary>
     public void AddPlayTime(float seconds)
@@ -578,7 +578,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
     }
 
     /// <summary>
-    /// television の Play_Canvas2 側 "Play" から呼び出される、UFOキャッチャーのプレイセッション開始処理。
+    /// television の Play_Canvas2 側 "Play" から呼び出される、デビルキャッチャーのプレイセッション開始処理。
     /// costDevilCoins 分の所持金（MoneyManager 経由）を消費してから、選択された秒数をプレイ時間として使用する。
     /// 旧 UFODynamicUICanvas の Pay to Play と同じ一連の流れ（コイン投入演出 → 完了時に television がゴール座標へ移動 →
     /// カメラ切り替え解禁 → ライト点灯）を引き継ぐ。
@@ -674,7 +674,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
             if (devilCatcher == null)
             {
                 // 表記揺れ対策
-                devilCatcher = GameObject.Find("new_ufocatcher 1");
+                devilCatcher = GameObject.Find("new_devilcatcher 1");
             }
             parentTransform = devilCatcher != null ? devilCatcher.transform : null;
             if (parentTransform != null)
@@ -1109,7 +1109,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
 
         yield return new WaitForSeconds(postRouletteRainExitDelay);
 
-        Debug.Log("[UFOCameraController] コイン降雨終了（または無し）+ 待機完了。UFOキャッチャーを終了します。");
+        Debug.Log("[UFOCameraController] コイン降雨終了（または無し）+ 待機完了。デビルキャッチャーを終了します。");
         ExitUfoMode();
     }
 
@@ -1368,7 +1368,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
     }
 
     /// <summary>
-    /// プレイヤーのCharacterController（カプセル型コライダー）の表面から、UFOキャッチャーの中心までの最短距離を計算します。
+    /// プレイヤーのCharacterController（カプセル型コライダー）の表面から、デビルキャッチャーの中心までの最短距離を計算します。
     /// </summary>
     private float GetDistanceToPlayer(App.Player.FirstPersonController player, Vector3 ufoCenter)
     {
@@ -1427,10 +1427,10 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
 
     public void WriteSaveData(RoguelikeSaveData saveData)
     {
-        saveData.isFinishUfoCatcherInRound = _hasPlayedThisRound;
+        saveData.isFinishDevilCatcherInRound = _hasPlayedThisRound;
     }
     public void ReadSaveData(RoguelikeSaveData saveData)
     {
-        _hasPlayedThisRound = saveData.isFinishUfoCatcherInRound;
+        _hasPlayedThisRound = saveData.isFinishDevilCatcherInRound;
     }
 }

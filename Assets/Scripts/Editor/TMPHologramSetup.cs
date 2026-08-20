@@ -1,14 +1,14 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace FeverCapital.Editor
+namespace OddOdds.Editor
 {
     public static class TMPHologramSetup
     {
         const string ShaderName = "Custom/TMP_Hologram";
         const string SavePath   = "Assets/Shaders/DSEG7_Hologram.mat";
 
-        [MenuItem("FEVER CAPITAL/ホログラムマテリアル生成")]
+        [MenuItem("ODD ODDS/ホログラムマテリアル生成")]
         static void CreateHologramMaterial()
         {
             var shader = Shader.Find(ShaderName);

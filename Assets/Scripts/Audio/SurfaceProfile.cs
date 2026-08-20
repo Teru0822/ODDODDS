@@ -9,7 +9,7 @@ using UnityEngine;
 ///
 /// 配列長が足りない / 該当インデックスが null の場合は無音 (フォールバックなし)。
 /// </summary>
-[CreateAssetMenu(menuName = "FeverCapital/Audio/Surface Profile", fileName = "Surface_New")]
+[CreateAssetMenu(menuName = "OddOdds/Audio/Surface Profile", fileName = "Surface_New")]
 public class SurfaceProfile : ScriptableObject
 {
     [Tooltip("デバッグ識別用 (Wood / Metal / Glass 等)")]
