@@ -521,14 +521,19 @@ namespace MiniGames.Transitions
             var savedAmbientEquatorColor = RenderSettings.ambientEquatorColor;
             var savedAmbientGroundColor = RenderSettings.ambientGroundColor;
 
-            // ターン遷移のロゴ照明に再利用するためキャッシュ
-            _titleAmbientMode        = savedAmbientMode;
-            _titleAmbientLight       = savedAmbientLight;
-            _titleAmbientIntensity   = savedAmbientIntensity;
-            _titleAmbientSkyColor    = savedAmbientSkyColor;
-            _titleAmbientEquatorColor = savedAmbientEquatorColor;
-            _titleAmbientGroundColor = savedAmbientGroundColor;
-            _hasTitleAmbientCached   = true;
+            // ターン遷移のロゴ照明に再利用するためキャッシュ。
+            // ゲームシーン→タイトルシーンの場合、savedAmbientはゲームシーンのambientになってしまうため、
+            // 初回（タイトル→ゲーム）のキャッシュを上書きしないよう guard する。
+            if (!_hasTitleAmbientCached)
+            {
+                _titleAmbientMode        = savedAmbientMode;
+                _titleAmbientLight       = savedAmbientLight;
+                _titleAmbientIntensity   = savedAmbientIntensity;
+                _titleAmbientSkyColor    = savedAmbientSkyColor;
+                _titleAmbientEquatorColor = savedAmbientEquatorColor;
+                _titleAmbientGroundColor = savedAmbientGroundColor;
+                _hasTitleAmbientCached   = true;
+            }
 
             AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName);
             asyncLoad.allowSceneActivation = false;
@@ -562,13 +567,27 @@ namespace MiniGames.Transitions
             var targetAmbientEquatorColor = RenderSettings.ambientEquatorColor;
             var targetAmbientGroundColor  = RenderSettings.ambientGroundColor;
 
-            // --- Mainシーンの環境光がロゴを暗くするのを防ぐため、タイトルシーンの環境光を一時適用 ---
-            RenderSettings.ambientMode = savedAmbientMode;
-            RenderSettings.ambientLight = savedAmbientLight;
-            RenderSettings.ambientIntensity = savedAmbientIntensity;
-            RenderSettings.ambientSkyColor = savedAmbientSkyColor;
-            RenderSettings.ambientEquatorColor = savedAmbientEquatorColor;
-            RenderSettings.ambientGroundColor = savedAmbientGroundColor;
+            // --- ロゴをタイトルシーンの環境光で照らす ---
+            // キャッシュ済みならタイトル ambient を使う。ゲームシーン→タイトルシーンの遷移では
+            // savedAmbient がゲームシーンの値になるため、キャッシュを優先しないとロゴが暗く見える。
+            if (_hasTitleAmbientCached)
+            {
+                RenderSettings.ambientMode         = _titleAmbientMode;
+                RenderSettings.ambientLight        = _titleAmbientLight;
+                RenderSettings.ambientIntensity    = _titleAmbientIntensity;
+                RenderSettings.ambientSkyColor     = _titleAmbientSkyColor;
+                RenderSettings.ambientEquatorColor = _titleAmbientEquatorColor;
+                RenderSettings.ambientGroundColor  = _titleAmbientGroundColor;
+            }
+            else
+            {
+                RenderSettings.ambientMode         = savedAmbientMode;
+                RenderSettings.ambientLight        = savedAmbientLight;
+                RenderSettings.ambientIntensity    = savedAmbientIntensity;
+                RenderSettings.ambientSkyColor     = savedAmbientSkyColor;
+                RenderSettings.ambientEquatorColor = savedAmbientEquatorColor;
+                RenderSettings.ambientGroundColor  = savedAmbientGroundColor;
+            }
 
             // --- 待機処理の復活 ---
             // MultiSceneLoader がサブシーンを読み込んでいる場合は終わるまで待機
