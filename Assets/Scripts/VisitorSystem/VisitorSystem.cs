@@ -318,6 +318,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider,ILanguage
     [Header("以下はView部分で必要なコンポーネント")]
     [SerializeField] private GameObject _visitorUI;
     [SerializeField] private IntercomController _icController;
+    [SerializeField] private GameObject _conversationPanel;
     [SerializeField] private TMP_Text _nameText;
     [SerializeField] private TMP_Text _conversationText;
     [SerializeField] private Button _select1;//選択肢1
@@ -399,6 +400,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider,ILanguage
                 if((visitor.VisitorName == "Faust" && visitor.eventProgress != 1) || (visitor.VisitorName == "Gargantua"&& visitor.eventProgress >= 3 && visitor.eventProgress != 5))//ファウストは一回目、ガルガンチュアはイベント1,2,5は確定してるので無視
                 {
                     //選択肢を出現させる（UIのセットアップも兼ねる）
+                    _conversationPanel.SetActive(true);
                     _visitorUI.SetActive(true);
                     Cursor.lockState = CursorLockMode.None;
                     Cursor.visible = true;
@@ -413,6 +415,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider,ILanguage
                     yield return new WaitUntil(() => _nowSelectIndexInTradeContent != -1);
                     _select1.gameObject.SetActive(false);
                     _select2.gameObject.SetActive(false);
+                    _conversationPanel.SetActive(false);
                     _visitorUI.SetActive(false);
                     Cursor.lockState = CursorLockMode.Locked;
                     Cursor.visible = false;
@@ -677,6 +680,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider,ILanguage
         }
 
         yield return new WaitForSeconds(0.5f);
+        _conversationPanel.SetActive(true);
         _visitorUI.SetActive(true);
         _nameText.text = visitor.VisitorName;
 
@@ -725,6 +729,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider,ILanguage
 
         _conversationText.text = "";
         _visitorUI.SetActive(false);
+        _conversationPanel.SetActive(false);
     }
 
     /// <summary>
@@ -738,6 +743,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider,ILanguage
             yield break;
 
         yield return new WaitForSeconds(0.5f);
+        _conversationPanel.SetActive(true);
         _visitorUI.SetActive(true);
         _nameText.text = "You";
 
@@ -777,6 +783,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider,ILanguage
         }
 
         _conversationText.text = "";
+        _conversationPanel.SetActive(false);
         _visitorUI.SetActive(false);
     }
 }

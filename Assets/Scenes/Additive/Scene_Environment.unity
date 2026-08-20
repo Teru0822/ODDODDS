@@ -4950,10 +4950,18 @@ MonoBehaviour:
   _devilEyeItemData: {fileID: 11400000, guid: 0984a2cbe57559349a04060c93869b33, type: 2}
   _blackDiamondItem: {fileID: 11400000, guid: 2874668e1e6a02741ad69048e43045cc, type: 2}
   _diamondStageNames:
-  - "\u546A\u308F\u308C\u305F\u30C0\u30A4\u30E4\u30E2\u30F3\u30C9"
-  - "\u5C01\u5370\u3055\u308C\u3057\u30C0\u30A4\u30E4\u30E2\u30F3\u30C9"
-  - "\u89E3\u653E\u3055\u308C\u305D\u3046\u306A\u30C0\u30A4\u30E4\u30E2\u30F3\u30C9"
-  - "\u30B4\u30C3\u30C9\u30C0\u30A4\u30E4\u30E2\u30F3\u30C9"
+  - name_Jp: "\u546A\u308F\u308C\u305F\u30C0\u30A4\u30E4\u30E2\u30F3\u30C9"
+    name_En: Cursed Diamond
+    name_Cn: 
+  - name_Jp: "\u5C01\u5370\u3055\u308C\u3057\u30C0\u30A4\u30E4\u30E2\u30F3\u30C9"
+    name_En: Sealed Diamond
+    name_Cn: 
+  - name_Jp: "\u89E3\u653E\u3055\u308C\u305D\u3046\u306A\u30C0\u30A4\u30E4\u30E2\u30F3\u30C9"
+    name_En: Unreleased Diamond
+    name_Cn: 
+  - name_Jp: "\u30B4\u30C3\u30C9\u30C0\u30A4\u30E4\u30E2\u30F3\u30C9"
+    name_En: God Diamond
+    name_Cn: 
 --- !u!114 &1122561454
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5071,6 +5079,7 @@ GameObject:
   - component: {fileID: 1126775032}
   - component: {fileID: 1126775034}
   - component: {fileID: 1126775033}
+  - component: {fileID: 1126775036}
   m_Layer: 0
   m_Name: Camera
   m_TagString: MainCamera
@@ -5197,6 +5206,22 @@ Transform:
   - {fileID: 993797702}
   m_Father: {fileID: 1122561444}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1126775036
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1126775031}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c49b4cc203aa6414fae5c798d1d0e7d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.EventSystems.PhysicsRaycaster
+  m_EventMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_MaxRayIntersections: 0
 --- !u!1 &1137002559
 GameObject:
   m_ObjectHideFlags: 0

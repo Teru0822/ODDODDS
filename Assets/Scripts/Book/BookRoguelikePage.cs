@@ -30,6 +30,13 @@ public class BookRoguelikePage : IBookPage
     private Image _toggleBack;
 
     private RoguelikeData _selected;
+    private Language _language;
+
+    public void SetLocalize(Language language)
+    {
+        _language = language;
+        Refresh();
+    }
 
     private class Row
     {
@@ -53,7 +60,7 @@ public class BookRoguelikePage : IBookPage
     private void BuildLeft(RectTransform page)
     {
         var title = BookUIBuilder.Text(page, "Title", "Roguelike", 56f,
-                                       TextAlignmentOptions.TopLeft, _palette.Accent, _palette.Font);
+                                       TextAlignmentOptions.TopLeft, _palette.Accent, _palette.Font, true,"BookUITable","RoguelikeTitle",true,60,18);
         BookUIBuilder.AnchorRect(title.rectTransform, 0f, 0.90f, 1f, 1f);
 
         var area = BookUIBuilder.Panel(page, "ScrollArea");

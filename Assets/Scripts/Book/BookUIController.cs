@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 using TMPro;
+using Unity.VisualScripting.Dependencies.NCalc;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -23,7 +24,7 @@ using UnityEngine.UI;
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(BookOpenController))]
-public class BookUIController : MonoBehaviour
+public class BookUIController : MonoBehaviour, ILanguage
 {
     [Header("ページ配置（本のローカル座標）")]
     [Tooltip("左ページ中央の位置")]
@@ -130,6 +131,7 @@ public class BookUIController : MonoBehaviour
     private Vector2 _appliedWorldSize;
     private Vector2 _appliedResolution;
     private bool _layoutApplied;
+    private Language _language;
 
     /// <summary>1 見開き分。左右それぞれのページ内容を持つ。</summary>
     private class BookSpread
@@ -137,6 +139,17 @@ public class BookUIController : MonoBehaviour
         public RectTransform Left;
         public RectTransform Right;
         public IBookPage Page;
+    }
+
+    public void SettingLanguage(Language language)
+    {
+        _language = language;
+        foreach(var book in _spreads)
+        {
+            book.Page.SetLocalize(language);
+        }
+
+        RefreshCurrentSpread();
     }
 
     private void Awake()
@@ -555,4 +568,10 @@ public interface IBookPage
 
     /// <summary>表示内容を最新の値に更新する。ページを開くたびに呼ばれる。</summary>
     void Refresh();
+
+    /// <summary>
+    /// ローカライズ用の設定を行う。設定から言語が切り替わるたびに呼ばれる。
+    /// </summary>
+    /// <param name="language"></param>
+    void SetLocalize(Language language);
 }
