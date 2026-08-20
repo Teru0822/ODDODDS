@@ -122,12 +122,12 @@ public class FallBallRefillController : MonoBehaviour
 
 ### ステップ 3: 既存スクリプトの修正
 
-#### [MODIFY] [FallBallGameManager.cs](file:///Users/apple/Documents/Unity/FEVER-CAPITAL/Assets/App/MiniGames/Scripts/FallBall/FallBallGameManager.cs)
+#### [MODIFY] [FallBallGameManager.cs](file:///Users/apple/Documents/Unity/ODD-ODDS/Assets/App/MiniGames/Scripts/FallBall/FallBallGameManager.cs)
 - `FallBallRefillController` への参照を追加
 - `SpawnNewBall()` を修正: `RefillController.PlayRefillSequence()` を呼び出す方式に変更
 - 補充アニメーション中（`IsRefilling == true`）はスペースキーを無視
 
-#### [MODIFY] [BarController.cs](file:///Users/apple/Documents/Unity/FEVER-CAPITAL/Assets/App/MiniGames/Scripts/FallBall/BarController.cs)
+#### [MODIFY] [BarController.cs](file:///Users/apple/Documents/Unity/ODD-ODDS/Assets/App/MiniGames/Scripts/FallBall/BarController.cs)
 - コード変更なし。Inspector で以下を付け替えるのみ:
   - `leftBar` → `handle1`
   - `rightBar` → `handle2`

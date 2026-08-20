@@ -1,4 +1,4 @@
-# 作業ログ: UFOキャッチャーのアーム伸縮とツメ開閉の不具合修正
+# 作業ログ: デビルキャッチャーのアーム伸縮とツメ開閉の不具合修正
 
 **対応日**: 2026-05-12
 **担当**: Antigravity
@@ -7,7 +7,7 @@
 ---
 
 ## 目的
-UFOキャッチャーのロープが下に伸びない問題（空中に分離する）、およびアーム（ツメ）が正しく開かない・変な方向にズレる問題の修正。
+デビルキャッチャーのロープが下に伸びない問題（空中に分離する）、およびアーム（ツメ）が正しく開かない・変な方向にズレる問題の修正。
 
 ## 変更内容
 1. `StretchRope.cs`
@@ -27,7 +27,7 @@ UFOキャッチャーのロープが下に伸びない問題（空中に分離�
 - `Assets/Scripts/StretchRope.cs`
 - `Assets/Scripts/UFOArmController.cs`
 - `Assets/Scripts/UFOClawCollisionDetector.cs`
-- `Assets/Scenes/UFOCATCHER.unity` (Hierarchy構成変更)
+- `Assets/Scenes/DEVILCATCHER.unity` (Hierarchy構成変更)
 
 ## 確認内容
 - ユーザー環境にて、アームが正しく下まで降りること（衝突判定の修正）。

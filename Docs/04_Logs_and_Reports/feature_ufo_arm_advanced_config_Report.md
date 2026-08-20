@@ -1,4 +1,4 @@
-# 作業ログ: UFOキャッチャーのアーム移動範囲のバグ修正と、爪の個別開閉設定の追加
+# 作業ログ: デビルキャッチャーのアーム移動範囲のバグ修正と、爪の個別開閉設定の追加
 
 **対応日**: 2026-05-12
 **担当**: Antigravity
@@ -22,7 +22,7 @@
 
 ## 対象ファイル
 - `Assets/Scripts/UFOArmController.cs`
-- `Assets/Scenes/UFOCATCHER.unity` (動作確認とパラメータ保存用)
+- `Assets/Scenes/DEVILCATCHER.unity` (動作確認とパラメータ保存用)
 
 ## 確認内容
 - 赤い枠線内でアームの見た目がピッタリと止まること。

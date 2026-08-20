@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Video;
 
-[CreateAssetMenu(menuName = "FeverCapital/Roguelike/Preview Registry", fileName = "RoguelikePreviewRegistry")]
+[CreateAssetMenu(menuName = "OddOdds/Roguelike/Preview Registry", fileName = "RoguelikePreviewRegistry")]
 public class RoguelikePreviewRegistry : ScriptableObject
 {
     [Serializable]
