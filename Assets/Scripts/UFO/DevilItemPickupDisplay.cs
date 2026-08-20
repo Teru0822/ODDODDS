@@ -53,12 +53,6 @@ public class DevilItemPickupDisplay : MonoBehaviour, ILanguage
 
     private GameObject _currentModelInstance;
     private Coroutine _hideCoroutine;
-    private Language _language;
-
-    public void SettingLanguage(Language language)
-    {
-        _language = language;
-    }
 
     private bool _forceHidden = false;
 
