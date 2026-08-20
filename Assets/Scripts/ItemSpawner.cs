@@ -5,7 +5,7 @@ using UnityEngine;
 public class ItemSpawner : MonoBehaviour
 {
     [Header("生成基準")]
-    [Tooltip("UFOキャッチャーのアーム（ArmRootなど、中心の基準にしたいもの）をセットしてください")]
+    [Tooltip("Devilキャッチャーのアーム（ArmRootなど、中心の基準にしたいもの）をセットしてください")]
     public Transform armRoot;
     [Tooltip("基準オブジェクトからどれくらい高い位置(Y座標)から落とすか")]
     public float spawnYOffset = 2.0f;
@@ -52,7 +52,7 @@ public class ItemSpawner : MonoBehaviour
 
     [Header("デバッグ設定")]
     [Tooltip("ON: 上の spawnCount (500/1000/1500) を Inspector で自由に設定してテストできます。\n" +
-             "OFF (本番用): 常に500枚からスタートし、ローグライクスキル「UFOキャッチャーの中身を1000/1500に増やす」(id26/id27) を獲得したときだけ自動で増加します。")]
+             "OFF (本番用): 常に500枚からスタートし、ローグライクスキル「Devilキャッチャーの中身を1000/1500に増やす」(id26/id27) を獲得したときだけ自動で増加します。")]
     public bool debugMode = false;
 
     [Header("初期アクティブアイテム枠 (必ず5つ設定してください)")]
@@ -99,7 +99,7 @@ public class ItemSpawner : MonoBehaviour
     public float[] grid9RowWeights    = new float[] { 1f, 1f, 1f };
 
     [Header("チュートリアル設定")]
-    [Tooltip("ON: 練習用UFOキャッチャー（Practice_Cranegame）側のItemSpawnerであることを示す。\n" +
+    [Tooltip("ON: 練習用Devilキャッチャー（Practice_Cranegame）側のItemSpawnerであることを示す。\n" +
              "実機・練習機の両方にItemSpawnerが存在するため、通常のOFF個体（実機側）とON個体（練習機側）の" +
              "Awake()実行順序次第でstatic Instance（実機のフィーバータイム/プレゼントボックス等が参照する" +
              "グローバル参照）がどちらになるか不定になってしまうバグを防ぐため、ON側は絶対にInstanceを奪わない。\n" +
@@ -125,7 +125,7 @@ public class ItemSpawner : MonoBehaviour
     private Coroutine _spawnCoroutine;
 
     // RespawnAll() で確実に消去できるよう、parentFolder の設定に依存せず生成した実体を直接追跡する
-    // （実機の UFOキャッチャー prefab では parentFolder が未設定のケースがあるため）
+    // （実機の Devilキャッチャー prefab では parentFolder が未設定のケースがあるため）
     private readonly System.Collections.Generic.List<GameObject> _spawnedInstances = new System.Collections.Generic.List<GameObject>();
 
     void Awake()
@@ -361,7 +361,7 @@ public class ItemSpawner : MonoBehaviour
         const int destroyPerFrame = 150; // 1フレームあたりに消去する上限数（負荷分散のため）
 
         // parentFolder の子として消すのではなく、自分で生成したオブジェクトを直接追跡したリストから消す。
-        // （実機の UFOキャッチャー prefab では parentFolder が未設定(null)になっており、
+        // （実機の Devilキャッチャー prefab では parentFolder が未設定(null)になっており、
         //   parentFolder 経由の消去では何も消えないケースがあったため）
         int destroyedCount = 0;
         int sinceYield = 0;
@@ -441,7 +441,7 @@ public class ItemSpawner : MonoBehaviour
     }
 
     /// <summary>
-    /// ローグライクスキル「UFOキャッチャーの中身を1000/1500に増やす」(id26/id27) 獲得時に呼ばれる。
+    /// ローグライクスキル「Devilキャッチャーの中身を1000/1500に増やす」(id26/id27) 獲得時に呼ばれる。
     /// 即座には反映せず、次にアイテムが降る（RespawnAll → SpawnRoutine が呼ばれる）ラウンドから枚数が増える。
     /// 現在値より少ない枚数を指定された場合は無視する（減少はしない）。
     /// </summary>
@@ -901,7 +901,7 @@ public class ItemSpawner : MonoBehaviour
     /// <summary>
     /// ルーレット発生時（旧ジャックポット）に指定のプレハブリストからランダムに指定数だけエリア0（左上）に降らせる。
     /// フィーバータイムのコイン雨にも同じ処理を使い回しているため、「ルーレット当選の払い出し中かどうか」を
-    /// 見分けたい呼び出し元（UFOItemGoal.HandleRouletteSpinComplete等）はonCompleteで完了タイミングを取得できる
+    /// 見分けたい呼び出し元（DevilItemGoal.HandleRouletteSpinComplete等）はonCompleteで完了タイミングを取得できる
     /// </summary>
     public void StartRouletteRain(System.Collections.Generic.List<GameObject> prefabs, int count, float duration, Vector2 areaScale, Vector2 areaOffset, System.Action onComplete = null)
     {

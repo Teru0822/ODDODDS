@@ -67,6 +67,20 @@ public class TypewriterInteractable : InteractableHighlight
 
     private DebtCollectionManager _debtCollectionManager;
     private FirstPersonController _fpsController;
+
+    [Header("カメラ固定")]
+    [Tooltip("タイプライター操作中のカメラ固定先。シーンに空 GameObject を置いてアサイン")]
+    [SerializeField] private Transform _cameraTargetTransform;
+    [Tooltip("カメラの移動時間（秒）")]
+    [SerializeField] private float _cameraTransitionDuration = 1.0f;
+    [SerializeField] private AnimationCurve _cameraTransitionEase = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+
+    private Camera _playerCamera;
+    private Vector3 _originalCamPos;
+    private Quaternion _originalCamRot;
+    private CupPickupController _pickupController;
+    private bool _cameraLocked;
+
     protected override void Awake()
     {
         base.Awake();
@@ -86,7 +100,72 @@ public class TypewriterInteractable : InteractableHighlight
     {
         if (!_busy) return;
         SetBusy(false);
-        ApplyHighlight(true);
+        ApplyHighlight(false);
+        StartCoroutine(RestoreCameraCoroutine());
+    }
+
+    private IEnumerator TransitionToTypewriter()
+    {
+        if (_playerCamera == null) _playerCamera = Camera.main;
+        if (_pickupController == null) _pickupController = FindAnyObjectByType<CupPickupController>();
+        if (_fpsController == null) _fpsController = FindFirstObjectByType<FirstPersonController>();
+
+        if (_fpsController != null) _fpsController.enabled = false;
+        if (_pickupController != null) _pickupController.enabled = false;
+
+        if (_playerCamera != null)
+        {
+            _originalCamPos = _playerCamera.transform.position;
+            _originalCamRot = _playerCamera.transform.rotation;
+        }
+        _cameraLocked = true;
+
+        if (_playerCamera != null && _cameraTargetTransform != null)
+        {
+            Vector3 startPos = _originalCamPos;
+            Quaternion startRot = _originalCamRot;
+            Vector3 targetPos = _cameraTargetTransform.position;
+            Quaternion targetRot = _cameraTargetTransform.rotation;
+
+            float elapsed = 0f;
+            while (elapsed < _cameraTransitionDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / _cameraTransitionDuration);
+                _playerCamera.transform.position = Vector3.Lerp(startPos, targetPos, _cameraTransitionEase.Evaluate(t));
+                _playerCamera.transform.rotation = Quaternion.Slerp(startRot, targetRot, _cameraTransitionEase.Evaluate(t));
+                yield return null;
+            }
+            _playerCamera.transform.position = targetPos;
+            _playerCamera.transform.rotation = targetRot;
+        }
+    }
+
+    private IEnumerator RestoreCameraCoroutine()
+    {
+        if (!_cameraLocked) yield break;
+        _cameraLocked = false;
+
+        if (_playerCamera != null && _cameraTargetTransform != null)
+        {
+            Vector3 startPos = _playerCamera.transform.position;
+            Quaternion startRot = _playerCamera.transform.rotation;
+
+            float elapsed = 0f;
+            while (elapsed < _cameraTransitionDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / _cameraTransitionDuration);
+                _playerCamera.transform.position = Vector3.Lerp(startPos, _originalCamPos, _cameraTransitionEase.Evaluate(t));
+                _playerCamera.transform.rotation = Quaternion.Slerp(startRot, _originalCamRot, _cameraTransitionEase.Evaluate(t));
+                yield return null;
+            }
+            _playerCamera.transform.position = _originalCamPos;
+            _playerCamera.transform.rotation = _originalCamRot;
+        }
+
+        if (_fpsController != null) _fpsController.enabled = true;
+        if (_pickupController != null) _pickupController.enabled = true;
     }
 
     private void EnsureSelectionUI()
@@ -144,6 +223,8 @@ public class TypewriterInteractable : InteractableHighlight
     public override bool IsInteractable(CupPickupController pickup)
     {
         if (_busy) return false;
+        if (DebtCollectionManager.IsCollecting) return false;
+        if (BookOpenController.IsBookVisible) return false;
         if (SceneTransitionManager.Instance != null && SceneTransitionManager.Instance.IsTransitioning) return false;
         if (controller != null && controller.IsTyping) return false;
         if (selectionUI != null && selectionUI.IsActive) return false;
@@ -210,8 +291,12 @@ public class TypewriterInteractable : InteractableHighlight
         if (!selectionUI.IsActive)
         {
             SetBusy(false);
-            ApplyHighlight(true);
+            ApplyHighlight(false);
             Debug.LogWarning("[TypewriterInteractable] RewardSelectionUI の表示に失敗しました。Inspector で _scrollContentPrefab または optionButtons を設定してください", this);
+        }
+        else
+        {
+            StartCoroutine(TransitionToTypewriter());
         }
     }
 
@@ -300,6 +385,9 @@ public class TypewriterInteractable : InteractableHighlight
             if(_debtCollectionManager == null)
                 _debtCollectionManager = FindFirstObjectByType<DebtCollectionManager>();
 
+            // DebtCollectionManager がカメラ現在位置を _originPosition として保存する前に戻しておく
+            yield return StartCoroutine(RestoreCameraCoroutine());
+
             if(_debtCollectionManager != null && moneyMgr.DebtClearTimes == 0)
                 _debtCollectionManager.StartConversationCoroutine("Conversation_00");
             else if(_debtCollectionManager != null && moneyMgr.DebtClearTimes != 0)
@@ -313,6 +401,7 @@ public class TypewriterInteractable : InteractableHighlight
                 _fpsController = FindFirstObjectByType<FirstPersonController>();
 
             yield return new WaitForSeconds(3.0f);
+            yield return StartCoroutine(RestoreCameraCoroutine());
             var stm = SceneTransitionManager.Instance;
             if (stm != null)
             {
@@ -338,8 +427,11 @@ public class TypewriterInteractable : InteractableHighlight
 
         // ターン遷移か会話が完全に終わってから占有を解放する。
         // シーンリロードで先に OnDestroy が呼ばれた場合は OnDestroy 側でクリアされる。
+        // 取り立て・ターン遷移ブランチではここより前で RestoreCameraCoroutine を呼んでいるため
+        // _cameraLocked フラグにより重複実行は自動でスキップされる。
+        yield return StartCoroutine(RestoreCameraCoroutine());
         SetBusy(false);
-        ApplyHighlight(true);
+        ApplyHighlight(false);
     }
 }
 

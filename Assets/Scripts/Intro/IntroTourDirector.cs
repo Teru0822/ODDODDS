@@ -86,7 +86,7 @@ namespace App.Intro
 
     /// <summary>
     /// ゲームシーンに入った直後に流す導入ツアー。
-    /// 部屋 → UFOキャッチャー → 操作部 → ATM → 操作部 → インターホン → ドア → 取引口 → 悪魔 の順で
+    /// 部屋 → Devilキャッチャー → 操作部 → ATM → 操作部 → インターホン → ドア → 取引口 → 悪魔 の順で
     /// カメラを切り替えながらテロップで説明し、最後にモヤ（霧）でフェードアウトしてから
     /// 通常のプレイヤーカメラへ戻し、操作を解禁する。
     ///
@@ -120,12 +120,12 @@ namespace App.Intro
         [Tooltip("最初のカットに移ってから再生を始めるまでの待ち時間(秒)。モヤが晴れる間を取ります")]
         [SerializeField] private float _startDelay = 0.5f;
 
-        [Header("UFOキャッチャー演出")]
-        [Tooltip("UFOキャッチャーのライトを点灯させるカット番号（0始まり。Shot 02 なら 1）")]
-        [SerializeField] private int _ufoSpotlightOnShotIndex = 1;
+        [Header("Devilキャッチャー演出")]
+        [Tooltip("Devilキャッチャーのライトを点灯させるカット番号（0始まり。Shot 02 なら 1）")]
+        [SerializeField] private int _devilSpotlightOnShotIndex = 1;
 
-        [Tooltip("UFOキャッチャーのライトを消灯させるカット番号（0始まり。Shot 03 が終わったら消す場合は 2）")]
-        [SerializeField] private int _ufoSpotlightOffShotIndex = 2;
+        [Tooltip("Devilキャッチャーのライトを消灯させるカット番号（0始まり。Shot 03 が終わったら消す場合は 2）")]
+        [SerializeField] private int _devilSpotlightOffShotIndex = 2;
 
         [Header("取引口")]
         [Tooltip("取引口を開くカットの番号（0始まり。Shot 08 なら 7）")]
@@ -381,7 +381,7 @@ namespace App.Intro
             ApplyShotStart(shot);
             shot.onShotEnter?.Invoke();
 
-            if (shotIndex == _ufoSpotlightOnShotIndex)
+            if (shotIndex == _devilSpotlightOnShotIndex)
                 UFOCameraController.Instance?.SetPlaySpotlight(true, playSound: true);
 
             if (_doorHatch != null && shotIndex == _doorHatchShotIndex)
@@ -411,7 +411,7 @@ namespace App.Intro
             StopMotion();
             shot.onShotExit?.Invoke();
 
-            if (shotIndex == _ufoSpotlightOffShotIndex)
+            if (shotIndex == _devilSpotlightOffShotIndex)
                 UFOCameraController.Instance?.SetPlaySpotlight(false, playSound: true);
 
             if (_doorHatch != null && shotIndex == _doorHatchShotIndex)
@@ -727,11 +727,11 @@ namespace App.Intro
                     "ようこそ、我が城へ。↓ここが今日からお前の職場だ。",
                     "借金を返すまで、外には出られん。↓せいぜい稼ぐことだな。"
                 }),
-                BuildShot(root, 2, "UFOキャッチャー", IntroTourMotion.Orbit, 45f, 12f, 45f, 40f, new[]
+                BuildShot(root, 2, "Devilキャッチャー", IntroTourMotion.Orbit, 45f, 12f, 45f, 40f, new[]
                 {
                     "まずはこれだ。↓景品を掴み上げて金に換える。"
                 }),
-                BuildShot(root, 3, "UFOキャッチャーの操作", IntroTourMotion.PoseToPose, 0f, 6f, 40f, 32f, new[]
+                BuildShot(root, 3, "Devilキャッチャーの操作", IntroTourMotion.PoseToPose, 0f, 6f, 40f, 32f, new[]
                 {
                     "レバーでアームを狙った位置へ。↓ボタンを押せば掴みにいく。"
                 }),

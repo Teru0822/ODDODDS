@@ -24,7 +24,7 @@ public class ItemData : ScriptableObject
     public Sprite silhouetteImage;//アイテムの画像（未入手・シルエット）
     public GameObject prefabData;//生成するオブジェクト
     public Rate priority;//アイテムのレア度
-    public int rate;//UFOキャッチャー内での出現確率
+    public int rate;//Devilキャッチャー内での出現確率
     public ItemType itemType;
     public ItemCategory itemCategory;
 

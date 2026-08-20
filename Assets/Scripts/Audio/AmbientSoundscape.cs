@@ -161,7 +161,7 @@ public class AmbientSoundscape : MonoBehaviour
     /// </summary>
     private IEnumerator WaitUntilItemsSettled()
     {
-        // UFOキャッチャーはサブシーン側にあるので、加法ロードの完了を待つ
+        // Devilキャッチャーはサブシーン側にあるので、加法ロードの完了を待つ
         while (MultiSceneLoader.IsLoadingSubScenes) yield return null;
 
         // Awake/Start が走る猶予を与えてから ItemSpawner の有無を判断する

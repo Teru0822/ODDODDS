@@ -1707,7 +1707,7 @@ GameObject:
   - component: {fileID: 426471892}
   - component: {fileID: 426471893}
   m_Layer: 11
-  m_Name: UFOChaseLightController
+  m_Name: DevilChaseLightController
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3396,9 +3396,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CoinImpactSoundManager
   minVelocityThreshold: 0.5
   maxVelocityForFullVolume: 5
-  perCoinCooldown: 0.25
+  perCoinCooldown: 0.3
   maxSoundsPerWindow: 3
-  windowDuration: 0.1
+  windowDuration: 0.3
 --- !u!4 &891194632
 Transform:
   m_ObjectHideFlags: 0
@@ -7240,7 +7240,7 @@ GameObject:
   - component: {fileID: 1307067186}
   - component: {fileID: 1307067185}
   m_Layer: 0
-  m_Name: UFOBGMManager
+  m_Name: DevilCatcherBGMManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7259,8 +7259,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UFOBGMManager
   bgmClip: {fileID: 8300000, guid: 2a09a69371ec139448aa493e26466f46, type: 3}
-  fastBgmClip: {fileID: 8300000, guid: 3e24cde4993e07545940246a009f47f3, type: 3}
-  bgmVolume: 0.406
+  fastBgmClip: {fileID: 8300000, guid: bc7a6da4e96d6454b8509409ac21acff, type: 3}
+  bgmVolume: 0.3
   fadeDuration: 1
   speedCrossfadeDuration: 0.5
   normalSource: {fileID: 0}
@@ -7621,7 +7621,7 @@ GameObject:
   - component: {fileID: 1360053391}
   - component: {fileID: 1360053390}
   m_Layer: 0
-  m_Name: UFOSEManager
+  m_Name: DevilCatcherSEManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7640,14 +7640,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UFOSEManager
   realCoinInsertSound: {fileID: 8300000, guid: 6a57f5afcbbb6174abd5994aa03b54f9, type: 3}
-  realCoinInsertVolume: 2.75
+  realCoinInsertVolume: 1.5
   realCoinGetSound: {fileID: 8300000, guid: 1844f9d577d01384a81bec1afd71b07b, type: 3}
   realWatchGetSound: {fileID: 8300000, guid: abcdc67f5c71d744489b1fa432127422, type: 3}
   realBlackDiamondGetSound: {fileID: 8300000, guid: 1fbebd194665c2f42879deab3512e212, type: 3}
   realRouletteItemGetSound: {fileID: 8300000, guid: 4adeb4a3f2c13ae4ab99e1a12f1b0cd6, type: 3}
   realItemGetVolume: 1
   realLowTimeWarningLoopSound: {fileID: 8300000, guid: 95831d7d112bdea4281e9151acbddc29, type: 3}
-  realLowTimeWarningVolume: 0.62
+  realLowTimeWarningVolume: 0.4
   rouletteSpinLoopSound: {fileID: 8300000, guid: 54911b59815f05e4682a4d50bd22a3c2, type: 3}
   rouletteSpinVolume: 1
   rouletteWinSound: {fileID: 8300000, guid: eb6dbd6dc5a533a4aa7411d7b083a991, type: 3}
@@ -7681,10 +7681,20 @@ MonoBehaviour:
   tutorialFrameSnapVolume: 1
   tutorialMessageTypingSound: {fileID: 8300000, guid: d76fe7901f976e249aaada8403e9d911, type: 3}
   tutorialMessageTypingVolume: 0.7
-  floorImpactSound: {fileID: 8300000, guid: 37cd3fcaf9a17c94c921d124d2580449, type: 3}
-  floorImpactVolume: 1
-  coinImpactSound: {fileID: 8300000, guid: 8c1f93ac5fbe25b458c0b2aca3361b46, type: 3}
+  floorImpactSounds:
+  - {fileID: 8300000, guid: 779c9b077a980ee4c8967020192cbcb0, type: 3}
+  - {fileID: 8300000, guid: bfa689949795b004a9f311501bb30e4a, type: 3}
+  - {fileID: 8300000, guid: 8754d54879d74a842b4179b24ade428a, type: 3}
+  floorImpactVolume: 0.5
+  coinImpactSounds:
+  - {fileID: 8300000, guid: 73c2d60f4988bad4d8e691aa1ea6162c, type: 3}
+  - {fileID: 8300000, guid: e82c7d8670a775c4cbbca8c82f8b99b9, type: 3}
+  - {fileID: 8300000, guid: 59feb6d48411fba4cb17257dd57d3f60, type: 3}
+  - {fileID: 8300000, guid: 3611958a152d6664294265843a72fdab, type: 3}
   coinImpactVolume: 1
+  specialItemImpactSounds:
+  - {fileID: 0}
+  specialItemImpactVolume: 1
   impactPitchRange: {x: 0.9, y: 1.1}
   touchSelectSound: {fileID: 8300000, guid: 94826d03cfc2c8148be7e49800e98929, type: 3}
   touchSelectVolume: 1
@@ -12600,7 +12610,7 @@ MonoBehaviour:
   televisionAnimator: {fileID: 1153044095}
   televisionStaticController: {fileID: 1153044099}
   gameUIManager: {fileID: 0}
-  ufoCatcherUIManager: {fileID: 7964024459087741878}
+  devilCatcherUIManager: {fileID: 0}
   armController: {fileID: 7587156506178242554}
   itemGoal: {fileID: 3836786255837806414}
   coinPrefab: {fileID: 8350361114308083434, guid: eb3f44b94f77161438cbc33b9458a91e, type: 3}
@@ -34720,10 +34730,18 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 75f9f412341ca924ab2921e4345bb93b, type: 2}
+    - target: {fileID: 315488349882024138, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_Name
+      value: DevilItemGoal
+      objectReference: {fileID: 0}
     - target: {fileID: 367658554195695919, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 75f9f412341ca924ab2921e4345bb93b, type: 2}
+    - target: {fileID: 587786271069572324, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_Name
+      value: DevilArmManager
+      objectReference: {fileID: 0}
     - target: {fileID: 624050841089503498, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: isUnlocked
       value: 1
@@ -34806,7 +34824,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1523333832638734422, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: m_Name
-      value: new_ufocatcher
+      value: new_DevilCatcher
+      objectReference: {fileID: 0}
+    - target: {fileID: 1552865936903198459, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_Name
+      value: Devil_Camera_Front_Pos
       objectReference: {fileID: 0}
     - target: {fileID: 1820318687098787852, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
@@ -34876,6 +34898,10 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 11
       objectReference: {fileID: 0}
+    - target: {fileID: 3733822411474097539, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_Name
+      value: DevilKeyboardController
+      objectReference: {fileID: 0}
     - target: {fileID: 3958336415773127100, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -34883,6 +34909,10 @@ PrefabInstance:
     - target: {fileID: 3968175774263575420, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: pileItemScale
       value: 0.04
+      objectReference: {fileID: 0}
+    - target: {fileID: 4023587837937929016, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_Name
+      value: Devil_Camera_Left
       objectReference: {fileID: 0}
     - target: {fileID: 4141286164952615546, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
@@ -34892,6 +34922,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4741984264153748716, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_Name
+      value: Devil_Camera_Right
+      objectReference: {fileID: 0}
     - target: {fileID: 4805687767339213497, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -34900,6 +34934,10 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 75f9f412341ca924ab2921e4345bb93b, type: 2}
+    - target: {fileID: 6035303515440977368, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_Name
+      value: DevilCameraController
+      objectReference: {fileID: 0}
     - target: {fileID: 6059852878795706469, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -34932,6 +34970,10 @@ PrefabInstance:
       propertyPath: chaseLightController
       value: 
       objectReference: {fileID: 426471893}
+    - target: {fileID: 7453761976014222389, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_Name
+      value: Devil_Camera_Back
+      objectReference: {fileID: 0}
     - target: {fileID: 7516722043646146397, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: triggerCoinAnimation
       value: 1
@@ -34972,6 +35014,10 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 8a83941a305890744afaf74f36e21e97, type: 2}
+    - target: {fileID: 8504533633297464178, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_Name
+      value: DevilController
+      objectReference: {fileID: 0}
     - target: {fileID: 8514869435957483499, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: devilCatcherOverride
       value: 

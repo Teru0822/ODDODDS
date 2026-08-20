@@ -567,12 +567,12 @@ namespace MiniGames.Transitions
             
 
             Debug.Log("[SceneTransitionManager] MultiSceneLoaderのロードが完了しました。ItemSpawnerの待機へ移行します。");
-            // サブシーンロード完了後、UFOキャッチャーの ItemSpawner 等が Start() を呼ぶための猶予
+            // サブシーンロード完了後、Devilキャッチャーの ItemSpawner 等が Start() を呼ぶための猶予
             yield return new WaitForSeconds(0.5f);
 
             Debug.Log($"[SceneTransitionManager] ItemSpawner待機チェック。IsSpawning: {ItemSpawner.IsSpawning}");
 
-            // --- 追加: UFOキャッチャー等でのコイン生成待機 ---
+            // --- 追加: Devilキャッチャー等でのコイン生成待機 ---
             // ItemSpawnerがコインを生成中の場合は、それが終わるまでロード画面の裏で待機する
             if (ItemSpawner.IsSpawning)
             {

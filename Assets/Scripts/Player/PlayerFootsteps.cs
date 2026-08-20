@@ -83,7 +83,7 @@ namespace App.Player
         /// <summary>歩いていると判定できるか。</summary>
         private bool IsWalking()
         {
-            // ATMやUFOキャッチャーの操作中はコントローラが無効化される。
+            // ATMやDevilキャッチャーの操作中はコントローラが無効化される。
             // その間 CharacterController.velocity は最後の値が残るため、ここで弾く
             if (_fpController != null && !_fpController.enabled) return false;
             if (_requireGrounded && !_characterController.isGrounded) return false;

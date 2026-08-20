@@ -4,7 +4,7 @@ using UnityEngine;
 /// <summary>
 /// ルーレット「目」用スワッパー。
 ///
-/// UFO キャッチャーのゲーム開始（IsPlayingUfo が true になった瞬間）に
+/// Devil キャッチャーのゲーム開始（IsPlayingUfo が true になった瞬間）に
 /// BlendShape で目を閉じ、ピーク（完全閉目）で blackSphere と rouletteReel の
 /// アクティブを入れ替え、再び目を開ける。
 ///
@@ -74,9 +74,9 @@ public class RouletteEyeSwapper : MonoBehaviour
 
     private void Update()
     {
-        bool isPlayingUfo = UFOCameraController.IsPlayingUfo;
+        bool isPlayingDevil = UFOCameraController.IsPlayingUfo;
 
-        if (_lastIsPlayingUfo != isPlayingUfo)
+        if (_lastIsPlayingUfo != isPlayingDevil)
         {
             if (!_isSwapping)
                 StartCoroutine(BlinkAndSwap());
@@ -84,7 +84,7 @@ public class RouletteEyeSwapper : MonoBehaviour
                 _pendingSwap = !_pendingSwap; // アニメーション中の変化をキュー（偶数回は相殺）
         }
 
-        _lastIsPlayingUfo = isPlayingUfo;
+        _lastIsPlayingUfo = isPlayingDevil;
     }
 
     // -----------------------------------------------------------------------

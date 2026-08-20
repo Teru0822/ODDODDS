@@ -22,7 +22,7 @@ public class GramophoneController : MonoBehaviour
     private int _currentTrackIndex = 0;
     private bool _isPlayerNear = false;
 
-    // 動的UI要素 (UFOキャッチャーと同様の動的生成)
+    // 動的UI要素 (Devilキャッチャーと同様の動的生成)
     private Canvas _dynamicCanvas;
     private TextMeshProUGUI _promptText;
 

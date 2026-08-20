@@ -164,7 +164,8 @@ public class Reticle : MonoBehaviour
             || RewardSelectionUI.IsTypewriterUIShowing
             || App.ATM.ATMController.IsInteracting          // ATM 操作中
             || VisitorSystem.IsTalkingWithVisitor           // インターホンで訪問者と対応中
-            || DebtCollectionManager.IsCollecting)          // 悪魔の取り立て中
+            || DebtCollectionManager.IsCollecting          // 悪魔の取り立て中
+            || BookOpenController.IsBookVisible)           // 本を開いている間
         {
             showReticle = false;
         }
