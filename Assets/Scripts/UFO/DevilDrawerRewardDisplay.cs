@@ -218,6 +218,10 @@ public class DevilDrawerRewardDisplay : MonoBehaviour
 
         if (drawerLight != null) drawerLight.enabled = true;
 
+        // 引き出しを見せるためにカメラがスラープ（移動）し始めるこのタイミングで、
+        // クレーンゲーム本体のライトを消す（ライト消灯音もSetPlaySpotlight側で再生される）
+        UFOCameraController.Instance?.SetPlaySpotlight(false);
+
         // 今アクティブなDevilカメラ（frontCamera）自体を、引き出しを見せる位置までLerpで動かす。
         // ※この時点では既に IsPlayingUfo が false になっているため GetActiveCamera() ではなく
         //   FrontCamera を直接参照する（実際に有効なままなのは frontCamera のため）
@@ -244,8 +248,10 @@ public class DevilDrawerRewardDisplay : MonoBehaviour
         if (drawerTransform != null && _drawerClosedPosCaptured)
         {
             Vector3 openPos = _drawerClosedLocalPos + drawerOpenLocalOffset;
+            DevilSEManager.Instance?.PlayDrawerOpen();
             yield return MoveDrawer(_drawerClosedLocalPos, openPos);
             yield return new WaitForSeconds(drawerHoldSeconds);
+            DevilSEManager.Instance?.PlayDrawerClose();
             yield return MoveDrawer(openPos, _drawerClosedLocalPos);
         }
         else

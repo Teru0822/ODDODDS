@@ -7,7 +7,8 @@ using UnityEngine;
 /// パトランプのLight.enabled/色そのものはDevilChaseLightControllerが一元管理しており
 /// （残り時間警告中以外は、コイン獲得フラッシュ・チェイス演出等でDevilChaseLightController自身が
 /// パトランプも含めて点灯を制御する）、このスクリプトは chaseLightController.IsWarningBlinkActive
-/// （残り時間警告中かどうか）だけを見て、trueの間だけ点灯・回転を担当する。
+/// （残り時間警告中かどうか）、または IsJackpotOmenActive（ルーレット大当たりの予兆演出中かどうか）
+/// を見て、どちらかがtrueの間だけ回転を担当する（点灯自体は前者の場合と同様DevilChaseLightController側）。
 /// それ以外の時間帯は一切手を出さないため、他の演出との競合は起きない。
 /// </summary>
 public class PatoLampController : MonoBehaviour
@@ -15,8 +16,11 @@ public class PatoLampController : MonoBehaviour
     [Tooltip("このパトランプが属する実機のDevilChaseLightController")]
     [SerializeField] private DevilChaseLightController chaseLightController;
 
-    [Tooltip("回転速度 (度/秒)")]
+    [Tooltip("通常の残り時間警告中の回転速度 (度/秒)")]
     [SerializeField] private float rotationSpeed = 360f;
+
+    [Tooltip("ルーレット大当たりの予兆演出中だけ使う回転速度 (度/秒)。通常より速くして煽り感を出す")]
+    [SerializeField] private float jackpotOmenRotationSpeed = 720f;
 
     private Transform _patoinTransform;
     private Light[] _lights;
@@ -48,7 +52,8 @@ public class PatoLampController : MonoBehaviour
 
     private void Update()
     {
-        bool shouldBeActive = chaseLightController != null && chaseLightController.IsWarningBlinkActive;
+        bool shouldBeActive = chaseLightController != null &&
+                               (chaseLightController.IsWarningBlinkActive || chaseLightController.IsJackpotOmenActive);
 
         if (shouldBeActive && !_isActive)
         {
@@ -65,10 +70,12 @@ public class PatoLampController : MonoBehaviour
             _isActive = false;
         }
 
-        // アクティブな間、Y軸で回転させ続ける
+        // アクティブな間、Y軸で回転させ続ける（大当たり予兆演出中だけ専用の速度を使う）
         if (_isActive && _patoinTransform != null)
         {
-            _patoinTransform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime, Space.Self);
+            bool isJackpotOmen = chaseLightController != null && chaseLightController.IsJackpotOmenActive;
+            float speed = isJackpotOmen ? jackpotOmenRotationSpeed : rotationSpeed;
+            _patoinTransform.Rotate(Vector3.up, speed * Time.deltaTime, Space.Self);
         }
     }
 

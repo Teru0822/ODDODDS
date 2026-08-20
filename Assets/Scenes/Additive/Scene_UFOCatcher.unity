@@ -1747,7 +1747,9 @@ MonoBehaviour:
   warningColor: {r: 1, g: 0, b: 0, a: 1}
   rouletteChaseStepInterval: 0.1
   rouletteBlinkInterval: 0.2
+  jackpotOmenDuration: 0.8
   coinCatchFlashDuration: 0.3
+  sessionEndChaseDuration: 2
   searchRoot: {fileID: 168518569}
   isPracticeInstance: 0
   practiceTutorialCrane: {fileID: 0}
@@ -3397,7 +3399,7 @@ MonoBehaviour:
   minVelocityThreshold: 0.5
   maxVelocityForFullVolume: 5
   perCoinCooldown: 0.3
-  maxSoundsPerWindow: 3
+  maxSoundsPerWindow: 5
   windowDuration: 0.3
 --- !u!4 &891194632
 Transform:
@@ -5648,17 +5650,6 @@ Light:
   m_LightUnit: 1
   m_LuxAtDistance: 1
   m_EnableSpotReflector: 1
---- !u!114 &1201307841 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1995868394668917846, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
-  m_PrefabInstance: {fileID: 5351351319220983938}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d502728690638354488b6805a450cdd0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UFOItemGoal
 --- !u!1 &1214303394
 GameObject:
   m_ObjectHideFlags: 0
@@ -7645,21 +7636,29 @@ MonoBehaviour:
   realWatchGetSound: {fileID: 8300000, guid: abcdc67f5c71d744489b1fa432127422, type: 3}
   realBlackDiamondGetSound: {fileID: 8300000, guid: 1fbebd194665c2f42879deab3512e212, type: 3}
   realRouletteItemGetSound: {fileID: 8300000, guid: 4adeb4a3f2c13ae4ab99e1a12f1b0cd6, type: 3}
-  realItemGetVolume: 1
+  realItemGetVolume: 1.4
   realLowTimeWarningLoopSound: {fileID: 8300000, guid: 95831d7d112bdea4281e9151acbddc29, type: 3}
-  realLowTimeWarningVolume: 0.4
+  realLowTimeWarningVolume: 0.2
   rouletteSpinLoopSound: {fileID: 8300000, guid: 54911b59815f05e4682a4d50bd22a3c2, type: 3}
   rouletteSpinVolume: 1
   rouletteWinSound: {fileID: 8300000, guid: eb6dbd6dc5a533a4aa7411d7b083a991, type: 3}
   rouletteWinVolume: 1
   rouletteLoseSlotIndex: 1
   rouletteLoseSound: {fileID: 8300000, guid: 3a5027387a89518488a5a2e37134724a, type: 3}
+  jackpotOmenSound: {fileID: 8300000, guid: 6b34ceb7db6f0034ebc8df65f4a7bcb8, type: 3}
+  jackpotOmenVolume: 2
+  jackpotWinSound: {fileID: 8300000, guid: ef8b0dff61c60cd479cc1bd701096ecc, type: 3}
+  jackpotWinVolume: 1
   realLightFlickerSound: {fileID: 8300000, guid: 4f319739c1eb21f46b9354431580df6d, type: 3}
   realLightFlickerVolume: 0.314
   realLightOffSound: {fileID: 8300000, guid: 4e56454f649254a4cbb9af34af19ba36, type: 3}
   realLightOffVolume: 6.02
   ambientLoopSound: {fileID: 8300000, guid: e48a9cd073793ed4c93425bbaf6c172b, type: 3}
   ambientVolume: 3.5
+  drawerOpenSound: {fileID: 8300000, guid: 918f70682b696224b91e46a2e6348d48, type: 3}
+  drawerOpenVolume: 1
+  drawerCloseSound: {fileID: 8300000, guid: 918f70682b696224b91e46a2e6348d48, type: 3}
+  drawerCloseVolume: 1
   armDescentRustleSound: {fileID: 0}
   armMoveLoopSound: {fileID: 8300000, guid: 4f20f946064e39a40911467daf930332, type: 3}
   armMoveVolume: 5.8
@@ -7669,6 +7668,10 @@ MonoBehaviour:
   armMoveStartVolume: 3.8
   armMoveStopSound: {fileID: 8300000, guid: 528c1bdaf864f044ea8400ef9870f658, type: 3}
   armMoveStopVolume: 3.8
+  clawToggleSound: {fileID: 8300000, guid: 3ed09c3589870d0438ea4832160baaee, type: 3}
+  clawToggleVolume: 1
+  practiceBgmSound: {fileID: 0}
+  practiceBgmVolume: 0.6
   practiceCoinInsertSound: {fileID: 8300000, guid: 6a57f5afcbbb6174abd5994aa03b54f9, type: 3}
   practiceCoinInsertVolume: 2.75
   practiceCoinGetSound: {fileID: 8300000, guid: 1844f9d577d01384a81bec1afd71b07b, type: 3}
@@ -7676,7 +7679,7 @@ MonoBehaviour:
   practiceBlackDiamondGetSound: {fileID: 8300000, guid: 293627995fffe3849badfeea4dc956a6, type: 3}
   practiceItemGetVolume: 1
   practiceLowTimeWarningLoopSound: {fileID: 8300000, guid: 95831d7d112bdea4281e9151acbddc29, type: 3}
-  practiceLowTimeWarningVolume: 0.62
+  practiceLowTimeWarningVolume: 0.2
   tutorialFrameSnapSound: {fileID: 8300000, guid: d0890fb20bffc464dad3b7efa3c87c0d, type: 3}
   tutorialFrameSnapVolume: 1
   tutorialMessageTypingSound: {fileID: 8300000, guid: d76fe7901f976e249aaada8403e9d911, type: 3}
@@ -7692,8 +7695,14 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 59feb6d48411fba4cb17257dd57d3f60, type: 3}
   - {fileID: 8300000, guid: 3611958a152d6664294265843a72fdab, type: 3}
   coinImpactVolume: 1
+  specialItemFloorImpactSounds:
+  - {fileID: 8300000, guid: 779c9b077a980ee4c8967020192cbcb0, type: 3}
+  specialItemFloorImpactVolume: 1.5
   specialItemImpactSounds:
-  - {fileID: 0}
+  - {fileID: 8300000, guid: 7fd8b4407e7d8814895b837b61baa126, type: 3}
+  - {fileID: 8300000, guid: 913c8f0cfab2fc048b8fb2f1b703bb17, type: 3}
+  - {fileID: 8300000, guid: 0a6e736befe12024a83a2774d655406e, type: 3}
+  - {fileID: 8300000, guid: 59b5201e3958e1140a1d308456b364db, type: 3}
   specialItemImpactVolume: 1
   impactPitchRange: {x: 0.9, y: 1.1}
   touchSelectSound: {fileID: 8300000, guid: 94826d03cfc2c8148be7e49800e98929, type: 3}
@@ -7701,15 +7710,16 @@ MonoBehaviour:
   touchSelect2Sound: {fileID: 8300000, guid: 94826d03cfc2c8148be7e49800e98929, type: 3}
   touchSelect2Volume: 1
   touchLockedSound: {fileID: 8300000, guid: fccc3e76f36eb2c4799d6ad28bd144cd, type: 3}
-  touchLockedVolume: 1
+  touchLockedVolume: 0.8
   touchNoLockedSound: {fileID: 8300000, guid: 5066fccc65ef56d4f9323dbf41d7f471, type: 3}
   touchNoLockedVolume: 1
   touchHoverSound: {fileID: 8300000, guid: 0d47aa5ef60e1224abda0e0568dd694b, type: 3}
-  touchHoverVolume: 1
+  touchHoverVolume: 0.8
   televisionStaticSound: {fileID: 8300000, guid: 39361cfbeab23314aba9cac3bfd0baf3, type: 3}
   televisionStaticVolume: 1
   tutorialStaticLoopSound: {fileID: 8300000, guid: 39361cfbeab23314aba9cac3bfd0baf3, type: 3}
   tutorialStaticLoopVolume: 0.3
+  tutorialStaticLoopEndSeconds: 50
   oneShotSource: {fileID: 0}
 --- !u!4 &1360053391
 Transform:
@@ -8965,7 +8975,9 @@ MonoBehaviour:
   warningColor: {r: 1, g: 0, b: 0, a: 1}
   rouletteChaseStepInterval: 0.15
   rouletteBlinkInterval: 0.2
+  jackpotOmenDuration: 2.5
   coinCatchFlashDuration: 0.3
+  sessionEndChaseDuration: 2
   searchRoot: {fileID: 1632140609}
   isPracticeInstance: 1
   practiceTutorialCrane: {fileID: 2006116701}
@@ -12621,7 +12633,7 @@ MonoBehaviour:
   coinAnimationDuration: 0.3
   coinAnimationRotation: {x: 0, y: -90, z: 0}
   coinAnimationRepeatCount: 3
-  coinAnimationStagger: 0.4
+  coinInsertionGap: 0.5
   leftCamera: {fileID: 3765522845490254342}
   rightCamera: {fileID: 6118290645916400518}
   backCamera: {fileID: 5336918042465489003}
@@ -15380,7 +15392,7 @@ GameObject:
   - component: {fileID: 3836786255837806413}
   - component: {fileID: 3836786255837806414}
   m_Layer: 0
-  m_Name: UFOItemGoal
+  m_Name: DevilItemGoal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -16798,6 +16810,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PatoLampController
   chaseLightController: {fileID: 0}
   rotationSpeed: 260
+  jackpotOmenRotationSpeed: 720
 --- !u!33 &585491769483782009
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -18213,6 +18226,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PatoLampController
   chaseLightController: {fileID: 0}
   rotationSpeed: 260
+  jackpotOmenRotationSpeed: 720
 --- !u!33 &935874564988309905
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -22875,6 +22889,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PatoLampController
   chaseLightController: {fileID: 0}
   rotationSpeed: 260
+  jackpotOmenRotationSpeed: 720
 --- !u!65 &2070180198315107843
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -23453,6 +23468,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PatoLampController
   chaseLightController: {fileID: 0}
   rotationSpeed: 260
+  jackpotOmenRotationSpeed: 720
 --- !u!4 &2208821678631073159
 Transform:
   m_ObjectHideFlags: 0
@@ -27586,6 +27602,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PatoLampController
   chaseLightController: {fileID: 0}
   rotationSpeed: 260
+  jackpotOmenRotationSpeed: 720
 --- !u!33 &3377536365180410774
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -29767,7 +29784,6 @@ GameObject:
   - component: {fileID: 8546781835570330696}
   - component: {fileID: 8163125730954882808}
   - component: {fileID: 2734604346452813466}
-  - component: {fileID: 4374462358088008812}
   - component: {fileID: 8546781835570330697}
   m_Layer: 0
   m_Name: Cube
@@ -29790,6 +29806,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PatoLampController
   chaseLightController: {fileID: 0}
   rotationSpeed: 260
+  jackpotOmenRotationSpeed: 720
 --- !u!33 &4020057204123114463
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -31310,19 +31327,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 5351141031041686001}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &4374462358088008812
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3990060552063182629}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 97ecdfde46b3e0b4b8311dce8fd9735c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UFOItemGoalTrigger
-  mainGoalManager: {fileID: 1201307841}
 --- !u!65 &4374941144664044538
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -34730,6 +34734,18 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 75f9f412341ca924ab2921e4345bb93b, type: 2}
+    - target: {fileID: 310394053026383905, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.0684
+      objectReference: {fileID: 0}
+    - target: {fileID: 310394053026383905, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.1872
+      objectReference: {fileID: 0}
+    - target: {fileID: 310394053026383905, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.0306
+      objectReference: {fileID: 0}
     - target: {fileID: 315488349882024138, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: m_Name
       value: DevilItemGoal
@@ -34751,8 +34767,20 @@ PrefabInstance:
       value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 624050841089503498, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: jackpotChance
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 624050841089503498, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: lightDuration
       value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 624050841089503498, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: jackpotOmenDelay
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 624050841089503498, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: debugForceJackpot
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 624050841089503498, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: slots.Array.data[0].weight
@@ -34982,6 +35010,66 @@ PrefabInstance:
       propertyPath: chaseLightController
       value: 
       objectReference: {fileID: 426471893}
+    - target: {fileID: 7731791438890781862, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.48112375
+      objectReference: {fileID: 0}
+    - target: {fileID: 7731791438890781862, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.0134
+      objectReference: {fileID: 0}
+    - target: {fileID: 7731791438890781862, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.2099
+      objectReference: {fileID: 0}
+    - target: {fileID: 7731791438890781862, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.0207
+      objectReference: {fileID: 0}
+    - target: {fileID: 7731791438890781862, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: -0.6994685
+      objectReference: {fileID: 0}
+    - target: {fileID: 7731791438890781862, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.6653572
+      objectReference: {fileID: 0}
+    - target: {fileID: 7731791438890781862, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.16652669
+      objectReference: {fileID: 0}
+    - target: {fileID: 7731791438890781862, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0.2007801
+      objectReference: {fileID: 0}
+    - target: {fileID: 7731791438890781862, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: -59.76
+      objectReference: {fileID: 0}
+    - target: {fileID: 7731791438890781862, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -83.257
+      objectReference: {fileID: 0}
+    - target: {fileID: 7731791438890781862, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 86.132
+      objectReference: {fileID: 0}
+    - target: {fileID: 7873593541179614179, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.08898363
+      objectReference: {fileID: 0}
+    - target: {fileID: 7873593541179614179, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.0294
+      objectReference: {fileID: 0}
+    - target: {fileID: 7873593541179614179, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.2512
+      objectReference: {fileID: 0}
+    - target: {fileID: 7873593541179614179, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.0143
+      objectReference: {fileID: 0}
     - target: {fileID: 7949359069841770545, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: displayStage
       value: 
@@ -34991,17 +35079,153 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: _priceCoinDatas.Array.size
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: _priceCoinDatas.Array.data[0].coinText
+      value: X---
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: _priceCoinDatas.Array.data[1].coinText
+      value: +20s
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: _priceCoinDatas.Array.data[2].coinText
+      value: X???
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: _priceCoinDatas.Array.data[3].coinText
+      value: x???
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: _priceCoinDatas.Array.data[4].coinText
+      value: +20s
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: _priceCoinDatas.Array.data[0].coinSprite
+      value: 
+      objectReference: {fileID: 21300000, guid: ef53ff64f08d76844979c4c186c55b0a, type: 3}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: _priceCoinDatas.Array.data[1].coinSprite
+      value: 
+      objectReference: {fileID: 21300000, guid: fcc6583a17730664ba09ea0efe68f8d4, type: 3}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: _priceCoinDatas.Array.data[2].coinSprite
+      value: 
+      objectReference: {fileID: 21300000, guid: a841679c34f38994397e1cd1206b6aed, type: 3}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: _priceCoinDatas.Array.data[3].coinSprite
+      value: 
+      objectReference: {fileID: 21300000, guid: a841679c34f38994397e1cd1206b6aed, type: 3}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: _priceCoinDatas.Array.data[4].coinSprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 4e8f04d14af2f38478040ba175e39682, type: 3}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: _priceCoinDatas.Array.data[0].coinPriceLinkType
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: _priceCoinDatas.Array.data[1].coinPriceLinkType
-      value: 2
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: _priceCoinDatas.Array.data[2].coinPriceLinkType
-      value: 3
+      value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: _priceCoinDatas.Array.data[0].useDiamondStageSprite
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: _priceCoinDatas.Array.data[1].useDiamondStageSprite
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: _priceCoinDatas.Array.data[2].useDiamondStageSprite
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: _priceCoinDatas.Array.data[3].useDiamondStageSprite
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: _priceCoinDatas.Array.data[2].requiresRouletteUnlock
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: _priceCoinDatas.Array.data[3].requiresRouletteUnlock
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: _priceCoinDatas.Array.data[4].requiresRouletteUnlock
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: _priceCoinDatas.Array.data[0].diamondStageSprites.Array.size
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: _priceCoinDatas.Array.data[1].diamondStageSprites.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: _priceCoinDatas.Array.data[2].diamondStageSprites.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: _priceCoinDatas.Array.data[3].diamondStageSprites.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: '_priceCoinDatas.Array.data[0].diamondStageSprites.Array.data[0]'
+      value: 
+      objectReference: {fileID: 21300000, guid: ef53ff64f08d76844979c4c186c55b0a, type: 3}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: '_priceCoinDatas.Array.data[0].diamondStageSprites.Array.data[1]'
+      value: 
+      objectReference: {fileID: 21300000, guid: 9f4dfd734c3b6174b9d6c6acba94b1f0, type: 3}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: '_priceCoinDatas.Array.data[0].diamondStageSprites.Array.data[2]'
+      value: 
+      objectReference: {fileID: 21300000, guid: e03d32fde7ce3ac40acaf1f2dbb9e994, type: 3}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: '_priceCoinDatas.Array.data[0].diamondStageSprites.Array.data[3]'
+      value: 
+      objectReference: {fileID: 21300000, guid: a98ffd1c2901ea6448468fe6ba581628, type: 3}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: '_priceCoinDatas.Array.data[1].diamondStageSprites.Array.data[0]'
+      value: 
+      objectReference: {fileID: 21300000, guid: ef53ff64f08d76844979c4c186c55b0a, type: 3}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: '_priceCoinDatas.Array.data[1].diamondStageSprites.Array.data[1]'
+      value: 
+      objectReference: {fileID: 21300000, guid: 9f4dfd734c3b6174b9d6c6acba94b1f0, type: 3}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: '_priceCoinDatas.Array.data[1].diamondStageSprites.Array.data[2]'
+      value: 
+      objectReference: {fileID: 21300000, guid: e03d32fde7ce3ac40acaf1f2dbb9e994, type: 3}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: '_priceCoinDatas.Array.data[1].diamondStageSprites.Array.data[3]'
+      value: 
+      objectReference: {fileID: 21300000, guid: a98ffd1c2901ea6448468fe6ba581628, type: 3}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: '_priceCoinDatas.Array.data[2].diamondStageSprites.Array.data[0]'
+      value: 
+      objectReference: {fileID: 21300000, guid: ef53ff64f08d76844979c4c186c55b0a, type: 3}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: '_priceCoinDatas.Array.data[2].diamondStageSprites.Array.data[1]'
+      value: 
+      objectReference: {fileID: 21300000, guid: 9f4dfd734c3b6174b9d6c6acba94b1f0, type: 3}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: '_priceCoinDatas.Array.data[2].diamondStageSprites.Array.data[2]'
+      value: 
+      objectReference: {fileID: 21300000, guid: e03d32fde7ce3ac40acaf1f2dbb9e994, type: 3}
+    - target: {fileID: 7964024459470686616, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
+      propertyPath: '_priceCoinDatas.Array.data[2].diamondStageSprites.Array.data[3]'
+      value: 
+      objectReference: {fileID: 21300000, guid: a98ffd1c2901ea6448468fe6ba581628, type: 3}
     - target: {fileID: 8337890820483626981, guid: 30e16e814cd831d44b819eb9d18c150b, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -46057,6 +46281,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PatoLampController
   chaseLightController: {fileID: 0}
   rotationSpeed: 260
+  jackpotOmenRotationSpeed: 720
 --- !u!114 &7108853185464695030
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -47421,6 +47646,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PatoLampController
   chaseLightController: {fileID: 0}
   rotationSpeed: 260
+  jackpotOmenRotationSpeed: 720
 --- !u!114 &7415361078546168980
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -49404,26 +49630,8 @@ MonoBehaviour:
   _xOffsetPerScale: 30
   _yOffsetPerScale: 10
   _priceCoinDatas:
-  - coinSprite: {fileID: 21300000, guid: 642c5499eb5f63247a3c3daf9eb34f9a, type: 3}
-    coinText: x100DC
-    coinPriceLinkType: 0
-    requiresRouletteUnlock: 0
-    useDiamondStageSprite: 0
-    diamondStageSprites: []
-  - coinSprite: {fileID: 21300000, guid: 87ab41d4a8dba0e44a6ea9b705f33cbe, type: 3}
-    coinText: x50DC
-    coinPriceLinkType: 0
-    requiresRouletteUnlock: 0
-    useDiamondStageSprite: 0
-    diamondStageSprites: []
-  - coinSprite: {fileID: 21300000, guid: f3915cfeca8884c44a989bfa6d57333c, type: 3}
-    coinText: x10DC
-    coinPriceLinkType: 0
-    requiresRouletteUnlock: 0
-    useDiamondStageSprite: 0
-    diamondStageSprites: []
   - coinSprite: {fileID: 21300000, guid: ef53ff64f08d76844979c4c186c55b0a, type: 3}
-    coinText: x---
+    coinText: X---
     coinPriceLinkType: 0
     requiresRouletteUnlock: 0
     useDiamondStageSprite: 1
@@ -49432,7 +49640,7 @@ MonoBehaviour:
     - {fileID: 21300000, guid: 9f4dfd734c3b6174b9d6c6acba94b1f0, type: 3}
     - {fileID: 21300000, guid: e03d32fde7ce3ac40acaf1f2dbb9e994, type: 3}
     - {fileID: 21300000, guid: a98ffd1c2901ea6448468fe6ba581628, type: 3}
-  - coinSprite: {fileID: 21300000, guid: 4e8f04d14af2f38478040ba175e39682, type: 3}
+  - coinSprite: {fileID: 21300000, guid: fcc6583a17730664ba09ea0efe68f8d4, type: 3}
     coinText: +20s
     coinPriceLinkType: 0
     requiresRouletteUnlock: 0

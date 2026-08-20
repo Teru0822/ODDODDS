@@ -1172,6 +1172,11 @@ public class TutorialStepController : MonoBehaviour
         {
             tutorialCrane.SetPracticeUIVisible(!fullyDark);
         }
+        // ItemShowcase（獲得アイテムの回転ポップアップ）も、暗転パネルを突き抜けて見えてしまうため一緒に隠す
+        if (DevilItemPickupDisplay.Instance != null)
+        {
+            DevilItemPickupDisplay.Instance.SetForceHidden(fullyDark);
+        }
 
         if (!_hasCapturedMaskPanelBaseColors)
         {

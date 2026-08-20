@@ -52,6 +52,13 @@ public class DevilSEManager : MonoBehaviour
     [SerializeField] private int rouletteLoseSlotIndex = 1;
     [Tooltip("上のスロットが当選（＝ハズレ）した時の専用サウンド。未設定なら通常のrouletteWinSoundを使う")]
     [SerializeField] private AudioClip rouletteLoseSound;
+    [Tooltip("大当たり（ジャックポット）の予兆演出（チェイスライト1周分の赤点灯）に合わせて鳴らす専用SE")]
+    [SerializeField] private AudioClip jackpotOmenSound;
+    [SerializeField, Range(0f, 10f)] private float jackpotOmenVolume = 1f;
+    [Tooltip("大当たり（ジャックポット）が確定した結果で止まった瞬間の専用当選音。" +
+             "未設定なら通常のrouletteWinSoundを使う")]
+    [SerializeField] private AudioClip jackpotWinSound;
+    [SerializeField, Range(0f, 10f)] private float jackpotWinVolume = 1f;
 
     [Header("=== 実機：ライト演出 ===")]
     [SerializeField] private AudioClip realLightFlickerSound;
@@ -64,6 +71,14 @@ public class DevilSEManager : MonoBehaviour
     [SerializeField] private AudioClip ambientLoopSound;
     [SerializeField, Range(0f, 10f)] private float ambientVolume = 1f;
 
+    [Header("=== 実機：引き出し演出 ===")]
+    [Tooltip("セッション終了後、獲得したアイテムを見せる引き出しが開くタイミングで再生するSE")]
+    [SerializeField] private AudioClip drawerOpenSound;
+    [SerializeField, Range(0f, 10f)] private float drawerOpenVolume = 1f;
+    [Tooltip("見せ終わった引き出しが閉まるタイミングで再生するSE")]
+    [SerializeField] private AudioClip drawerCloseSound;
+    [SerializeField, Range(0f, 10f)] private float drawerCloseVolume = 1f;
+
     [Header("=== 実機：アーム ===")]
     [SerializeField] private AudioClip armDescentRustleSound;
     [SerializeField] private AudioClip armMoveLoopSound;
@@ -74,10 +89,19 @@ public class DevilSEManager : MonoBehaviour
     [SerializeField, Range(0f, 10f)] private float armMoveStartVolume = 1f;
     [SerializeField] private AudioClip armMoveStopSound;
     [SerializeField, Range(0f, 10f)] private float armMoveStopVolume = 1f;
+    [Tooltip("爪（フィンガー）が開く/閉じる瞬間のSE。開閉どちらも同じ音を共用する" +
+             "（StartDescentCycle開始時の開き、掴む時の閉じ、手動開閉ボタンの開閉、いずれもここで再生）")]
+    [SerializeField] private AudioClip clawToggleSound;
+    [SerializeField, Range(0f, 10f)] private float clawToggleVolume = 1f;
 
     // ============================================================
     // 練習機 (Practice Machine)
     // ============================================================
+    [Header("=== 練習機：BGM ===")]
+    [Tooltip("レバー/ボタンを初めて操作した瞬間に再生を開始し、タイマーが0になったら止めるBGM")]
+    [SerializeField] private AudioClip practiceBgmSound;
+    [SerializeField, Range(0f, 1f)] private float practiceBgmVolume = 0.6f;
+
     [Header("=== 練習機：コイン投入・アイテム獲得 ===")]
     [SerializeField] private AudioClip practiceCoinInsertSound;
     [SerializeField, Range(0f, 10f)] private float practiceCoinInsertVolume = 1f;
@@ -109,8 +133,11 @@ public class DevilSEManager : MonoBehaviour
     [Tooltip("コイン同士がぶつかった時の効果音。複数登録すると毎回ランダムに1つ選ばれる")]
     [SerializeField] private AudioClip[] coinImpactSounds;
     [SerializeField, Range(0f, 10f)] private float coinImpactVolume = 1f;
-    [Tooltip("時計・ルーレットアイテム（プレゼントボックス）が何かに衝突した時専用の効果音。" +
-             "床/コインどちらに当たった場合でも、床用/コイン用の音の代わりにこちらが使われる。" +
+    [Tooltip("時計・ルーレットアイテム（プレゼントボックス）が床に落ちた時専用の効果音。" +
+             "複数登録すると毎回ランダムに1つ選ばれる")]
+    [SerializeField] private AudioClip[] specialItemFloorImpactSounds;
+    [SerializeField, Range(0f, 10f)] private float specialItemFloorImpactVolume = 1f;
+    [Tooltip("時計・ルーレットアイテム（プレゼントボックス）がコイン等に衝突した時専用の効果音。" +
              "複数登録すると毎回ランダムに1つ選ばれる")]
     [SerializeField] private AudioClip[] specialItemImpactSounds;
     [SerializeField, Range(0f, 10f)] private float specialItemImpactVolume = 1f;
@@ -140,6 +167,9 @@ public class DevilSEManager : MonoBehaviour
     [Tooltip("Tutorial_Canvas表示中にループ再生する専用の砂嵐SE。未設定なら上のtelevisionStaticSoundを流用する")]
     [SerializeField] private AudioClip tutorialStaticLoopSound;
     [SerializeField, Range(0f, 5f)] private float tutorialStaticLoopVolume = 0.5f;
+    [Tooltip("上のループ音を、クリップの最後まで待たずに何秒地点でループさせるか（秒）。" +
+             "クリップ末尾に無音区間がある場合、そこを含めずにループさせたい時に使う")]
+    [SerializeField] private float tutorialStaticLoopEndSeconds = 50f;
 
     // ============================================================
     // 内部再生チャンネル
@@ -160,8 +190,10 @@ public class DevilSEManager : MonoBehaviour
     private AudioSource _armMoveLoopSource2;
     private AudioSource _rouletteSpinLoopSource;
     private AudioSource _ambientLoopSource;
+    private AudioSource _practiceBgmSource;
     private AudioSource _televisionStaticLoopSource;
     private AudioSource _tutorialStaticLoopSource;
+    private Coroutine _tutorialStaticLoopMonitorRoutine;
 
     private void Awake()
     {
@@ -321,10 +353,15 @@ public class DevilSEManager : MonoBehaviour
     }
 
     /// <summary>当選スロット番号を渡すと、それがrouletteLoseSlotIndex（デフォルトElement1＝ハズレ）と
-    /// 一致する場合だけLoseSoundを鳴らす。それ以外（番号を渡さない場合も含む）は通常の当選音を鳴らす</summary>
-    public void PlayRouletteResult(int winningIndex = -1)
+    /// 一致する場合だけLoseSoundを鳴らす。isJackpotがtrueの場合は最優先でjackpotWinSoundを鳴らす。
+    /// それ以外（番号を渡さない場合も含む）は通常の当選音を鳴らす</summary>
+    public void PlayRouletteResult(int winningIndex = -1, bool isJackpot = false)
     {
-        if (winningIndex == rouletteLoseSlotIndex && rouletteLoseSound != null)
+        if (isJackpot && jackpotWinSound != null)
+        {
+            PlayOneShot(jackpotWinSound, jackpotWinVolume);
+        }
+        else if (winningIndex == rouletteLoseSlotIndex && rouletteLoseSound != null)
         {
             PlayOneShot(rouletteLoseSound, rouletteWinVolume);
         }
@@ -334,11 +371,16 @@ public class DevilSEManager : MonoBehaviour
         }
     }
 
+    /// <summary>大当たり（ジャックポット）の予兆演出（チェイスライト1周分の赤点灯）に合わせて鳴らす</summary>
+    public void PlayJackpotOmen() => PlayOneShot(jackpotOmenSound, jackpotOmenVolume);
+
     // ============================================================
     // 実機：ライト演出
     // ============================================================
     public void PlayRealLightFlicker() => PlayWithTailCut(realLightFlickerSound, realLightFlickerVolume, 0.4f);
     public void PlayRealLightOff() => PlayWithTailCut(realLightOffSound, realLightOffVolume, 0f);
+    public void PlayDrawerOpen() => PlayOneShot(drawerOpenSound, drawerOpenVolume);
+    public void PlayDrawerClose() => PlayOneShot(drawerCloseSound, drawerCloseVolume);
 
     // ============================================================
     // 実機：環境音
@@ -403,6 +445,29 @@ public class DevilSEManager : MonoBehaviour
 
     public void PlayArmMoveStart() => PlayOneShot(armMoveStartSound, armMoveStartVolume);
     public void PlayArmMoveStop() => PlayOneShot(armMoveStopSound, armMoveStopVolume);
+    /// <summary>爪が開く/閉じる瞬間に鳴らす。開閉で同じ音を共用する</summary>
+    public void PlayClawToggle() => PlayOneShot(clawToggleSound, clawToggleVolume);
+
+    // ============================================================
+    // 練習機：BGM
+    // ============================================================
+    /// <summary>レバー/ボタンを初めて操作した瞬間に呼ぶ。既に再生中の場合は何もしない</summary>
+    public void StartPracticeBgm()
+    {
+        if (practiceBgmSound == null) return;
+        EnsureLoopSource(ref _practiceBgmSource, "PracticeBgmAudioSource");
+        if (_practiceBgmSource.isPlaying && _practiceBgmSource.clip == practiceBgmSound) return;
+        _practiceBgmSource.clip = practiceBgmSound;
+        _practiceBgmSource.loop = true;
+        _practiceBgmSource.volume = practiceBgmVolume;
+        _practiceBgmSource.Play();
+    }
+
+    /// <summary>タイマーが0になった瞬間、またはチュートリアル終了時に呼ぶ</summary>
+    public void StopPracticeBgm()
+    {
+        if (_practiceBgmSource != null) _practiceBgmSource.Stop();
+    }
 
     // ============================================================
     // 練習機：コイン投入・アイテム獲得
@@ -436,7 +501,14 @@ public class DevilSEManager : MonoBehaviour
         PlayOneShotWithPitch(PickRandomClip(coinImpactSounds), coinImpactVolume * Mathf.Clamp01(volumeFactor), pitch);
     }
 
-    /// <summary>volumeFactor: 0〜1。時計・ルーレットアイテム（プレゼントボックス）専用の衝突音</summary>
+    /// <summary>volumeFactor: 0〜1。時計・ルーレットアイテム（プレゼントボックス）が床に落ちた時専用の衝突音</summary>
+    public void PlaySpecialItemFloorImpact(float volumeFactor)
+    {
+        float pitch = Random.Range(impactPitchRange.x, impactPitchRange.y);
+        PlayOneShotWithPitch(PickRandomClip(specialItemFloorImpactSounds), specialItemFloorImpactVolume * Mathf.Clamp01(volumeFactor), pitch);
+    }
+
+    /// <summary>volumeFactor: 0〜1。時計・ルーレットアイテム（プレゼントボックス）がコイン等に衝突した時専用の衝突音</summary>
     public void PlaySpecialItemImpact(float volumeFactor)
     {
         float pitch = Random.Range(impactPitchRange.x, impactPitchRange.y);
@@ -490,13 +562,40 @@ public class DevilSEManager : MonoBehaviour
         if (active)
         {
             _tutorialStaticLoopSource.clip = clip;
+            // loop=trueは万一下の監視が間に合わなかった場合の保険として残しておくが、
+            // 実際のループはtutorialStaticLoopEndSeconds地点で手動で先頭へ戻すことで行う
+            // （クリップ末尾の無音区間を含めてループさせないため）
             _tutorialStaticLoopSource.loop = true;
             _tutorialStaticLoopSource.volume = tutorialStaticLoopVolume;
+            _tutorialStaticLoopSource.time = 0f;
             _tutorialStaticLoopSource.Play();
+
+            if (_tutorialStaticLoopMonitorRoutine != null) StopCoroutine(_tutorialStaticLoopMonitorRoutine);
+            _tutorialStaticLoopMonitorRoutine = StartCoroutine(MonitorTutorialStaticLoopRoutine());
         }
         else
         {
             _tutorialStaticLoopSource.Stop();
+            if (_tutorialStaticLoopMonitorRoutine != null)
+            {
+                StopCoroutine(_tutorialStaticLoopMonitorRoutine);
+                _tutorialStaticLoopMonitorRoutine = null;
+            }
+        }
+    }
+
+    /// <summary>tutorialStaticLoopEndSeconds地点に達するたびに先頭(0秒)へシークし直すことで、
+    /// クリップ末尾の無音区間を含めずにループさせ続ける</summary>
+    private IEnumerator MonitorTutorialStaticLoopRoutine()
+    {
+        while (true)
+        {
+            if (_tutorialStaticLoopSource != null && _tutorialStaticLoopSource.isPlaying &&
+                _tutorialStaticLoopSource.time >= tutorialStaticLoopEndSeconds)
+            {
+                _tutorialStaticLoopSource.time = 0f;
+            }
+            yield return null;
         }
     }
 }

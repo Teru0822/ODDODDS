@@ -68,6 +68,23 @@ public class RouletteController : MonoBehaviour
     [Tooltip("スロット間の角度間隔。5分割なら 360/5 = 72")]
     [SerializeField] private float anglePerSlot = 72f;
 
+    [Header("大当たり（ジャックポット）設定")]
+    [Tooltip("このスロットが当選した際、jackpotChanceの確率で「大当たり」が上乗せされる（Element0）")]
+    [SerializeField] private int jackpotSlotIndex = 0;
+
+    [Tooltip("jackpotSlotIndexが当選した際に、大当たりになる確率（0〜1）")]
+    [SerializeField, Range(0f, 1f)] private float jackpotChance = 0.5f;
+
+    [Tooltip("大当たりが確定していた場合、リールが回り始めてから予兆演出（ランプ全点灯・赤＋効果音）を出すまでの秒数")]
+    [SerializeField] private float jackpotOmenDelay = 0.3f;
+
+    [Tooltip("ON: 通常の抽選（weightやSetForcedNextResult等）より最優先で、必ずjackpotSlotIndexが" +
+             "100%の確率で大当たりとして当選する（動作確認用）")]
+    [SerializeField] private bool debugForceJackpot = false;
+
+    /// <summary>今回のスピンが大当たり（ジャックポット）かどうか。SelectWinningSlot()実行時に確定する</summary>
+    public bool IsJackpotThisSpin { get; private set; }
+
     [Header("演出ライト設定")]
     [Tooltip("ルーレット停止時に点滅させる演出用ライトオブジェクト（空のGameObjectなど）")]
     [SerializeField] private GameObject winLightObject;
@@ -339,6 +356,29 @@ public class RouletteController : MonoBehaviour
     /// </summary>
     private int SelectWinningSlot()
     {
+        // デバッグ強制: SetForcedNextResult()の予約や通常の重み付き抽選より最優先で、
+        // 必ずjackpotSlotIndexが100%大当たりとして当選する
+        if (debugForceJackpot)
+        {
+            IsJackpotThisSpin = true;
+            Debug.Log($"[RouletteController] [デバッグ] 大当たり（ジャックポット）を強制当選させます。スロット [{jackpotSlotIndex}]");
+            return jackpotSlotIndex;
+        }
+
+        int result = SelectWinningSlotRaw();
+
+        // jackpotSlotIndexが当選した場合のみ、jackpotChanceの確率で大当たりを上乗せする
+        IsJackpotThisSpin = result == jackpotSlotIndex && Random.value < jackpotChance;
+        if (IsJackpotThisSpin)
+        {
+            Debug.Log($"[RouletteController] 大当たり（ジャックポット）確定！スロット [{result}]");
+        }
+
+        return result;
+    }
+
+    private int SelectWinningSlotRaw()
+    {
         if (_forcedNextWinningIndex.HasValue)
         {
             int forced = _forcedNextWinningIndex.Value;
@@ -420,6 +460,13 @@ public class RouletteController : MonoBehaviour
 
         DevilSEManager.Instance?.StartRouletteSpinLoop();
 
+        // 大当たりが確定している場合、回り始めてからjackpotOmenDelay秒後に予兆演出
+        // （ランプ・パトランプを全て赤で同時点灯＋専用効果音）を出す
+        if (IsJackpotThisSpin)
+        {
+            StartCoroutine(JackpotOmenRoutine());
+        }
+
         while (t < 1f)
         {
             t += Time.deltaTime / safeDuration;
@@ -445,9 +492,20 @@ public class RouletteController : MonoBehaviour
         Debug.Log($"[RouletteController] スピン完了 → 当選スロット [{winningIndex}] {label}");
 
         StartLightShow();
-        DevilSEManager.Instance?.PlayRouletteResult(winningIndex);
+        DevilSEManager.Instance?.PlayRouletteResult(winningIndex, IsJackpotThisSpin);
 
         OnSpinComplete.Invoke(winningIndex);
+    }
+
+    /// <summary>
+    /// 大当たりの予兆演出。回り始めてからjackpotOmenDelay秒後に、ランプ・パトランプを全て
+    /// 赤で同時点灯させ、専用の効果音を鳴らす（DevilChaseLightController側が実際のランプ制御を持つ）
+    /// </summary>
+    private IEnumerator JackpotOmenRoutine()
+    {
+        yield return new WaitForSeconds(jackpotOmenDelay);
+        DevilChaseLightController.TriggerJackpotOmenLap();
+        DevilSEManager.Instance?.PlayJackpotOmen();
     }
 
     /// <summary>

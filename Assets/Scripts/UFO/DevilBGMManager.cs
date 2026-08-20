@@ -6,7 +6,7 @@ using UnityEngine;
 /// プレイ中に初めてレバー/ボタンが操作された瞬間（UFOCameraController.OnControlInputUsed）にBGMを再生し、
 /// プレイセッションが終了した瞬間（OnPlaySessionActiveChanged(false)）に停止する。
 ///
-/// 残り時間が10秒を切ると（OnLowTimeWarningChanged）、あらかじめ用意した「テンポだけ上げて
+/// 残り時間が10秒を切ると（OnLowTimeThresholdChanged）、あらかじめ用意した「テンポだけ上げて
 /// 書き出した別音源（fastBgmClip）」へ、再生位置を同期させながらクロスフェードで切り替える。
 /// AudioSource.pitchで速度を上げるとピッチも一緒に上がってしまうため、ピッチはそのままに
 /// テンポだけ上げたい場合はこの「別音源への切り替え」方式が必要になる。
@@ -90,14 +90,18 @@ public class DevilBGMManager : MonoBehaviour
     {
         UFOCameraController.OnControlInputUsed += HandleControlInputUsed;
         UFOCameraController.OnPlaySessionActiveChanged += HandlePlaySessionActiveChanged;
-        UFOCameraController.OnLowTimeWarningChanged += HandleLowTimeWarningChanged;
+        // OnLowTimeWarningChangedではなくOnLowTimeThresholdChangedを使う。前者はルーレット回転中・
+        // アイテム獲得演出中はfalseになってしまう（警告音を鳴らさないための仕様）ため、そちらに
+        // 連動させると「10秒未満でルーレット/ブラックダイヤを入れると通常テンポに戻ってしまう」バグになる。
+        // BGMのテンポは演出の有無に関わらず、純粋に残り時間だけで判定したい
+        UFOCameraController.OnLowTimeThresholdChanged += HandleLowTimeWarningChanged;
     }
 
     private void OnDisable()
     {
         UFOCameraController.OnControlInputUsed -= HandleControlInputUsed;
         UFOCameraController.OnPlaySessionActiveChanged -= HandlePlaySessionActiveChanged;
-        UFOCameraController.OnLowTimeWarningChanged -= HandleLowTimeWarningChanged;
+        UFOCameraController.OnLowTimeThresholdChanged -= HandleLowTimeWarningChanged;
     }
 
     private void HandleControlInputUsed()

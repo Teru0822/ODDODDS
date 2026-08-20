@@ -16,8 +16,15 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
     /// <summary>プレイセッション中、初めてレバー/ボタンが操作された瞬間に1回だけ発火</summary>
     public static event System.Action OnControlInputUsed;
     /// <summary>残り時間10秒未満の警告状態に入った/抜けた瞬間に発火（true: 入った / false: 抜けた）。
-    /// 警告音（DevilSEManager.StartLowTimeWarning）と全く同じタイミング・条件で発火する</summary>
+    /// 警告音（DevilSEManager.StartLowTimeWarning）と全く同じタイミング・条件で発火する。
+    /// ルーレット回転中・アイテム獲得演出中（DevilItemGoal.IsFlashing）はfalseとして扱われるため、
+    /// 「見た目のランプが赤点滅しているか」に連動させたい用途向け。純粋に残り時間だけで
+    /// 判定したい場合はOnLowTimeThresholdChangedを使うこと</summary>
     public static event System.Action<bool> OnLowTimeWarningChanged;
+    /// <summary>残り時間が10秒を切った/超えた瞬間に発火（true: 切った / false: 超えた・セッション終了等）。
+    /// OnLowTimeWarningChangedと違い、ルーレット回転中やアイテム獲得演出中でも影響を受けない、
+    /// 純粋に残り時間だけを見た判定。BGMのテンポ切り替え等、演出の有無に関わらず一定の基準が欲しい用途向け</summary>
+    public static event System.Action<bool> OnLowTimeThresholdChanged;
     public static event System.Action<UfoSubCameraState> OnSubCameraChanged;
     public static bool IsPlaySessionActive { get; private set; } = false;
     /// <summary>IsPlaySessionActive が変化した時に発火（true: Play_Canvas2 の Play を押して実際にプレイ開始 / false: セッション終了）</summary>
@@ -209,6 +216,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
 
     private bool _isTransitioning = false;
     private bool _hasPlayedLowTimeWarning = false;
+    private bool _isBelowLowTimeThreshold = false;
     // 点灯フリッカー演出（PlayLightOnFlickerCoroutine）の参照。すぐに退出してSetPlaySpotlight(false)が
     // 呼ばれても、参照が無いと演出コルーチンを止められず、演出の最後（完全点灯）が後から上書きして
     // ライトがつけっぱなしになってしまうため、消灯時に確実に止められるよう保持しておく
@@ -599,6 +607,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
         IsPlaySessionActive = true;
         OnPlaySessionActiveChanged?.Invoke(true);
         _hasPlayedLowTimeWarning = false; // 新規セッション開始時に警告音再生フラグをリセット
+        _isBelowLowTimeThreshold = false; // BGMテンポ切り替え用フラグも同様にリセット
 
         // 前回のプレイで獲得演出（時計・ブラックダイヤ等）やルーレット配当待ちの最中に
         // ターンが切り替わった場合、演出コルーチンが中断されIsFlashing等がtrueのまま
@@ -972,15 +981,21 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
         IsPlayingUfo = false;
         OnUfoModeChanged?.Invoke(false); // UFO終了イベントを通知（ここで引き出しの演出が開始される）
 
-        // 引き出しの演出（開く→見せる→閉じる）が終わるまで、プレイヤー視点への切り替えを待つ
+        // 引き出しの演出（開く→見せる→閉じる）が終わるまで、プレイヤー視点への切り替えを待つ。
+        // ライトを消すタイミングは、引き出しを見せるためにカメラがスラープし始める瞬間に
+        // DevilDrawerRewardDisplay側で行うため、ここでは待つだけでよい
         if (DevilDrawerRewardDisplay.Instance != null)
         {
             yield return new WaitUntil(() => !DevilDrawerRewardDisplay.Instance.IsShowing);
         }
+        else
+        {
+            // 引き出し演出が存在しない場合のフォールバック。従来通りここで消灯する
+            SetPlaySpotlight(false);
+        }
 
         IsPlaySessionActive = false;
         OnPlaySessionActiveChanged?.Invoke(false);
-        SetPlaySpotlight(false);
         SetCoinInsertionLightsActive(false);
 
         // 途中でやめた場合・プレイが終了した場合ともに、television の画面を初期状態（Play_Canvas）へ戻す
@@ -1289,10 +1304,19 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
 
     private void UpdateWarningSound()
     {
+        // BGMのテンポ切り替え等、演出の有無に関わらず「残り時間が10秒を切っているか」だけの
+        // 純粋な判定（ルーレット回転中・アイテム獲得演出中でも影響を受けない）
+        bool isBelowThresholdNow = IsPlaySessionActive && _playTimer > 0f && _playTimer <= 10f;
+        if (isBelowThresholdNow != _isBelowLowTimeThreshold)
+        {
+            _isBelowLowTimeThreshold = isBelowThresholdNow;
+            OnLowTimeThresholdChanged?.Invoke(isBelowThresholdNow);
+        }
+
         // DevilItemGoal.IsFlashing (アイテム演出中) や、ルーレット回転中〜配当完了まで（水色点滅演出中）は警告音を鳴らさない
         bool isRoulettePlaying = DevilItemGoal.IsRouletteRewardPending ||
                                   (RouletteController.Instance != null && RouletteController.Instance.IsSpinning);
-        bool shouldPlay = IsPlaySessionActive && _playTimer > 0f && _playTimer <= 10f &&
+        bool shouldPlay = isBelowThresholdNow &&
                            !DevilItemGoal.IsFlashing && !isRoulettePlaying;
 
         if (shouldPlay)

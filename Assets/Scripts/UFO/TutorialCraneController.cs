@@ -162,8 +162,10 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
     [Tooltip("コイン投入演出のリピート回数（実機と同じく複数枚のコインを演出する）")]
     [SerializeField] private int coinAnimationRepeatCount = 3;
 
-    [Tooltip("コインを1枚ずつ投入する間隔（秒）")]
-    [SerializeField] private float coinAnimationStagger = 0.3f;
+    [Tooltip("1枚のコインの移動が終わってから、次のコインが出現するまでの追加の間（秒）。" +
+             "coinAnimationDurationちょうどだと、1枚目が物理落下し始めた瞬間に2枚目が出てきてしまい" +
+             "詰まって見えるため、少し余白を持たせる")]
+    [SerializeField, Min(0f)] private float coinInsertionGap = 0.5f;
 
     private int _triggeredCoinCountTutorial;
 
@@ -355,6 +357,7 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
                 // 以前はここでExitTutorial()を呼んでいたが、タイマー切れでチュートリアルを
                 // 終了させるのはやめた。終了はチュートリアルステップが最後まで完了した時
                 // （CompleteTutorial）にのみ行う。タイマー切れ自体はイベントとして通知するだけ。
+                DevilSEManager.Instance?.StopPracticeBgm();
                 OnTimerExpired?.Invoke();
             }
         }
@@ -673,14 +676,16 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
 
     /// <summary>
     /// 実機の TriggerSoundPlayer によるコイン投入アニメーションの連続トリガーを、
-    /// アニメーションイベントの代わりに一定間隔（coinAnimationStagger）で自動的に行う。
+    /// アニメーションイベントの代わりに自動的に行う。1枚分の移動時間（coinAnimationDuration）が
+    /// 終わってから、さらにcoinInsertionGap秒待ってから次のコインを投入することで、
+    /// 1枚目が物理落下し始めた瞬間に2枚目が出てきて詰まって見えるのを防ぐ
     /// </summary>
     private IEnumerator TriggerCoinInsertionRepeatedly()
     {
         for (int i = 0; i < coinAnimationRepeatCount; i++)
         {
             TriggerCoinInsertionAnimationTutorial();
-            yield return new WaitForSeconds(coinAnimationStagger);
+            yield return new WaitForSeconds(coinAnimationDuration + coinInsertionGap);
         }
     }
 
@@ -755,10 +760,13 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
     /// <summary>
     /// レバー/ボタンが実際に操作された瞬間に呼ばれる。最初の操作でタイマーのカウントダウンを開始する
     /// （実機のUFOCameraController.NotifyControlInputUsedと同じ考え方）。
+    /// 最初の操作の瞬間にBGMの再生も開始する（実機のOnControlInputUsed→DevilBGMManagerと同じ考え方）。
     /// </summary>
     public void NotifyControlInputUsed()
     {
+        if (_timerStarted) return;
         _timerStarted = true;
+        DevilSEManager.Instance?.StartPracticeBgm();
     }
 
     public Camera GetActiveCamera() => playerCamera != null ? playerCamera : Camera.main;
@@ -791,6 +799,10 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
         IsPlayingTutorial = false;
         IsAnyTutorialPlaying = false;
         _controlsUnlocked = false;
+
+        // タイマー満了より前に途中で終了（Quit等）した場合の保険として、ここでもBGMを止めておく
+        // （タイマー満了時は既にOnTimerExpired発火箇所で止めているため、こちらは二重呼び出しでも無害）
+        DevilSEManager.Instance?.StopPracticeBgm();
 
         // UIも実機のセッション終了時と同じ状態（閲覧用フォーカス表示 / price_table非表示）に戻す
         if (gameUIManager != null) gameUIManager.ApplySessionActiveUIState(false);
