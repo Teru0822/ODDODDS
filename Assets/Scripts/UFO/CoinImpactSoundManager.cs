@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// コイン（DevilItem）が床や他のコインに衝突した際の効果音を、1箇所に集約して管理するマネージャー。
-/// 各DevilItemはOnCollisionEnterで検知した衝突情報をNotifyImpact()に投げてくるだけで、
+/// コイン（UFOItem）が床や他のコインに衝突した際の効果音を、1箇所に集約して管理するマネージャー。
+/// 各UFOItemはOnCollisionEnterで検知した衝突情報をNotifyImpact()に投げてくるだけで、
 /// 「床かコインか」「音を鳴らすほどの速度か」「鳴らしすぎていないか」の判定・音量計算は
 /// 全てここで一元的に行う。実機・練習機どちらのコインにも共通して働く。
 ///
@@ -44,7 +44,7 @@ public class CoinImpactSoundManager : MonoBehaviour
 
     /// <summary>
     /// UFOItem.OnCollisionEnterから呼ばれる。衝突相手が床かコインかを判定し、
-    /// 速度に応じた音量で対応する効果音をDevilSEManager経由で再生する。
+    /// 速度に応じた音量で対応する効果音をUFOSEManager経由で再生する。
     /// </summary>
     public void NotifyImpact(Collision collision, UFOItem source)
     {
@@ -74,26 +74,15 @@ public class CoinImpactSoundManager : MonoBehaviour
         }
 
         float volumeFactor = Mathf.InverseLerp(minVelocityThreshold, maxVelocityForFullVolume, speed);
+        bool isCoinToCoin = collision.gameObject.GetComponent<UFOItem>() != null;
 
-        // 時計・ルーレットアイテム（プレゼントボックス）は、床/コインどちらに当たった場合でも
-        // 専用の衝突音を優先して鳴らす（両者は同じ音を共有する）
-        bool isSpecialItem = source.itemType == UFOItemType.Watch || source.itemType == UFOItemType.RouletteItem;
-
-        if (isSpecialItem)
+        if (isCoinToCoin)
         {
-            DevilSEManager.Instance?.PlaySpecialItemImpact(volumeFactor);
+            UFOSEManager.Instance?.PlayCoinImpact(volumeFactor);
         }
         else
         {
-            bool isCoinToCoin = collision.gameObject.GetComponent<UFOItem>() != null;
-            if (isCoinToCoin)
-            {
-                DevilSEManager.Instance?.PlayCoinImpact(volumeFactor);
-            }
-            else
-            {
-                DevilSEManager.Instance?.PlayFloorImpact(volumeFactor);
-            }
+            UFOSEManager.Instance?.PlayFloorImpact(volumeFactor);
         }
 
         _lastPlayTimeByCoin[source] = now;

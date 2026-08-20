@@ -17,7 +17,7 @@ public enum ItemType
     /// </summary>
     Permanent,
     /// <summary>
-    /// クレーンゲーム（Devilキャッチャー）アイテム
+    /// クレーンゲーム（UFOキャッチャー）アイテム
     /// </summary>
     CraneItem,
 }

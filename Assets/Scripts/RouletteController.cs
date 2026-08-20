@@ -303,7 +303,7 @@ public class RouletteController : MonoBehaviour
         bool isKeyPressed = keyboard.kKey.wasPressedThisFrame || (debugSpinKey != Key.None && keyboard[debugSpinKey].wasPressedThisFrame);
         if (isKeyPressed)
         {
-            var goal = DevilItemGoal.Instance != null ? DevilItemGoal.Instance : FindAnyObjectByType<DevilItemGoal>();
+            var goal = UFOItemGoal.Instance != null ? UFOItemGoal.Instance : FindAnyObjectByType<UFOItemGoal>();
             if (goal != null)
             {
                 goal.TriggerRouletteItemGoalEffect();
@@ -418,7 +418,7 @@ public class RouletteController : MonoBehaviour
         float safeDuration = Mathf.Max(0.01f, spinDuration);
         float t = 0f;
 
-        DevilSEManager.Instance?.StartRouletteSpinLoop();
+        UFOSEManager.Instance?.StartRouletteSpinLoop();
 
         while (t < 1f)
         {
@@ -429,7 +429,7 @@ public class RouletteController : MonoBehaviour
             yield return null;
         }
 
-        DevilSEManager.Instance?.StopRouletteSpinLoop();
+        UFOSEManager.Instance?.StopRouletteSpinLoop();
 
         // 浮動小数点誤差を消すハードスナップ
         reelTransform.localEulerAngles = new Vector3(0f, 0f, targetAngle);
@@ -445,7 +445,7 @@ public class RouletteController : MonoBehaviour
         Debug.Log($"[RouletteController] スピン完了 → 当選スロット [{winningIndex}] {label}");
 
         StartLightShow();
-        DevilSEManager.Instance?.PlayRouletteResult(winningIndex);
+        UFOSEManager.Instance?.PlayRouletteResult(winningIndex);
 
         OnSpinComplete.Invoke(winningIndex);
     }

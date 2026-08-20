@@ -4,8 +4,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
-/// チュートリアル用の練習Devilキャッチャー(Practice_Cranegame)のセッション制御。
-/// 実機の UFOCameraController / ItemSpawner / DevilItemGoal とは完全に独立しており、
+/// チュートリアル用の練習UFOキャッチャー(Practice_Cranegame)のセッション制御。
+/// 実機の UFOCameraController / ItemSpawner / UFOItemGoal とは完全に独立しており、
 /// ローグライクスキル・所持金・アイテム所持数など実機の永続データには一切影響しない。
 ///
 /// LeverController / ButtonController の controlSourceOverride にこのコンポーネントを設定することで、
@@ -47,11 +47,11 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
     [SerializeField] private GameUIManager gameUIManager;
 
     [Tooltip("未設定なら自動検出します")]
-    [SerializeField] private DevilCatcherUIManager devilCatcherUIManager;
+    [SerializeField] private UFOCatcherUIManager ufoCatcherUIManager;
 
     [Header("アーム（任意・Start Descent/Toggle Claw完了検知用）")]
-    [Tooltip("必ず練習機側のDevilControllerを手動で設定すること。実機と練習機の両方にUFOArmControllerが" +
-             "存在し、名前も同じ「DevilController」のため、自動検出（FindAnyObjectByType）ではどちらが" +
+    [Tooltip("必ず練習機側のUFOControllerを手動で設定すること。実機と練習機の両方にUFOArmControllerが" +
+             "存在し、名前も同じ「UFOController」のため、自動検出（FindAnyObjectByType）ではどちらが" +
              "見つかるか不定になり、実機側を誤って掴んでしまうことがある")]
     [SerializeField] private UFOArmController armController;
 
@@ -205,7 +205,7 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
     }
 
     /// <summary>Play2_tutorialのPlayが押され、BeginTutorialPlay()で操作が解禁されたかどうか
-    /// （DevilChaseLightControllerが、練習機のチェイス演出を開始してよいかの判定に使う）</summary>
+    /// （UFOChaseLightControllerが、練習機のチェイス演出を開始してよいかの判定に使う）</summary>
     public bool AreControlsUnlocked => _controlsUnlocked;
 
     /// <summary>入力種別に関わらず共通の基礎条件（プレイ中・操作解禁済み・タイマー残あり）。
@@ -318,9 +318,9 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
         {
             gameUIManager = GameUIManager.Instance != null ? GameUIManager.Instance : FindAnyObjectByType<GameUIManager>();
         }
-        if (devilCatcherUIManager == null)
+        if (ufoCatcherUIManager == null)
         {
-            devilCatcherUIManager = FindAnyObjectByType<DevilCatcherUIManager>();
+            ufoCatcherUIManager = FindAnyObjectByType<UFOCatcherUIManager>();
         }
         // armController/itemGoalは、他スクリプトのAwake()実行順序に依存しないよう、
         // ここで一度試すだけでなく実際に使う時（Ensure〜()）にも再試行する
@@ -375,16 +375,16 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
             if (!_hasPlayedLowTimeWarning)
             {
                 _hasPlayedLowTimeWarning = true;
-                DevilSEManager.Instance?.StartLowTimeWarning(isPractice: true);
+                UFOSEManager.Instance?.StartLowTimeWarning(isPractice: true);
             }
         }
         else
         {
-            bool isActuallyPlayingWarning = DevilSEManager.Instance != null && DevilSEManager.Instance.IsLowTimeWarningActive(isPractice: true);
+            bool isActuallyPlayingWarning = UFOSEManager.Instance != null && UFOSEManager.Instance.IsLowTimeWarningActive(isPractice: true);
             if (_hasPlayedLowTimeWarning || isActuallyPlayingWarning)
             {
                 _hasPlayedLowTimeWarning = false;
-                DevilSEManager.Instance?.StopLowTimeWarning(isPractice: true);
+                UFOSEManager.Instance?.StopLowTimeWarning(isPractice: true);
             }
         }
     }
@@ -429,14 +429,14 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
     }
 
     /// <summary>
-    /// 練習機側のDevilCatcherUIManager（price_table等）の表示だけを一時的に切り替える。
+    /// 練習機側のUFOCatcherUIManager（price_table等）の表示だけを一時的に切り替える。
     /// TutorialStepControllerのfullDarkBackgroundステップから呼ばれる。
     /// </summary>
     public void SetPracticeUIVisible(bool visible)
     {
-        if (devilCatcherUIManager != null)
+        if (ufoCatcherUIManager != null)
         {
-            devilCatcherUIManager.SetUIVisibleExternal(visible);
+            ufoCatcherUIManager.SetUIVisibleExternal(visible);
         }
     }
 
@@ -639,7 +639,7 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
         // 実機の StartPlaySessionFromTelevision 直後（IsPlaySessionActive = true）と同じUI切り替えを行う。
         // 実機の UFOCameraController.IsPlaySessionActive 自体には触れない（別コンポーネント扱いのため）。
         if (gameUIManager != null) gameUIManager.ApplySessionActiveUIState(true);
-        if (devilCatcherUIManager != null) devilCatcherUIManager.ApplySessionActiveUIState(true);
+        if (ufoCatcherUIManager != null) ufoCatcherUIManager.ApplySessionActiveUIState(true);
 
         _currentSubCameraState = UFOCameraController.UfoSubCameraState.Back;
         if (backCamera != null) backCamera.enabled = true;
@@ -765,7 +765,7 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
 
     /// <summary>
     /// チュートリアル終了。実機のような報酬演出（引き出し・カウント加算）は一切行わない。
-    /// ここではプレイヤーへ操作を返さず、実機の television を見ている状態（Devil_Camera_Front_Pos）へ戻すだけにする。
+    /// ここではプレイヤーへ操作を返さず、実機の television を見ている状態（Ufo_Camera_Front_Pos）へ戻すだけにする。
     /// FirstPersonController は無効のまま、カーソルも表示状態のまま維持し、Tutorial_Canvas の Yes/No 操作に備える。
     /// Play_tutorial の Quit から呼ばれる（チュートリアルを最後まで見ずに途中で切り上げるケース）。
     /// </summary>
@@ -794,7 +794,7 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
 
         // UIも実機のセッション終了時と同じ状態（閲覧用フォーカス表示 / price_table非表示）に戻す
         if (gameUIManager != null) gameUIManager.ApplySessionActiveUIState(false);
-        if (devilCatcherUIManager != null) devilCatcherUIManager.ApplySessionActiveUIState(false);
+        if (ufoCatcherUIManager != null) ufoCatcherUIManager.ApplySessionActiveUIState(false);
 
         // Q/E 切り替え・サブカメラ参照先を実機側に返し、チュートリアル用の状態をリセットする
         if (televisionStaticController != null)

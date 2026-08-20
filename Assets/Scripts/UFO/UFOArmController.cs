@@ -66,7 +66,7 @@ public class UFOArmController : MonoBehaviour
     // 掴んだコインがClawCarrierZone内にあるとマーカーがそこで止まってしまうため、
     // Raycastを複数ヒット取得できるようにするバッファ（毎フレームのGCアロケーションを防ぐ）
     private readonly RaycastHit[] _descentLaserHitBuffer = new RaycastHit[16];
-    private DevilClawCarrier _cachedClawCarrier;
+    private UFOClawCarrier _cachedClawCarrier;
 
     // ─────────────────────────────────────
     [Header("爪（finger）設定")]
@@ -172,7 +172,7 @@ public class UFOArmController : MonoBehaviour
     public float magnetForce = 50f;
 
     [Header("【新規】降下衝突時のコインがさがさ効果音")]
-    [Tooltip("がさがさ音の最大音量 (1.0より大きい値で音量増幅可能)。実際のクリップはDevilSEManagerで一元管理")]
+    [Tooltip("がさがさ音の最大音量 (1.0より大きい値で音量増幅可能)。実際のクリップはUFOSEManagerで一元管理")]
     [Range(0f, 10f)]
     [SerializeField] private float rustleVolume = 0.8f;
     [Tooltip("がさがさ音を鳴らすために必要な最低コイン枚数")]
@@ -280,24 +280,24 @@ public class UFOArmController : MonoBehaviour
         // 【新規】ClawCarrieZone と Claw_RiseCollider に自動的に検知スクリプトをアタッチする
         if (clawCarrieZone != null)
         {
-            DevilClawCollisionDetector detector = clawCarrieZone.GetComponent<DevilClawCollisionDetector>();
+            UFOClawCollisionDetector detector = clawCarrieZone.GetComponent<UFOClawCollisionDetector>();
             if (detector == null)
             {
-                detector = clawCarrieZone.gameObject.AddComponent<DevilClawCollisionDetector>();
+                detector = clawCarrieZone.gameObject.AddComponent<UFOClawCollisionDetector>();
             }
             detector.armController = this;
-            Debug.Log($"[UFOArmController] Auto-attached DevilClawCollisionDetector to clawCarrieZone ({clawCarrieZone.name})");
+            Debug.Log($"[UFOArmController] Auto-attached UFOClawCollisionDetector to clawCarrieZone ({clawCarrieZone.name})");
         }
 
         if (clawRiseCollider != null)
         {
-            DevilClawCollisionDetector detector = clawRiseCollider.GetComponent<DevilClawCollisionDetector>();
+            UFOClawCollisionDetector detector = clawRiseCollider.GetComponent<UFOClawCollisionDetector>();
             if (detector == null)
             {
-                detector = clawRiseCollider.gameObject.AddComponent<DevilClawCollisionDetector>();
+                detector = clawRiseCollider.gameObject.AddComponent<UFOClawCollisionDetector>();
             }
             detector.armController = this;
-            Debug.Log($"[UFOArmController] Auto-attached DevilClawCollisionDetector to clawRiseCollider ({clawRiseCollider.name})");
+            Debug.Log($"[UFOArmController] Auto-attached UFOClawCollisionDetector to clawRiseCollider ({clawRiseCollider.name})");
         }
 
 
@@ -618,13 +618,13 @@ public class UFOArmController : MonoBehaviour
 
         if (isMoving && !_wasArmMoving)
         {
-            DevilSEManager.Instance?.PlayArmMoveStart();
-            DevilSEManager.Instance?.StartArmMoveLoop();
+            UFOSEManager.Instance?.PlayArmMoveStart();
+            UFOSEManager.Instance?.StartArmMoveLoop();
         }
         else if (!isMoving && _wasArmMoving)
         {
-            DevilSEManager.Instance?.StopArmMoveLoop();
-            DevilSEManager.Instance?.PlayArmMoveStop();
+            UFOSEManager.Instance?.StopArmMoveLoop();
+            UFOSEManager.Instance?.PlayArmMoveStop();
         }
 
         _wasArmMoving = isMoving;
@@ -767,9 +767,9 @@ public class UFOArmController : MonoBehaviour
         // （揺れの傾きに沿わせると、実際の降下地点とズレたマーカー位置になってしまう）。
         // 揺れの反映は「原点（爪の現在位置）」の方だけで十分。
         //
-        // 爪がコインを掴んでいる間は、そのコインがClawCarrierZone（DevilClawCarrierが付いた領域）の
+        // 爪がコインを掴んでいる間は、そのコインがClawCarrierZone（UFOClawCarrierが付いた領域）の
         // 内側に来るため、素直にRaycastすると掴んだコイン自体にマーカーが当たってしまう。
-        // ここでは名前・パス検索は行わず、現在有効なDevilClawCarrierコンポーネントの位置・サイズから
+        // ここでは名前・パス検索は行わず、現在有効なUFOClawCarrierコンポーネントの位置・サイズから
         // その領域を判定し、領域内のヒットは透過して地面まで貫通させる（アーム強化でstructure_lv1/2/3が
         // 切り替わっても、コンポーネントの存在で追従するためパスの書き換えは不要）。
         BoxCollider clawCarrierZone = GetActiveClawCarrierCollider();
@@ -812,7 +812,7 @@ public class UFOArmController : MonoBehaviour
     }
 
     /// <summary>
-    /// 現在有効なClawCarrierZoneのBoxColliderを取得する。パス文字列ではなくDevilClawCarrier
+    /// 現在有効なClawCarrierZoneのBoxColliderを取得する。パス文字列ではなくUFOClawCarrier
     /// コンポーネントの存在で判定するため、アーム強化でstructure_lv1→lv2→lv3と対象が
     /// 切り替わっても、armRoot配下を探し直すだけで自動的に追従する。
     /// </summary>
@@ -821,7 +821,7 @@ public class UFOArmController : MonoBehaviour
         if (_cachedClawCarrier == null || !_cachedClawCarrier.isActiveAndEnabled)
         {
             Transform searchRoot = armRoot != null ? armRoot : transform;
-            _cachedClawCarrier = searchRoot.GetComponentInChildren<DevilClawCarrier>(true);
+            _cachedClawCarrier = searchRoot.GetComponentInChildren<UFOClawCarrier>(true);
         }
 
         return _cachedClawCarrier != null ? _cachedClawCarrier.GetComponent<BoxCollider>() : null;
@@ -861,7 +861,7 @@ public class UFOArmController : MonoBehaviour
             foreach (var col in colliders)
             {
                 if (col == null) continue;
-                // トリガー（DevilClawCarrierなど運搬用の領域判定コライダー）は動作を維持するため除外し、
+                // トリガー（UFOClawCarrierなど運搬用の領域判定コライダー）は動作を維持するため除外し、
                 // 物理衝突判定用のコライダーのみ無効化する
                 if (col.isTrigger) continue;
                 
@@ -1303,8 +1303,8 @@ public class UFOArmController : MonoBehaviour
     {
         if (activeClawObj == null) return;
 
-        // DevilClawData がついていれば、各種設定（開く角度など）を上書きする
-        DevilClawData data = activeClawObj.GetComponent<DevilClawData>();
+        // UFOClawData がついていれば、各種設定（開く角度など）を上書きする
+        UFOClawData data = activeClawObj.GetComponent<UFOClawData>();
         if (data != null)
         {
             this.fingerOpenAngle = data.fingerOpenAngle;
@@ -1634,7 +1634,7 @@ public class UFOArmController : MonoBehaviour
             float pitch = Random.Range(0.9f, 1.1f);
 
             // volumeBoostの回数だけ重ねて再生して音量を限界突破
-            DevilSEManager.Instance?.PlayArmDescentRustle(volume, pitch, volumeBoost);
+            UFOSEManager.Instance?.PlayArmDescentRustle(volume, pitch, volumeBoost);
             Debug.Log($"[UFOArmController] コインの山に衝突！がさがさ音を再生。枚数: {coinCount}, 音量: {volume:F2}, 重ね数: {volumeBoost}");
         }
         else

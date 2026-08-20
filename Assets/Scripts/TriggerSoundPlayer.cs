@@ -3,7 +3,7 @@ using UnityEngine;
 /// <summary>
 /// コイン投入口のTriggerコライダーにコインが侵入した際に、コイン投入音を再生するスクリプト。
 /// 実機・練習機どちらのコイン投入口にも配置できる（isPracticeInstanceで切り替え）。
-/// 再生するクリップ自体はDevilSEManager側で一元管理しており（実機:realCoinInsertSound /
+/// 再生するクリップ自体はUFOSEManager側で一元管理しており（実機:realCoinInsertSound /
 /// 練習機:practiceCoinInsertSound）、このスクリプトはトリガー検知と再生先の切り替えだけを担当する。
 /// </summary>
 [RequireComponent(typeof(Collider))]
@@ -11,7 +11,7 @@ public class TriggerSoundPlayer : MonoBehaviour
 {
     [Header("対象機体")]
     [Tooltip("練習機（Practice_Cranegame）側のコイン投入口の場合はON。実機側はOFFのままにする。" +
-             "DevilSEManagerでの再生先クリップと、連動するコイン投入アニメーションの呼び出し先が" +
+             "UFOSEManagerでの再生先クリップと、連動するコイン投入アニメーションの呼び出し先が" +
              "実機/練習機のどちらになるかがこれで切り替わるため、実機・練習機の演出が競合しない")]
     [SerializeField] private bool isPracticeInstance = false;
 
@@ -59,8 +59,8 @@ public class TriggerSoundPlayer : MonoBehaviour
             return; // タグが一致しない場合は処理スキップ
         }
 
-        // コイン投入音の再生（実機/練習機どちらの機体かでDevilSEManager側の再生先が切り替わる）
-        DevilSEManager.Instance?.PlayCoinInsert(isPracticeInstance);
+        // コイン投入音の再生（実機/練習機どちらの機体かでUFOSEManager側の再生先が切り替わる）
+        UFOSEManager.Instance?.PlayCoinInsert(isPracticeInstance);
         _hasPlayed = true;
 
         // 検知済みリストに登録

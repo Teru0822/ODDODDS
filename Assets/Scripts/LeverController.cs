@@ -80,7 +80,7 @@ public class LeverController : MonoBehaviour
 
     void Update()
     {
-        // Devilプレイ中かつアクティブなプレイセッション中のみ操作を許可する
+        // UFOプレイ中かつアクティブなプレイセッション中のみ操作を許可する
         if (!IsPlaying || !IsActive)
         {
             _isDragging = false;

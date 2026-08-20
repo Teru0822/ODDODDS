@@ -3,11 +3,11 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// 各ゲーム（Devil/FALLBALL/PINBALL）の強化パネルに1つアタッチして使用します。
+/// 各ゲーム（UFO/FALLBALL/PINBALL）の強化パネルに1つアタッチして使用します。
 /// 3ページ分のページオブジェクトを管理し、矢印ボタンでページ切り替えを行います。
 ///
-/// 【このオブジェクトのヒエラルキー構成例（DevilUpgradePanel）】
-/// DevilUpgradePanel
+/// 【このオブジェクトのヒエラルキー構成例（UFOUpgradePanel）】
+/// UFOUpgradePanel
 ///  ├─ Page1（GameObject）  ← 強化内容1ページ目
 ///  ├─ Page2（GameObject）  ← 強化内容2ページ目
 ///  ├─ Page3（GameObject）  ← 強化内容3ページ目

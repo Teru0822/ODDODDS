@@ -1,19 +1,19 @@
 using UnityEngine;
 
 /// <summary>
-/// Devilキャッチャーの残り時間が10秒以下になった際に、パトランプを光らせて回転（Y軸）させる
+/// UFOキャッチャーの残り時間が10秒以下になった際に、パトランプを光らせて回転（Y軸）させる
 /// コントローラー。
 ///
-/// パトランプのLight.enabled/色そのものはDevilChaseLightControllerが一元管理しており
-/// （残り時間警告中以外は、コイン獲得フラッシュ・チェイス演出等でDevilChaseLightController自身が
+/// パトランプのLight.enabled/色そのものはUFOChaseLightControllerが一元管理しており
+/// （残り時間警告中以外は、コイン獲得フラッシュ・チェイス演出等でUFOChaseLightController自身が
 /// パトランプも含めて点灯を制御する）、このスクリプトは chaseLightController.IsWarningBlinkActive
 /// （残り時間警告中かどうか）だけを見て、trueの間だけ点灯・回転を担当する。
 /// それ以外の時間帯は一切手を出さないため、他の演出との競合は起きない。
 /// </summary>
 public class PatoLampController : MonoBehaviour
 {
-    [Tooltip("このパトランプが属する実機のDevilChaseLightController")]
-    [SerializeField] private DevilChaseLightController chaseLightController;
+    [Tooltip("このパトランプが属する実機のUFOChaseLightController")]
+    [SerializeField] private UFOChaseLightController chaseLightController;
 
     [Tooltip("回転速度 (度/秒)")]
     [SerializeField] private float rotationSpeed = 360f;
@@ -42,7 +42,7 @@ public class PatoLampController : MonoBehaviour
 
         if (chaseLightController == null)
         {
-            Debug.LogWarning($"[{gameObject.name}] Chase Light Controller が未設定です。インスペクターで実機の DevilChaseLightController を設定してください。", this);
+            Debug.LogWarning($"[{gameObject.name}] Chase Light Controller が未設定です。インスペクターで実機の UFOChaseLightController を設定してください。", this);
         }
     }
 
@@ -58,10 +58,10 @@ public class PatoLampController : MonoBehaviour
         }
         else if (!shouldBeActive && _isActive)
         {
-            // 警告点滅が終わった後の消灯・別演出への切り替えは、常にDevilChaseLightController側の
+            // 警告点滅が終わった後の消灯・別演出への切り替えは、常にUFOChaseLightController側の
             // 各モードの遷移処理が責任を持って行う（Deferred/CoinCatchFlash等が、警告点滅の直後に
             // パトランプも含めて自分で点灯させたい場合があるため、ここで消灯を上書きしない。
-            // Off等、本当に消灯すべき場合はDevilChaseLightController側が明示的に消灯する）
+            // Off等、本当に消灯すべき場合はUFOChaseLightController側が明示的に消灯する）
             _isActive = false;
         }
 

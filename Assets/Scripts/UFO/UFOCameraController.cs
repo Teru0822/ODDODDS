@@ -16,7 +16,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
     /// <summary>プレイセッション中、初めてレバー/ボタンが操作された瞬間に1回だけ発火</summary>
     public static event System.Action OnControlInputUsed;
     /// <summary>残り時間10秒未満の警告状態に入った/抜けた瞬間に発火（true: 入った / false: 抜けた）。
-    /// 警告音（DevilSEManager.StartLowTimeWarning）と全く同じタイミング・条件で発火する</summary>
+    /// 警告音（UFOSEManager.StartLowTimeWarning）と全く同じタイミング・条件で発火する</summary>
     public static event System.Action<bool> OnLowTimeWarningChanged;
     public static event System.Action<UfoSubCameraState> OnSubCameraChanged;
     public static bool IsPlaySessionActive { get; private set; } = false;
@@ -24,7 +24,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
     public static event System.Action<bool> OnPlaySessionActiveChanged;
     public static bool IsControlActive => IsPlaySessionActive && IsPlaySpotlightActive && Instance != null && Instance._controlsUnlocked && Instance._playTimer > 0f;
 
-    /// <summary>プレイヤーが実際にレバー/ボタンを操作し、タイマーのカウントダウンが始まっているかどうか（DevilChaseLightControllerがチェイス開始判定に使う）</summary>
+    /// <summary>プレイヤーが実際にレバー/ボタンを操作し、タイマーのカウントダウンが始まっているかどうか（UFOChaseLightControllerがチェイス開始判定に使う）</summary>
     public static bool IsTimerStarted => Instance != null && Instance._timerStarted;
 
     [Header("Camera Settings")]
@@ -603,7 +603,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
         // 前回のプレイで獲得演出（時計・ブラックダイヤ等）やルーレット配当待ちの最中に
         // ターンが切り替わった場合、演出コルーチンが中断されIsFlashing等がtrueのまま
         // 固まっている可能性があるため、新しいセッション開始時に必ず強制リセットする
-        DevilItemGoal.ResetStuckFlashState();
+        UFOItemGoal.ResetStuckFlashState();
 
         // アニメーション（コイン投入 → television 移動）完了までレバー/ボタン操作を禁止し、
         // 実際に操作されるまではタイマーも進めない
@@ -760,7 +760,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
     }
 
     /// <summary>
-    /// スポットライトおよびアタッチされたライト群、さらにDevilItemGoalのライト・マテリアルの有効/無効を一括設定します。
+    /// スポットライトおよびアタッチされたライト群、さらにUFOItemGoalのライト・マテリアルの有効/無効を一括設定します。
     /// 点灯（ON）時は徐々に速くなる点滅演出を行ってから完全点灯します。
     /// </summary>
     public void SetPlaySpotlight(bool active, bool playSound = true)
@@ -774,11 +774,11 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
             // ライト点滅開始の最初のタイミングで、起動音を末尾0.4秒カットして一度だけ流す
             if (playSound)
             {
-                DevilSEManager.Instance?.PlayRealLightFlicker();
+                UFOSEManager.Instance?.PlayRealLightFlicker();
             }
 
             // ライトが点灯している間ずっと流す環境音もここで開始する
-            DevilSEManager.Instance?.StartAmbientLoop();
+            UFOSEManager.Instance?.StartAmbientLoop();
 
             if (_playLightFlickerCoroutine != null) StopCoroutine(_playLightFlickerCoroutine);
             _playLightFlickerCoroutine = StartCoroutine(PlayLightOnFlickerCoroutine());
@@ -799,18 +799,18 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
             // 消灯音の再生（カットなしで最後まで流す）
             if (playSound)
             {
-                DevilSEManager.Instance?.PlayRealLightOff();
+                UFOSEManager.Instance?.PlayRealLightOff();
             }
 
             // ライト点灯中ずっと流していた環境音もここで止める
-            DevilSEManager.Instance?.StopAmbientLoop();
+            UFOSEManager.Instance?.StopAmbientLoop();
 
             Debug.Log("[UFOCameraController] ライトを消灯しました。");
         }
     }
 
     /// <summary>
-    /// ライトオブジェクト群およびDevilItemGoalマテリアル・ライトの状態を明るさ倍率を適用して適用します。
+    /// ライトオブジェクト群およびUFOItemGoalマテリアル・ライトの状態を明るさ倍率を適用して適用します。
     /// </summary>
     private void ApplyRawLightsState(bool active, float brightnessMultiplier = 1.0f)
     {
@@ -858,7 +858,7 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
             }
         }
 
-        var ufoGoal = FindAnyObjectByType<DevilItemGoal>();
+        var ufoGoal = FindAnyObjectByType<UFOItemGoal>();
         if (ufoGoal != null)
         {
             ufoGoal.SetInsertableItemsLights(active, brightnessMultiplier);
@@ -973,9 +973,9 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
         OnUfoModeChanged?.Invoke(false); // UFO終了イベントを通知（ここで引き出しの演出が開始される）
 
         // 引き出しの演出（開く→見せる→閉じる）が終わるまで、プレイヤー視点への切り替えを待つ
-        if (DevilDrawerRewardDisplay.Instance != null)
+        if (UFODrawerRewardDisplay.Instance != null)
         {
-            yield return new WaitUntil(() => !DevilDrawerRewardDisplay.Instance.IsShowing);
+            yield return new WaitUntil(() => !UFODrawerRewardDisplay.Instance.IsShowing);
         }
 
         IsPlaySessionActive = false;
@@ -1289,29 +1289,29 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
 
     private void UpdateWarningSound()
     {
-        // DevilItemGoal.IsFlashing (アイテム演出中) や、ルーレット回転中〜配当完了まで（水色点滅演出中）は警告音を鳴らさない
-        bool isRoulettePlaying = DevilItemGoal.IsRouletteRewardPending ||
+        // UFOItemGoal.IsFlashing (アイテム演出中) や、ルーレット回転中〜配当完了まで（水色点滅演出中）は警告音を鳴らさない
+        bool isRoulettePlaying = UFOItemGoal.IsRouletteRewardPending ||
                                   (RouletteController.Instance != null && RouletteController.Instance.IsSpinning);
         bool shouldPlay = IsPlaySessionActive && _playTimer > 0f && _playTimer <= 10f &&
-                           !DevilItemGoal.IsFlashing && !isRoulettePlaying;
+                           !UFOItemGoal.IsFlashing && !isRoulettePlaying;
 
         if (shouldPlay)
         {
             if (!_hasPlayedLowTimeWarning)
             {
                 _hasPlayedLowTimeWarning = true;
-                DevilSEManager.Instance?.StartLowTimeWarning(isPractice: false);
+                UFOSEManager.Instance?.StartLowTimeWarning(isPractice: false);
                 OnLowTimeWarningChanged?.Invoke(true);
             }
         }
         else
         {
             // フラグがONであるか、または実際に警告音が再生中の場合は確実に停止処理を実行
-            bool isActuallyPlayingWarning = DevilSEManager.Instance != null && DevilSEManager.Instance.IsLowTimeWarningActive(isPractice: false);
+            bool isActuallyPlayingWarning = UFOSEManager.Instance != null && UFOSEManager.Instance.IsLowTimeWarningActive(isPractice: false);
             if (_hasPlayedLowTimeWarning || isActuallyPlayingWarning)
             {
                 _hasPlayedLowTimeWarning = false;
-                DevilSEManager.Instance?.StopLowTimeWarning(isPractice: false);
+                UFOSEManager.Instance?.StopLowTimeWarning(isPractice: false);
                 OnLowTimeWarningChanged?.Invoke(false);
             }
         }

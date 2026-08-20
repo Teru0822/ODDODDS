@@ -751,7 +751,7 @@ public class TutorialStepController : MonoBehaviour
             if (!soundPlayed && t >= frameSnapSoundTriggerProgress)
             {
                 soundPlayed = true;
-                DevilSEManager.Instance?.PlayTutorialFrameSnap();
+                UFOSEManager.Instance?.PlayTutorialFrameSnap();
             }
 
             yield return null;
@@ -759,7 +759,7 @@ public class TutorialStepController : MonoBehaviour
 
         if (!soundPlayed)
         {
-            DevilSEManager.Instance?.PlayTutorialFrameSnap();
+            UFOSEManager.Instance?.PlayTutorialFrameSnap();
         }
 
         // スナップ完了後は、対象が動く場合に備えてそのままライブ追従を続ける
@@ -814,7 +814,7 @@ public class TutorialStepController : MonoBehaviour
         if (Time.time - _lastTypingSoundTime < minMessageTypingInterval) return;
 
         float pitch = Random.Range(messageTypingPitchMin, messageTypingPitchMax);
-        DevilSEManager.Instance?.PlayTutorialMessageTyping(pitch);
+        UFOSEManager.Instance?.PlayTutorialMessageTyping(pitch);
         _lastTypingSoundTime = Time.time;
     }
 
@@ -1162,7 +1162,7 @@ public class TutorialStepController : MonoBehaviour
         if (fullyDark == _maskPanelsForcedDark) return;
         _maskPanelsForcedDark = fullyDark;
 
-        // fullDarkBackground=ONの間は、実機のGameUI（所持金表示など）と練習機のDevilCatcherUIManager
+        // fullDarkBackground=ONの間は、実機のGameUI（所持金表示など）と練習機のUFOCatcherUIManager
         // （price_table等）も一緒に隠す
         if (GameUIManager.Instance != null)
         {

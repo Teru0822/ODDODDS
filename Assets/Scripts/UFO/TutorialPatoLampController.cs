@@ -1,11 +1,11 @@
 using UnityEngine;
 
 /// <summary>
-/// 練習Devilキャッチャー（Practice_Cranegame）用のパトランプコントローラー。
+/// 練習UFOキャッチャー（Practice_Cranegame）用のパトランプコントローラー。
 ///
-/// パトランプのLight.enabled/色そのものは練習機側のDevilChaseLightControllerインスタンスが
+/// パトランプのLight.enabled/色そのものは練習機側のUFOChaseLightControllerインスタンスが
 /// 一元管理しており（残り時間警告中以外は、コイン獲得フラッシュ・チェイス演出・獲得演出等で
-/// DevilChaseLightController自身がパトランプも含めて点灯を制御する）、このスクリプトは
+/// UFOChaseLightController自身がパトランプも含めて点灯を制御する）、このスクリプトは
 /// chaseLightController.IsWarningBlinkActive（残り時間警告中かどうか）だけを見て、
 /// trueの間だけ点灯・回転を担当する。それ以外の時間帯は一切手を出さないため、他の演出との
 /// 競合は起きない。
@@ -15,8 +15,8 @@ using UnityEngine;
 /// </summary>
 public class TutorialPatoLampController : MonoBehaviour
 {
-    [Tooltip("このパトランプが属する練習DevilキャッチャーのDevilChaseLightController（練習機側インスタンス、Is Practice InstanceがON）")]
-    [SerializeField] private DevilChaseLightController chaseLightController;
+    [Tooltip("このパトランプが属する練習UFOキャッチャーのUFOChaseLightController（練習機側インスタンス、Is Practice InstanceがON）")]
+    [SerializeField] private UFOChaseLightController chaseLightController;
 
     [Tooltip("回転速度 (度/秒)")]
     [SerializeField] private float rotationSpeed = 360f;
@@ -45,7 +45,7 @@ public class TutorialPatoLampController : MonoBehaviour
 
         if (chaseLightController == null)
         {
-            Debug.LogWarning($"[{gameObject.name}] Chase Light Controller が未設定です。インスペクターで練習機の DevilChaseLightController を設定してください。", this);
+            Debug.LogWarning($"[{gameObject.name}] Chase Light Controller が未設定です。インスペクターで練習機の UFOChaseLightController を設定してください。", this);
         }
     }
 
@@ -61,7 +61,7 @@ public class TutorialPatoLampController : MonoBehaviour
         }
         else if (!shouldBeActive && _isActive)
         {
-            // 警告点滅が終わった後の消灯・別演出への切り替えは、常にDevilChaseLightController側の
+            // 警告点滅が終わった後の消灯・別演出への切り替えは、常にUFOChaseLightController側の
             // 各モードの遷移処理が責任を持って行う（PracticeItemFlash/CoinCatchFlash等が、警告点滅の
             // 直後にパトランプも含めて自分で点灯させたい場合があるため、ここで消灯を上書きしない）
             _isActive = false;
