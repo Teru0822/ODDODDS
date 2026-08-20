@@ -17,6 +17,9 @@ public class DevilItemPickupDisplay : MonoBehaviour, ILanguage
 {
     public static DevilItemPickupDisplay Instance { get; private set; }
 
+    [Header("言語設定")]
+    [SerializeField] private Language _language = Language.JP;
+
     [Header("アイテム定義データベース（拾ったオブジェクトの名前でItemDataを検索します）")]
     [Tooltip("ItemData アセットを登録してください。prefab名で一致判定します。")]
     [SerializeField] private List<ItemData> itemDatabase = new List<ItemData>();
@@ -72,6 +75,8 @@ public class DevilItemPickupDisplay : MonoBehaviour, ILanguage
         SetVisible(false);
     }
 
+    public void SettingLanguage(Language language) { _language = language; }
+
     private void Update()
     {
         // Devilキャッチャーを実際にプレイしている間（実機・練習機どちらか）以外は強制的に非表示にする。
@@ -109,7 +114,8 @@ public class DevilItemPickupDisplay : MonoBehaviour, ILanguage
             return;
         }
 
-        ShowModel(data.prefabData, string.IsNullOrEmpty(data.itemName[(int)_language]) ? data.prefabData.name : data.itemName[(int)_language]);
+        var localName = data.itemName != null && data.itemName.Length > (int)_language ? data.itemName[(int)_language] : null;
+        ShowModel(data.prefabData, string.IsNullOrEmpty(localName) ? data.prefabData.name : localName);
     }
 
     /// <summary>

@@ -116,9 +116,9 @@ namespace MiniGames.Transitions
                     }
                     if (canvas.gameObject.scene.name == "DontDestroyOnLoad")
                     {
-                        //ここに初期化関連の事項を書き連ねる
-                        //例：SceneTransitionManager.Instance._lightsToTurnOff[0] = this._lightsToTurnOff[0];
-                        // //ただ、これは実際にはできない。_lightsToTurnOffがPrivateとして設定されているから。publicにするか、書き換えるメソッドを作成しよう
+                        Instance.ReinitializeSceneDependentRefs(
+                            this._lightsToTurnOff,
+                            this._lightsToTurnOn);
                         continue;
                     }
 
@@ -179,6 +179,16 @@ namespace MiniGames.Transitions
                 _loadingText.font = _loadingFontAsset;
                 _loadingText.text = "Loading";
             }
+        }
+
+        /// <summary>
+        /// タイトルシーンへ戻った際に、シーン依存の参照を新しいインスタンスの値で上書きする。
+        /// Awake の else ブランチから呼び出す。
+        /// </summary>
+        public void ReinitializeSceneDependentRefs(Light[] toTurnOff, Light[] toTurnOn)
+        {
+            _lightsToTurnOff = toTurnOff;
+            _lightsToTurnOn  = toTurnOn;
         }
 
         private void Update()
@@ -392,7 +402,6 @@ namespace MiniGames.Transitions
 
             Debug.Log("[STM-DEBUG] === TransitionRoutine 開始 ===");
 
-            // --- 追加: 専用カメラをオンにする ---
             if (_loadingCamera != null) _loadingCamera.enabled = true;
 
             // 1. フェードアウト（暗転・モヤ）
@@ -461,6 +470,21 @@ namespace MiniGames.Transitions
 
             // （ライト処理はワープ前に移動済み）
 
+            // TransitionCanvasをScreenSpaceCameraに切り替えてロゴを描画できるようにする。
+            // LogoObjectはTransitionCanvasの子3Dオブジェクトであり、ScreenSpaceOverlayでは描画されない。
+            // TurnTransitionRoutineと同じ方式で、_preservedTitleCamera（DDOLカメラ）を worldCamera に設定する。
+            Canvas transitionCanvas = _fadeCanvasGroup != null
+                ? _fadeCanvasGroup.transform.root.GetComponent<Canvas>()
+                : null;
+            RenderMode originalCanvasRenderMode = RenderMode.ScreenSpaceOverlay;
+            if (transitionCanvas != null && _preservedTitleCamera != null)
+            {
+                originalCanvasRenderMode = transitionCanvas.renderMode;
+                transitionCanvas.renderMode  = RenderMode.ScreenSpaceCamera;
+                transitionCanvas.worldCamera = _preservedTitleCamera;
+                yield return null; // 1フレーム待ってCanvasがカメラ前に再配置されるのを待つ
+            }
+
             // 2. ロード画面の表示
             Debug.Log($"[STM-DEBUG] Step3: _loadingScreenCanvasGroup={(_loadingScreenCanvasGroup != null ? "あり" : "null")}, _floatingLogoParent={(_floatingLogoParent != null ? "あり" : "null")}");
             if (_loadingScreenCanvasGroup != null)
@@ -497,14 +521,19 @@ namespace MiniGames.Transitions
             var savedAmbientEquatorColor = RenderSettings.ambientEquatorColor;
             var savedAmbientGroundColor = RenderSettings.ambientGroundColor;
 
-            // ターン遷移のロゴ照明に再利用するためキャッシュ
-            _titleAmbientMode        = savedAmbientMode;
-            _titleAmbientLight       = savedAmbientLight;
-            _titleAmbientIntensity   = savedAmbientIntensity;
-            _titleAmbientSkyColor    = savedAmbientSkyColor;
-            _titleAmbientEquatorColor = savedAmbientEquatorColor;
-            _titleAmbientGroundColor = savedAmbientGroundColor;
-            _hasTitleAmbientCached   = true;
+            // ターン遷移のロゴ照明に再利用するためキャッシュ。
+            // ゲームシーン→タイトルシーンの場合、savedAmbientはゲームシーンのambientになってしまうため、
+            // 初回（タイトル→ゲーム）のキャッシュを上書きしないよう guard する。
+            if (!_hasTitleAmbientCached)
+            {
+                _titleAmbientMode        = savedAmbientMode;
+                _titleAmbientLight       = savedAmbientLight;
+                _titleAmbientIntensity   = savedAmbientIntensity;
+                _titleAmbientSkyColor    = savedAmbientSkyColor;
+                _titleAmbientEquatorColor = savedAmbientEquatorColor;
+                _titleAmbientGroundColor = savedAmbientGroundColor;
+                _hasTitleAmbientCached   = true;
+            }
 
             AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName);
             asyncLoad.allowSceneActivation = false;
@@ -538,13 +567,27 @@ namespace MiniGames.Transitions
             var targetAmbientEquatorColor = RenderSettings.ambientEquatorColor;
             var targetAmbientGroundColor  = RenderSettings.ambientGroundColor;
 
-            // --- Mainシーンの環境光がロゴを暗くするのを防ぐため、タイトルシーンの環境光を一時適用 ---
-            RenderSettings.ambientMode = savedAmbientMode;
-            RenderSettings.ambientLight = savedAmbientLight;
-            RenderSettings.ambientIntensity = savedAmbientIntensity;
-            RenderSettings.ambientSkyColor = savedAmbientSkyColor;
-            RenderSettings.ambientEquatorColor = savedAmbientEquatorColor;
-            RenderSettings.ambientGroundColor = savedAmbientGroundColor;
+            // --- ロゴをタイトルシーンの環境光で照らす ---
+            // キャッシュ済みならタイトル ambient を使う。ゲームシーン→タイトルシーンの遷移では
+            // savedAmbient がゲームシーンの値になるため、キャッシュを優先しないとロゴが暗く見える。
+            if (_hasTitleAmbientCached)
+            {
+                RenderSettings.ambientMode         = _titleAmbientMode;
+                RenderSettings.ambientLight        = _titleAmbientLight;
+                RenderSettings.ambientIntensity    = _titleAmbientIntensity;
+                RenderSettings.ambientSkyColor     = _titleAmbientSkyColor;
+                RenderSettings.ambientEquatorColor = _titleAmbientEquatorColor;
+                RenderSettings.ambientGroundColor  = _titleAmbientGroundColor;
+            }
+            else
+            {
+                RenderSettings.ambientMode         = savedAmbientMode;
+                RenderSettings.ambientLight        = savedAmbientLight;
+                RenderSettings.ambientIntensity    = savedAmbientIntensity;
+                RenderSettings.ambientSkyColor     = savedAmbientSkyColor;
+                RenderSettings.ambientEquatorColor = savedAmbientEquatorColor;
+                RenderSettings.ambientGroundColor  = savedAmbientGroundColor;
+            }
 
             // --- 待機処理の復活 ---
             // MultiSceneLoader がサブシーンを読み込んでいる場合は終わるまで待機
@@ -687,6 +730,16 @@ namespace MiniGames.Transitions
                 // MainSceneのカメラに描画を完全に引き継ぐ
                 Destroy(_preservedTitleCamera.gameObject);
                 _preservedTitleCamera = null;
+            }
+
+            // TransitionCanvasをScreenSpaceCamera切り替え前の状態に戻す。
+            // OverlayのままだとTurnTransitionRoutineがoriginalRenderModeにOverlayを保存し
+            // 正常に動くが、ScreenSpaceCameraのままにするとTurnTransition終了時に
+            // worldCamera=nullのScreenSpaceCameraになりロゴが映らなくなるため必ず戻す。
+            if (transitionCanvas != null)
+            {
+                transitionCanvas.renderMode  = originalCanvasRenderMode;
+                transitionCanvas.worldCamera = null;
             }
 
             // アクティブシーンを遷移先に確定させる。

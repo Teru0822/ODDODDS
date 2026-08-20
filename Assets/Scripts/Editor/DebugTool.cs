@@ -158,7 +158,7 @@ public class DebugTool : EditorWindow
                         permItemIds[0] = -1;
                         for (int idx = 0; idx < permItems.Count; idx++)
                         {
-                            permDisplayNames[idx + 1] = $"{permItems[idx].itemName} (ID: {permItems[idx].id})";
+                            permDisplayNames[idx + 1] = $"{(permItems[idx].itemName?.Length > 0 ? permItems[idx].itemName[0] : "")} (ID: {permItems[idx].id})";
                             permItemIds[idx + 1] = permItems[idx].id;
                         }
 
@@ -170,7 +170,7 @@ public class DebugTool : EditorWindow
                         consumeItemIds[0] = -1;
                         for (int idx = 0; idx < consumeItems.Count; idx++)
                         {
-                            consumeDisplayNames[idx + 1] = $"{consumeItems[idx].itemName} (ID: {consumeItems[idx].id})";
+                            consumeDisplayNames[idx + 1] = $"{(consumeItems[idx].itemName?.Length > 0 ? consumeItems[idx].itemName[0] : "")} (ID: {consumeItems[idx].id})";
                             consumeItemIds[idx + 1] = consumeItems[idx].id;
                         }
                     }

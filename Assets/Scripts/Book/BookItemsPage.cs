@@ -14,6 +14,7 @@ using UnityEngine.UI;
 public class BookItemsPage : IBookPage
 {
     private readonly BookPagePalette _palette;
+    private Language _language = Language.JP;
 
     private RectTransform _scrollContent;
     private readonly List<Slot> _slots = new List<Slot>();
@@ -48,6 +49,8 @@ public class BookItemsPage : IBookPage
     {
         _palette = palette;
     }
+
+    public void SetLanguage(Language lang) { _language = lang; }
 
     public void Build(RectTransform left, RectTransform right)
     {
@@ -211,9 +214,9 @@ public class BookItemsPage : IBookPage
         _detailImage.sprite = data.iconImage;
         _detailImage.enabled = data.iconImage != null;
 
-        if (_detailName != null) _detailName.text = data.itemName[(int)_language];
+        if (_detailName != null) _detailName.text = data.itemName != null && data.itemName.Length > (int)_language ? data.itemName[(int)_language] : "";
         if (_detailCategory != null) _detailCategory.text = CategoryLabel(data.itemCategory);
-        if (_detailDescription != null) _detailDescription.text = data.description[(int)_language];
+        if (_detailDescription != null) _detailDescription.text = data.description != null && data.description.Length > (int)_language ? data.description[(int)_language] : "";
     }
 
     private static string CategoryLabel(ItemCategory category)
