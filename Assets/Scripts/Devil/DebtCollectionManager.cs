@@ -15,6 +15,10 @@ public enum Language
 {
     JP = 0,
     EN = 1,
+    /// <summary>
+    /// 中国語
+    /// </summary>
+    CN = 2,
 }
 
 public class DebtCollectionManager : MonoBehaviour,ILanguage

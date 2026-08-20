@@ -1,12 +1,10 @@
-using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using TMPro;
 using UniRx;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using UnityEngine.Localization;
 
 public enum ItemType
 {
@@ -59,12 +57,17 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider,ILanguage
     [SerializeField] private List<Button> _itemButtons = new List<Button>();
 
     [Header("説明用オブジェクト")]
+    [SerializeField] private GameObject _itemPanel;
     [SerializeField] private TMP_Text _itemNameText;
     [SerializeField] private TMP_Text _categoryText;
     [SerializeField] private TMP_Text _countText;
     [SerializeField] private TMP_Text _detailDescriptionText;
     [SerializeField] private Image _itemIconImage;
     [SerializeField] private Button _useButton;
+
+    /*Localize用の変数*/
+    private LocalizedString _categoryLocalizedString;
+    private LocalizedString _countLocalizedString;
 
     ReactiveCollection<ItemInstance> _ownedItems = new ReactiveCollection<ItemInstance>();//恒常アイテムのIDを保持したもの
     ReactiveCollection<ItemInstance> _ownedConsumeItems = new ReactiveCollection<ItemInstance>();//消費アイテムのIDを保持したもの
@@ -81,6 +84,8 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider,ILanguage
     private void Awake()
     {
         Instance = this;
+        _categoryLocalizedString = new LocalizedString("GameUITable", "Category");
+        _countLocalizedString = new LocalizedString("GameUITable", "Count");
 
         _ownedItems
             .ObserveAdd()
@@ -147,6 +152,8 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider,ILanguage
     public void SettingLanguage(Language language)
     {
         _language = language;
+        UpdateUI();
+        ClearExplainPanel();
     }
     
     private void Update()
@@ -162,6 +169,11 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider,ILanguage
             Debug.Log("試しにイベント機能を使います。");
         }
 #endif
+
+        if(_itemPanel.activeInHierarchy == false)
+        {
+            ClearExplainPanel();
+        }
     }
 
     public void WriteSaveData(RoguelikeSaveData saveData)
@@ -283,8 +295,16 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider,ILanguage
             }
         }
 
-        if(_countText.gameObject.activeSelf && _nowSelectedItem != null)
-            _countText.text = "Count: " + _nowSelectedItem.Count.ToString();
+        if(_nowSelectedItem == null)
+        {
+            _detailDescriptionText.text = "";
+            _categoryText.text = "";
+            _countText.text = "";
+            _itemNameText.text = "";
+        }
+
+        // if(_countText.gameObject.activeSelf && _nowSelectedItem != null)
+        //     _countText.text = "Count: " + _nowSelectedItem.Count.ToString();
     }
 
     /// <summary>
@@ -322,29 +342,27 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider,ILanguage
 
         if (_detailDescriptionText != null)
         {
-            if(_language == Language.JP)
-                _detailDescriptionText.text = item.ItemDescription;
-            else if(_language == Language.EN)
-                _detailDescriptionText.text = item.ItemDescription_en;
-
+            _detailDescriptionText.text = item.ItemDescription[(int)_language];
             _detailDescriptionText.gameObject.SetActive(true);
         }
 
         if (_categoryText != null)
         {
-            _categoryText.text = "Category: " + item.ItemCategory.ToString();
+            _categoryLocalizedString.Arguments = new object[]{item.ItemCategory.ToString()};
             _categoryText.gameObject.SetActive(true);
+            _categoryText.text = _categoryLocalizedString.GetLocalizedString();
         }
 
         if (_countText != null)
         {
-            _countText.text = "Count: " + item.Count.ToString();
+            _countLocalizedString.Arguments = new object[]{item.Count.ToString()};
             _countText.gameObject.SetActive(true);
+            _countText.text = _countLocalizedString.GetLocalizedString();
         }
 
         if (_itemNameText != null)
         {
-            _itemNameText.text = item.ItemName;
+            _itemNameText.text = item.ItemName[(int)_language];
             _itemNameText.gameObject.SetActive(true);
         }
 
@@ -370,7 +388,7 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider,ILanguage
     /// </summary>
     private void UseItem()
     {
-        int effectId = EffectManager.Instance.GetIdByItemName(_nowSelectedItem.ItemName);
+        int effectId = EffectManager.Instance.GetIdByItemName(_nowSelectedItem.ItemName[1]);//ここは英語固定
 
         //アイテムを使用できるか確認し、アイテム処理を行う
         if(EffectManager.Instance.IsHasEffect(effectId))

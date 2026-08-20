@@ -705,7 +705,7 @@ public class VisitorSystem : MonoBehaviour,IsaveDataProvider,ILanguage
             foreach (char c in sentence)
             {
                 //途中でトリガーボタンを押すとテキストを全て出力
-                if (_clickReference.action.IsPressed() && charNum >= 5)
+                if (_clickReference.action.IsPressed() && charNum >= 3)
                 {
                     _conversationText.text = sentence;
                     break;

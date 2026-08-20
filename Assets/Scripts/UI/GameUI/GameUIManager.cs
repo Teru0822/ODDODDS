@@ -719,12 +719,12 @@ public class GameUIManager : MonoBehaviour,ILanguage
             if (data is ItemData itemData)
             {
                 image.sprite = itemData.iconImage;
-                text.text = itemData.itemName;
+                text.text = itemData.itemName[(int)_language];
             }
             else if (data is EffectData effectData)
             {
                 image.sprite = effectData.effectIcon;
-                text.text = effectData.effectName;
+                text.text = effectData.effectName[(int)_language];
             }
             else if(data is MoneyData moneyData)
             {

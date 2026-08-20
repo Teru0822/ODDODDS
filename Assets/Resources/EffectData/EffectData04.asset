@@ -15,7 +15,12 @@ MonoBehaviour:
   id: 4
   turn: 1
   isInfinity: 1
-  effectName: Eligor's Blessing
-  description: "ATM\u624B\u6570\u6599\u304C\u25CB\u25CB\uFF05\u6E1B\u5C11\u3059\u308B"
+  effectName:
+  - "\u30A8\u30EA\u30B4\u30FC\u30EB\u306E\u795D\u798F"
+  - Eligor's Blessing
+  description:
+  - "ATM\u306E\u624B\u6570\u6599\u304C\u25CB\u25CB%\u5F15\u304B\u308C\u308B\u3002"
+  - "The ATM fee is reduced by \u25CB\u25CB%."
+  description_en: 
   effectIcon: {fileID: 21300000, guid: a6cfc7a793b291e40a539fc4673c2936, type: 3}
   effectType: 0
