@@ -118,8 +118,7 @@ namespace MiniGames.Transitions
                     {
                         Instance.ReinitializeSceneDependentRefs(
                             this._lightsToTurnOff,
-                            this._lightsToTurnOn,
-                            this._loadingCamera);
+                            this._lightsToTurnOn);
                         continue;
                     }
 
@@ -186,12 +185,10 @@ namespace MiniGames.Transitions
         /// タイトルシーンへ戻った際に、シーン依存の参照を新しいインスタンスの値で上書きする。
         /// Awake の else ブランチから呼び出す。
         /// </summary>
-        public void ReinitializeSceneDependentRefs(Light[] toTurnOff, Light[] toTurnOn, Camera loadingCamera = null)
+        public void ReinitializeSceneDependentRefs(Light[] toTurnOff, Light[] toTurnOn)
         {
             _lightsToTurnOff = toTurnOff;
             _lightsToTurnOn  = toTurnOn;
-            if (loadingCamera != null)
-                _loadingCamera = loadingCamera;
         }
 
         private void Update()
@@ -405,20 +402,7 @@ namespace MiniGames.Transitions
 
             Debug.Log("[STM-DEBUG] === TransitionRoutine 開始 ===");
 
-            // --- 専用カメラをオンにし、TransitionCanvasのworldCameraに設定する ---
-            // ゲームシーンへの遷移後にタイトルカメラが破棄されると Canvas の worldCamera が null になり、
-            // ScreenSpaceCamera モードから Overlay へフォールバックして 3D ロゴが描画されなくなる。
-            // 専用カメラを明示的に worldCamera に設定することで、どのシーンから来ても正しく描画する。
             if (_loadingCamera != null) _loadingCamera.enabled = true;
-            Canvas transitionCanvas = _fadeCanvasGroup != null
-                ? _fadeCanvasGroup.transform.root.GetComponent<Canvas>()
-                : null;
-            if (transitionCanvas != null && _loadingCamera != null)
-            {
-                transitionCanvas.renderMode  = RenderMode.ScreenSpaceCamera;
-                transitionCanvas.worldCamera = _loadingCamera;
-                yield return null; // 1フレーム待ってCanvasがカメラ前に再配置されるのを待つ
-            }
 
             // 1. フェードアウト（暗転・モヤ）
             Debug.Log($"[STM-DEBUG] Step1: _fadeCanvasGroup={(_fadeCanvasGroup != null ? "あり" : "null")}");
@@ -485,6 +469,21 @@ namespace MiniGames.Transitions
             }
 
             // （ライト処理はワープ前に移動済み）
+
+            // TransitionCanvasをScreenSpaceCameraに切り替えてロゴを描画できるようにする。
+            // LogoObjectはTransitionCanvasの子3Dオブジェクトであり、ScreenSpaceOverlayでは描画されない。
+            // TurnTransitionRoutineと同じ方式で、_preservedTitleCamera（DDOLカメラ）を worldCamera に設定する。
+            Canvas transitionCanvas = _fadeCanvasGroup != null
+                ? _fadeCanvasGroup.transform.root.GetComponent<Canvas>()
+                : null;
+            RenderMode originalCanvasRenderMode = RenderMode.ScreenSpaceOverlay;
+            if (transitionCanvas != null && _preservedTitleCamera != null)
+            {
+                originalCanvasRenderMode = transitionCanvas.renderMode;
+                transitionCanvas.renderMode  = RenderMode.ScreenSpaceCamera;
+                transitionCanvas.worldCamera = _preservedTitleCamera;
+                yield return null; // 1フレーム待ってCanvasがカメラ前に再配置されるのを待つ
+            }
 
             // 2. ロード画面の表示
             Debug.Log($"[STM-DEBUG] Step3: _loadingScreenCanvasGroup={(_loadingScreenCanvasGroup != null ? "あり" : "null")}, _floatingLogoParent={(_floatingLogoParent != null ? "あり" : "null")}");
@@ -714,10 +713,15 @@ namespace MiniGames.Transitions
                 _preservedTitleCamera = null;
             }
 
-            // CanvasのworldCameraを遷移先のCamera.mainに戻す
-            // （_loadingCameraはロード専用なので、遷移完了後はシーンのカメラに引き渡す）
-            if (transitionCanvas != null && Camera.main != null)
-                transitionCanvas.worldCamera = Camera.main;
+            // TransitionCanvasをScreenSpaceCamera切り替え前の状態に戻す。
+            // OverlayのままだとTurnTransitionRoutineがoriginalRenderModeにOverlayを保存し
+            // 正常に動くが、ScreenSpaceCameraのままにするとTurnTransition終了時に
+            // worldCamera=nullのScreenSpaceCameraになりロゴが映らなくなるため必ず戻す。
+            if (transitionCanvas != null)
+            {
+                transitionCanvas.renderMode  = originalCanvasRenderMode;
+                transitionCanvas.worldCamera = null;
+            }
 
             // アクティブシーンを遷移先に確定させる。
             // 環境光の復元自体はフェードイン前に済ませてある（SetActiveScene は
