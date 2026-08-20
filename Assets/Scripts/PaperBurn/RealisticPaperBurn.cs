@@ -12,6 +12,9 @@ public class RealisticPaperBurn : MonoBehaviour
     [Tooltip("燃焼中に周囲を照らすライト（省略可）")]
     public Light fireLight;
 
+    [Tooltip("TMP に適用する燃焼シェーダー（PaperBurnTMP をアサイン）")]
+    [SerializeField] private Shader _tmpBurnShader;
+
     [Header("Burn Settings")]
     [Range(1f, 10f)]
     public float burnDuration = 3.0f;
@@ -131,10 +134,10 @@ public class RealisticPaperBurn : MonoBehaviour
         var tmp = GetComponentInChildren<TextMeshPro>(true);
         if (tmp == null) return;
 
-        var shader = Shader.Find("Custom/PaperBurnTMP");
+        var shader = _tmpBurnShader;
         if (shader == null)
         {
-            Debug.LogWarning("[RealisticPaperBurn] Custom/PaperBurnTMP シェーダーが見つかりません。", this);
+            Debug.LogWarning("[RealisticPaperBurn] _tmpBurnShader が未アサインです。Inspector で PaperBurnTMP シェーダーを設定してください。", this);
             return;
         }
 
