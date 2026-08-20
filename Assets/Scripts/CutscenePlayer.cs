@@ -46,7 +46,7 @@ public class CutscenePlayer : MonoBehaviour
     }
 
     /// <summary>
-    /// 外部から呼び出して再生開始。UFOキャッチャー/ミニゲーム/ピンボール終了時はここを叩く。
+    /// 外部から呼び出して再生開始。Devilキャッチャー/ミニゲーム/ピンボール終了時はここを叩く。
     /// 既に再生中なら無視。
     /// </summary>
     public void PlayCutscene()

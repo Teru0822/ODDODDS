@@ -12,10 +12,10 @@ using System.Collections.Generic;
 ///      ├─ UpgradeButton（Button）       ← 左下の「強化要素」ボタン
 ///      ├─ CloseButton（Button）         ← 「閉じる」ボタン（常時表示、パネル表示中のみ有効）
 ///      ├─ GameSelectPanel               ← ゲーム選択パネル
-///      │    ├─ UFOButton（Button）      → OnGameSelected(0)
+///      │    ├─ DevilButton（Button）      → OnGameSelected(0)
 ///      │    ├─ FallballButton（Button） → OnGameSelected(1)
 ///      │    └─ PinballButton（Button）  → OnGameSelected(2)
-///      ├─ UFOUpgradePanel               ← UpgradePanelController をアタッチ
+///      ├─ DevilUpgradePanel               ← UpgradePanelController をアタッチ
 ///      │    ├─ Page1
 ///      │    ├─ Page2
 ///      │    ├─ Page3
@@ -36,7 +36,7 @@ public class UpgradeUIManager : MonoBehaviour
     public Button closeButton;
 
     [Header("ゲーム選択パネル")]
-    [Tooltip("UFO / FALLBALL / PINBALL を選ぶパネル")]
+    [Tooltip("Devil / FALLBALL / PINBALL を選ぶパネル")]
     public GameObject gameSelectPanel;
 
     [Header("各ゲームの強化パネル")]
@@ -84,7 +84,7 @@ public class UpgradeUIManager : MonoBehaviour
     /// <summary>
     /// ゲーム選択パネルのボタンから呼ぶ。
     /// インスペクターで OnClick() → OnGameSelected(0) のように登録してください。
-    ///   0 = UFO CATCHER
+    ///   0 = Devil CATCHER
     ///   1 = FALLBALL
     ///   2 = PINBALL
     /// </summary>

@@ -5,8 +5,8 @@ using UnityEngine.InputSystem;
 #endif
 
 /// <summary>
-/// Scene_UFOCatcher 内のテレビ（television）オブジェクトにアタッチして使用する演出用スクリプト。
-/// 1. UFOキャッチャークリック時: 出現座標(spawn)へ即座にワープし、そこからスタート座標(start)へアニメーション移動
+/// Scene_DevilCatcher 内のテレビ（television）オブジェクトにアタッチして使用する演出用スクリプト。
+/// 1. Devilキャッチャークリック時: 出現座標(spawn)へ即座にワープし、そこからスタート座標(start)へアニメーション移動
 /// 2. 全コイン投入完了時: スタート座標(start)からゴール座標(end)へアニメーション移動
 /// 3. ゴール座標待機中にキーボードの「3」を押下時: ゴール座標(end)から収納座標(stow)へアニメーション移動
 /// 4. 収納座標待機中に再度キーボードの「3」を押下時: 収納座標(stow)からゴール座標(end)へ復元アニメーション移動
@@ -14,13 +14,13 @@ using UnityEngine.InputSystem;
 public class TelevisionAnimator : MonoBehaviour
 {
     [Header("1. 出現（ワープ先）座標設定")]
-    [Tooltip("UFOキャッチャーアクセス時（モニター出現時）に即座にワープする位置")]
+    [Tooltip("Devilキャッチャーアクセス時（モニター出現時）に即座にワープする位置")]
     [SerializeField] private Vector3 spawnPosition = new Vector3(6.14467525f, 6.30035591f, -15.8870001f);
 
-    [Tooltip("UFOキャッチャーアクセス時（モニター出現時）に即座にワープする回転 (Quaternion)")]
+    [Tooltip("Devilキャッチャーアクセス時（モニター出現時）に即座にワープする回転 (Quaternion)")]
     [SerializeField] private Quaternion spawnRotation = new Quaternion(-0.911107421f, 0.0964306742f, 0.0631602257f, 0.395721138f);
 
-    [Tooltip("UFOキャッチャーアクセス時（モニター出現時）に即座にワープする回転 (度数表示 X, Y, Z)")]
+    [Tooltip("Devilキャッチャーアクセス時（モニター出現時）に即座にワープする回転 (度数表示 X, Y, Z)")]
     [SerializeField] private Vector3 spawnEulerAngles = new Vector3(-133.76f, 11.04f, -7.36f);
 
     [Header("2. スタート座標設定（コイン投入前）")]
@@ -84,7 +84,7 @@ public class TelevisionAnimator : MonoBehaviour
     [SerializeField] private Vector3 stowTutorialEulerAngles;
 
     [Header("5. アニメーション設定")]
-    [Tooltip("UFOキャッチャーアクセス時（出現 -> スタート）の所要時間（秒）")]
+    [Tooltip("Devilキャッチャーアクセス時（出現 -> スタート）の所要時間（秒）")]
     [SerializeField, Min(0.01f)] private float enterAnimationDuration = 1.0f;
 
     [Tooltip("全コイン投入完了時（スタート -> ゴール）の所要時間（秒）")]
@@ -139,13 +139,13 @@ public class TelevisionAnimator : MonoBehaviour
 
     private void OnEnable()
     {
-        UFOCameraController.OnUfoModeChanged += HandleUfoModeChanged;
+        UFOCameraController.OnUfoModeChanged += HandleDevilModeChanged;
         UFOCameraController.OnAllCoinsInserted += PlayCoinAnimation;
     }
 
     private void OnDisable()
     {
-        UFOCameraController.OnUfoModeChanged -= HandleUfoModeChanged;
+        UFOCameraController.OnUfoModeChanged -= HandleDevilModeChanged;
         UFOCameraController.OnAllCoinsInserted -= PlayCoinAnimation;
     }
 
@@ -205,9 +205,9 @@ public class TelevisionAnimator : MonoBehaviour
         }
     }
 
-    private void HandleUfoModeChanged(bool isUfoMode)
+    private void HandleDevilModeChanged(bool isDevilMode)
     {
-        if (isUfoMode)
+        if (isDevilMode)
         {
             PlayEnterAnimation();
         }
@@ -569,7 +569,7 @@ public class TelevisionAnimator : MonoBehaviour
     }
 
     /// <summary>
-    /// 1段階目：UFOキャッチャーアクセス時
+    /// 1段階目：Devilキャッチャーアクセス時
     /// ① 出現座標へ即座にワープ (0秒)
     /// ② 出現座標からスタート座標へアニメーション移動 (1秒)
     /// </summary>

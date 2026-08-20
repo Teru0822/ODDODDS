@@ -2,8 +2,8 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
-/// チュートリアル用の落とし口（練習UFOキャッチャー用）。
-/// 実機の UFOItemGoal とは完全に分離しており、所持金・アイテム所持数・実機のランプ（タグ検索で
+/// チュートリアル用の落とし口（練習Devilキャッチャー用）。
+/// 実機の DevilItemGoal とは完全に分離しており、所持金・アイテム所持数・実機のランプ（タグ検索で
 /// シーン全体のInsertableItemを操作する仕組み）など、実機の永続データ/共有オブジェクトには
 /// 一切触れない。入ってきたアイテムは、種別ごとの効果音・ランプ演出のあと見た目上消えるだけ。
 /// </summary>
@@ -25,8 +25,8 @@ public class TutorialItemGoal : MonoBehaviour
     [Tooltip("ランプの点灯を維持する時間（秒）")]
     [SerializeField, Min(0.05f)] private float flashDuration = 1.0f;
 
-    [Header("時計効果（実機のUFOItemGoalと同じ挙動）")]
-    [Tooltip("このTutorialItemGoalが属する練習UFOキャッチャーのTutorialCraneController")]
+    [Header("時計効果（実機のDevilItemGoalと同じ挙動）")]
+    [Tooltip("このTutorialItemGoalが属する練習DevilキャッチャーのTutorialCraneController")]
     [SerializeField] private TutorialCraneController tutorialCrane;
 
     [Tooltip("時計を落とし口に入れたときに残り時間を何秒延長するか")]
@@ -35,10 +35,10 @@ public class TutorialItemGoal : MonoBehaviour
     /// <summary>アイテムが落とし口に入った瞬間に発火する（チュートリアルステップの進行検知等に使う）</summary>
     public event System.Action<UFOItemType> OnItemDropped;
 
-    /// <summary>時計・ブラックダイヤ等の獲得ランプ演出中かどうか（練習機用UFOChaseLightControllerが参照する）</summary>
+    /// <summary>時計・ブラックダイヤ等の獲得ランプ演出中かどうか（練習機用DevilChaseLightControllerが参照する）</summary>
     public bool IsFlashing { get; private set; }
 
-    /// <summary>IsFlashing中に使っている色（練習機用UFOChaseLightControllerが、チェイスライト側の
+    /// <summary>IsFlashing中に使っている色（練習機用DevilChaseLightControllerが、チェイスライト側の
     /// 物理ランプをこの色で光らせるために参照する）</summary>
     public Color CurrentFlashColor { get; private set; }
 
@@ -62,7 +62,7 @@ public class TutorialItemGoal : MonoBehaviour
     /// <summary>
     /// アイテムが入ったときの実際の処理。複数の穴（小・中・大）がある場合は、
     /// それぞれの穴の判定用CubeにTutorialItemGoalTriggerを付けて、こちらに転送してもらう
-    /// （実機のUFOItemGoal.HandleItemDropと同じ構造）。
+    /// （実機のDevilItemGoal.HandleItemDropと同じ構造）。
     /// </summary>
     public void HandleItemDrop(Collider other)
     {
@@ -83,28 +83,28 @@ public class TutorialItemGoal : MonoBehaviour
         switch (item.itemType)
         {
             case UFOItemType.Watch:
-                UFOSEManager.Instance?.PlayPracticeWatchGet();
+                DevilSEManager.Instance?.PlayPracticeWatchGet();
                 FlashLights(watchFlashColor, isGetEffect: true);
                 tutorialCrane?.AddPlayTime(watchTimeExtension);
                 break;
             case UFOItemType.BlackDiamond:
-                UFOSEManager.Instance?.PlayPracticeBlackDiamondGet();
+                DevilSEManager.Instance?.PlayPracticeBlackDiamondGet();
                 FlashLights(blackDiamondFlashColor, isGetEffect: true);
                 break;
             default:
-                UFOSEManager.Instance?.PlayPracticeCoinGet();
+                DevilSEManager.Instance?.PlayPracticeCoinGet();
                 FlashLights(coinFlashColor, isGetEffect: false);
                 // 練習機のチェイスライトも、実機の銅貨・銀貨・金貨獲得時と同じ一瞬フラッシュを行う
-                UFOChaseLightController.TriggerCoinCatchFlash();
+                DevilChaseLightController.TriggerCoinCatchFlash();
                 break;
         }
 
         OnItemDropped?.Invoke(item.itemType);
 
-        // 左下の3D回転ポップアップに、今取得したアイテムを表示する（実機のUFOItemGoalと同じ）
-        if (UFOItemPickupDisplay.Instance != null)
+        // 左下の3D回転ポップアップに、今取得したアイテムを表示する（実機のDevilItemGoalと同じ）
+        if (DevilItemPickupDisplay.Instance != null)
         {
-            UFOItemPickupDisplay.Instance.ShowPickedItem(item.gameObject);
+            DevilItemPickupDisplay.Instance.ShowPickedItem(item.gameObject);
         }
 
         Destroy(item.gameObject);
@@ -112,7 +112,7 @@ public class TutorialItemGoal : MonoBehaviour
 
     /// <summary>
     /// isGetEffect: true の場合、時計/ブラックダイヤ獲得演出として IsFlashing を演出中のみ true にする
-    /// （練習機用UFOChaseLightControllerが、この間はチェイス演出を止めて待機する判定に使う）
+    /// （練習機用DevilChaseLightControllerが、この間はチェイス演出を止めて待機する判定に使う）
     /// </summary>
     private void FlashLights(Color color, bool isGetEffect)
     {

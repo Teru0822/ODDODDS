@@ -11,7 +11,7 @@ using TMPro;
 /// TouchPanel > Play の各子オブジェクトは Play_Canvas 上の UI と位置を揃えるための透明な当たり判定用オブジェクトで、
 /// 実際に見せたい輪郭は Play_Canvas 側の Panel_30 / Panel_60 / Panel_90 / Quit&gt;Button にすでにアタッチされた
 /// UnityEngine.UI.Outline を使う。
-/// UFOキャッチャー再生中（画面が固定される間）のみ判定を行い、それ以外は常に非表示にする。
+/// Devilキャッチャー再生中（画面が固定される間）のみ判定を行い、それ以外は常に非表示にする。
 /// さらに 30 / 60 / 90 は左クリックで「選択」でき、選択音 → 砂嵐演出 → Play_Canvas2 への切り替えを行う。
 /// ラウンド1のみ、TouchPanel > Tutorial (Yes / No) も同じ仕組みで判定する。Tutorial_Canvas の Yes/No は
 /// Play_Canvas の Panel_30 等と同じ「透明な当たり判定 + Outline表示 + ホバー/選択SE」のパターンを踏襲しており、
@@ -66,7 +66,7 @@ public class TouchPanelOutlineController : MonoBehaviour
     }
 
     [Header("マウスレイ発信元カメラ")]
-    [Tooltip("null の場合 UFOCameraController の現在のアクティブカメラ（UFOプレイ中は frontCamera）を使用")]
+    [Tooltip("null の場合 UFOCameraController の現在のアクティブカメラ（Devilプレイ中は frontCamera）を使用")]
     [SerializeField] private Camera rayCamera;
 
     [Tooltip("Raycast の最大距離 (m)")]
@@ -211,7 +211,7 @@ public class TouchPanelOutlineController : MonoBehaviour
         }
 
         // TouchPanel > Play / Play2 / Tutorial / Play_tutorial / Play2_tutorial の当たり判定グループ。最初は Play のみ有効にする
-        // （ラウンド1でまだプレイしていない場合は、UFOモードに入るたびに HandleUfoModeEntered が Tutorial に切り替える）
+        // （ラウンド1でまだプレイしていない場合は、Devilモードに入るたびに HandleDevilModeEntered が Tutorial に切り替える）
         _tutorialGroup = transform.Find("Tutorial");
         _playGroup = transform.Find("Play");
         _play2Group = transform.Find("Play2");
@@ -281,7 +281,7 @@ public class TouchPanelOutlineController : MonoBehaviour
 
     private void OnEnable()
     {
-        UFOCameraController.OnUfoModeChanged += HandleUfoModeEntered;
+        UFOCameraController.OnUfoModeChanged += HandleDevilModeEntered;
         if (tutorialCrane != null)
         {
             tutorialCrane.OnTutorialEntered += HandleTutorialEntered;
@@ -291,12 +291,12 @@ public class TouchPanelOutlineController : MonoBehaviour
     }
 
     /// <summary>
-    /// UFOモードに入った（machine をクリックしてカメラが到着した）瞬間に呼ばれる。
+    /// Devilモードに入った（machine をクリックしてカメラが到着した）瞬間に呼ばれる。
     /// ラウンド1でまだ実際にプレイしていない間は、Play_Canvas を経由せずその場で直接
     /// Tutorial_Canvas に切り替える（砂嵐演出なし）ことで、機体を再度クリックするたびに
     /// 「プレイするまでは毎回チュートリアルの Yes/No から始まる」ようにする。
     /// </summary>
-    private void HandleUfoModeEntered(bool active)
+    private void HandleDevilModeEntered(bool active)
     {
         if (!active) return;
         if (_hasStartedPlaySession) return;
@@ -416,7 +416,7 @@ public class TouchPanelOutlineController : MonoBehaviour
             // ホバー開始の瞬間（未ホバー → ホバー）にだけ SE を鳴らす
             if (isHovered && !t.wasHovered)
             {
-                UFOSEManager.Instance?.PlayTouchHover();
+                DevilSEManager.Instance?.PlayTouchHover();
             }
             t.wasHovered = isHovered;
         }
@@ -531,7 +531,7 @@ public class TouchPanelOutlineController : MonoBehaviour
     }
 
     /// <summary>
-    /// Play_Canvas 上の Quit が左クリックされた時の処理。UFOキャッチャーモードを終了する。
+    /// Play_Canvas 上の Quit が左クリックされた時の処理。Devilキャッチャーモードを終了する。
     /// </summary>
     private void HandleQuitClicked()
     {
@@ -564,7 +564,7 @@ public class TouchPanelOutlineController : MonoBehaviour
             GameUIManager.Instance.ShowMoneyCountPreview(target.durationCost);
         }
 
-        UFOSEManager.Instance?.PlayTouchSelect();
+        DevilSEManager.Instance?.PlayTouchSelect();
         HideAll();
         SetActiveGroup(PanelGroup.Play2);
 
@@ -601,7 +601,7 @@ public class TouchPanelOutlineController : MonoBehaviour
             GameUIManager.Instance.ShowMoneyCountPreview(target.durationCost);
         }
 
-        UFOSEManager.Instance?.PlayTouchSelect();
+        DevilSEManager.Instance?.PlayTouchSelect();
         HideAll();
         SetActiveGroup(PanelGroup.Play2Tutorial);
 
@@ -618,7 +618,7 @@ public class TouchPanelOutlineController : MonoBehaviour
     /// </summary>
     private void HandleTutorialYesClicked()
     {
-        UFOSEManager.Instance?.PlayTouchSelect();
+        DevilSEManager.Instance?.PlayTouchSelect();
         HideAll();
 
         if (_tvController != null && _tvController.TutorialCanvas != null)
@@ -657,12 +657,12 @@ public class TouchPanelOutlineController : MonoBehaviour
 
     /// <summary>
     /// Play_tutorial の Quit が左クリックされた時の処理。
-    /// 実機の Quit（UFOモード自体を終了）とは異なり、TutorialCraneController.ExitTutorial() でカメラ・television を
+    /// 実機の Quit（Devilモード自体を終了）とは異なり、TutorialCraneController.ExitTutorial() でカメラ・television を
     /// 元の位置へ戻す（すらーぷ）。戻り終わったら HandleTutorialFinished が Tutorial_Canvas の Yes/No を表示する。
     /// </summary>
     private void HandlePlayTutorialQuitClicked()
     {
-        UFOSEManager.Instance?.PlayTouchSelect();
+        DevilSEManager.Instance?.PlayTouchSelect();
         HideAll();
 
         if (GameUIManager.Instance != null)
@@ -724,7 +724,7 @@ public class TouchPanelOutlineController : MonoBehaviour
     {
         _tutorialPending = false;
 
-        UFOSEManager.Instance?.PlayTouchSelect();
+        DevilSEManager.Instance?.PlayTouchSelect();
         HideAll();
         SetActiveGroup(PanelGroup.Play);
         RefreshLockIndicators(_selectableTargets);
@@ -742,11 +742,11 @@ public class TouchPanelOutlineController : MonoBehaviour
     {
         if (target == touchNo)
         {
-            UFOSEManager.Instance?.PlayTouchNoLocked();
+            DevilSEManager.Instance?.PlayTouchNoLocked();
         }
         else
         {
-            UFOSEManager.Instance?.PlayTouchLocked();
+            DevilSEManager.Instance?.PlayTouchLocked();
         }
 
         if (target.outline != null)
@@ -808,12 +808,12 @@ public class TouchPanelOutlineController : MonoBehaviour
     /// </summary>
     private void HandlePlay2BackClicked()
     {
-        UFOSEManager.Instance?.PlayTouchSelect2();
+        DevilSEManager.Instance?.PlayTouchSelect2();
         ReturnToPlay1();
     }
 
     /// <summary>
-    /// Play_Canvas2 の Play が左クリックされた時の処理。選択済みの秒数・Devil Coins で UFOキャッチャーの
+    /// Play_Canvas2 の Play が左クリックされた時の処理。選択済みの秒数・Devil Coins で Devilキャッチャーの
     /// プレイセッションを開始する。所持金が足りない場合は開始せず拒否演出のみ行う。
     /// </summary>
     private void HandlePlay2PlayClicked()
@@ -831,7 +831,7 @@ public class TouchPanelOutlineController : MonoBehaviour
         {
             _hasStartedPlaySession = true;
 
-            UFOSEManager.Instance?.PlayTouchSelect2();
+            DevilSEManager.Instance?.PlayTouchSelect2();
             HideAll();
 
             // プレイ開始によりメニュー操作は終了するため、Play / Play2 どちらの当たり判定も無効化する
@@ -849,7 +849,7 @@ public class TouchPanelOutlineController : MonoBehaviour
     /// </summary>
     private void HandlePlay2PlayRejected()
     {
-        UFOSEManager.Instance?.PlayTouchLocked();
+        DevilSEManager.Instance?.PlayTouchLocked();
 
         if (touch2Play.outline != null)
         {
@@ -863,7 +863,7 @@ public class TouchPanelOutlineController : MonoBehaviour
     /// </summary>
     private void HandlePlay2TutorialBackClicked()
     {
-        UFOSEManager.Instance?.PlayTouchSelect2();
+        DevilSEManager.Instance?.PlayTouchSelect2();
         ReturnToPlayTutorial();
     }
 
@@ -881,7 +881,7 @@ public class TouchPanelOutlineController : MonoBehaviour
             tutorialStepController.NotifyStepActionPerformed();
         }
 
-        UFOSEManager.Instance?.PlayTouchSelect2();
+        DevilSEManager.Instance?.PlayTouchSelect2();
         HideAll();
 
         if (GameUIManager.Instance != null)
@@ -958,7 +958,7 @@ public class TouchPanelOutlineController : MonoBehaviour
 
     private void OnDisable()
     {
-        UFOCameraController.OnUfoModeChanged -= HandleUfoModeEntered;
+        UFOCameraController.OnUfoModeChanged -= HandleDevilModeEntered;
         if (tutorialCrane != null)
         {
             tutorialCrane.OnTutorialEntered -= HandleTutorialEntered;

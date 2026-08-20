@@ -314,7 +314,7 @@ public class GameUIManager : MonoBehaviour,ILanguage
             })
             .AddTo(this);
 
-        UFOCameraController.OnUfoModeChanged += HandleUfoModeChanged;
+        UFOCameraController.OnUfoModeChanged += HandleDevilModeChanged;
         UFOCameraController.OnPlaySessionActiveChanged += HandlePlaySessionActiveChanged;
         RewardSelectionUI.OnTypewriterUIChanged += HandleTypewriterUIChanged;
         RoguelikeManager.OnDiamondPolishStageChanged += SetBlackDiamondStage;
@@ -413,7 +413,7 @@ public class GameUIManager : MonoBehaviour,ILanguage
 
     private void OnDestroy()
     {
-        UFOCameraController.OnUfoModeChanged -= HandleUfoModeChanged;
+        UFOCameraController.OnUfoModeChanged -= HandleDevilModeChanged;
         UFOCameraController.OnPlaySessionActiveChanged -= HandlePlaySessionActiveChanged;
         RewardSelectionUI.OnTypewriterUIChanged -= HandleTypewriterUIChanged;
         RoguelikeManager.OnDiamondPolishStageChanged -= SetBlackDiamondStage;
@@ -463,9 +463,9 @@ public class GameUIManager : MonoBehaviour,ILanguage
         }
     }
 
-    private void HandleUfoModeChanged(bool isPlayingUfo)
+    private void HandleDevilModeChanged(bool isPlayingDevil)
     {
-        if (isPlayingUfo)
+        if (isPlayingDevil)
         {
             // machine をクリックした直後（tutorial_canvas / Play_canvas / Play2_canvas を閲覧中）はまだ
             // 有料セッションが始まっていないため、GameUI自体は表示したまま、UnwashCoin以外を隠す
@@ -479,12 +479,12 @@ public class GameUIManager : MonoBehaviour,ILanguage
         SetGameUIVisible(true);
         SetBrowsingFocusMode(false);
 
-        // UFOキャッチャー終了時、GameUIが再表示された瞬間に通常状態が一瞬映ってしまわないよう、
+        // Devilキャッチャー終了時、GameUIが再表示された瞬間に通常状態が一瞬映ってしまわないよう、
         // 最初からフォーカスモード（UnwashCoin以外を隠した状態）にしておく。
         // 通常表示への復帰は、引き出しの演出が完全に終わった時点で SetRewardFocusMode(false) が呼ばれる。
         //
-        // ただし、Play2_Canvasで一度もPlayを押さずに（＝有料セッションを一度も開始せずに）UFOモードを
-        // 抜けた場合は、UFOItemGoal側でOpenDrawer()自体がスキップされ引き出しの演出が発生しないため、
+        // ただし、Play2_Canvasで一度もPlayを押さずに（＝有料セッションを一度も開始せずに）Devilモードを
+        // 抜けた場合は、DevilItemGoal側でOpenDrawer()自体がスキップされ引き出しの演出が発生しないため、
         // SetRewardFocusMode(false) を呼ぶ機会が無い。その場合は上の SetBrowsingFocusMode(false) で
         // 既に元の表示へ戻っているため、ここでは何もしない。
         bool didStartPlaySession = UFOCameraController.Instance != null && UFOCameraController.Instance.PaymentCount > 0;
@@ -494,7 +494,7 @@ public class GameUIManager : MonoBehaviour,ILanguage
     /// <summary>
     /// UFOCameraController.IsPlaySessionActive が変化した時に呼ばれる。
     /// Play_Canvas2 で実際に Play を押してセッションが始まった瞬間に GameUI を完全に隠し（price_table 側のUIに切り替え）、
-    /// セッションが終わってもまだ UFOモード中（再び Play_Canvas を選べる状態）なら閲覧用フォーカス表示に戻す。
+    /// セッションが終わってもまだ Devilモード中（再び Play_Canvas を選べる状態）なら閲覧用フォーカス表示に戻す。
     /// </summary>
     private void HandlePlaySessionActiveChanged(bool isSessionActive)
     {
@@ -519,7 +519,7 @@ public class GameUIManager : MonoBehaviour,ILanguage
             SetGameUIVisible(true);
             SetBrowsingFocusMode(true);
         }
-        // UFOモードごと終了した場合は HandleUfoModeChanged 側で処理される
+        // Devilモードごと終了した場合は HandleDevilModeChanged 側で処理される
     }
 
     private void HandleTypewriterUIChanged(bool isShowing)

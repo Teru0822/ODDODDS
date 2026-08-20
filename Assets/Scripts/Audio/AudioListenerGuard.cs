@@ -79,7 +79,7 @@ public class AudioListenerGuard : MonoBehaviour
         while (MultiSceneLoader.IsLoadingSubScenes) yield return null;
         Apply();
 
-        // 実行中に生成されるプレハブ（UFOキャッチャー等）が持ち込む分を拾うため低頻度で見張る
+        // 実行中に生成されるプレハブ（Devilキャッチャー等）が持ち込む分を拾うため低頻度で見張る
         while (_rescanInterval > 0f)
         {
             yield return new WaitForSeconds(_rescanInterval);
