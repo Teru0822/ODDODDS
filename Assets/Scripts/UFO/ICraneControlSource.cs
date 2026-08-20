@@ -2,7 +2,7 @@
 /// LeverController / ButtonController が「今操作を受け付けてよいか」「どのカメラを基準にするか」を
 /// 問い合わせるための差し替え可能な制御元。
 /// 未設定の場合は UFOCameraController の静的な状態（実機側）を参照する（今まで通りの挙動）。
-/// チュートリアル用の練習UFOキャッチャーなど、実機とは独立したセッションを制御する際に実装して使う。
+/// チュートリアル用の練習Devilキャッチャーなど、実機とは独立したセッションを制御する際に実装して使う。
 /// </summary>
 public interface ICraneControlSource
 {

@@ -62,7 +62,7 @@ public class ButtonController : MonoBehaviour
 
     void Update()
     {
-        // UFOプレイ中かつアクティブなプレイセッション中のみ操作を許可する
+        // Devilプレイ中かつアクティブなプレイセッション中のみ操作を許可する
         if (!IsPlaying || !IsActive)
         {
             _isPressed = false;
@@ -96,13 +96,13 @@ public class ButtonController : MonoBehaviour
 
     /// <summary>
     /// このボタンを押した状態にする（押し込み演出・効果音・対応する動作の実行）。
-    /// マウスクリックからも、UFOKeyboardController（キーボードショートカット）からも、
+    /// マウスクリックからも、DevilKeyboardController（キーボードショートカット）からも、
     /// 同じ見た目・音・挙動になるようこのメソッドに一本化している。
     /// </summary>
     public void TriggerPress()
     {
         Debug.Log($"[TutorialDebug] TriggerPress: buttonType={buttonType}, IsActive={IsActive}");
-        // UFOプレイ中かつアクティブなプレイセッション中のみ操作を許可する
+        // Devilプレイ中かつアクティブなプレイセッション中のみ操作を許可する
         if (!IsPlaying || !IsActive) return;
 
         _isPressed = true;
@@ -125,14 +125,14 @@ public class ButtonController : MonoBehaviour
             }
             else if (buttonType == ButtonType.FeverTime)
             {
-                UFOItemGoal goal = FindAnyObjectByType<UFOItemGoal>();
+                DevilItemGoal goal = FindAnyObjectByType<DevilItemGoal>();
                 if (goal != null)
                 {
                     goal.StartFeverTime();
                 }
                 else
                 {
-                    Debug.LogError("[ButtonController] UFOItemGoal がシーン内に見つかりません。");
+                    Debug.LogError("[ButtonController] DevilItemGoal がシーン内に見つかりません。");
                 }
             }
         }
@@ -155,6 +155,6 @@ public class ButtonController : MonoBehaviour
 
     private void PlaySound(AudioClip clip)
     {
-        UFOSEManager.Instance?.PlayOneShot(clip, soundVolume);
+        DevilSEManager.Instance?.PlayOneShot(clip, soundVolume);
     }
 }

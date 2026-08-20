@@ -20,16 +20,16 @@ public interface ISubCameraSource
 public class TelevisionStaticController : MonoBehaviour
 {
     [Header("カメラ別 Canvas 設定")]
-    [Tooltip("Ufo_Camera_Left に対応する Canvas")]
+    [Tooltip("Devil_Camera_Left に対応する Canvas")]
     [SerializeField] private Canvas canvasLeft;
 
-    [Tooltip("Ufo_Camera_Right に対応する Canvas")]
+    [Tooltip("Devil_Camera_Right に対応する Canvas")]
     [SerializeField] private Canvas canvasRight;
 
-    [Tooltip("Ufo_Camera_Back に対応する Canvas")]
+    [Tooltip("Devil_Camera_Back に対応する Canvas")]
     [SerializeField] private Canvas canvasBack;
 
-    [Tooltip("初期表示用の Play Canvas（UFOキャッチャー遷移時に最初に表示される）")]
+    [Tooltip("初期表示用の Play Canvas（Devilキャッチャー遷移時に最初に表示される）")]
     [SerializeField] private Canvas playCanvas;
 
     [Tooltip("Play Canvas から 30/60/90 を選択した際に、砂嵐を挟んで切り替わる Canvas")]
@@ -77,7 +77,7 @@ public class TelevisionStaticController : MonoBehaviour
 
     [Header("砂嵐 SE")]
     [Tooltip("砂嵐の表示時間（staticDuration）に合わせてループ再生するか。false の場合は開始時に一度だけ再生する。" +
-             "実際のクリップ・音量はUFOSEManagerで一元管理")]
+             "実際のクリップ・音量はDevilSEManagerで一元管理")]
     [SerializeField] private bool loopStaticSound = true;
 
     private bool _wasTutorialCanvasActive;
@@ -166,7 +166,7 @@ public class TelevisionStaticController : MonoBehaviour
     /// </summary>
     private void SetTutorialStaticLoopActive(bool active)
     {
-        UFOSEManager.Instance?.SetTutorialStaticLoopActive(active);
+        DevilSEManager.Instance?.SetTutorialStaticLoopActive(active);
     }
 
     /// <summary>
@@ -237,7 +237,7 @@ public class TelevisionStaticController : MonoBehaviour
 
     /// <summary>
     /// 砂嵐演出を挟まずに Tutorial_Canvas を直接表示します。
-    /// ラウンド1でまだプレイしていない状態で UFOモードに入った瞬間（カメラ到着と同フレーム）に
+    /// ラウンド1でまだプレイしていない状態で Devilモードに入った瞬間（カメラ到着と同フレーム）に
     /// TouchPanelOutlineController から呼ばれ、Play_Canvas を経由せず最初から Tutorial_Canvas を見せるために使用する。
     /// </summary>
     public void ShowTutorialCanvas()
@@ -561,16 +561,16 @@ public class TelevisionStaticController : MonoBehaviour
         {
             if (loopStaticSound)
             {
-                UFOSEManager.Instance?.StartTelevisionStaticLoop();
+                DevilSEManager.Instance?.StartTelevisionStaticLoop();
             }
             else
             {
-                UFOSEManager.Instance?.PlayTelevisionStaticOneShot();
+                DevilSEManager.Instance?.PlayTelevisionStaticOneShot();
             }
         }
         else if (loopStaticSound)
         {
-            UFOSEManager.Instance?.StopTelevisionStaticLoop();
+            DevilSEManager.Instance?.StopTelevisionStaticLoop();
         }
     }
 

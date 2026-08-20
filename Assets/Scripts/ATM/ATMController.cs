@@ -333,11 +333,11 @@ namespace App.ATM
         private float _silverPrice;
         private float _bronzePrice;
 
-        /// <summary>現在の金貨買取価格（DC）。UFOCatcherUIManager等の他画面からの参照用</summary>
+        /// <summary>現在の金貨買取価格（DC）。DevilCatcherUIManager等の他画面からの参照用</summary>
         public float GoldPrice => _goldPrice;
-        /// <summary>現在の銀貨買取価格（DC）。UFOCatcherUIManager等の他画面からの参照用</summary>
+        /// <summary>現在の銀貨買取価格（DC）。DevilCatcherUIManager等の他画面からの参照用</summary>
         public float SilverPrice => _silverPrice;
-        /// <summary>現在の銅貨買取価格（DC）。UFOCatcherUIManager等の他画面からの参照用</summary>
+        /// <summary>現在の銅貨買取価格（DC）。DevilCatcherUIManager等の他画面からの参照用</summary>
         public float BronzePrice => _bronzePrice;
 
         private int _goldSellQty = 0;
@@ -506,7 +506,7 @@ namespace App.ATM
             _hacking = GetComponent<ATMHackingMode>();
             if (_hacking == null) _hacking = gameObject.AddComponent<ATMHackingMode>();
 
-            // ATMを一度も開いていない状態でも買取価格を他画面（UFOCatcherUIManager等）から参照できるよう、
+            // ATMを一度も開いていない状態でも買取価格を他画面（DevilCatcherUIManager等）から参照できるよう、
             // 起動時に一度だけ初期値をランダム設定しておく（未訪問時は0のままになってしまうため）
             RerollCoinPrices();
         }

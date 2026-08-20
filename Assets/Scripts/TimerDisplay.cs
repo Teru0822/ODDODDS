@@ -3,10 +3,10 @@ using TMPro;
 using UnityEngine;
 
 /// <summary>
-/// UFOキャッチャーのタイマーをゲーム情報ディスプレイとして表示する。
+/// Devilキャッチャーのタイマーをゲーム情報ディスプレイとして表示する。
 ///
 /// 表示ステート:
-///   Hidden       — UFO モード外（非表示）
+///   Hidden       — Devil モード外（非表示）
 ///   RoundDisplay — ラウンド番号 (ROUND X / Y)
 ///   PlayInfo     — プレイ回数 (PLAY Z / W)
 ///   LimitTime    — 制限時間プレビュー (LIMIT TIME / 0:SS) ↔ PlayInfo 交互
@@ -169,11 +169,11 @@ public class TimerDisplay : MonoBehaviour
             return;
         }
 
-        bool isPlayingUfo    = UFOCameraController.IsPlayingUfo;
+        bool isPlayingDevil    = UFOCameraController.IsPlayingUfo;
         bool isSessionActive = UFOCameraController.IsPlaySessionActive;
 
-        // UFO モード離脱
-        if (_lastIsPlayingUfo && !isPlayingUfo)
+        // Devil モード離脱
+        if (_lastIsPlayingUfo && !isPlayingDevil)
         {
             _lastIsPlayingUfo    = false;
             _lastIsSessionActive = false;
@@ -183,8 +183,8 @@ public class TimerDisplay : MonoBehaviour
             return;
         }
 
-        // UFO モード開始
-        if (!_lastIsPlayingUfo && isPlayingUfo)
+        // Devil モード開始
+        if (!_lastIsPlayingUfo && isPlayingDevil)
         {
             _lastIsPlayingUfo = true;
             _gameComplete     = false;
@@ -208,7 +208,7 @@ public class TimerDisplay : MonoBehaviour
             TransitionTo(DisplayState.Finish);
 
         _lastIsSessionActive = isSessionActive;
-        _lastIsPlayingUfo    = isPlayingUfo;
+        _lastIsPlayingUfo    = isPlayingDevil;
 
         UpdateFade();
 
@@ -498,9 +498,9 @@ public class TimerDisplay : MonoBehaviour
             return;
         }
 
-        // PaymentCount = UFO セッションをプレイした回数（セッション終了で +1）
+        // PaymentCount = Devil セッションをプレイした回数（セッション終了で +1）
         // ゲームラウンド（MoneyManager.CurrentTurnCount）はタイプライター使用時にしか進まないため
-        // UFO 単体でも変化する PaymentCount でインジケーターを駆動する
+        // Devil 単体でも変化する PaymentCount でインジケーターを駆動する
         var ctrl    = UFOCameraController.Instance;
         int current = ctrl != null ? ctrl.PaymentCount : 0;
         string ch   = string.IsNullOrEmpty(indicatorChar) ? "~" : indicatorChar;
