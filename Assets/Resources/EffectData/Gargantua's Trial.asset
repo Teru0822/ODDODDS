@@ -15,8 +15,12 @@ MonoBehaviour:
   id: 1
   turn: 10000
   isInfinity: 1
-  effectName: Gargantua's Trial
-  description: "\u6B21\u56DE\u30A2\u30AF\u30DE\u306B\u53D6\u308A\u7ACB\u3066\u3089\u308C\u308B\u91D1\u984D\u304C1.5\u500D\u306B\u306A\u308B"
+  effectName:
+  - "\u30AC\u30EB\u30AC\u30F3\u30C1\u30E5\u30A2\u306E\u8A66\u7DF4"
+  - Gargantua's Trial
+  description:
+  - "\u6B21\u306E\u53D6\u308A\u7ACB\u3066\u306E\u30CE\u30EB\u30DE\u304C1.5\u500D\u306B\u306A\u308B"
+  - The amount collected by the demon next time is increased by 1.5 times.
   description_en: The amount collected by the demon next time is increased by 1.5
     times.
   effectIcon: {fileID: 21300000, guid: 9c48b04d8f55d7540aaae3629054fc3c, type: 3}

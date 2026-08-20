@@ -31,9 +31,9 @@ public class EffectInstance
     public int Id => master.id;
     public int InitTurn => master.turn;
     public bool IsInfinity => master.isInfinity;    
-    public string EffectName => master.effectName;
+    public string[] EffectName => master.effectName;
     public Sprite EffectIcon => master.effectIcon;
-    public string EffectDescription => master.description;
+    public string[] EffectDescription => master.description;
     public string EffectDescription_en => master.description_en;
     public EffectType EffectType => master.effectType;
 
@@ -137,6 +137,7 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider, ILanguage
     public void SettingLanguage(Language language)
     {
         _language = language;
+        UpdateUI();
     }
 
     public void WriteSaveData(RoguelikeSaveData saveData)
@@ -229,7 +230,7 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider, ILanguage
 
         if (_effectNameText != null)
         {
-            _effectNameText.text = "Effect Name: " + effect.EffectName;
+            _effectNameText.text = "Effect Name: " + effect.EffectName[(int)_language];
             _effectNameText.gameObject.SetActive(true);
         }
 
@@ -245,11 +246,7 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider, ILanguage
 
         if (_effectExplainText != null)
         {
-            if(_language == Language.JP)
-                _effectExplainText.text = effect.EffectDescription.ToString();
-            else if(_language == Language.EN)
-                _effectExplainText.text = effect.EffectDescription_en.ToString();
-
+            _effectExplainText.text = effect.EffectDescription[(int)_language].ToString();
             _effectExplainText.gameObject.SetActive(true);
         }
     }
@@ -291,8 +288,8 @@ public class EffectManager : MonoBehaviour, IsaveDataProvider, ILanguage
     /// <returns></returns>
     public int GetIdByItemName(string itemName)
     {
-        var id = _effectDataBase.effectDataBase.Find(effect => effect.effectName == itemName+" Effect").id;
-        if(id == 0)
+        var id = _effectDataBase.effectDataBase.Find(effect => effect.effectName[(int)Language.EN] == itemName +" Effect").id;
+        if(id == 0 && itemName != "Devil's Candy")
             return -1;
         else
             return id;

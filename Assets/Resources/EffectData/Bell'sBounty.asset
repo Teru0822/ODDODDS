@@ -15,8 +15,12 @@ MonoBehaviour:
   id: 0
   turn: 1
   isInfinity: 0
-  effectName: Bell's Bounty
-  description: "\u3053\u306E\u30BF\u30FC\u30F3\u4E2D\u3001\u7372\u5F97\u91D1\u984D\u304C2\u500D\u306B\u306A\u308B"
+  effectName:
+  - "\u30D9\u30EB\u306E\u6069\u5BF5"
+  - Bell's Bounty
+  description:
+  - "\u3053\u306E\u30BF\u30FC\u30F3\u4E2D\u3001\u7372\u5F97\u3067\u304D\u308B\u91D1\u984D\u304C2\u500D\u306B\u306A\u308B"
+  - During this turn, the amount of money you earn is doubled
   description_en: During this turn, the amount of money you earn is doubled
   effectIcon: {fileID: 21300000, guid: 4be5f47dfe86d05428bfcb1139e44300, type: 3}
   effectType: 0

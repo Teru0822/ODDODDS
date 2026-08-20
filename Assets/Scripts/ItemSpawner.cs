@@ -160,9 +160,9 @@ public class ItemSpawner : MonoBehaviour
         if (initialActiveItems == null || initialActiveItems.Count == 0)
         {
             initialActiveItems = new System.Collections.Generic.List<ItemSpawnSettings>();
-            if (copperCoinPrefab != null) initialActiveItems.Add(new ItemSpawnSettings("Copper Coin", copperCoinPrefab, 0, copperRate));
-            if (silverCoinPrefab != null) initialActiveItems.Add(new ItemSpawnSettings("Silver Coin", silverCoinPrefab, 1, silverRate));
-            if (goldCoinPrefab != null) initialActiveItems.Add(new ItemSpawnSettings("Gold Coin", goldCoinPrefab, 2, goldRate));
+            if (copperCoinPrefab != null) initialActiveItems.Add(new ItemSpawnSettings(new string[]{"Copper Coin"}, copperCoinPrefab, 0, copperRate));
+            if (silverCoinPrefab != null) initialActiveItems.Add(new ItemSpawnSettings(new string[]{"Silver Coin"}, silverCoinPrefab, 1, silverRate));
+            if (goldCoinPrefab != null) initialActiveItems.Add(new ItemSpawnSettings(new string[]{"Gold Coin"}, goldCoinPrefab, 2, goldRate));
             
             // 5枠に足りない場合は、すでに登録済みのプレハブをコピーして5枠を埋める
             if (initialActiveItems.Count < 5)
@@ -171,7 +171,7 @@ public class ItemSpawner : MonoBehaviour
                 while (initialActiveItems.Count < 5 && initialActiveItems.Count > 0)
                 {
                     var baseSettings = initialActiveItems[index % initialActiveItems.Count];
-                    initialActiveItems.Add(new ItemSpawnSettings(baseSettings.name + " (Sub)", baseSettings.prefab, baseSettings.priority, baseSettings.rate));
+                    initialActiveItems.Add(new ItemSpawnSettings(new string[]{baseSettings.name + " (Sub)"}, baseSettings.prefab, baseSettings.priority, baseSettings.rate));
                     index++;
                 }
             }
@@ -894,7 +894,7 @@ public class ItemSpawner : MonoBehaviour
     public void TestAddActiveItemPriority2()
     {
         var prefab = (copperCoinPrefab != null) ? copperCoinPrefab : this.gameObject;
-        var testItem = new ItemSpawnSettings("Test Priority 2 Item", prefab, 2, 3f);
+        var testItem = new ItemSpawnSettings(new string[]{"Test Priority 2 Item"}, prefab, 2, 3f);
         TryAddActiveItem(testItem);
     }
 
@@ -1207,7 +1207,7 @@ public enum SpawnCountType
 [System.Serializable]
 public class ItemSpawnSettings
 {
-    public string name;
+    public string[] name;
     public GameObject prefab;
     public int priority;
     public float rate;
@@ -1223,7 +1223,7 @@ public class ItemSpawnSettings
     [System.NonSerialized]
     public float currentRate;
 
-    public ItemSpawnSettings(string name, GameObject prefab, int priority, float rate, int goldConvert = 0, int silverConvert = 0, int bronzeConvert = 0)
+    public ItemSpawnSettings(string[] name, GameObject prefab, int priority, float rate, int goldConvert = 0, int silverConvert = 0, int bronzeConvert = 0)
     {
         this.name = name;
         this.prefab = prefab;

@@ -18,9 +18,9 @@ public class ItemInstance
     public ItemData master;
     public int Count { get; set; }
     public int Id => master.id;
-    public string ItemName => master.itemName;
+    public string[] ItemName => master.itemName;
     public Sprite ItemIcon => master.iconImage;
-    public string ItemDescription => master.description;
+    public string[] ItemDescription => master.description;
     public string ItemDescription_en => master.description_en;
     public GameObject PrefabData=> master.prefabData;
     public ItemType ItemType=> master.itemType;

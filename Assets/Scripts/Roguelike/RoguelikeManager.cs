@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Linq;
 using UniRx;
+using UnityEditor.Build.Pipeline;
 
 [Serializable]
 public class RoguelikeSaveClass
@@ -15,11 +16,32 @@ public class RoguelikeSaveClass
     public bool isGet = false;//スキルが取得されているか否か
 }
 
-public class RoguelikeManager : MonoBehaviour, IsaveDataProvider
+[Serializable]
+public class DiamondStageNames
+{
+    public string name_Jp;//日本語
+    public string name_En;//英語
+    public string name_Cn;//中国語
+
+    public DiamondStageNames(string jp = "",string en = "",string cn = "")
+    {
+        this.name_Jp = jp;
+        this.name_En = en;
+        this.name_Cn = cn;
+    }
+
+    public string[] GetNameInArray()
+    {
+        return new string[]{name_Jp,name_En,name_Cn};
+    }
+}
+
+public class RoguelikeManager : MonoBehaviour, IsaveDataProvider, ILanguage
 {
     private Dictionary<SkillId, RoguelikeData> _roguelikeDictionary = new Dictionary<SkillId, RoguelikeData>();//SkillId: ID, RoguelikeData:ローグライク用のスキルに関するデータ
     [SerializeField] private string _jsonFilePath = "Assets/Resources/Roguelike/RoguelikeData.json";
     private bool isFinishLoadJson = false;
+    private Language _language;
 
     [Header("Devil_Eye（ルーレット）")]
     [Tooltip("スキルID16取得時にインベントリへ追加する Devil_Eye の ItemData。未設定なら図鑑カラー化をスキップします")]
@@ -29,13 +51,14 @@ public class RoguelikeManager : MonoBehaviour, IsaveDataProvider
     [Tooltip("磨き段階に応じて表示名を書き換える、唯一のブラックダイヤItemData")]
     [SerializeField] private ItemData _blackDiamondItem;
     [Tooltip("磨き段階0〜3に対応する表示名")]
-    [SerializeField] private string[] _diamondStageNames =
+    [SerializeField] private DiamondStageNames[] _diamondStageNames =
     {
-        "呪われたダイヤモンド",
-        "封印されしダイヤモンド",
-        "解放されそうなダイヤモンド",
-        "ゴッドダイヤモンド",
+        new DiamondStageNames("呪われたダイヤモンド","Cursed Diamond"),
+        new DiamondStageNames("封印されしダイヤモンド","Sealed Diamond"),
+        new DiamondStageNames("解放されそうなダイヤモンド","Unreleased Diamond"),
+        new DiamondStageNames("ゴッドダイヤモンド","God Diamond"),
     };
+    
 
 
     /// <summary>
@@ -76,6 +99,11 @@ public class RoguelikeManager : MonoBehaviour, IsaveDataProvider
     private void Awake()
     {
         LoadRoguelikeData();
+    }
+
+    public void SettingLanguage(Language language)
+    {
+        _language = language;
     }
 
     private void Start()
@@ -476,7 +504,7 @@ public class RoguelikeManager : MonoBehaviour, IsaveDataProvider
         if (_blackDiamondItem == null || _diamondStageNames == null || _diamondStageNames.Length == 0) return;
 
         int stage = Mathf.Clamp(GetDiamondPolishStage(), 0, _diamondStageNames.Length - 1);
-        _blackDiamondItem.itemName = _diamondStageNames[stage];
+        _blackDiamondItem.itemName = _diamondStageNames[stage].GetNameInArray();
         OnDiamondPolishStageChanged?.Invoke(stage);
     }
 

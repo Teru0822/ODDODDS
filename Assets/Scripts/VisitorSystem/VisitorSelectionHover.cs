@@ -2,11 +2,16 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class VisitorSelectionHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+public class VisitorSelectionHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler,ILanguage
 {
     private ScriptableObject _masterData;
     private TMP_Text _contentText;
     private TMP_Text _nameText;
+    private Language _language;
+    public void SettingLanguage(Language language)
+    {
+        _language = language;
+    }
 
     public void Init(ScriptableObject data, TMP_Text contentText)
     {
@@ -17,11 +22,11 @@ public class VisitorSelectionHover : MonoBehaviour, IPointerEnterHandler, IPoint
         {
             if (_masterData is ItemData itemData)
             {
-                _nameText.text = itemData.itemName;
+                _nameText.text = itemData.itemName[(int)_language];
             }
             else if (_masterData is EffectData effectData)
             {
-                _nameText.text = effectData.effectName;
+                _nameText.text = effectData.effectName[(int)_language];
             }
         }
     }
@@ -32,11 +37,11 @@ public class VisitorSelectionHover : MonoBehaviour, IPointerEnterHandler, IPoint
         {
             if (_masterData is ItemData itemData)
             {
-                _contentText.text = itemData.description;
+                _contentText.text = itemData.description[(int)_language];
             }
             else if (_masterData is EffectData effectData)
             {
-                _contentText.text = effectData.description;
+                _contentText.text = effectData.description[(int)_language];
             }
         }
     }

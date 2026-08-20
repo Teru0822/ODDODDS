@@ -10,7 +10,7 @@ using UnityEngine.UI;
 /// セルサイズはパネル幅から自動計算する。
 /// </summary>
 [DisallowMultipleComponent]
-public class ItemEncyclopediaUI : MonoBehaviour
+public class ItemEncyclopediaUI : MonoBehaviour,ILanguage
 {
     [Header("データ")]
     [Tooltip("図鑑に表示するアイテムデータベース。未設定なら ItemPanelManager から自動取得")]
@@ -59,6 +59,8 @@ public class ItemEncyclopediaUI : MonoBehaviour
     private RewardSelectionUI  _rewardSelectionUI;
     private EntryView _selected;
 
+    private Language _language;
+
     // ────────────────────────────────────────────────
     // ライフサイクル
     // ────────────────────────────────────────────────
@@ -79,6 +81,11 @@ public class ItemEncyclopediaUI : MonoBehaviour
     {
         // RectTransform のサイズ確定後に Refresh するため 1 フレーム待つ
         StartCoroutine(RefreshNextFrame());
+    }
+
+    public void SettingLanguage(Language language)
+    {
+        _language = language;
     }
 
     private IEnumerator RefreshNextFrame()
@@ -275,7 +282,7 @@ public class ItemEncyclopediaUI : MonoBehaviour
 
         if (_rewardSelectionUI == null) return;
         if (e.isOwned)
-            _rewardSelectionUI.ShowItemPreview(e.data.iconImage, e.data.itemName, e.data.description);
+            _rewardSelectionUI.ShowItemPreview(e.data.iconImage, e.data.itemName[(int)_language], e.data.description[(int)_language]);
         else
             _rewardSelectionUI.ShowItemPreviewUnknown();
     }

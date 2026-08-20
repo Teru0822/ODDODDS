@@ -13,7 +13,7 @@ using UnityEngine.UI;
 ///   2. displayCamera がそのステージを撮影し、RenderTexture 経由で displayImage (RawImage) に映す
 ///   3. UFOItemGoal.HandleItemDrop() 等から ShowPickedItem() / ShowItemPrefabDirect() を呼ぶと表示が切り替わる
 /// </summary>
-public class UFOItemPickupDisplay : MonoBehaviour
+public class UFOItemPickupDisplay : MonoBehaviour,ILanguage
 {
     public static UFOItemPickupDisplay Instance { get; private set; }
 
@@ -50,6 +50,12 @@ public class UFOItemPickupDisplay : MonoBehaviour
 
     private GameObject _currentModelInstance;
     private Coroutine _hideCoroutine;
+    private Language _language;
+
+    public void SettingLanguage(Language language)
+    {
+        _language = language;
+    }
 
     private void Awake()
     {
@@ -103,7 +109,7 @@ public class UFOItemPickupDisplay : MonoBehaviour
             return;
         }
 
-        ShowModel(data.prefabData, string.IsNullOrEmpty(data.itemName) ? data.prefabData.name : data.itemName);
+        ShowModel(data.prefabData, string.IsNullOrEmpty(data.itemName[(int)_language]) ? data.prefabData.name : data.itemName[(int)_language]);
     }
 
     /// <summary>
