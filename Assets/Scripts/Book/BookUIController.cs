@@ -102,6 +102,7 @@ public class BookUIController : MonoBehaviour, ILanguage
     private BookOpenController _bookController;
 
     private readonly List<BookSpread> _spreads = new List<BookSpread>();
+    private BookItemsPage _itemsPage;
     private int _spreadIndex;
 
     private Canvas _leftCanvas;
@@ -400,8 +401,14 @@ public class BookUIController : MonoBehaviour, ILanguage
         };
 
         AddSpread(new BookInfoPage(palette, _goldCoinIcon, _silverCoinIcon, _bronzeCoinIcon, _blackDiamondIcon));
-        AddSpread(new BookItemsPage(palette));
+        _itemsPage = new BookItemsPage(palette);
+        AddSpread(_itemsPage);
         AddSpread(new BookRoguelikePage(palette, _previewRegistry));
+    }
+
+    public void SettingLanguage(Language language)
+    {
+        _itemsPage?.SetLanguage(language);
     }
 
     private void AddSpread(IBookPage page)
