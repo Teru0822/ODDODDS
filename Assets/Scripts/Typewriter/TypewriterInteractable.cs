@@ -68,10 +68,10 @@ public class TypewriterInteractable : InteractableHighlight
     private DebtCollectionManager _debtCollectionManager;
     private FirstPersonController _fpsController;
 
-    [Header("カメラ固定 (ATM と同方式)")]
+    [Header("カメラ固定")]
     [Tooltip("タイプライター操作中のカメラ固定先。シーンに空 GameObject を置いてアサイン")]
     [SerializeField] private Transform _cameraTargetTransform;
-    [Tooltip("カメラの移動時間（秒）。ATM デフォルトと同じ 1.0f")]
+    [Tooltip("カメラの移動時間（秒）")]
     [SerializeField] private float _cameraTransitionDuration = 1.0f;
     [SerializeField] private AnimationCurve _cameraTransitionEase = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
