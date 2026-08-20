@@ -303,7 +303,6 @@ public class SettingUIManager : MonoBehaviour
     private void LanguageSetting(int value)
     {
         _language = (Language)value;
-        Debug.LogError(_language);
 
         //設定された言語をもとに全てのUIの言語を反映させる
         var languages = InterfaceFinder.FindAllByInterface<ILanguage>();
@@ -313,8 +312,6 @@ public class SettingUIManager : MonoBehaviour
         }
 
         var locales = LocalizationSettings.AvailableLocales.Locales;
-        Debug.Log(locales[0]);
-        Debug.Log(locales[1]);
         LocalizationSettings.SelectedLocale = locales[value];
     }
 

@@ -57,7 +57,6 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider,ILanguage
     [SerializeField] private List<Button> _itemButtons = new List<Button>();
 
     [Header("説明用オブジェクト")]
-    [SerializeField] private GameObject _itemPanel;
     [SerializeField] private TMP_Text _itemNameText;
     [SerializeField] private TMP_Text _categoryText;
     [SerializeField] private TMP_Text _countText;
@@ -170,10 +169,6 @@ public class ItemPanelManager : MonoBehaviour, IsaveDataProvider,ILanguage
         }
 #endif
 
-        if(_itemPanel.activeInHierarchy == false)
-        {
-            ClearExplainPanel();
-        }
     }
 
     public void WriteSaveData(RoguelikeSaveData saveData)

@@ -23,6 +23,13 @@ public class BookInfoPage : IBookPage
 
     private TextMeshProUGUI _quotaValue;
     private TextMeshProUGUI _turnValue;
+    private Language _language;
+
+    public void SetLocalize(Language language)
+    {
+        _language = language;
+        Refresh();
+    }
 
     public BookInfoPage(BookPagePalette palette, Sprite gold, Sprite silver, Sprite bronze, Sprite diamond)
     {
@@ -43,11 +50,11 @@ public class BookInfoPage : IBookPage
     {
         // タイトルは左上
         var title = BookUIBuilder.Text(page, "Title", "Information", 56f,
-                                       TextAlignmentOptions.TopLeft, _palette.Accent, _palette.Font);
+                                       TextAlignmentOptions.TopLeft, _palette.Accent, _palette.Font, true,"BookUITable","InfomationPageTitle",true,60,18);
         BookUIBuilder.AnchorRect(title.rectTransform, 0f, 0.88f, 1f, 1f);
 
         var money = BookUIBuilder.Text(page, "MoneyLabel", "Money", 30f,
-                                       TextAlignmentOptions.TopLeft, _palette.Text, _palette.Font);
+                                       TextAlignmentOptions.TopLeft, _palette.Text, _palette.Font, true,"BookUITable","MoneyLabel",true,60,18);
         BookUIBuilder.AnchorRect(money.rectTransform, 0f, 0.78f, 1f, 0.86f);
 
         _moneyValue = BookUIBuilder.Text(page, "MoneyValue", "0 DC", 52f,
@@ -55,7 +62,7 @@ public class BookInfoPage : IBookPage
         BookUIBuilder.AnchorRect(_moneyValue.rectTransform, 0f, 0.70f, 1f, 0.80f);
 
         var coinsLabel = BookUIBuilder.Text(page, "CoinsLabel", "Coins", 30f,
-                                            TextAlignmentOptions.TopLeft, _palette.Text, _palette.Font);
+                                            TextAlignmentOptions.TopLeft, _palette.Text, _palette.Font, true,"BookUITable","CoinLabel",true,60,18);
         BookUIBuilder.AnchorRect(coinsLabel.rectTransform, 0f, 0.60f, 1f, 0.68f);
 
         var list = new GameObject("CoinList", typeof(RectTransform)).GetComponent<RectTransform>();
@@ -108,11 +115,11 @@ public class BookInfoPage : IBookPage
     {
         // こちらのタイトルは中央上
         var title = BookUIBuilder.Text(page, "Title", "Next Debt Collection", 48f,
-                                       TextAlignmentOptions.Top, _palette.Accent, _palette.Font);
+                                       TextAlignmentOptions.Top, _palette.Accent, _palette.Font, true,"BookUITable","NextDebtCollection",true,60,18);
         BookUIBuilder.AnchorRect(title.rectTransform, 0f, 0.86f, 1f, 1f);
 
         var quotaLabel = BookUIBuilder.Text(page, "QuotaLabel", "Amount Due", 30f,
-                                            TextAlignmentOptions.Center, _palette.Text, _palette.Font);
+                                            TextAlignmentOptions.Center, _palette.Text, _palette.Font, true,"BookUITable","AmountDue",true,60,18);
         BookUIBuilder.AnchorRect(quotaLabel.rectTransform, 0f, 0.66f, 1f, 0.74f);
 
         _quotaValue = BookUIBuilder.Text(page, "QuotaValue", "0 DC", 72f,
@@ -120,7 +127,7 @@ public class BookInfoPage : IBookPage
         BookUIBuilder.AnchorRect(_quotaValue.rectTransform, 0f, 0.54f, 1f, 0.66f);
 
         var turnLabel = BookUIBuilder.Text(page, "TurnLabel", "Turns Remaining", 30f,
-                                           TextAlignmentOptions.Center, _palette.Text, _palette.Font);
+                                           TextAlignmentOptions.Center, _palette.Text, _palette.Font, true,"BookUITable","TurnRemaining",true,60,18);
         BookUIBuilder.AnchorRect(turnLabel.rectTransform, 0f, 0.38f, 1f, 0.46f);
 
         _turnValue = BookUIBuilder.Text(page, "TurnValue", "0", 64f,

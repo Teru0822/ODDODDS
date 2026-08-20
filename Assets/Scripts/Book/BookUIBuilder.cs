@@ -2,6 +2,8 @@ using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Components;
 
 /// <summary>
 /// 本のページ UI を実行時に組み立てるための共通ヘルパー。
@@ -35,7 +37,7 @@ public static class BookUIBuilder
 
     public static TextMeshProUGUI Text(Transform parent, string name, string content,
                                        float fontSize, TextAlignmentOptions alignment,
-                                       Color color, TMP_FontAsset font = null)
+                                       Color color, TMP_FontAsset font = null, bool isSetLocalized = false, string tableName = "", string keyName = "", bool isAutoSize = false, int autoSizeMax = 60,int autoSizeMin = 18)
     {
         var go = new GameObject(name, typeof(RectTransform));
         var rt = go.GetComponent<RectTransform>();
@@ -50,6 +52,27 @@ public static class BookUIBuilder
         text.textWrappingMode = TextWrappingModes.Normal;
         text.overflowMode = TextOverflowModes.Truncate;
         if (font != null) text.font = font;
+
+        //自動で文字サイズを変えさせたいTextの場合
+        if(isAutoSize)
+        {
+            // Auto Sizeを有効にする
+            text.enableAutoSizing = true;
+
+            // 最小および最大のフォントサイズを設定する
+            text.fontSizeMin = autoSizeMin;
+            text.fontSizeMax = autoSizeMax;
+        }
+
+        //ローカライズ対応させたいTextの場合
+        if(isSetLocalized)
+        {
+            var localize = go.AddComponent<LocalizeStringEvent>();
+            // Update Stringイベントを登録
+            localize.OnUpdateString.AddListener(content => text.text = content);
+            if(tableName != "" && keyName != "")
+                localize.StringReference.SetReference(tableName,keyName);
+        }
 
         return text;
     }

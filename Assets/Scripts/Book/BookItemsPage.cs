@@ -24,6 +24,17 @@ public class BookItemsPage : IBookPage
     private TextMeshProUGUI _detailDescription;
 
     private ItemData _selected;
+    private Language _language;
+    // public void SetItemPageLanguage(Language language)
+    // {
+    //     _language = language;
+    // }
+
+    public void SetLocalize(Language language)
+    {
+        _language = language;
+        Refresh();
+    }
 
     /// <summary>グリッド上の 1 マス。</summary>
     private class Slot
@@ -47,7 +58,7 @@ public class BookItemsPage : IBookPage
     private void BuildLeft(RectTransform page)
     {
         var title = BookUIBuilder.Text(page, "Title", "Items", 56f,
-                                       TextAlignmentOptions.TopLeft, _palette.Accent, _palette.Font);
+                                       TextAlignmentOptions.TopLeft, _palette.Accent, _palette.Font, true,"BookUITable","ItemDetail",true,60,18);
         BookUIBuilder.AnchorRect(title.rectTransform, 0f, 0.90f, 1f, 1f);
 
         var area = BookUIBuilder.Panel(page, "ScrollArea");
@@ -59,7 +70,7 @@ public class BookItemsPage : IBookPage
     private void BuildRight(RectTransform page)
     {
         var title = BookUIBuilder.Text(page, "Title", "Detail", 48f,
-                                       TextAlignmentOptions.Top, _palette.Accent, _palette.Font);
+                                       TextAlignmentOptions.Top, _palette.Accent, _palette.Font, true,"BookUITable","ItemDetail",true,60,18);
         BookUIBuilder.AnchorRect(title.rectTransform, 0f, 0.92f, 1f, 1f);
 
         _detailImage = BookUIBuilder.Sprite(page, "DetailImage", null);
@@ -74,7 +85,7 @@ public class BookItemsPage : IBookPage
         BookUIBuilder.AnchorRect(_detailCategory.rectTransform, 0f, 0.40f, 1f, 0.46f);
 
         _detailDescription = BookUIBuilder.Text(page, "DetailDescription", "", 30f,
-                                                TextAlignmentOptions.TopLeft, _palette.Text, _palette.Font);
+                                                TextAlignmentOptions.TopLeft, _palette.Text, _palette.Font, false,"","",true,60,18);
         BookUIBuilder.AnchorRect(_detailDescription.rectTransform, 0f, 0.02f, 1f, 0.38f);
 
         ShowDetail(null);
@@ -200,9 +211,9 @@ public class BookItemsPage : IBookPage
         _detailImage.sprite = data.iconImage;
         _detailImage.enabled = data.iconImage != null;
 
-        if (_detailName != null) _detailName.text = data.itemName;
+        if (_detailName != null) _detailName.text = data.itemName[(int)_language];
         if (_detailCategory != null) _detailCategory.text = CategoryLabel(data.itemCategory);
-        if (_detailDescription != null) _detailDescription.text = data.description;
+        if (_detailDescription != null) _detailDescription.text = data.description[(int)_language];
     }
 
     private static string CategoryLabel(ItemCategory category)
