@@ -86,7 +86,7 @@ public class TypewriterInteractable : InteractableHighlight
     {
         if (!_busy) return;
         SetBusy(false);
-        ApplyHighlight(true);
+        ApplyHighlight(false);
     }
 
     private void EnsureSelectionUI()
@@ -144,6 +144,7 @@ public class TypewriterInteractable : InteractableHighlight
     public override bool IsInteractable(CupPickupController pickup)
     {
         if (_busy) return false;
+        if (DebtCollectionManager.IsCollecting) return false;
         if (SceneTransitionManager.Instance != null && SceneTransitionManager.Instance.IsTransitioning) return false;
         if (controller != null && controller.IsTyping) return false;
         if (selectionUI != null && selectionUI.IsActive) return false;
@@ -339,7 +340,7 @@ public class TypewriterInteractable : InteractableHighlight
         // ターン遷移か会話が完全に終わってから占有を解放する。
         // シーンリロードで先に OnDestroy が呼ばれた場合は OnDestroy 側でクリアされる。
         SetBusy(false);
-        ApplyHighlight(true);
+        ApplyHighlight(false);
     }
 }
 
