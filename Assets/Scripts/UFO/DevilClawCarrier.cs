@@ -41,6 +41,37 @@ public class DevilClawCarrier : MonoBehaviour
     // Physics.OverlapBox 用の使い回しバッファ（毎 FixedUpdate の GC アロケーションを防ぐ）
     private readonly Collider[] _overlapBuffer = new Collider[64];
 
+    // このゾーン内に今フレーム存在するUFOItem（時計・ルーレットアイテム含む）。運搬中は
+    // 同じ領域内の他のアイテムと押し合って意図しない衝突が頻発するため、CoinImpactSoundManager側で
+    // ここに入っているアイテムの衝突音を一時的に抑制するために使う
+    private readonly HashSet<UFOItem> _itemsCurrentlyInZone = new HashSet<UFOItem>();
+    private static readonly List<DevilClawCarrier> s_activeInstances = new List<DevilClawCarrier>();
+
+    /// <summary>
+    /// アーム強化(structure_lv1/2/3)で複数のDevilClawCarrierが存在しうるため、
+    /// 現在有効な全インスタンスを横断して、指定アイテムがいずれかのClawCarrierZone内にいるか判定する
+    /// </summary>
+    public static bool IsItemInsideAnyCarrierZone(UFOItem item)
+    {
+        if (item == null) return false;
+        for (int i = 0; i < s_activeInstances.Count; i++)
+        {
+            if (s_activeInstances[i]._itemsCurrentlyInZone.Contains(item)) return true;
+        }
+        return false;
+    }
+
+    private void OnEnable()
+    {
+        s_activeInstances.Add(this);
+    }
+
+    private void OnDisable()
+    {
+        s_activeInstances.Remove(this);
+        _itemsCurrentlyInZone.Clear();
+    }
+
     private void Start()
     {
         _boxCollider = GetComponent<BoxCollider>();
@@ -70,6 +101,7 @@ public class DevilClawCarrier : MonoBehaviour
         if (!_boxCollider.enabled)
         {
             _lastPosition = transform.position; // 基準点のみ更新して終了
+            _itemsCurrentlyInZone.Clear();
             return;
         }
 
@@ -109,6 +141,15 @@ public class DevilClawCarrier : MonoBehaviour
                 Rigidbody rb = _overlapBuffer[i].attachedRigidbody;
                 Debug.Log($"[DevilClawCarrier] Hit[{i}]: {_overlapBuffer[i].name}, Layer: {LayerMask.LayerToName(_overlapBuffer[i].gameObject.layer)}, IsChildOfClawParent: {isChild}, HasRigidbody: {rb != null}");
             }
+        }
+
+        // ゾーン内アイテムの一覧を更新する（アームが静止している間も、掴んだままのアイテムは
+        // 引き続きゾーン内にいる扱いにするため、下の「移動していない場合は何もしない」より前で行う）
+        _itemsCurrentlyInZone.Clear();
+        for (int i = 0; i < hitCount; i++)
+        {
+            UFOItem item = _overlapBuffer[i].GetComponent<UFOItem>();
+            if (item != null) _itemsCurrentlyInZone.Add(item);
         }
 
         // 移動していない場合は何もしない

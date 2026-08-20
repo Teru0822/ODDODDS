@@ -70,6 +70,12 @@ public class TutorialItemGoal : MonoBehaviour
         UFOItem item = other.GetComponentInParent<UFOItem>();
         if (item == null) return;
 
+        // 複数の穴の判定用トリガーが重なっていると、同じアイテムに対して同じフレーム内で
+        // HandleItemDropが複数回呼ばれることがある（Destroy()は次フレームまで実際には効かないため）。
+        // 既に処理済みなら二重の獲得音・演出を防ぐためここで弾く
+        if (item.IsProcessedForGoal) return;
+        item.IsProcessedForGoal = true;
+
         // チュートリアルをプレイしていない間（Yes/No待ちの間に物理的に転がり込んだ等）に
         // 何か入っても、効果音・ランプ演出・時間延長などは一切発生させない（未プレイ判定）。
         // ただし入ったアイテム自体は消しておかないと機体内に残り続けるため、破棄だけは行う。
@@ -119,6 +125,13 @@ public class TutorialItemGoal : MonoBehaviour
         if (_flashCoroutine != null)
         {
             StopCoroutine(_flashCoroutine);
+            _flashCoroutine = null;
+
+            // 前の演出が isGetEffect:true（時計/ブラックダイヤ獲得）の途中だった場合、
+            // StopCoroutineはFlashLightsRoutine末尾のIsFlashing=falseまで実行しないため、
+            // ここでリセットしないとIsFlashingがtrueのまま固まってしまう
+            // （練習機のパトランプが警告点滅に切り替われなくなるバグの原因だった）
+            IsFlashing = false;
         }
         _flashCoroutine = StartCoroutine(FlashLightsRoutine(color, isGetEffect));
     }

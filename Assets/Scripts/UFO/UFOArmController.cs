@@ -215,6 +215,15 @@ public class UFOArmController : MonoBehaviour
     private bool         _wantFingerOpen = false;
     public bool WantFingerOpen => _wantFingerOpen;
 
+    /// <summary>爪の開閉状態を変更し、実際に状態が変わった時だけ開閉SEを鳴らす
+    /// （StartDescentCycleの開き、掴む時の閉じ、ToggleClawの手動開閉、いずれもここを通す）</summary>
+    private void SetWantFingerOpen(bool open)
+    {
+        if (_wantFingerOpen == open) return;
+        _wantFingerOpen = open;
+        DevilSEManager.Instance?.PlayClawToggle();
+    }
+
     private float _wakeUpTimer = 0f;
     // Physics.OverlapBox 用の使い回しバッファ（毎フレームの配列アロケーションを防ぐ）
     private readonly Collider[] _wakeUpBuffer = new Collider[32];
@@ -523,7 +532,7 @@ public class UFOArmController : MonoBehaviour
         
         // すぐ下降せず、まず爪を上に開くフェーズに入る
         _state = ArmState.OpeningClaw;
-        _wantFingerOpen = true;
+        SetWantFingerOpen(true);
         _stateTimer = 1.0f; // 1秒間待機する
     }
 
@@ -538,13 +547,13 @@ public class UFOArmController : MonoBehaviour
 
     private System.Collections.IEnumerator ToggleClawRoutine()
     {
-        _wantFingerOpen = true;
+        SetWantFingerOpen(true);
         Debug.Log($"[UFOArmController] 手動開閉ボタンが押されました！ 開きます。");
 
         // アームが開ききるまでの時間（0.5秒） ＋ 開ききってからの待機（0.3秒）＝合計 0.8秒
         yield return new WaitForSeconds(0.8f);
 
-        _wantFingerOpen = false;
+        SetWantFingerOpen(false);
         Debug.Log($"[UFOArmController] 自動的に閉じます。");
 
         // アームが閉じきる時間（0.5秒）待ってからコルーチンを解放する
@@ -1194,7 +1203,7 @@ public class UFOArmController : MonoBehaviour
             {
                 Debug.Log($"[UFOArmController] Entered grab trigger area (immediateArea={isImmediateArea}, clawRiseContact={isClawRiseContact}) with {hitCollider.name}. Bypassing extra descent. State: {_state} -> Grabbing");
                 _state = ArmState.Grabbing;
-                _wantFingerOpen = false;
+                SetWantFingerOpen(false);
                 _stateTimer = grabWaitSeconds;
 
                 // コインの山に衝突したときのがさがさ音を再生
@@ -1265,7 +1274,7 @@ public class UFOArmController : MonoBehaviour
                 {
                     Debug.Log("[UFOArmController] State changed: Descending -> Grabbing. Rope is at Max.");
                     _state = ArmState.Grabbing;
-                    _wantFingerOpen = false;
+                    SetWantFingerOpen(false);
                     _stateTimer = grabWaitSeconds;
                     if (stretchRope != null) stretchRope.PauseExternalControl(); // 掴み中はピタッと停止
                 }

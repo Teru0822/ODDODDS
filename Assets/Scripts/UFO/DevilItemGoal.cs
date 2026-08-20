@@ -465,6 +465,14 @@ public class DevilItemGoal : MonoBehaviour, IsaveDataProvider
                 float rainDuration = rouletteRainDuration > 0f ? rouletteRainDuration : 5.0f;
                 Vector2 rainScale = rouletteRainAreaScale.sqrMagnitude > 0.001f ? rouletteRainAreaScale : new Vector2(0.5f, 0.5f);
 
+                // 大当たり（ジャックポット）が確定していた場合、排出量を2倍にする（時間は変えない＝同じ時間で2倍の密度）
+                bool isJackpot = rouletteController != null && rouletteController.IsJackpotThisSpin;
+                if (isJackpot)
+                {
+                    rainCount *= 2;
+                    Debug.Log($"[DevilItemGoal] 大当たり（ジャックポット）成立！排出量を2倍（{rainCount}枚）にします。");
+                }
+
                 Debug.Log($"[DevilItemGoal] ルーレット当選結果 [{winningIndex}]: {rewardPrefab.name} (枚数: {rainCount}, 時間: {rainDuration}秒, 範囲スケール: {rainScale}) の降雨を開始しました！");
 
                 ItemSpawner.Instance.StartRouletteRain(
@@ -642,6 +650,13 @@ public class DevilItemGoal : MonoBehaviour, IsaveDataProvider
         //   親方向も辿って検索する）
         UFOItem item = other.GetComponentInParent<UFOItem>();
         if (item == null) return;
+
+        // 落とし口には複数の判定用トリガー（各穴のDevilItemGoalTrigger + このDevilItemGoal自身の
+        // コライダー等）が重なって存在するため、同じアイテムに対して同じフレーム内で複数回
+        // HandleItemDropが呼ばれることがある（Destroy()は次フレームまで実際には効かないため）。
+        // 既に処理済みなら二重の獲得音・報酬加算を防ぐためここで弾く
+        if (item.IsProcessedForGoal) return;
+        item.IsProcessedForGoal = true;
 
         // Devilキャッチャーを実際にプレイしていない間（ラウンド開始時のスポーン落下・物理的な転がり込みなど）に
         // 何か入っても、獲得金額・枚数・効果音などは一切発生させない（未プレイ判定）。
@@ -924,11 +939,30 @@ public class DevilItemGoal : MonoBehaviour, IsaveDataProvider
                 {
                     // 子オブジェクトのLightを全て収集する（以前は名前に"spotlight"を含むものだけに
                     // 絞っていたが、タグで既に対象を絞っているうえ、bottom_lump/PatoLamp等
-                    // "spotlight"を含まない名前のライトが対象から漏れてしまっていたため撤廃）
-                    targetLights.AddRange(obj.GetComponentsInChildren<Light>(true));
+                    // "spotlight"を含まない名前のライトが対象から漏れてしまっていたため撤廃）。
+                    // ただし、bottom_lump/PatoLamp自体（DevilChaseLightUnitが付いたもの）は
+                    // DevilChaseLightController側が同じ演出色で完全に管理済みのため、ここで二重に
+                    // 収集してしまうと、この演出終了時のResetLampsToOriginal()が「演出開始前に
+                    // キャプチャした色（例: 警告点滅中の赤）」へ戻してしまい、DevilChaseLightController
+                    // が既にOff等へ切り替えた後でも赤いランプが再点灯したまま固まって残るバグになる。
+                    // そのため、DevilChaseLightUnitが付いている（＝チェイスライト側が管理する）
+                    // Light/Rendererはここでは対象から除外する
+                    foreach (var light in obj.GetComponentsInChildren<Light>(true))
+                    {
+                        if (light != null && light.GetComponentInParent<DevilChaseLightUnit>() == null)
+                        {
+                            targetLights.Add(light);
+                        }
+                    }
 
-                    // Rendererも収集する
-                    targetRenderers.AddRange(obj.GetComponentsInChildren<Renderer>(true));
+                    // Rendererも収集する（同様にDevilChaseLightUnit配下は除外）
+                    foreach (var renderer in obj.GetComponentsInChildren<Renderer>(true))
+                    {
+                        if (renderer != null && renderer.GetComponentInParent<DevilChaseLightUnit>() == null)
+                        {
+                            targetRenderers.Add(renderer);
+                        }
+                    }
                 }
             }
         }

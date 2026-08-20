@@ -12,9 +12,12 @@ using UnityEngine;
 /// 同じprefabが何セットシーンに置かれていても、手動でLightをドラッグして配線する必要はない。
 ///
 /// 優先度は以下の順（上ほど優先）:
-/// 1. ブラックダイヤ・時計獲得演出中（DevilItemGoal.IsFlashing）→ DevilItemGoal.CurrentFlashColorで
-///    パトランプ含め点灯（DevilItemGoal.FlashLampsCoroutine自体は別系統の壁掛けランプ類を担当する）
-/// 2. ルーレット当選〜配当完了 / ルーレット回転中 → 水色の点滅・チェイス
+/// 1. ルーレット当選〜配当完了 / ルーレット回転中 → 水色の点滅・チェイス（大当たり予兆演出含む）。
+///    この間にブラックダイヤ・時計を同時に獲得しても、チェイスリングの色はルーレット側のまま
+///    途切れさせない（ダイヤ・時計側の専用ランプ・獲得音・報酬処理はDevilItemGoal側で独立して動く）
+/// 2. ブラックダイヤ・時計獲得演出中（DevilItemGoal.IsFlashing、ルーレットが動いていない時のみ）→
+///    DevilItemGoal.CurrentFlashColorでパトランプ含め点灯
+///    （DevilItemGoal.FlashLampsCoroutine自体は別系統の壁掛けランプ類を担当する）
 /// 3. レバー/ボタン操作前 → 通常ライトのみ点灯（パトランプは触らない）
 /// 4. 残り時間が10秒を切ったら → パトランプには一切触らず PatoLampController 側の警告点灯・
 ///    回転に完全に任せる。通常ライトは赤で点滅させる
@@ -72,9 +75,19 @@ public class DevilChaseLightController : MonoBehaviour
     [Tooltip("ルーレットが当たってから配当（降雨）が終わるまでの、全体点滅の間隔（秒）")]
     [SerializeField, Min(0.01f)] private float rouletteBlinkInterval = 0.2f;
 
+    [Tooltip("大当たりの予兆演出中、通常ライト・パトランプを全て赤で同時点灯させたまま保持する秒数。" +
+             "終わると自動的に通常の水色チェイス（順番に点灯していく演出）に戻る")]
+    [SerializeField, Min(0.05f)] private float jackpotOmenDuration = 0.4f;
+
     [Header("コイン獲得演出")]
     [Tooltip("銅貨・銀貨・金貨を獲得した瞬間、通常ライト全体を今の色のまま一瞬点灯させておく時間（秒）")]
     [SerializeField, Min(0.05f)] private float coinCatchFlashDuration = 0.3f;
+
+    [Header("セッション終了演出（実機のみ）")]
+    [Tooltip("プレイセッションが終了した瞬間、いきなり消灯するのではなく、この秒数だけ通常のチェイス演出" +
+             "（警告点滅やブラックダイヤ等の獲得演出が残っていても、ここで打ち切って通常チェイスに戻す）を" +
+             "見せてから消灯する。0にするとこの演出をスキップし、従来通り即座に消灯する")]
+    [SerializeField, Min(0f)] private float sessionEndChaseDuration = 2f;
 
     [Header("検索範囲・練習機設定")]
     [Tooltip("DevilChaseLightUnitを検索するルート。実機・練習機など同じ種類の機体が複数シーンに存在する場合、" +
@@ -99,6 +112,17 @@ public class DevilChaseLightController : MonoBehaviour
     private static float s_coinCatchFlashTimer = 0f;
     private static float s_coinCatchFlashDuration = 0.3f;
 
+    // RouletteController側から、大当たりの予兆演出（通常ライト・パトランプを全て赤で同時点灯させる）を
+    // 発火するための残り秒数（インスタンス跨ぎでアクセスするためstatic）。0より大きい間、
+    // RouletteChaseRoutineは通常の水色チェイスの代わりに全灯赤色を保持する
+    private static float s_jackpotOmenTimeRemaining = 0f;
+    private static float s_jackpotOmenDuration = 2.5f;
+
+    // 実機のみ: プレイセッションがtrue→falseに変わった瞬間を検知して、消灯前の一時的な
+    // チェイス演出（sessionEndChaseDuration秒）を発火させるためのタイマー
+    private bool _wasSessionActive = false;
+    private float _sessionEndChaseTimer = 0f;
+
     /// <summary>
     /// 残り時間警告中（10秒未満で通常ライトを赤点滅させている間）かどうか。
     /// PatoLampController / TutorialPatoLampControllerはこれだけを見て、trueの間だけ
@@ -106,6 +130,13 @@ public class DevilChaseLightController : MonoBehaviour
     /// このDevilChaseLightController自身が一元管理するため、パトランプ側は一切手を出さない）
     /// </summary>
     public bool IsWarningBlinkActive => _currentMode == RegularLightMode.WarningBlink;
+
+    /// <summary>
+    /// ルーレットの大当たり予兆演出中（通常ライト・パトランプが全て赤で同時点灯している間）かどうか。
+    /// PatoLampController / TutorialPatoLampControllerはIsWarningBlinkActiveと合わせてこれも見て、
+    /// どちらかがtrueの間だけパトランプの点灯・回転を担当する
+    /// </summary>
+    public bool IsJackpotOmenActive => s_jackpotOmenTimeRemaining > 0f;
 
     /// <summary>
     /// 銅貨・銀貨・金貨のいずれかを獲得した瞬間に呼び出す。通常ライト全体を今の色のまま
@@ -116,12 +147,23 @@ public class DevilChaseLightController : MonoBehaviour
         s_coinCatchFlashTimer = s_coinCatchFlashDuration;
     }
 
+    /// <summary>
+    /// ルーレットの大当たり予兆演出。ルーレット回転中のチェイスライト（通常は水色）の代わりに、
+    /// 通常ライト・パトランプを全て赤でjackpotOmenDuration秒間同時点灯させる
+    /// （RouletteController.JackpotOmenRoutineから呼ばれる）
+    /// </summary>
+    public static void TriggerJackpotOmenLap()
+    {
+        s_jackpotOmenTimeRemaining = s_jackpotOmenDuration;
+    }
+
     // Position -> そのPositionを自己申告している全ユニットのLight/Rendererをまとめたもの
     private Dictionary<DevilChaseLightUnit.Position, List<Light>> _lightsByPosition;
     private Dictionary<DevilChaseLightUnit.Position, List<Renderer>> _renderersByPosition;
 
-    // 優先度（上ほど優先）: Deferred/PracticeItemFlash > RouletteWon > RouletteSpinning >
+    // 優先度（上ほど優先、実機）: RouletteWon > RouletteSpinning > Deferred >
     //                    CoinInsertFlash(レバー待ち) > WarningBlink > CoinCatchFlash(コイン獲得) > Chase > Off
+    // （練習機のみ）PracticeItemFlash が最優先
     private enum RegularLightMode { Off, CoinCatchFlash, Chase, WarningBlink, CoinInsertFlash, RouletteSpinning, RouletteWon, Deferred, PracticeItemFlash }
     private RegularLightMode _currentMode = RegularLightMode.Off;
     private Coroutine _routine;
@@ -135,6 +177,15 @@ public class DevilChaseLightController : MonoBehaviour
     {
         RefreshUnits();
         s_coinCatchFlashDuration = coinCatchFlashDuration;
+
+        // ルーレット（大当たり予兆演出）は実機専用の機能。s_jackpotOmenDurationはstaticで
+        // 実機・練習機の両インスタンス間で共有されているため、ここをisPracticeInstanceで
+        // ガードしないと、練習機側のInspector値（誰も触っていない可能性が高い）で
+        // 実機側の設定が上書きされてしまう
+        if (!isPracticeInstance)
+        {
+            s_jackpotOmenDuration = jackpotOmenDuration;
+        }
 
         // プレハブ側のLightはデフォルトで有効(点灯済み)になっているため、何もしないと
         // _currentModeの初期値(Off)と最初のUpdate()の判定結果(Off)が一致してしまい、
@@ -191,6 +242,23 @@ public class DevilChaseLightController : MonoBehaviour
             s_coinCatchFlashTimer -= Time.deltaTime;
         }
 
+        if (!isPracticeInstance)
+        {
+            bool sessionActiveNow = UFOCameraController.IsPlaySessionActive;
+            if (_wasSessionActive && !sessionActiveNow)
+            {
+                // プレイセッションが今まさに終了した瞬間。警告点滅や獲得演出が残っていても、
+                // ここで打ち切って一旦通常チェイスに戻ってから消灯させる
+                _sessionEndChaseTimer = sessionEndChaseDuration;
+            }
+            _wasSessionActive = sessionActiveNow;
+
+            if (_sessionEndChaseTimer > 0f)
+            {
+                _sessionEndChaseTimer -= Time.deltaTime;
+            }
+        }
+
         bool lowTime = IsLowTime();
         RegularLightMode desiredMode = DetermineRegularLightMode(lowTime);
 
@@ -200,6 +268,15 @@ public class DevilChaseLightController : MonoBehaviour
             {
                 StopCoroutine(_routine);
                 _routine = null;
+            }
+
+            // RouletteSpinningモードから抜ける際、大当たりの予兆演出（赤全灯保持）の途中だと
+            // RouletteChaseRoutine自体が強制停止されてタイマーをリセットするコードに到達できず、
+            // s_jackpotOmenTimeRemainingが正の値のまま残り続けてパトランプが回り続けてしまう。
+            // モードが切り替わる瞬間に必ずここでリセットする
+            if (_currentMode == RegularLightMode.RouletteSpinning)
+            {
+                s_jackpotOmenTimeRemaining = 0f;
             }
 
             switch (desiredMode)
@@ -306,15 +383,24 @@ public class DevilChaseLightController : MonoBehaviour
             return RegularLightMode.Chase;
         }
 
-        if (!UFOCameraController.IsPlaySessionActive) return RegularLightMode.Off;
+        if (!UFOCameraController.IsPlaySessionActive)
+        {
+            // セッション終了直後は、警告点滅やブラックダイヤ等の獲得演出が残っていても打ち切って、
+            // sessionEndChaseDuration秒だけいつもの通常チェイス演出に戻してから消灯する
+            if (_sessionEndChaseTimer > 0f) return RegularLightMode.Chase;
+            return RegularLightMode.Off;
+        }
+
+        // ルーレット関連の演出を最優先にする。ルーレット回転中・当選演出中にダイヤ・時計を
+        // 同時に獲得しても、チェイスリングの色はルーレット側のまま途切れさせない
+        // （ダイヤ・時計側の専用ランプ・獲得音・報酬処理はDevilItemGoal側で独立して動くため、
+        // ここで待たせてもそちらの演出自体が失われることはない）
+        if (DevilItemGoal.IsRouletteRewardPending) return RegularLightMode.RouletteWon;
+        if (RouletteController.Instance != null && RouletteController.Instance.IsSpinning) return RegularLightMode.RouletteSpinning;
 
         // ブラックダイヤ・時計等の獲得演出中は、DevilItemGoal.FlashLampsCoroutineに完全に委ねる
         // （こちらのRestoreAllColors()やenabled切り替えで、演出側が点けた色を消してしまわないように）
         if (DevilItemGoal.IsFlashing) return RegularLightMode.Deferred;
-
-        // ルーレット関連の演出は、低残り時間の警告よりも優先して見せる
-        if (DevilItemGoal.IsRouletteRewardPending) return RegularLightMode.RouletteWon;
-        if (RouletteController.Instance != null && RouletteController.Instance.IsSpinning) return RegularLightMode.RouletteSpinning;
 
         // レバー/ボタンを実際に操作してタイマーが始まるまでは、チェイスは開始せず、
         // コイン投入時に点いた通常ライトをそのまま点けたままにしておく
@@ -448,15 +534,32 @@ public class DevilChaseLightController : MonoBehaviour
 
     /// <summary>
     /// ルーレットが回転している最中、指定順（パトランプ含む）で1つずつ水色を流れるように点灯させる。
-    /// 通常のChaseRoutineと同じ並び方だが、色をDevilItemGoal.RouletteChaseColorで上書きする
+    /// 通常のChaseRoutineと同じ並び方だが、色をDevilItemGoal.RouletteChaseColorで上書きする。
+    /// 大当たりの予兆演出中（s_jackpotOmenTimeRemaining > 0）は、チェイスを止めて通常ライト・
+    /// パトランプを全て警告色（赤）で同時点灯させたまま保持する
     /// </summary>
     private IEnumerator RouletteChaseRoutine()
     {
         int leftIndex = 0;
         int rightIndex = 0;
 
+        // 前回のスピンで予兆演出が消化しきれずに残っていた場合に備え、新しく回転が始まるたびにリセットする
+        s_jackpotOmenTimeRemaining = 0f;
+
         while (true)
         {
+            if (s_jackpotOmenTimeRemaining > 0f)
+            {
+                // 予兆演出中: チェイスを止めて全灯赤色を保持する
+                SetLightsForOrder(LeftOrder, normalOnly: false, on: true, overrideColor: warningColor);
+                SetLightsForOrder(RightOrder, normalOnly: false, on: true, overrideColor: warningColor);
+
+                float waitTime = Mathf.Min(s_jackpotOmenTimeRemaining, 0.05f);
+                yield return new WaitForSeconds(waitTime);
+                s_jackpotOmenTimeRemaining -= waitTime;
+                continue;
+            }
+
             Color color = DevilItemGoal.RouletteChaseColor;
             ApplyChaseStep(LeftOrder, leftIndex, color);
             ApplyChaseStep(RightOrder, rightIndex, color);

@@ -60,6 +60,19 @@ public class DevilItemPickupDisplay : MonoBehaviour, ILanguage
         _language = language;
     }
 
+    private bool _forceHidden = false;
+
+    /// <summary>
+    /// 外部から強制的に非表示にする（例: TutorialStepControllerのfullDarkBackground中、
+    /// 暗転パネルの上にItemShowcaseのRawImageが突き抜けて見えてしまうのを防ぐ）。
+    /// ONの間はShowPickedItem等で新しいアイテムが来ても表示しない
+    /// </summary>
+    public void SetForceHidden(bool hidden)
+    {
+        _forceHidden = hidden;
+        if (hidden) SetVisible(false);
+    }
+
     private void Awake()
     {
         if (Instance == null)
@@ -84,7 +97,7 @@ public class DevilItemPickupDisplay : MonoBehaviour, ILanguage
         // プレイをやめた後もポップアップが残ってしまうのを防ぐ。
         // IsPlayingUfoは「Devilエリアに入っている間ずっとtrue」（チュートリアル終了後、Play_Canvasに
         // 戻っただけではfalseにならない）なので使わず、実際にプレイ中かどうかを示すIsPlaySessionActiveを見る
-        if (!UFOCameraController.IsPlaySessionActive && !TutorialCraneController.IsAnyTutorialPlaying)
+        if (_forceHidden || (!UFOCameraController.IsPlaySessionActive && !TutorialCraneController.IsAnyTutorialPlaying))
         {
             if ((displayImage != null && displayImage.enabled) || (itemNameText != null && itemNameText.enabled))
             {
@@ -213,7 +226,7 @@ public class DevilItemPickupDisplay : MonoBehaviour, ILanguage
 
         if (itemNameText != null) itemNameText.text = displayName;
 
-        SetVisible(true);
+        if (!_forceHidden) SetVisible(true);
 
         if (displayHoldSeconds > 0f)
         {

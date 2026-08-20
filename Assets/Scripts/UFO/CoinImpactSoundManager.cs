@@ -7,6 +7,9 @@ using UnityEngine;
 /// 「床かコインか」「音を鳴らすほどの速度か」「鳴らしすぎていないか」の判定・音量計算は
 /// 全てここで一元的に行う。実機・練習機どちらのコインにも共通して働く。
 ///
+/// 時計・ルーレットアイテム（プレゼントボックス）も、鳴らす音が違うだけで判定の仕組みは
+/// 通常コインと完全に同じにしている（別枠のクールダウンや「1回だけ」フラグ等は持たない）。
+///
 /// シーンに1つだけ配置する。
 /// </summary>
 public class CoinImpactSoundManager : MonoBehaviour
@@ -21,7 +24,8 @@ public class CoinImpactSoundManager : MonoBehaviour
     [SerializeField] private float maxVelocityForFullVolume = 5f;
 
     [Header("鳴らしすぎ防止")]
-    [Tooltip("同じコイン1個につき、これより短い間隔では連続して音を鳴らさない（秒）")]
+    [Tooltip("同じアイテム1個につき、これより短い間隔では連続して音を鳴らさない（秒）。" +
+             "コイン・時計・ルーレットアイテム共通で使う")]
     [SerializeField] private float perCoinCooldown = 0.1f;
 
     [Tooltip("直近windowDuration秒間に鳴らせる衝突音の最大数。" +
@@ -55,12 +59,19 @@ public class CoinImpactSoundManager : MonoBehaviour
         // 一切鳴らさない。それ以外（クレーンで掴んで落とした時など）は通常通り鳴らす
         if (ItemSpawner.IsInitialSpawning) return;
 
+        bool isSpecialItem = source.itemType == UFOItemType.Watch || source.itemType == UFOItemType.RouletteItem;
+
+        // アーム（爪）のClawCarrierZone内にいる間は、DevilClawCarrierが毎FixedUpdateで運搬中の
+        // アイテム同士を押し合わせるため、意図しない接触が頻発する。運搬中は音を鳴らさず、
+        // 実際に落とされてゾーンの外に出てから初めて鳴るようにする（コイン・特別アイテム共通）
+        if (DevilClawCarrier.IsItemInsideAnyCarrierZone(source)) return;
+
         float speed = collision.relativeVelocity.magnitude;
         if (speed < minVelocityThreshold) return;
 
         float now = Time.time;
 
-        // 同じコインの連打防止
+        // 連打防止（コイン・特別アイテム共通の仕組み）
         if (_lastPlayTimeByCoin.TryGetValue(source, out float lastTime) && now - lastTime < perCoinCooldown)
         {
             return;
@@ -74,26 +85,26 @@ public class CoinImpactSoundManager : MonoBehaviour
         }
 
         float volumeFactor = Mathf.InverseLerp(minVelocityThreshold, maxVelocityForFullVolume, speed);
-
-        // 時計・ルーレットアイテム（プレゼントボックス）は、床/コインどちらに当たった場合でも
-        // 専用の衝突音を優先して鳴らす（両者は同じ音を共有する）
-        bool isSpecialItem = source.itemType == UFOItemType.Watch || source.itemType == UFOItemType.RouletteItem;
+        bool isCoinToCoin = collision.gameObject.GetComponent<UFOItem>() != null;
 
         if (isSpecialItem)
         {
-            DevilSEManager.Instance?.PlaySpecialItemImpact(volumeFactor);
-        }
-        else
-        {
-            bool isCoinToCoin = collision.gameObject.GetComponent<UFOItem>() != null;
             if (isCoinToCoin)
             {
-                DevilSEManager.Instance?.PlayCoinImpact(volumeFactor);
+                DevilSEManager.Instance?.PlaySpecialItemImpact(volumeFactor);
             }
             else
             {
-                DevilSEManager.Instance?.PlayFloorImpact(volumeFactor);
+                DevilSEManager.Instance?.PlaySpecialItemFloorImpact(volumeFactor);
             }
+        }
+        else if (isCoinToCoin)
+        {
+            DevilSEManager.Instance?.PlayCoinImpact(volumeFactor);
+        }
+        else
+        {
+            DevilSEManager.Instance?.PlayFloorImpact(volumeFactor);
         }
 
         _lastPlayTimeByCoin[source] = now;
