@@ -406,11 +406,6 @@ public class BookUIController : MonoBehaviour, ILanguage
         AddSpread(new BookRoguelikePage(palette, _previewRegistry));
     }
 
-    public void SettingLanguage(Language language)
-    {
-        _itemsPage?.SetLanguage(language);
-    }
-
     private void AddSpread(IBookPage page)
     {
         var spread = new BookSpread
