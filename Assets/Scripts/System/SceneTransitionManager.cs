@@ -116,9 +116,10 @@ namespace MiniGames.Transitions
                     }
                     if (canvas.gameObject.scene.name == "DontDestroyOnLoad")
                     {
-                        //ここに初期化関連の事項を書き連ねる
-                        //例：SceneTransitionManager.Instance._lightsToTurnOff[0] = this._lightsToTurnOff[0];
-                        // //ただ、これは実際にはできない。_lightsToTurnOffがPrivateとして設定されているから。publicにするか、書き換えるメソッドを作成しよう
+                        Instance.ReinitializeSceneDependentRefs(
+                            this._lightsToTurnOff,
+                            this._lightsToTurnOn,
+                            this._loadingCamera);
                         continue;
                     }
 
@@ -179,6 +180,18 @@ namespace MiniGames.Transitions
                 _loadingText.font = _loadingFontAsset;
                 _loadingText.text = "Loading";
             }
+        }
+
+        /// <summary>
+        /// タイトルシーンへ戻った際に、シーン依存の参照を新しいインスタンスの値で上書きする。
+        /// Awake の else ブランチから呼び出す。
+        /// </summary>
+        public void ReinitializeSceneDependentRefs(Light[] toTurnOff, Light[] toTurnOn, Camera loadingCamera = null)
+        {
+            _lightsToTurnOff = toTurnOff;
+            _lightsToTurnOn  = toTurnOn;
+            if (loadingCamera != null)
+                _loadingCamera = loadingCamera;
         }
 
         private void Update()
@@ -392,8 +405,20 @@ namespace MiniGames.Transitions
 
             Debug.Log("[STM-DEBUG] === TransitionRoutine 開始 ===");
 
-            // --- 追加: 専用カメラをオンにする ---
+            // --- 専用カメラをオンにし、TransitionCanvasのworldCameraに設定する ---
+            // ゲームシーンへの遷移後にタイトルカメラが破棄されると Canvas の worldCamera が null になり、
+            // ScreenSpaceCamera モードから Overlay へフォールバックして 3D ロゴが描画されなくなる。
+            // 専用カメラを明示的に worldCamera に設定することで、どのシーンから来ても正しく描画する。
             if (_loadingCamera != null) _loadingCamera.enabled = true;
+            Canvas transitionCanvas = _fadeCanvasGroup != null
+                ? _fadeCanvasGroup.transform.root.GetComponent<Canvas>()
+                : null;
+            if (transitionCanvas != null && _loadingCamera != null)
+            {
+                transitionCanvas.renderMode  = RenderMode.ScreenSpaceCamera;
+                transitionCanvas.worldCamera = _loadingCamera;
+                yield return null; // 1フレーム待ってCanvasがカメラ前に再配置されるのを待つ
+            }
 
             // 1. フェードアウト（暗転・モヤ）
             Debug.Log($"[STM-DEBUG] Step1: _fadeCanvasGroup={(_fadeCanvasGroup != null ? "あり" : "null")}");
@@ -688,6 +713,11 @@ namespace MiniGames.Transitions
                 Destroy(_preservedTitleCamera.gameObject);
                 _preservedTitleCamera = null;
             }
+
+            // CanvasのworldCameraを遷移先のCamera.mainに戻す
+            // （_loadingCameraはロード専用なので、遷移完了後はシーンのカメラに引き渡す）
+            if (transitionCanvas != null && Camera.main != null)
+                transitionCanvas.worldCamera = Camera.main;
 
             // アクティブシーンを遷移先に確定させる。
             // 環境光の復元自体はフェードイン前に済ませてある（SetActiveScene は
