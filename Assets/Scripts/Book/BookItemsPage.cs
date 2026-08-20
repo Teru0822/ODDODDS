@@ -25,11 +25,7 @@ public class BookItemsPage : IBookPage
     private TextMeshProUGUI _detailDescription;
 
     private ItemData _selected;
-    private Language _language;
-    // public void SetItemPageLanguage(Language language)
-    // {
-    //     _language = language;
-    // }
+
 
     public void SetLocalize(Language language)
     {
