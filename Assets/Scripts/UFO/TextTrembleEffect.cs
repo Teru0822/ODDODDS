@@ -8,7 +8,7 @@ using UnityEngine;
 /// TextMeshProの公式サンプル（VertexJitter等）と同じ手法。
 /// </summary>
 [RequireComponent(typeof(TMP_Text))]
-public class TextTrembleEffect : MonoBehaviour
+public class TextTrembleEffect : MonoBehaviour, ILanguage
 {
     [Tooltip("1文字ごとの震えの最大角度（度）")]
     [SerializeField] private float angle = 3f;
@@ -32,6 +32,31 @@ public class TextTrembleEffect : MonoBehaviour
     private RectTransform _rect;
     private Vector2 _originalAnchoredPosition;
     private Quaternion _originalRotation;
+    private Language _language;
+    int missCount = 0;
+
+    public void SettingLanguage(Language language)
+    {
+        _language = language;
+        missCount = 0;
+    }
+
+    private void DestroySubMeshUI()
+    {
+        TMP_SubMeshUI[] subMeshes = GetComponentsInChildren<TMP_SubMeshUI>(true);
+        if(subMeshes.Length == 0)
+        {
+            Debug.LogError("TMP_SubMeshUI一つもない");
+            missCount++;
+            return;
+        }
+
+        Debug.Log($"TMP_SubMeshUI count: {subMeshes.Length}");
+        foreach (TMP_SubMeshUI subMesh in subMeshes)
+        {
+            Destroy(subMesh.gameObject);
+        }
+    }
 
     private void Awake()
     {
@@ -66,6 +91,11 @@ public class TextTrembleEffect : MonoBehaviour
         if (_text == null || string.IsNullOrEmpty(_text.text)) return;
 
         _text.ForceMeshUpdate();
+        if(_language != Language.JP && missCount <= 3)
+        {
+            DestroySubMeshUI();
+        }
+
         TMP_TextInfo textInfo = _text.textInfo;
         int characterCount = textInfo.characterCount;
         if (characterCount == 0) return;

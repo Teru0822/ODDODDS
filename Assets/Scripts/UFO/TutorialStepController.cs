@@ -16,7 +16,7 @@ using UnityEngine.UI;
 /// 2. 外部（TouchPanelOutlineController.HandleTutorialEntered 等）から StartTutorialSteps() を呼ぶ。
 /// 3. 「実際の操作待ち」のステップでは、対応する操作を検知した側から NotifyStepActionPerformed() を呼ぶ。
 /// </summary>
-public class TutorialStepController : MonoBehaviour
+public class TutorialStepController : MonoBehaviour, ILanguage
 {
     /// <summary>このステップ中にクレーンの入力（レバー/カメラQE/ボタン）をどう制限するか</summary>
     private enum CraneInputMode
@@ -55,9 +55,9 @@ public class TutorialStepController : MonoBehaviour
                  "Rendererが見つかればその範囲を、見つからなければ位置を中心にした固定サイズを使う")]
         public Transform targetWorld;
 
-        [Tooltip("説明文")]
+        [Tooltip("説明文, 0:日本語, 1:英語, 2:中国語")]
         [TextArea]
-        public string message;
+        public string[] message = new string[4];
 
         [Tooltip("枠を対象より広げる余白（スクリーンピクセル）")]
         public float padding = 20f;
@@ -242,6 +242,8 @@ public class TutorialStepController : MonoBehaviour
 
     [Header("説明テキスト")]
     [SerializeField] private TMP_Text messageText;
+    [SerializeField] private TMP_FontAsset _font_jp;
+    [SerializeField] private TMP_FontAsset _font_en;
     [Tooltip("説明テキストの背景・親。対象の上下どちらに置くかを自動調整する")]
     [SerializeField] private RectTransform messageBox;
     [Tooltip("対象の枠とテキスト欄の間の余白（スクリーンピクセル）")]
@@ -267,6 +269,7 @@ public class TutorialStepController : MonoBehaviour
     [Tooltip("「Press Space」等の操作ガイド。文字を表示しきった後に表示する（IntroTourTelopの_advanceHintと同じ）。" +
              "画面左下など好きな位置にあらかじめ配置しておく。waitForExternalAction=ONのステップでは表示しない")]
     [SerializeField] private GameObject advanceHint;
+    private TMP_Text advanceHint_text;
 
     [Tooltip("文字を表示しきってから操作ガイドを出すまでの待ち時間（秒）")]
     [SerializeField] private float advanceHintDelay = 0.3f;
@@ -308,6 +311,24 @@ public class TutorialStepController : MonoBehaviour
     private int _stepShownFrame = -1;
     private Coroutine _messageTypeCoroutine;
     private float _lastTypingSoundTime;
+    private Language _language;
+
+    public void SettingLanguage(Language language)
+    {
+        _language = language;
+        if(language == Language.JP)
+        {
+            messageText.font = _font_jp;
+            advanceHint_text.font = _font_jp;
+        }
+            
+        else if(language == Language.EN)
+        {
+            messageText.font = _font_en;
+            advanceHint_text.font = _font_en;
+        }
+            
+    }
 
     private void Awake()
     {
@@ -348,6 +369,9 @@ public class TutorialStepController : MonoBehaviour
             glowImage.rectTransform.offsetMin = Vector2.zero;
             glowImage.rectTransform.offsetMax = Vector2.zero;
         }
+
+        if(messageText != null) messageText.font = _font_jp;
+        if(advanceHint != null) advanceHint.TryGetComponent<TMP_Text>(out advanceHint_text);
     }
 
     private void OnEnable()
@@ -601,13 +625,12 @@ public class TutorialStepController : MonoBehaviour
         // ステップ表示のきっかけになったクリック（例:「はい」ボタン）自体を、
         // このステップへの「進む」入力として二重に拾ってしまわないよう、表示した同じフレームは無視する
         bool sameFrameAsShown = Time.frameCount == _stepShownFrame;
-        if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
+        if (Keyboard.current != null && Mouse.current.leftButton.wasPressedThisFrame)
         {
             Debug.Log($"[TutorialDebug] Space pressed: step={_currentStepIndex}, waitForExternalAction={step.waitForExternalAction}, " +
                       $"craneInputMode={step.craneInputMode}, willAdvance={!step.waitForExternalAction && !sameFrameAsShown}");
         }
-        if (!step.waitForExternalAction && !sameFrameAsShown &&
-            Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
+        if (!step.waitForExternalAction && !sameFrameAsShown && Keyboard.current != null && Mouse.current.leftButton.wasPressedThisFrame)
         {
             AdvanceStep();
         }
@@ -780,7 +803,7 @@ public class TutorialStepController : MonoBehaviour
     private IEnumerator TypeMessage(TutorialStep step)
     {
         messageText.text = "";
-        string message = step.message;
+        string message = step.message[(int)_language];
 
         if (!string.IsNullOrEmpty(message))
         {
@@ -1245,7 +1268,7 @@ public class TutorialStepController : MonoBehaviour
         messageText.enableWordWrapping = true;
 
         // 横幅はこのステップのmessageBoxMaxWidthに固定し、文章量に応じて高さだけ自動調整する
-        Vector2 preferred = messageText.GetPreferredValues(step.message ?? string.Empty, innerWidth, 0f);
+        Vector2 preferred = messageText.GetPreferredValues(step.message[(int)_language] ?? string.Empty, innerWidth, 0f);
         float boxHeight = preferred.y + messageBoxPadding.y * 2f;
 
         messageBox.sizeDelta = new Vector2(maxWidth, boxHeight);

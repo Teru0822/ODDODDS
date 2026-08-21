@@ -54,7 +54,7 @@ public class BookItemsPage : IBookPage
     private void BuildLeft(RectTransform page)
     {
         var title = BookUIBuilder.Text(page, "Title", "Items", 56f,
-                                       TextAlignmentOptions.TopLeft, _palette.Accent, _palette.Font, true,"BookUITable","ItemDetail",true,60,18);
+                                       TextAlignmentOptions.TopLeft, _palette.Accent, _palette.Font, true,"BookUITable","ItemPageTitle",true,60,18);
         BookUIBuilder.AnchorRect(title.rectTransform, 0f, 0.90f, 1f, 1f);
 
         var area = BookUIBuilder.Panel(page, "ScrollArea");
