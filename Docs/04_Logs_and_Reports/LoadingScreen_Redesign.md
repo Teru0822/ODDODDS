@@ -172,6 +172,71 @@ LoadingScreenManager.Instance.Hide(float fadeDuration = 1.5f);
 
 ---
 
+## Unity Editor 作業手順（ユーザー担当）
+
+### ① 「LoadingScreen」レイヤーを追加
+1. `Edit > Project Settings > Tags and Layers`
+2. `Layers` 一覧の空きスロットに `LoadingScreen` と入力して保存
+
+### ② SceneTransitionManager の移設
+`3D_Title_Sample.unity` の `TransitionCanvas` を削除する前に:
+1. 新しい空の GameObject `SceneTransitionManager` を `3D_Title_Sample.unity` に作成
+2. `SceneTransitionManager` コンポーネントをアタッチ
+3. Inspector で `_postSpawnWaitTime`（デフォルト 2.5）を確認
+
+### ③ `Assets/Resources/LoadingScreen.prefab` を作成
+1. `Assets/Resources/` フォルダに新しい Prefab `LoadingScreen` を作成
+2. 以下の GameObject 構成を組む:
+
+```
+LoadingScreen [LoadingScreenManager コンポーネント]
+├── LoadingCamera
+│     Camera コンポーネント:
+│       Render Type = Overlay（URP）
+│       Culling Mask = LoadingScreen のみ
+│       Clear Flags = Depth
+│     Transform: Y = -500
+├── TransitionCanvas (Canvas コンポーネント)
+│     Render Mode = Screen Space - Camera
+│     World Camera = LoadingCamera
+│     Sort Order = 999
+│   ├── RootBlocker (Image)
+│   │     Color = (0, 0, 0, 0)  ← 透明
+│   │     RaycastTarget = true
+│   │     Anchor: Stretch 全画面
+│   ├── FadeGroup (CanvasGroup)
+│   │   └── FadeImage (Image)
+│   │         Color = (0, 0, 0, 1)  ← 黒
+│   │         Anchor: Stretch 全画面
+│   ├── LoadingGroup (CanvasGroup)
+│   │   ├── LoadingText (TextMeshProUGUI "Loading")
+│   │   └── （背景画像など、現行のロード画面と同じ構成）
+│   └── LogoObject [Layer: LoadingScreen]
+│         （3D_Title_Sample.unity の LogoObject をコピー＆ペースト）
+└── LogoLight [Layer: LoadingScreen]
+      Light コンポーネント: Type = Spot または Point
+      （DirectionalLight は使用禁止）
+```
+
+3. `LoadingScreenManager` コンポーネントの SerializeField をすべてアサイン:
+   - `_loadingCamera` → LoadingCamera
+   - `_fadeCanvasGroup` → FadeGroup
+   - `_loadingScreenCanvasGroup` → LoadingGroup
+   - `_rootBlocker` → RootBlocker
+   - `_floatingLogoParent` → LogoObject
+   - `_rotatingLogoPart` → ロゴの回転パーツ
+   - `_logoSkinnedMeshRenderer` → まばたき用 SkinnedMeshRenderer
+   - `_loadingText` → LoadingText
+   - `_loadingFontAsset` → Owrekynge 等のフォントアセット
+4. Prefab として保存（`Assets/Resources/LoadingScreen.prefab`）
+
+### ④ `3D_Title_Sample.unity` を修正
+1. 旧 `TransitionCanvas` を削除（LogoObject を先に Prefab へコピーすること）
+2. 旧 `SceneTransitionManager` がアタッチされていた GameObject も削除
+3. ②で作成した新しい `SceneTransitionManager` オブジェクトのみ残す
+
+---
+
 ## 検証方法
 
 1. タイトル → ゲームシーン遷移でロード画面が正しく表示・消去される
