@@ -130,6 +130,7 @@ GameObject:
   - component: {fileID: 2769335}
   - component: {fileID: 2769337}
   - component: {fileID: 2769336}
+  - component: {fileID: 2769338}
   m_Layer: 0
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -256,6 +257,46 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2769334}
   m_CullTransparentMesh: 1
+--- !u!114 &2769338
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2769334}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56eb0353ae6e5124bb35b17aff880f16, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Components.LocalizeStringEvent
+  m_StringReference:
+    m_TableReference:
+      m_TableCollectionName: GUID:6fa1b201c0b325044a7d27bcd9cd36e1
+    m_TableEntryReference:
+      m_KeyId: 18832086343680
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  m_FormatArguments: []
+  m_UpdateString:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 2769336}
+        m_TargetAssemblyTypeName: TMPro.TMP_Text, Unity.TextMeshPro
+        m_MethodName: set_text
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 1
+  references:
+    version: 2
+    RefIds: []
 --- !u!1 &32588761
 GameObject:
   m_ObjectHideFlags: 0
@@ -965,6 +1006,7 @@ GameObject:
   - component: {fileID: 197740668}
   - component: {fileID: 197740670}
   - component: {fileID: 197740669}
+  - component: {fileID: 197740671}
   m_Layer: 5
   m_Name: Press_Space
   m_TagString: Untagged
@@ -1045,8 +1087,8 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
@@ -1077,7 +1119,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: -93.754395, y: 0, z: 12.7771, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -1091,6 +1133,46 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 197740667}
   m_CullTransparentMesh: 1
+--- !u!114 &197740671
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 197740667}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56eb0353ae6e5124bb35b17aff880f16, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Components.LocalizeStringEvent
+  m_StringReference:
+    m_TableReference:
+      m_TableCollectionName: GUID:6fa1b201c0b325044a7d27bcd9cd36e1
+    m_TableEntryReference:
+      m_KeyId: 33902161895424
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  m_FormatArguments: []
+  m_UpdateString:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 197740669}
+        m_TargetAssemblyTypeName: TMPro.TMP_Text, Unity.TextMeshPro
+        m_MethodName: set_text
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 1
+  references:
+    version: 2
+    RefIds: []
 --- !u!1 &202990908
 GameObject:
   m_ObjectHideFlags: 0
@@ -3853,6 +3935,7 @@ GameObject:
   - component: {fileID: 938780728}
   - component: {fileID: 938780730}
   - component: {fileID: 938780729}
+  - component: {fileID: 938780731}
   m_Layer: 0
   m_Name: section
   m_TagString: Untagged
@@ -3979,6 +4062,46 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 938780727}
   m_CullTransparentMesh: 1
+--- !u!114 &938780731
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 938780727}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56eb0353ae6e5124bb35b17aff880f16, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Components.LocalizeStringEvent
+  m_StringReference:
+    m_TableReference:
+      m_TableCollectionName: GUID:6fa1b201c0b325044a7d27bcd9cd36e1
+    m_TableEntryReference:
+      m_KeyId: 63339307008
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  m_FormatArguments: []
+  m_UpdateString:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 938780729}
+        m_TargetAssemblyTypeName: TMPro.TMP_Text, Unity.TextMeshPro
+        m_MethodName: set_text
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 1
+  references:
+    version: 2
+    RefIds: []
 --- !u!1001 &940877376
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5242,6 +5365,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: d6dd0721d5d3d8b478c0e48c82a6722f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1153044099}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: d6dd0721d5d3d8b478c0e48c82a6722f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1153044100}
   m_SourcePrefab: {fileID: 100100000, guid: d6dd0721d5d3d8b478c0e48c82a6722f, type: 3}
 --- !u!1 &1153044094 stripped
 GameObject:
@@ -5345,6 +5471,23 @@ MonoBehaviour:
   keepVideoPlayingInBackground: 1
   videoStartOffsetSeconds: 1
   loopStaticSound: 1
+--- !u!114 &1153044100
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1153044094}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd08dca180401cb40a0070947accd99f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FontChanger
+  _fonts:
+  - {fileID: 11400000, guid: 80f2348e57a1a4d47af546535d76c144, type: 2}
+  - {fileID: 11400000, guid: 93f8be6c10b2743ada3a3f7f1addfd46, type: 2}
+  - {fileID: 11400000, guid: 93f8be6c10b2743ada3a3f7f1addfd46, type: 2}
+  - {fileID: 11400000, guid: 93f8be6c10b2743ada3a3f7f1addfd46, type: 2}
 --- !u!1 &1165467552
 GameObject:
   m_ObjectHideFlags: 0
@@ -6080,7 +6223,11 @@ MonoBehaviour:
     targetUI2: {fileID: 0}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 0}
-    message: "\u624B\u77ED\u306B\u805E\u304F\u305E\u3001\u751F\u304D\u6B8B\u308A\u305F\u3044\u304B\uFF1F\u3053\u3053\u304B\u3089\u306E\u8131\u51FA\u306B\u4FFA\u304C\u5354\u529B\u3057\u3066\u3084\u308B"
+    message:
+    - "\u624B\u77ED\u306B\u805E\u304F\u305E\u3001\u751F\u304D\u6B8B\u308A\u305F\u3044\u304B\uFF1F\u3053\u3053\u304B\u3089\u306E\u8131\u51FA\u306B\u4FFA\u304C\u5354\u529B\u3057\u3066\u3084\u308B"
+    - I'll make this quick. You wanna survive? I'll help you get out of here.
+    - 
+    - 
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
@@ -6110,7 +6257,14 @@ MonoBehaviour:
     targetUI2: {fileID: 0}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 0}
-    message: "\u5974\u306B\u3070\u308C\u306A\u3044\u3088\u3046\u306B\u4E00\u6642\u7684\u306A\u7A7A\u9593\u3092\u7528\u610F\u3057\u305F\u3001\u307E\u305A\u306F\u3053\u3053\u3067\u3053\u306E\u30B2\u30FC\u30E0\u306E\u53D6\u308A\u6271\u3044\u3092\u5B66\u3079"
+    message:
+    - "\u5974\u306B\u3070\u308C\u306A\u3044\u3088\u3046\u306B\u4E00\u6642\u7684\u306A\u7A7A\u9593\u3092\u7528\u610F\u3057\u305F\u3001\u307E\u305A\u306F\u3053\u3053\u3067\u3053\u306E\u30B2\u30FC\u30E0\u306E\u53D6\u308A\u6271\u3044\u3092\u5B66\u3079"
+    - 'I set up a temporary space without him finding out.
+
+      Start by learning
+      how this game works here.'
+    - 
+    - 
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
@@ -6140,7 +6294,14 @@ MonoBehaviour:
     targetUI2: {fileID: 0}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 1430657953}
-    message: "\u3053\u306E\u6B04\u3067\u306F\u30C7\u30D3\u30EB\u30B3\u30A4\u30F3\u3092\u4F7F\u3063\u3066\u6642\u9593\u3092\u8CB7\u3048\u308B\u3001\u3001\u304C\u4ECA\u306F30\u79D2\u3057\u304B\u9078\u629E\u3067\u304D\u306A\u3044\u3088\u3046\u3060\u306A"
+    message:
+    - "\u3053\u306E\u6B04\u3067\u306F\u30C7\u30D3\u30EB\u30B3\u30A4\u30F3\u3092\u4F7F\u3063\u3066\u6642\u9593\u3092\u8CB7\u3048\u308B\u3001\u3001\u304C\u4ECA\u306F30\u79D2\u3057\u304B\u9078\u629E\u3067\u304D\u306A\u3044\u3088\u3046\u3060\u306A\r\n"
+    - 'You can use Devil Coins to buy time here.
+
+      ...For now, it seems like
+      30 seconds is all you can choose.'
+    - 
+    - 
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
@@ -6170,7 +6331,11 @@ MonoBehaviour:
     targetUI2: {fileID: 0}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 1731404773}
-    message: "\u67A0\u5185\u306B\u30DE\u30A6\u30B9\u30AB\u30FC\u30BD\u30EB\u3092\u5408\u308F\u305B\u3066\u5DE6\u30AF\u30EA\u30C3\u30AF\u3057\u306A"
+    message:
+    - "\u67A0\u5185\u306B\u30DE\u30A6\u30B9\u30AB\u30FC\u30BD\u30EB\u3092\u5408\u308F\u305B\u3066\u5DE6\u30AF\u30EA\u30C3\u30AF\u3057\u306A"
+    - Move your mouse cursor over the area and left-click.
+    - 
+    - 
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
@@ -6200,7 +6365,12 @@ MonoBehaviour:
     targetUI2: {fileID: 0}
     targetUI2IsMoneyCountPreview: 1
     targetWorld: {fileID: 0}
-    message: "\u73FE\u5728\u306E\u624B\u6301\u3061\u3092\u307F\u3066\u30D7\u30EC\u30A4\u3059\u308B\u304B\u8003\u3048\u306A\u3001\u4ECA\u306F\u6E1B\u3089\u3093\u304C\u306A"
+    message:
+    - "\u73FE\u5728\u306E\u624B\u6301\u3061\u3092\u307F\u3066\u30D7\u30EC\u30A4\u3059\u308B\u304B\u8003\u3048\u306A\u3001\u4ECA\u306F\u6E1B\u3089\u3093\u304C\u306A"
+    - "Check your money and decide which one want to play. \nYou won't lose money
+      this time."
+    - 
+    - 
     padding: 0
     rectAdjustMin: {x: -85, y: 0}
     rectAdjustMax: {x: 80, y: -230}
@@ -6230,7 +6400,11 @@ MonoBehaviour:
     targetUI2: {fileID: 0}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 813982483}
-    message: "\u65E9\u901FPlay\u3092\u62BC\u3059\u3093\u3060\nEnter\u3067\u3082\u958B\u59CB\u3067\u304D\u308B\u305E"
+    message:
+    - "\u65E9\u901FPlay\u3092\u62BC\u3059\u3093\u3060\r\nEnter\u3067\u3082\u958B\u59CB\u3067\u304D\u308B\u305E"
+    - "Press \u201CPlay\u201D and get started.\nYou can also hit Enter to start."
+    - 
+    - 
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
@@ -6260,7 +6434,11 @@ MonoBehaviour:
     targetUI2: {fileID: 0}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 2160405353095806755}
-    message: "\u5236\u9650\u6642\u9593\u306F\u3053\u3053\u3067\u78BA\u8A8D\u3067\u304D\u308B\u305E"
+    message:
+    - "\u5236\u9650\u6642\u9593\u306F\u3053\u3053\u3067\u78BA\u8A8D\u3067\u304D\u308B\u305E"
+    - You can check the time limit here.
+    - 
+    - 
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
@@ -6290,7 +6468,11 @@ MonoBehaviour:
     targetUI2: {fileID: 0}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 1923579903}
-    message: "\u30EC\u30D0\u30FC\u304B\u30DC\u30BF\u30F3\u3092\u64CD\u4F5C\u3059\u308B\u3068\u30BF\u30A4\u30DE\u30FC\u304C\u958B\u59CB\u3059\u308B"
+    message:
+    - "\u30EC\u30D0\u30FC\u304B\u30DC\u30BF\u30F3\u3092\u64CD\u4F5C\u3059\u308B\u3068\u30BF\u30A4\u30DE\u30FC\u304C\u958B\u59CB\u3059\u308B"
+    - The timer starts when you operate the lever or press the button.
+    - 
+    - 
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
@@ -6320,7 +6502,12 @@ MonoBehaviour:
     targetUI2: {fileID: 0}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 1755706113}
-    message: "\u3072\u3068\u307E\u305A\u30EC\u30D0\u30FC\u3092\u52D5\u304B\u3057\u3066\u307F\u308D\u3001\u30AB\u30FC\u30BD\u30EB\u3092\u5408\u308F\u305B\u3066\u5DE6\u30AF\u30EA\u30C3\u30AF\u9577\u62BC\u3057\u3067\u64CD\u4F5C\u3060\nWASD\u3067\u3082\u64CD\u4F5C\u3067\u304D\u308B"
+    message:
+    - "\u3072\u3068\u307E\u305A\u30EC\u30D0\u30FC\u3092\u52D5\u304B\u3057\u3066\u307F\u308D\u3001\u30AB\u30FC\u30BD\u30EB\u3092\u5408\u308F\u305B\u3066\u5DE6\u30AF\u30EA\u30C3\u30AF\u9577\u62BC\u3057\u3067\u64CD\u4F5C\u3060\r\nWASD\u3067\u3082\u64CD\u4F5C\u3067\u304D\u308B"
+    - "Try moving the lever. \nPlace your cursor over it and hold the left mouse
+      button.\nYou can also use WASD."
+    - 
+    - 
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
@@ -6350,7 +6537,12 @@ MonoBehaviour:
     targetUI2: {fileID: 0}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 2160405353095806755}
-    message: "\u30BF\u30A4\u30DE\u30FC\u304C\u52D5\u304F\u306E\u3092\u78BA\u8A8D\u3057\u305F\u304B\uFF1F0\u79D2\u306B\u306A\u308B\u524D\u306B\u30B3\u30A4\u30F3\u3092\u7A3C\u3052"
+    message:
+    - "\u30BF\u30A4\u30DE\u30FC\u304C\u52D5\u304F\u306E\u3092\u78BA\u8A8D\u3057\u305F\u304B\uFF1F0\u79D2\u306B\u306A\u308B\u524D\u306B\u30B3\u30A4\u30F3\u3092\u7A3C\u3052"
+    - Did you see the timer start? Earn as many coins as you can before it reaches
+      zero.
+    - 
+    - 
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
@@ -6380,7 +6572,14 @@ MonoBehaviour:
     targetUI2: {fileID: 0}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 227449733}
-    message: "\u6B21\u306B\u30A2\u30FC\u30E0\u3092\u964D\u4E0B\u3055\u305B\u3066\u307F\u306A\u3001\u3053\u306E\u30DC\u30BF\u30F3\u3067\u30B3\u30A4\u30F3\u304C\u3064\u304B\u3081\u308B\n1\u756A\u30AD\u30FC\u3092\u62BC\u3059\u3053\u3068\u3067\u3082\u64CD\u4F5C\u53EF\u80FD\u3060"
+    message:
+    - "\u6B21\u306B\u30A2\u30FC\u30E0\u3092\u964D\u4E0B\u3055\u305B\u3066\u307F\u306A\u3001\u3053\u306E\u30DC\u30BF\u30F3\u3067\u30B3\u30A4\u30F3\u304C\u3064\u304B\u3081\u308B\r\n1\u756A\u30AD\u30FC\u3092\u62BC\u3059\u3053\u3068\u3067\u3082\u64CD\u4F5C\u53EF\u80FD\u3060"
+    - 'Next, lower the arm. This button lets you grab the coins.
+
+      You can also
+      use the 1 key.'
+    - 
+    - 
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
@@ -6410,7 +6609,12 @@ MonoBehaviour:
     targetUI2: {fileID: 0}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 1957663250}
-    message: "\u6B21\u306B\u30A2\u30FC\u30E0\u3092\u958B\u304F\u30DC\u30BF\u30F3\u3092\u62BC\u3057\u3066\u307F\u308D\u3001\u3053\u308C\u3067\u63B4\u3093\u3060\u3082\u306E\u3092\u96E2\u305B\u308B\n2\u756A\u30AD\u30FC\u3092\u62BC\u3059\u3053\u3068\u3067\u3082\u64CD\u4F5C\u53EF\u80FD\u3060"
+    message:
+    - "\u6B21\u306B\u30A2\u30FC\u30E0\u3092\u958B\u304F\u30DC\u30BF\u30F3\u3092\u62BC\u3057\u3066\u307F\u308D\u3001\u3053\u308C\u3067\u63B4\u3093\u3060\u3082\u306E\u3092\u96E2\u305B\u308B\r\n2\u756A\u30AD\u30FC\u3092\u62BC\u3059\u3053\u3068\u3067\u3082\u64CD\u4F5C\u53EF\u80FD\u3060"
+    - "Next, press the button to open the arm. \nThat'll make it let go of whatever
+      it's holding.\nYou can also press the 2 key."
+    - 
+    - 
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
@@ -6440,7 +6644,14 @@ MonoBehaviour:
     targetUI2: {fileID: 0}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 1951307279}
-    message: "\u30E2\u30CB\u30BF\u30FC\u3092\u898B\u3066\u307F\u306A\u3001\u4ECA\u306F\u30AF\u30EC\u30FC\u30F3\u30B2\u30FC\u30E0\u306E\u5F8C\u308D\u306E\u30AB\u30E1\u30E9\u304C\u753B\u9762\u306B\u5199\u3057\u51FA\u3055\u308C\u3066\u3044\u308B\nQ\u3092\u62BC\u3057\u3066\u307F\u308D"
+    message:
+    - "\u30E2\u30CB\u30BF\u30FC\u3092\u898B\u3066\u307F\u306A\u3001\u4ECA\u306F\u30DE\u30B7\u30F3\u306E\u5F8C\u308D\u306E\u30AB\u30E1\u30E9\u304C\u753B\u9762\u306B\u5199\u3057\u51FA\u3055\u308C\u3066\u3044\u308B\r\nQ\u3092\u62BC\u3057\u3066\u307F\u308D"
+    - 'Look at the monitor. Right now, it shows the camera behind the machine.
+
+      Try
+      pressing Q.'
+    - 
+    - 
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
@@ -6470,7 +6681,14 @@ MonoBehaviour:
     targetUI2: {fileID: 0}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 1951307279}
-    message: "\u4ECA\u6620\u3055\u308C\u3066\u3044\u308B\u753B\u9762\u306F\u30AF\u30EC\u30FC\u30F3\u30B2\u30FC\u30E0\u306E\u5DE6\u5074\u306E\u30AB\u30E1\u30E9\u3060\n\u6B21\u306BE\u30922\u56DE\u62BC\u3057\u3066\u53F3\u5074\u306E\u30AB\u30E1\u30E9\u3092\u6620\u3057\u3066\u307F\u308D"
+    message:
+    - "\u4ECA\u6620\u3055\u308C\u3066\u3044\u308B\u753B\u9762\u306F\u30DE\u30B7\u30F3\u306E\u5DE6\u5074\u306E\u30AB\u30E1\u30E9\u3060\r\n\u6B21\u306BE\u30922\u56DE\u62BC\u3057\u3066\u53F3\u5074\u306E\u30AB\u30E1\u30E9\u3092\u6620\u3057\u3066\u307F\u308D"
+    - 'You''re looking at the camera on the left side of the machine.
+
+      Now
+      press E twice to switch to the right-side camera.'
+    - 
+    - 
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
@@ -6500,7 +6718,14 @@ MonoBehaviour:
     targetUI2: {fileID: 0}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 1951307279}
-    message: "\u4ECA\u306F\u53F3\u306E\u30AB\u30E1\u30E9\u304C\u6620\u3057\u3060\u3055\u308C\u3066\u3044\u308B\n\u30A2\u30A4\u30C6\u30E0\u304C\u88CF\u306B\u96A0\u308C\u3066\u3044\u308B\u3068\u304D\u306F\u3053\u308C\u3092\u3064\u304B\u3048"
+    message:
+    - "\u4ECA\u306F\u53F3\u306E\u30AB\u30E1\u30E9\u304C\u6620\u3057\u3060\u3055\u308C\u3066\u3044\u308B\r\n\u30A2\u30A4\u30C6\u30E0\u304C\u88CF\u306B\u96A0\u308C\u3066\u3044\u308B\u3068\u304D\u306F\u3053\u308C\u3092\u3064\u304B\u3048"
+    - 'You''re looking at the camera on the right side of the machine.
+
+      Use
+      it when items are hidden behind the machine.'
+    - 
+    - 
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
@@ -6530,7 +6755,12 @@ MonoBehaviour:
     targetUI2: {fileID: 0}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 1951307279}
-    message: "3\u756A\u30AD\u30FC\u3067\u30E2\u30CB\u30BF\u30FC\u3092\u3057\u307E\u3046/\u51FA\u3059\u3053\u3068\u304C\u3067\u304D\u308B\u3001\u90AA\u9B54\u306A\u6642\u306F\u3057\u307E\u3063\u3068\u304F\u3068\u3044\u3044"
+    message:
+    - "3\u756A\u30AD\u30FC\u3067\u30E2\u30CB\u30BF\u30FC\u3092\u3057\u307E\u3046/\u51FA\u3059\u3053\u3068\u304C\u3067\u304D\u308B\u3001\u90AA\u9B54\u306A\u6642\u306F\u3057\u307E\u3063\u3068\u304F\u3068\u3044\u3044"
+    - "You can put the monitor away or bring it back out with the 3 key. \nPut it
+      away when it's in the way."
+    - 
+    - 
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
@@ -6560,7 +6790,14 @@ MonoBehaviour:
     targetUI2: {fileID: 0}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 0}
-    message: "\u64CD\u4F5C\u306F\u3053\u308C\u3067\u3059\u3079\u3066\u3060\n\u3072\u3068\u307E\u305A\u30A2\u30A4\u30C6\u30E0\u3092\u63B4\u3093\u3067\u843D\u3068\u3057\u53E3\u306B\u5165\u308C\u3066\u307F\u308D"
+    message:
+    - "\u64CD\u4F5C\u306F\u3053\u308C\u3067\u3059\u3079\u3066\u3060\r\n\u3072\u3068\u307E\u305A\u30A2\u30A4\u30C6\u30E0\u3092\u63B4\u3093\u3067\u843D\u3068\u3057\u53E3\u306B\u5165\u308C\u3066\u307F\u308D"
+    - 'That''s all you need to know.
+
+      Try grabbing an item and putting it in
+      the prize chute.'
+    - 
+    - 
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
@@ -6590,7 +6827,12 @@ MonoBehaviour:
     targetUI2: {fileID: 0}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 1708828701}
-    message: "\u4F55\u3092\u843D\u3068\u3057\u305F\u304B\u306F\u3053\u3053\u3067\u843D\u3068\u3057\u305F\u9806\u306B\u8868\u793A\u3055\u308C\u308B"
+    message:
+    - "\u4F55\u3092\u843D\u3068\u3057\u305F\u304B\u306F\u3053\u3053\u3067\u843D\u3068\u3057\u305F\u9806\u306B\u8868\u793A\u3055\u308C\u308B"
+    - This is where you'll see the items you've dropped, listed in the order you
+      dropped them.
+    - 
+    - 
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
@@ -6620,7 +6862,11 @@ MonoBehaviour:
     targetUI2: {fileID: 7191062920111406091}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 0}
-    message: "\u8868\u3092\u898B\u3066\u826F\u3044\u30A2\u30A4\u30C6\u30E0\u3092\u72D9\u3046\u3068\u3044\u3044"
+    message:
+    - "\u8868\u3092\u898B\u3066\u826F\u3044\u30A2\u30A4\u30C6\u30E0\u3092\u72D9\u3046\u3068\u3044\u3044"
+    - Check the chart and aim for the good items.
+    - 
+    - 
     padding: 0
     rectAdjustMin: {x: -20, y: -430}
     rectAdjustMax: {x: 300, y: 0}
@@ -6650,7 +6896,14 @@ MonoBehaviour:
     targetUI2: {fileID: 7191062920111406091}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 0}
-    message: "\u305F\u3060\u3057\u30D6\u30E9\u30C3\u30AF\u30C0\u30A4\u30E4\u306B\u306F\u6C17\u3092\u4ED8\u3051\u308D\u3001\u3042\u308C\u306F\u30C7\u30D3\u30EB\u30B3\u30A4\u30F3\u3092\u6E1B\u3089\u3059\u305E\u6D17\u6D44\u3059\u308C\u3070\u3042\u308B\u3044\u306F\u3001\u3001\u3001\u3060\u304C\u306A"
+    message:
+    - "\u305F\u3060\u3057\u30D6\u30E9\u30C3\u30AF\u30C0\u30A4\u30E4\u306B\u306F\u6C17\u3092\u4ED8\u3051\u308D\u3002\u3042\u308C\u306F\u30C7\u30D3\u30EB\u30B3\u30A4\u30F3\u3092\u6E1B\u3089\u3059\u305E\u3002\n\u6D17\u6D44\u3059\u308C\u3070\u3042\u308B\u3044\u306F\u3001\u3001\u3001\u3060\u304C\u306A"
+    - 'But be careful with Black Diamonds. They''ll drain your Devil Coins.
+
+      Maybe
+      cleaning them will do the trick... though.'
+    - 
+    - 
     padding: 0
     rectAdjustMin: {x: -20, y: -430}
     rectAdjustMax: {x: 300, y: 0}
@@ -6680,7 +6933,11 @@ MonoBehaviour:
     targetUI2: {fileID: 7191062920111406091}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 0}
-    message: "\u7802\u6642\u8A08\u306F\u5236\u9650\u6642\u9593\u3092\u56DE\u5FA9\u3059\u308B\u3053\u3068\u304C\u3067\u304D\u308B\u305E"
+    message:
+    - "\u7802\u6642\u8A08\u306F\u5236\u9650\u6642\u9593\u3092\u56DE\u5FA9\u3059\u308B\u3053\u3068\u304C\u3067\u304D\u308B\u305E"
+    - The hourglass can restore your remaining time.
+    - 
+    - 
     padding: 0
     rectAdjustMin: {x: -20, y: -430}
     rectAdjustMax: {x: 300, y: 0}
@@ -6710,7 +6967,14 @@ MonoBehaviour:
     targetUI2: {fileID: 0}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 0}
-    message: "\u6700\u5F8C\u306B\u5236\u9650\u6642\u9593\u4ED8\u304D\u3067\u3084\u3063\u3066\u307F\u306A\n\u30EC\u30D0\u30FC\u304B\u30DC\u30BF\u30F3\u3092\u64CD\u4F5C\u3059\u308B\u3068\u59CB\u307E\u308B\u305E"
+    message:
+    - "\u6700\u5F8C\u306B\u5236\u9650\u6642\u9593\u4ED8\u304D\u3067\u3084\u3063\u3066\u307F\u306A\r\n\u30EC\u30D0\u30FC\u304B\u30DC\u30BF\u30F3\u3092\u64CD\u4F5C\u3059\u308B\u3068\u59CB\u307E\u308B\u305E"
+    - 'Finally, try playing with a time limit.
+
+      It starts when you operate
+      the lever or press the button.'
+    - 
+    - 
     padding: 0
     rectAdjustMin: {x: -20, y: -300}
     rectAdjustMax: {x: 300, y: 0}
@@ -6740,7 +7004,11 @@ MonoBehaviour:
     targetUI2: {fileID: 0}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 0}
-    message: "\u3053\u308C\u3067\u5927\u4F53\u306F\u308F\u304B\u3063\u305F\u304B\uFF1F"
+    message:
+    - "\u3053\u308C\u3067\u5927\u4F53\u306F\u308F\u304B\u3063\u305F\u304B\uFF1F"
+    - Got the gist of it?
+    - 
+    - 
     padding: 0
     rectAdjustMin: {x: -20, y: -300}
     rectAdjustMax: {x: 300, y: 0}
@@ -6770,7 +7038,12 @@ MonoBehaviour:
     targetUI2: {fileID: 0}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 0}
-    message: "\u4ED6\u306B\u3082\u30BF\u30A4\u30D7\u30E9\u30A4\u30BF\u30FC\u3092\u3064\u304B\u3063\u3066\u30A2\u30A4\u30C6\u30E0\u3092\u8FFD\u52A0\u3057\u305F\u308A\u5F37\u5316\u3059\u308B\u3053\u3068\u3067\u5974\u304B\u3089\u306E\u53D6\u308A\u7ACB\u3066\u3092\u3057\u306E\u3050\u3093\u3060"
+    message:
+    - "\u4ED6\u306B\u3082\u30BF\u30A4\u30D7\u30E9\u30A4\u30BF\u30FC\u3092\u4F7F\u3063\u3066\u3001\u30A2\u30A4\u30C6\u30E0\u3092\u8FFD\u52A0\u3057\u305F\u308A\u5F37\u5316\u3059\u308B\u3053\u3068\u3067\u5974\u304B\u3089\u306E\u53D6\u308A\u7ACB\u3066\u3092\u3057\u306E\u3050\u3093\u3060"
+    - You can also use the typewriter to add and upgrade items, helping you survive
+      the debt collection by him.
+    - 
+    - 
     padding: 0
     rectAdjustMin: {x: -20, y: -300}
     rectAdjustMax: {x: 300, y: 0}
@@ -6800,7 +7073,11 @@ MonoBehaviour:
     targetUI2: {fileID: 0}
     targetUI2IsMoneyCountPreview: 0
     targetWorld: {fileID: 0}
-    message: "\u305D\u308D\u305D\u308D\u6642\u9593\u306E\u3088\u3046\u3060\n\u4FFA\u306E\u540D\u524D\u304B\uFF1F\u4FFA\u306F\u25A0\u25A0\u25A0\u30FB\u30FB\u30FB\u30FB\u30FB"
+    message:
+    - "\u305D\u308D\u305D\u308D\u6642\u9593\u306E\u3088\u3046\u3060\r\n\u4FFA\u306E\u540D\u524D\u304B\uFF1F\u4FFA\u306F\u25A0\u25A0\u25A0\u30FB\u30FB\u30FB\u30FB\u30FB"
+    - "Time's almost up.\nMy name? I'm \u25A0\u25A0\u25A0\u30FB\u30FB\u30FB\u30FB\u30FB"
+    - 
+    - 
     padding: 0
     rectAdjustMin: {x: -20, y: -300}
     rectAdjustMax: {x: 300, y: 0}
@@ -6878,6 +7155,8 @@ MonoBehaviour:
   glowPulseMaxScale: 0.9
   glowPulseDuration: 2
   messageText: {fileID: 537323466}
+  _font_jp: {fileID: 11400000, guid: 80f2348e57a1a4d47af546535d76c144, type: 2}
+  _font_en: {fileID: 11400000, guid: 93f8be6c10b2743ada3a3f7f1addfd46, type: 2}
   messageBox: {fileID: 773862515}
   messageBoxGap: 24
   messageBoxPadding: {x: 32, y: 20}
@@ -8650,6 +8929,7 @@ GameObject:
   - component: {fileID: 1526946107}
   - component: {fileID: 1526946106}
   - component: {fileID: 1526946108}
+  - component: {fileID: 1526946109}
   m_Layer: 17
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -8698,8 +8978,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u3044\u3044\u3048"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 80f2348e57a1a4d47af546535d76c144, type: 2}
-  m_sharedMaterial: {fileID: -1235115034246611150, guid: 80f2348e57a1a4d47af546535d76c144, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 93f8be6c10b2743ada3a3f7f1addfd46, type: 2}
+  m_sharedMaterial: {fileID: -6212793872472541599, guid: 93f8be6c10b2743ada3a3f7f1addfd46, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -8793,6 +9073,46 @@ MonoBehaviour:
   speed: 5
   characterOffset: 4
   parentTremble: {fileID: 1599661888}
+--- !u!114 &1526946109
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1526946104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56eb0353ae6e5124bb35b17aff880f16, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Components.LocalizeStringEvent
+  m_StringReference:
+    m_TableReference:
+      m_TableCollectionName: GUID:6fa1b201c0b325044a7d27bcd9cd36e1
+    m_TableEntryReference:
+      m_KeyId: 1816965226496
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  m_FormatArguments: []
+  m_UpdateString:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1526946106}
+        m_TargetAssemblyTypeName: TMPro.TMP_Text, Unity.TextMeshPro
+        m_MethodName: set_text
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 1
+  references:
+    version: 2
+    RefIds: []
 --- !u!1001 &1545988590
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -11110,6 +11430,7 @@ GameObject:
   - component: {fileID: 1876907246}
   - component: {fileID: 1876907248}
   - component: {fileID: 1876907247}
+  - component: {fileID: 1876907249}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -11236,6 +11557,46 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1876907245}
   m_CullTransparentMesh: 1
+--- !u!114 &1876907249
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1876907245}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56eb0353ae6e5124bb35b17aff880f16, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Components.LocalizeStringEvent
+  m_StringReference:
+    m_TableReference:
+      m_TableCollectionName: GUID:6fa1b201c0b325044a7d27bcd9cd36e1
+    m_TableEntryReference:
+      m_KeyId: 19117118660608
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  m_FormatArguments: []
+  m_UpdateString:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1876907247}
+        m_TargetAssemblyTypeName: TMPro.TMP_Text, Unity.TextMeshPro
+        m_MethodName: set_text
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 1
+  references:
+    version: 2
+    RefIds: []
 --- !u!1 &1880645339
 GameObject:
   m_ObjectHideFlags: 0
@@ -11248,6 +11609,7 @@ GameObject:
   - component: {fileID: 1880645342}
   - component: {fileID: 1880645341}
   - component: {fileID: 1880645343}
+  - component: {fileID: 1880645344}
   m_Layer: 17
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -11296,8 +11658,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u306F\u3044"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 80f2348e57a1a4d47af546535d76c144, type: 2}
-  m_sharedMaterial: {fileID: -1235115034246611150, guid: 80f2348e57a1a4d47af546535d76c144, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 93f8be6c10b2743ada3a3f7f1addfd46, type: 2}
+  m_sharedMaterial: {fileID: -6212793872472541599, guid: 93f8be6c10b2743ada3a3f7f1addfd46, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -11391,6 +11753,46 @@ MonoBehaviour:
   speed: 5
   characterOffset: 4
   parentTremble: {fileID: 0}
+--- !u!114 &1880645344
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1880645339}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56eb0353ae6e5124bb35b17aff880f16, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Components.LocalizeStringEvent
+  m_StringReference:
+    m_TableReference:
+      m_TableCollectionName: GUID:6fa1b201c0b325044a7d27bcd9cd36e1
+    m_TableEntryReference:
+      m_KeyId: 1800393531392
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  m_FormatArguments: []
+  m_UpdateString:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1880645341}
+        m_TargetAssemblyTypeName: TMPro.TMP_Text, Unity.TextMeshPro
+        m_MethodName: set_text
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 1
+  references:
+    version: 2
+    RefIds: []
 --- !u!1001 &1885820926
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -13225,6 +13627,7 @@ GameObject:
   - component: {fileID: 2091445468}
   - component: {fileID: 2091445467}
   - component: {fileID: 2091445469}
+  - component: {fileID: 2091445470}
   m_Layer: 17
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -13273,8 +13676,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u30C1\u30E5\u30FC\u30C8\u30EA\u30A2\u30EB\n\u3092\u30D7\u30EC\u30A4\u3057\u307E\u3059\u304B"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 80f2348e57a1a4d47af546535d76c144, type: 2}
-  m_sharedMaterial: {fileID: -1235115034246611150, guid: 80f2348e57a1a4d47af546535d76c144, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 93f8be6c10b2743ada3a3f7f1addfd46, type: 2}
+  m_sharedMaterial: {fileID: -6212793872472541599, guid: 93f8be6c10b2743ada3a3f7f1addfd46, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -13301,9 +13704,9 @@ MonoBehaviour:
   m_fontSize: 36
   m_fontSizeBase: 36
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_fontSizeMax: 36
   m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 256
@@ -13337,7 +13740,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: 0, y: 0, z: 0, w: -61.418743}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -13368,6 +13771,46 @@ MonoBehaviour:
   speed: 5
   characterOffset: 4
   parentTremble: {fileID: 0}
+--- !u!114 &2091445470
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2091445465}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56eb0353ae6e5124bb35b17aff880f16, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Components.LocalizeStringEvent
+  m_StringReference:
+    m_TableReference:
+      m_TableCollectionName: GUID:6fa1b201c0b325044a7d27bcd9cd36e1
+    m_TableEntryReference:
+      m_KeyId: 665880436736
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  m_FormatArguments: []
+  m_UpdateString:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 2091445467}
+        m_TargetAssemblyTypeName: TMPro.TMP_Text, Unity.TextMeshPro
+        m_MethodName: set_text
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 1
+  references:
+    version: 2
+    RefIds: []
 --- !u!1 &2104767980
 GameObject:
   m_ObjectHideFlags: 0
@@ -14297,35 +14740,35 @@ MonoBehaviour:
   spawnCount: 500
   debugMode: 0
   initialActiveItems:
-  - name: 1
+  - name: []
     prefab: {fileID: 4563478140741147117, guid: c7b8b375e77d0f04dbe82caa5351db21, type: 3}
     priority: 0
     rate: 29
     goldConvertCount: 0
     silverConvertCount: 0
     bronzeConvertCount: 1
-  - name: 2
+  - name: []
     prefab: {fileID: 4563478140741147117, guid: c7b8b375e77d0f04dbe82caa5351db21, type: 3}
     priority: 0
     rate: 29
     goldConvertCount: 0
     silverConvertCount: 0
     bronzeConvertCount: 1
-  - name: 3
+  - name: []
     prefab: {fileID: 1801957764297551110, guid: 6581663a52055644e8b8de069e3e3c84, type: 3}
     priority: 1
     rate: 15
     goldConvertCount: 0
     silverConvertCount: 1
     bronzeConvertCount: 0
-  - name: 4
+  - name: []
     prefab: {fileID: 1801957764297551110, guid: 6581663a52055644e8b8de069e3e3c84, type: 3}
     priority: 1
     rate: 15
     goldConvertCount: 0
     silverConvertCount: 1
     bronzeConvertCount: 0
-  - name: 5
+  - name: []
     prefab: {fileID: 8350361114308083434, guid: 2ace8664a70b8014da5cb933568ca21b, type: 3}
     priority: 2
     rate: 10
@@ -49515,6 +49958,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f0eeb00f9942e242838eb1c24460d3f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UFOItemPickupDisplay
+  _language: 0
   itemDatabase:
   - {fileID: 11400000, guid: e53f8d62073195d40965c9b4a3363751, type: 2}
   - {fileID: 11400000, guid: be94224a19db61348abb9df7e39a425d, type: 2}
