@@ -21,6 +21,7 @@ public class RoguelikeSaveData
     public int debtClearTimes;//借金の取り立てに何回耐えきったか
     public bool isWatchTour;//ツアーを一回みたか
     public bool isFinishDevilCatcherInRound;//ラウンド内で、デビルキャッチャーをプレイし終わっているか
+    public bool isUsedATMInRound;//ラウンド内で、ATMを使用し終わっているか
     public VisitorSaveData remainVisitor = null;//前回、訪問者がいたままゲーム終了した時に、状況を復元する用の情報
     public int tradeTimes;//ゲーム内でトレードに応じた回数
     public float playTime;//ゲームプレイ時間

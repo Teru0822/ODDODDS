@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using UniRx;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
@@ -76,10 +77,12 @@ namespace App.ATM
     /// スピンボックス・売却ボタン(WorldSpace)、及び所持金の高速カウントアップ演出を統合管理します。
     /// </summary>
     [DisallowMultipleComponent]
-    public class ATMController : MonoBehaviour
+    public class ATMController : MonoBehaviour, IsaveDataProvider
     {
         public static ATMController Instance { get; private set; }
         public static bool IsInteracting { get; private set; } = false;
+        /// <summary>このラウンド（ターン）内でATMを使用し終えているか（画面遷移が完全に終わった時点でtrueになる）。</summary>
+        public static bool HasUsedATMThisRound => Instance != null && Instance._hasUsedATMThisRound;
 
         // --- ハッキングモード (ATMHackingMode) へ渡すための公開窓口 ---
 
@@ -324,6 +327,8 @@ namespace App.ATM
 
         private ATMState _currentState = ATMState.Off;
         private ATMSubState _currentSubState = ATMSubState.Welcome;
+        // このラウンド（ターン）内でATMを使用し終えたか。MoneyManager のターンが進むたびにリセットされる
+        private bool _hasUsedATMThisRound = false;
         private App.Player.FirstPersonController _fpController;
         private Vector3 _originalPlayerCamPos;
         private Quaternion _originalPlayerCamRot;
@@ -519,6 +524,32 @@ namespace App.ATM
             {
                 hoverOutline.OnClicked += OnATMClicked;
             }
+
+            // ラウンド（MoneyManager のターン）が進むたびに、ATM使用済みフラグをリセットする。
+            // MoneyManager は加法ロードされる別サブシーン側にいる可能性があるため、
+            // UFOCameraController と同様に Instance が現れるまで毎フレーム待ってから購読する。
+            Observable.EveryUpdate()
+                .Select(_ => MoneyManager.Instance)
+                .Where(mm => mm != null)
+                .First()
+                .Subscribe(mm =>
+                {
+                    mm.OnCurrentTurnChange
+                        .Skip(1)
+                        .Subscribe(_ => _hasUsedATMThisRound = false)
+                        .AddTo(this);
+                })
+                .AddTo(this);
+        }
+
+        public void WriteSaveData(RoguelikeSaveData saveData)
+        {
+            saveData.isUsedATMInRound = _hasUsedATMThisRound;
+        }
+
+        public void ReadSaveData(RoguelikeSaveData saveData)
+        {
+            _hasUsedATMThisRound = saveData.isUsedATMInRound;
         }
 
         private void OnDisable()
@@ -707,6 +738,8 @@ namespace App.ATM
 
             SetATMState(true);
             _currentState = ATMState.Active;
+            // 画面遷移が完全に終わった時点で「使用した」とカウントする
+            _hasUsedATMThisRound = true;
 
             // 起動音 → ループ音。末尾を重ねながら入れ替えるのでつなぎ目が聞こえない。
             // 状態を Active にしてから呼ぶこと（ループ開始時に状態を見て鳴らすか決めている）

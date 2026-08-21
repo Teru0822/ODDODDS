@@ -19,6 +19,9 @@ public class TypewriterInteractable : InteractableHighlight
     [Tooltip("選択 UI。null ならシーン内検索 → 無ければ自動生成")]
     public RewardSelectionUI selectionUI;
 
+    [Tooltip("DevilCatcher/ATM未使用時の確認パネルを出すゲート。null なら確認なしで即使用可能")]
+    public TypewriterUsageGate usageGate;
+
     [Header("自動生成 (selectionUI が null の場合)")]
     [Tooltip("自動生成する RewardSelectionUI を DontDestroyOnLoad に乗せる")]
     public bool persistAutoCreatedUI = false;
@@ -235,6 +238,18 @@ public class TypewriterInteractable : InteractableHighlight
 
     /// <summary>CupPickupController からクリック時に呼ばれる。</summary>
     public void OnPressed()
+    {
+        if (_busy) return;
+        if (usageGate != null)
+        {
+            usageGate.RequestUse(OnUsageAllowed);
+            return;
+        }
+        OnUsageAllowed();
+    }
+
+    /// <summary>usageGate の確認が済んだ（または不要だった）ときに実際の打鍵処理へ進む。</summary>
+    private void OnUsageAllowed()
     {
         if (_busy) return;
         if (selectionUI == null)

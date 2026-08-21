@@ -10,6 +10,8 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
 {
     public static UFOCameraController Instance { get; private set; }
     public static bool IsPlayingUfo { get; private set; } = false;
+    /// <summary>このラウンド（ターン）内でデビルキャッチャーをプレイし終えているか。</summary>
+    public static bool HasPlayedThisRound => Instance != null && Instance._hasPlayedThisRound;
     public static event System.Action<bool> OnUfoModeChanged;
     public static event System.Action OnCoinInserted;
     public static event System.Action OnAllCoinsInserted;
