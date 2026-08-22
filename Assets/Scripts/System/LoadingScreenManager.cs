@@ -70,8 +70,11 @@ namespace MiniGames.Transitions
         private Coroutine _loadingTextCoroutine;
         private Tween _loadingTextFadeTween;
         private Coroutine _blinkCoroutine;
-        private bool _isShowing = false;
+        private bool _isShowing;
         private readonly List<Canvas> _hiddenCanvases = new List<Canvas>();
+
+        /// <summary>ローディング画面が表示中か（フェード中も含む）。他システムが入力ガードに使う。</summary>
+        public static bool IsShowing => _instance != null && _instance._isShowing;
 
         // ─── ライフサイクル ───────────────────────────────────────────────
 
