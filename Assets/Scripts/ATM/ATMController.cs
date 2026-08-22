@@ -187,6 +187,11 @@ namespace App.ATM
         [Tooltip("ATMにアタッチした MouseHoverOutline。インスペクターでの指定が必須です")]
         [SerializeField] private MouseHoverOutline hoverOutline;
 
+        [Header("使用ゲート")]
+        [Tooltip("1ターン目にDevilCatcher未プレイの場合、先に使うよう案内するゲート。" +
+                 "別サブシーンにあるため未設定でよい（実行時に自動検索する）")]
+        [SerializeField] private TypewriterUsageGate usageGate;
+
         [Header("演出用オブジェクト (プレハブ内アセット)")]
         [Tooltip("起動時に有効化するライトオブジェクト群")]
         [SerializeField] private GameObject[] atmLights;
@@ -355,6 +360,7 @@ namespace App.ATM
 
         // タイピング演出および入力アニメーション排他制御フラグ
         private bool _isTyping = false;
+        private Coroutine _typingRoutine;
         private bool _canProceedFromWelcome = false;
         private bool _isLaunderProcessing = false;
         private bool _isCountingUp = false;
@@ -673,6 +679,11 @@ namespace App.ATM
         {
             if (_currentState != ATMState.Off) return;
 
+            // 別サブシーンにあるため、Inspectorで未設定なら実行時に検索する
+            // （シーンをまたぐドラッグ参照は保存時にUnityがnullにしてしまうため）
+            if (usageGate == null) usageGate = FindAnyObjectByType<TypewriterUsageGate>();
+            if (usageGate != null && usageGate.TryBlockATM()) return;
+
             ResolveCrossSceneReferences();
 
             // コインの現在買取価格をターン変動としてランダム設定
@@ -738,8 +749,6 @@ namespace App.ATM
 
             SetATMState(true);
             _currentState = ATMState.Active;
-            // 画面遷移が完全に終わった時点で「使用した」とカウントする
-            _hasUsedATMThisRound = true;
 
             // 起動音 → ループ音。末尾を重ねながら入れ替えるのでつなぎ目が聞こえない。
             // 状態を Active にしてから呼ぶこと（ループ開始時に状態を見て鳴らすか決めている）
@@ -788,6 +797,15 @@ namespace App.ATM
         private IEnumerator TransitionToPlayer()
         {
             _currentState = ATMState.TransitioningToPlayer;
+
+            // パスコード自動入力の演出が終わる前に退出した場合、裏でコルーチンが動き続けて
+            // 後から「使用済み」フラグが立ってしまわないよう、必ず止める
+            if (_typingRoutine != null)
+            {
+                StopCoroutine(_typingRoutine);
+                _typingRoutine = null;
+            }
+            _isTyping = false;
 
             // ハッキング画面を出したまま退出されると画面が戻らないので、必ず畳んでから閉じる
             if (_hacking != null) _hacking.Abort();
@@ -930,7 +948,7 @@ namespace App.ATM
                 _typedTitle = "";
                 _inputPasscode = ""; // 起動画面＝ログイン画面。パスコードを初期化
                 _screenRenderer?.SetScreen("welcome", BuildTokens());
-                StartCoroutine(TypeWelcomeText());
+                _typingRoutine = StartCoroutine(TypeWelcomeText());
             }
             else
             {
@@ -1228,6 +1246,11 @@ namespace App.ATM
             yield return new WaitForSeconds(0.25f);
 
             _isTyping = false;
+            _typingRoutine = null;
+            // パスコード演出を最後まで見切った時点で初めて「使用した」とカウントする。
+            // 演出の途中でEscapeで退出した場合はTransitionToPlayer側でコルーチン自体を止めるため、
+            // ここには到達せずカウントされない
+            _hasUsedATMThisRound = true;
             ChangeSubState(ATMSubState.CoinExchange);
         }
 
