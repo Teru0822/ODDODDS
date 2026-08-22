@@ -338,6 +338,7 @@ public class SettingUIManager : MonoBehaviour
         // (メニューを開いている間は、閉じる操作を受け付けるため素通りさせる)
         if (!_isOpenMenu)
         {
+            if (MiniGames.Transitions.LoadingScreenManager.IsShowing) return;
             App.Input.GameInputGate.PurgeDestroyedEscapeOwners();
             if (App.Input.GameInputGate.IsEscapeCaptured) return;
         }
