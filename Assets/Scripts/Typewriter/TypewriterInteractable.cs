@@ -49,6 +49,9 @@ public class TypewriterInteractable : InteractableHighlight
         new DiamondSellRate { label = "ゴッドダイヤモンド",         rate =  0.10f },
     };
 
+    [Tooltip("ダイヤ売却時に金額の変化を見せる演出UI。null なら演出なしで即座に売却する")]
+    [SerializeField] private BlackDiamondSellDisplay _diamondSellDisplay;
+
     [Header("デバッグ")]
     [Tooltip("ONにするとInspectorにローグライクスキルのオンオフパネルが表示される（Playモードのみ有効）")]
     [SerializeField] private bool _debugMode = false;
@@ -323,8 +326,6 @@ public class TypewriterInteractable : InteractableHighlight
         else
             Debug.LogWarning("[TypewriterInteractable] RoguelikeManager が見つかりません。スキルは反映されません", this);
 
-        SellBlackDiamonds(mgr);
-
         if (controller == null)
         {
             Debug.LogWarning("[TypewriterInteractable] TypewriterController が未設定 - 打鍵をスキップ", this);
@@ -332,27 +333,30 @@ public class TypewriterInteractable : InteractableHighlight
             return;
         }
 
-        StartCoroutine(TypeAndUnblock(chosen.skillName));
+        // ブラックダイヤの売却はターンが実際に進んだ後に行うため、ここでは呼ばない（TypeAndUnblock 参照）
+        StartCoroutine(TypeAndUnblock(chosen.skillName, mgr));
     }
 
-    private void SellBlackDiamonds(RoguelikeManager mgr)
+    private IEnumerator SellBlackDiamonds(RoguelikeManager mgr)
     {
         var wallet = PlayerWallet.Local;
-        if (wallet == null) return;
+        if (wallet == null) yield break;
 
         int count = wallet.BlackDiamonds;
-        if (count <= 0) return;
+        if (count <= 0) yield break;
 
         int stage = mgr != null ? mgr.GetDiamondPolishStage() : 0;
 
         if (_diamondSellRates == null || stage >= _diamondSellRates.Length)
         {
             Debug.LogWarning($"[TypewriterInteractable] ダイヤ売却: stage={stage} に対応するレートが未設定です", this);
-            return;
+            yield break;
         }
 
         float rate = _diamondSellRates[stage].rate;
-        float totalChange = wallet.WashedAmount * rate * count;
+        float moneyBefore = wallet.WashedAmount;
+        float totalChange = moneyBefore * rate * count;
+        float moneyAfter = moneyBefore + totalChange;
 
         if (totalChange >= 0f)
             wallet.AddWashed(totalChange);
@@ -366,9 +370,12 @@ public class TypewriterInteractable : InteractableHighlight
             itemMgr.RemoveItem(105, ItemType.CraneItem, count);
         else
             Debug.LogWarning("[TypewriterInteractable] ItemPanelManager が見つかりません", this);
+
+        if (_diamondSellDisplay != null)
+            yield return StartCoroutine(_diamondSellDisplay.PlaySellAnimation(count, stage, rate, moneyBefore, moneyAfter));
     }
 
-    private IEnumerator TypeAndUnblock(string text)
+    private IEnumerator TypeAndUnblock(string text, RoguelikeManager mgr)
     {
         var c = controller.TypeText(text);
         if (c != null) yield return c;
@@ -390,6 +397,7 @@ public class TypewriterInteractable : InteractableHighlight
         yield return new WaitForSeconds(0.5f);
 
         var moneyMgr = MoneyManager.Instance;
+        int turnBeforeAdvance = moneyMgr != null ? moneyMgr.CurrentTurnCount : -1;
         if (moneyMgr == null)
         {
             Debug.LogError("[TypewriterInteractable] MoneyManager が見つかりません。ターン処理をスキップします", this);
@@ -439,6 +447,22 @@ public class TypewriterInteractable : InteractableHighlight
                 if (_fpsController != null) _fpsController.enabled = true;
             }
         }
+
+        // ブラックダイヤの売却は、取り立て・通常どちらの経路でも MoneyManager.AdvanceTurn() で
+        // ターンが実際に進んだ後に行う（取り立てが発生した場合は取り立て後、その後のローディングが
+        // 終わってターンが進んでから売却する）
+        if (moneyMgr != null)
+        {
+            float turnWaitElapsed = 0f;
+            while (moneyMgr.CurrentTurnCount <= turnBeforeAdvance && turnWaitElapsed < 60f)
+            {
+                turnWaitElapsed += Time.deltaTime;
+                yield return null;
+            }
+            if (turnWaitElapsed >= 60f)
+                Debug.LogWarning("[TypewriterInteractable] ターン進行待ちがタイムアウトしました。ブラックダイヤ売却を強制実行します", this);
+        }
+        yield return StartCoroutine(SellBlackDiamonds(mgr));
 
         // ターン遷移か会話が完全に終わってから占有を解放する。
         // シーンリロードで先に OnDestroy が呼ばれた場合は OnDestroy 側でクリアされる。
