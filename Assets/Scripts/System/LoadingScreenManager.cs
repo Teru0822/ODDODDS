@@ -70,6 +70,7 @@ namespace MiniGames.Transitions
         private Coroutine _loadingTextCoroutine;
         private Tween _loadingTextFadeTween;
         private Coroutine _blinkCoroutine;
+        private bool _isShowing = false;
 
         // ─── ライフサイクル ───────────────────────────────────────────────
 
@@ -104,6 +105,7 @@ namespace MiniGames.Transitions
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             ExcludeLoadingLayerFromAllCameras();
+            if (_isShowing) AddOverlayToAllBaseCameras();
         }
 
         private void Update()
@@ -241,6 +243,7 @@ namespace MiniGames.Transitions
 
         private IEnumerator ShowRoutine(float fadeDuration)
         {
+            _isShowing = true;
             SetBlocker(true);
             AddOverlayToAllBaseCameras();
 
@@ -302,6 +305,7 @@ namespace MiniGames.Transitions
 
             RemoveOverlayFromAllCameras();
             SetBlocker(false);
+            _isShowing = false;
         }
 
         private IEnumerator TransitionToSceneRoutine(string sceneName, float minimumDuration, float fadeDuration, Action onComplete)
@@ -403,13 +407,7 @@ namespace MiniGames.Transitions
                 _floatingLogoParent.DOKill();
                 _floatingLogoParent.localPosition = _originalLogoLocalPosition;
 
-                // ScreenSpaceCamera Canvas 内では localScale が非常に大きくなるため距離を補正する
-                float adjustedFloatDistance = _floatDistance;
-                float parentScale = _floatingLogoParent.localScale.y;
-                if (parentScale > 1f)
-                    adjustedFloatDistance = _floatDistance * parentScale;
-
-                _floatingLogoParent.DOLocalMoveY(adjustedFloatDistance, _floatDuration)
+                _floatingLogoParent.DOLocalMoveY(_floatDistance, _floatDuration)
                     .SetRelative(true)
                     .SetLoops(-1, LoopType.Yoyo)
                     .SetEase(Ease.InOutSine);
