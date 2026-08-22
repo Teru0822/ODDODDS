@@ -357,7 +357,7 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
                 // 以前はここでExitTutorial()を呼んでいたが、タイマー切れでチュートリアルを
                 // 終了させるのはやめた。終了はチュートリアルステップが最後まで完了した時
                 // （CompleteTutorial）にのみ行う。タイマー切れ自体はイベントとして通知するだけ。
-                DevilSEManager.Instance?.StopPracticeBgm();
+                DevilBGMManager.Instance?.StopPracticeBgm();
                 OnTimerExpired?.Invoke();
             }
         }
@@ -390,6 +390,10 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
                 DevilSEManager.Instance?.StopLowTimeWarning(isPractice: true);
             }
         }
+
+        // BGMのテンポ切り替えは、演出中でも警告音を止めるような例外(前述コメント参照)に
+        // 引きずられないよう、shouldPlay(残り時間だけの判定)に直接連動させる
+        DevilBGMManager.Instance?.SetPracticeLowTime(shouldPlay);
     }
 
     /// <summary>タイマーが0になった瞬間に発火する。チュートリアルステップ側が
@@ -407,6 +411,7 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
         _timerStarted = false;
         _timerPaused = false;
         _hasPlayedLowTimeWarning = false;
+        DevilBGMManager.Instance?.SetPracticeLowTime(false);
     }
 
     /// <summary>タイマーの残り秒数。チュートリアルステップ側から閾値監視に使う</summary>
@@ -766,7 +771,7 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
     {
         if (_timerStarted) return;
         _timerStarted = true;
-        DevilSEManager.Instance?.StartPracticeBgm();
+        DevilBGMManager.Instance?.StartPracticeBgm();
     }
 
     public Camera GetActiveCamera() => playerCamera != null ? playerCamera : Camera.main;
@@ -802,7 +807,7 @@ public class TutorialCraneController : MonoBehaviour, ICraneControlSource, ISubC
 
         // タイマー満了より前に途中で終了（Quit等）した場合の保険として、ここでもBGMを止めておく
         // （タイマー満了時は既にOnTimerExpired発火箇所で止めているため、こちらは二重呼び出しでも無害）
-        DevilSEManager.Instance?.StopPracticeBgm();
+        DevilBGMManager.Instance?.StopPracticeBgm();
 
         // UIも実機のセッション終了時と同じ状態（閲覧用フォーカス表示 / price_table非表示）に戻す
         if (gameUIManager != null) gameUIManager.ApplySessionActiveUIState(false);

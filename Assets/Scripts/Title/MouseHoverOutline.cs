@@ -153,6 +153,7 @@ public class MouseHoverOutline : MonoBehaviour
             || BookOpenController.IsBookVisible
             || RewardSelectionUI.IsTypewriterUIShowing
             || TypewriterInteractable.IsAnyBusy
+            || TypewriterUsageGate.IsPanelShowing
             || DebtCollectionManager.IsCollecting
             || (SceneTransitionManager.Instance != null && SceneTransitionManager.Instance.IsTransitioning);
     }

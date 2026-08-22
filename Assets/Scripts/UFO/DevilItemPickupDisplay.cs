@@ -67,6 +67,27 @@ public class DevilItemPickupDisplay : MonoBehaviour, ILanguage
         if (hidden) SetVisible(false);
     }
 
+    /// <summary>
+    /// 表示中のアイテムを即座に消し、モデルも破棄する。前回のプレイで表示したままの
+    /// アイテムが新しいプレイセッションに映り込まないよう、セッション開始時に呼ぶ想定
+    /// （Update()の自動非表示は enabled ベースのため、GameObjectが非アクティブな間は動かず
+    /// 次にアクティブになった瞬間に一瞬映り込む可能性がある。これを確実に防ぐ）。
+    /// </summary>
+    public void ResetDisplay()
+    {
+        if (_hideCoroutine != null)
+        {
+            StopCoroutine(_hideCoroutine);
+            _hideCoroutine = null;
+        }
+        if (_currentModelInstance != null)
+        {
+            Destroy(_currentModelInstance);
+            _currentModelInstance = null;
+        }
+        SetVisible(false);
+    }
+
     private void Awake()
     {
         if (Instance == null)

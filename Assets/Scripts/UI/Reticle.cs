@@ -166,7 +166,9 @@ public class Reticle : MonoBehaviour
             || VisitorSystem.IsTalkingWithVisitor           // インターホンで訪問者と対応中
             || DebtCollectionManager.IsCollecting          // 悪魔の取り立て中
             || BookOpenController.IsBookVisible            // 本を開いている間
-            || SettingUIManager.IsMenuOpen)                // Escape で設定画面を開いている間
+            || SettingUIManager.IsMenuOpen                 // Escape で設定画面を開いている間
+            || TypewriterUsageGate.IsPanelShowing          // 使用ゲートの忠告パネル表示中
+            || MiniGames.Transitions.LoadingScreenManager.IsShowing) // ロード画面表示中
         {
             showReticle = false;
         }

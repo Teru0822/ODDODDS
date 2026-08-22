@@ -118,6 +118,8 @@ public class TitlePlayButton : MonoBehaviour
 
     private void Update()
     {
+        if (MiniGames.Transitions.LoadingScreenManager.IsShowing) return;
+
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             SettingUIManager.Instance.CloseSettingMenu();

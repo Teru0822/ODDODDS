@@ -177,7 +177,7 @@ public class StudioLogoIntro : MonoBehaviour
     /// <summary>画面を覆うCanvasとロゴを組み立てる。</summary>
     private void BuildOverlay()
     {
-        var canvasGo = new GameObject(CanvasObjectName, typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
+        var canvasGo = new GameObject(CanvasObjectName, typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
         canvasGo.hideFlags = HideFlags.DontSave;
         canvasGo.transform.SetParent(transform, false);
 
@@ -189,6 +189,18 @@ public class StudioLogoIntro : MonoBehaviour
         var scaler = canvasGo.GetComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920f, 1080f);
+
+        // 演出中にタイトルボタンをクリックさせないための全画面ブロッカー
+        var blockerGo = new GameObject("InputBlocker", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        blockerGo.hideFlags = HideFlags.DontSave;
+        blockerGo.transform.SetParent(canvasGo.transform, false);
+        var blockerImg = blockerGo.GetComponent<Image>();
+        blockerImg.color = new Color(0f, 0f, 0f, 0f);
+        blockerImg.raycastTarget = true;
+        var blockerRt = blockerGo.GetComponent<RectTransform>();
+        blockerRt.anchorMin = Vector2.zero;
+        blockerRt.anchorMax = Vector2.one;
+        blockerRt.offsetMin = blockerRt.offsetMax = Vector2.zero;
 
         _background = CreateImage(canvasGo.transform, "Background");
         var bgRect = (RectTransform)_background.transform;
