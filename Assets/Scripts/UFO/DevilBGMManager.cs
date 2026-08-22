@@ -11,7 +11,8 @@ using UnityEngine;
 /// AudioSource.pitchで速度を上げるとピッチも一緒に上がってしまうため、ピッチはそのままに
 /// テンポだけ上げたい場合はこの「別音源への切り替え」方式が必要になる。
 ///
-/// 練習機（Practice_Cranegame）側は今のところ対象外（実機のみ）。
+/// 練習機（Practice_Cranegame）側のBGMもここで管理する（TutorialCraneControllerから呼ばれる）。
+/// 実機用の通常/高速切り替えとは独立した専用AudioSourceで再生するため、互いに干渉しない。
 /// </summary>
 public class DevilBGMManager : MonoBehaviour
 {
@@ -42,10 +43,32 @@ public class DevilBGMManager : MonoBehaviour
     [Tooltip("高速版BGM再生用のAudioSource。未設定なら自動でAddComponentする")]
     [SerializeField] private AudioSource fastSource;
 
+    [Header("BGM設定（練習機用）")]
+    [Tooltip("レバー/ボタンを初めて操作した瞬間に再生を開始し、タイマー0またはチュートリアル終了時に止めるBGM")]
+    [SerializeField] private AudioClip practiceBgmClip;
+
+    [Tooltip("残り時間10秒未満の間に再生する、テンポだけを上げて書き出した別音源。" +
+             "未設定の場合、10秒未満になっても速度は変化しない")]
+    [SerializeField] private AudioClip practiceFastBgmClip;
+
+    [Range(0f, 1f)]
+    [Tooltip("練習機BGMの音量")]
+    [SerializeField] private float practiceBgmVolume = 0.6f;
+
+    [Tooltip("練習機BGM再生用のAudioSource。未設定なら自動でAddComponentする")]
+    [SerializeField] private AudioSource practiceSource;
+
+    [Tooltip("練習機・高速版BGM再生用のAudioSource。未設定なら自動でAddComponentする")]
+    [SerializeField] private AudioSource practiceFastSource;
+
     private Coroutine _normalFadeCoroutine;
     private Coroutine _fastFadeCoroutine;
+    private Coroutine _practiceFadeCoroutine;
+    private Coroutine _practiceFastFadeCoroutine;
     private Coroutine _crossfadeCoroutine;
+    private Coroutine _practiceCrossfadeCoroutine;
     private bool _isFastActive;
+    private bool _isPracticeFastActive;
 
     private void Awake()
     {
@@ -57,6 +80,8 @@ public class DevilBGMManager : MonoBehaviour
 
         normalSource = EnsureSource(normalSource, "NormalBgmSource");
         fastSource = EnsureSource(fastSource, "FastBgmSource");
+        practiceSource = EnsureSource(practiceSource, "PracticeBgmSource");
+        practiceFastSource = EnsureSource(practiceFastSource, "PracticeFastBgmSource");
 
         // AudioClipは実際にPlay()される瞬間に初めてデコードされる（Load Typeが
         // Decompress On Load 等の場合）ため、何もしないと「レバーを動かした瞬間」や
@@ -64,6 +89,8 @@ public class DevilBGMManager : MonoBehaviour
         // シーン開始時にバックグラウンドで先読みしておくことでこれを防ぐ。
         if (bgmClip != null) bgmClip.LoadAudioData();
         if (fastBgmClip != null) fastBgmClip.LoadAudioData();
+        if (practiceBgmClip != null) practiceBgmClip.LoadAudioData();
+        if (practiceFastBgmClip != null) practiceFastBgmClip.LoadAudioData();
     }
 
     private AudioSource EnsureSource(AudioSource source, string fallbackName)
@@ -155,10 +182,10 @@ public class DevilBGMManager : MonoBehaviour
         _isFastActive = !_isFastActive;
 
         if (_crossfadeCoroutine != null) StopCoroutine(_crossfadeCoroutine);
-        _crossfadeCoroutine = StartCoroutine(CrossfadeRoutine(from, to));
+        _crossfadeCoroutine = StartCoroutine(CrossfadeRoutine(from, to, bgmVolume));
     }
 
-    private IEnumerator CrossfadeRoutine(AudioSource from, AudioSource to)
+    private IEnumerator CrossfadeRoutine(AudioSource from, AudioSource to, float targetVolume)
     {
         float startFromVolume = from.volume;
         float elapsed = 0f;
@@ -166,7 +193,7 @@ public class DevilBGMManager : MonoBehaviour
         if (speedCrossfadeDuration <= 0f)
         {
             from.volume = 0f;
-            to.volume = bgmVolume;
+            to.volume = targetVolume;
         }
         else
         {
@@ -175,11 +202,11 @@ public class DevilBGMManager : MonoBehaviour
                 elapsed += Time.deltaTime;
                 float t = elapsed / speedCrossfadeDuration;
                 from.volume = Mathf.Lerp(startFromVolume, 0f, t);
-                to.volume = Mathf.Lerp(0f, bgmVolume, t);
+                to.volume = Mathf.Lerp(0f, targetVolume, t);
                 yield return null;
             }
             from.volume = 0f;
-            to.volume = bgmVolume;
+            to.volume = targetVolume;
         }
 
         from.Stop();
@@ -222,5 +249,77 @@ public class DevilBGMManager : MonoBehaviour
         {
             source.Stop();
         }
+    }
+
+    // ============================================================
+    // 練習機（Practice Machine）
+    // ============================================================
+
+    /// <summary>レバー/ボタンを初めて操作した瞬間に呼ぶ。既に再生中の場合は何もしない</summary>
+    public void StartPracticeBgm()
+    {
+        if (practiceBgmClip == null) return;
+        if (practiceSource.isPlaying && practiceSource.clip == practiceBgmClip) return;
+
+        _isPracticeFastActive = false;
+        practiceSource.clip = practiceBgmClip;
+        practiceSource.time = 0f;
+        practiceSource.volume = 0f;
+        practiceSource.Play();
+        practiceFastSource.Stop();
+
+        StartPracticeFade(practiceSource, practiceBgmVolume);
+    }
+
+    /// <summary>タイマーが0になった瞬間、またはチュートリアル終了時に呼ぶ</summary>
+    public void StopPracticeBgm()
+    {
+        StartPracticeFade(practiceSource, 0f, stopOnComplete: true);
+        StartPracticeFade(practiceFastSource, 0f, stopOnComplete: true);
+        if (_practiceCrossfadeCoroutine != null) StopCoroutine(_practiceCrossfadeCoroutine);
+        _isPracticeFastActive = false;
+    }
+
+    /// <summary>
+    /// 練習機側で、残り時間が10秒未満に切り替わった/戻った時に呼ぶ（TutorialCraneControllerから）。
+    /// 実機のHandleLowTimeWarningChangedと同じ考え方で、練習機用の別音源へクロスフェードで切り替える。
+    /// </summary>
+    public void SetPracticeLowTime(bool isLowTime)
+    {
+        if (practiceFastBgmClip == null) return;
+        if (isLowTime == _isPracticeFastActive) return;
+        if (!practiceSource.isPlaying && !practiceFastSource.isPlaying) return; // BGM再生前は何もしない
+
+        AudioSource from = _isPracticeFastActive ? practiceFastSource : practiceSource;
+        AudioSource to = _isPracticeFastActive ? practiceSource : practiceFastSource;
+        AudioClip toClip = _isPracticeFastActive ? practiceBgmClip : practiceFastBgmClip;
+
+        float speedRatio = toClip.length > 0f && from.clip != null
+            ? from.clip.length / toClip.length
+            : 1f;
+
+        float convertedTime = _isPracticeFastActive ? from.time * speedRatio : from.time / speedRatio;
+        to.clip = toClip;
+        to.time = toClip.length > 0f ? Mathf.Repeat(convertedTime, toClip.length) : 0f;
+        to.volume = 0f;
+        to.Play();
+
+        _isPracticeFastActive = !_isPracticeFastActive;
+
+        if (_practiceCrossfadeCoroutine != null) StopCoroutine(_practiceCrossfadeCoroutine);
+        _practiceCrossfadeCoroutine = StartCoroutine(CrossfadeRoutine(from, to, practiceBgmVolume));
+    }
+
+    private void StartPracticeFade(AudioSource source, float targetVolume, bool stopOnComplete = false)
+    {
+        if (source == null) return;
+
+        bool isNormal = source == practiceSource;
+        Coroutine existing = isNormal ? _practiceFadeCoroutine : _practiceFastFadeCoroutine;
+        if (existing != null) StopCoroutine(existing);
+
+        Coroutine started = StartCoroutine(FadeVolumeRoutine(source, targetVolume, stopOnComplete));
+        if (isNormal) _practiceFadeCoroutine = started;
+        else _practiceFastFadeCoroutine = started;
     }
 }

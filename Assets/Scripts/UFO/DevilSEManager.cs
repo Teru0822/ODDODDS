@@ -35,6 +35,8 @@ public class DevilSEManager : MonoBehaviour
     [Tooltip("ルーレットアイテム（プレゼントボックス等）投入時の効果音。未設定の場合はコイン獲得音で代用します")]
     [SerializeField] private AudioClip realRouletteItemGetSound;
     [SerializeField, Range(0f, 10f)] private float realItemGetVolume = 1f;
+    [Tooltip("ルーレットアイテム投入音だけの音量調整。他の獲得音（Real Item Get Volume）とは独立して調整できます")]
+    [SerializeField, Range(0f, 10f)] private float realRouletteItemGetVolume = 1f;
 
     [Header("=== 実機：残り時間警告（10秒未満） ===")]
     [SerializeField] private AudioClip realLowTimeWarningLoopSound;
@@ -94,13 +96,14 @@ public class DevilSEManager : MonoBehaviour
     [SerializeField] private AudioClip clawToggleSound;
     [SerializeField, Range(0f, 10f)] private float clawToggleVolume = 1f;
 
+    [Tooltip("ボタン（StartDescent/ToggleClaw/FeverTime等）を押した瞬間のSE。実機・練習機共通")]
+    [SerializeField] private AudioClip buttonClickSound;
+    [SerializeField, Range(0f, 10f)] private float buttonClickVolume = 1f;
+
     // ============================================================
     // 練習機 (Practice Machine)
     // ============================================================
-    [Header("=== 練習機：BGM ===")]
-    [Tooltip("レバー/ボタンを初めて操作した瞬間に再生を開始し、タイマーが0になったら止めるBGM")]
-    [SerializeField] private AudioClip practiceBgmSound;
-    [SerializeField, Range(0f, 1f)] private float practiceBgmVolume = 0.6f;
+    // BGMはDevilBGMManagerが管理する（StartPracticeBgm/StopPracticeBgm）
 
     [Header("=== 練習機：コイン投入・アイテム獲得 ===")]
     [SerializeField] private AudioClip practiceCoinInsertSound;
@@ -190,7 +193,6 @@ public class DevilSEManager : MonoBehaviour
     private AudioSource _armMoveLoopSource2;
     private AudioSource _rouletteSpinLoopSource;
     private AudioSource _ambientLoopSource;
-    private AudioSource _practiceBgmSource;
     private AudioSource _televisionStaticLoopSource;
     private AudioSource _tutorialStaticLoopSource;
     private Coroutine _tutorialStaticLoopMonitorRoutine;
@@ -295,7 +297,9 @@ public class DevilSEManager : MonoBehaviour
     public void PlayRealCoinGet() => PlayOneShot(realCoinGetSound, realItemGetVolume);
     public void PlayRealWatchGet() => PlayOneShot(realWatchGetSound != null ? realWatchGetSound : realCoinGetSound, realItemGetVolume);
     public void PlayRealBlackDiamondGet() => PlayOneShot(realBlackDiamondGetSound != null ? realBlackDiamondGetSound : realCoinGetSound, realItemGetVolume);
-    public void PlayRealRouletteItemGet() => PlayOneShot(realRouletteItemGetSound != null ? realRouletteItemGetSound : realCoinGetSound, realItemGetVolume);
+    public void PlayRealRouletteItemGet() => PlayOneShot(
+        realRouletteItemGetSound != null ? realRouletteItemGetSound : realCoinGetSound,
+        realRouletteItemGetSound != null ? realRouletteItemGetVolume : realItemGetVolume);
 
     // ============================================================
     // 実機/練習機 共通：残り時間警告（実機・練習機は同時に鳴らないため1チャンネルを共有する）
@@ -447,27 +451,8 @@ public class DevilSEManager : MonoBehaviour
     public void PlayArmMoveStop() => PlayOneShot(armMoveStopSound, armMoveStopVolume);
     /// <summary>爪が開く/閉じる瞬間に鳴らす。開閉で同じ音を共用する</summary>
     public void PlayClawToggle() => PlayOneShot(clawToggleSound, clawToggleVolume);
-
-    // ============================================================
-    // 練習機：BGM
-    // ============================================================
-    /// <summary>レバー/ボタンを初めて操作した瞬間に呼ぶ。既に再生中の場合は何もしない</summary>
-    public void StartPracticeBgm()
-    {
-        if (practiceBgmSound == null) return;
-        EnsureLoopSource(ref _practiceBgmSource, "PracticeBgmAudioSource");
-        if (_practiceBgmSource.isPlaying && _practiceBgmSource.clip == practiceBgmSound) return;
-        _practiceBgmSource.clip = practiceBgmSound;
-        _practiceBgmSource.loop = true;
-        _practiceBgmSource.volume = practiceBgmVolume;
-        _practiceBgmSource.Play();
-    }
-
-    /// <summary>タイマーが0になった瞬間、またはチュートリアル終了時に呼ぶ</summary>
-    public void StopPracticeBgm()
-    {
-        if (_practiceBgmSource != null) _practiceBgmSource.Stop();
-    }
+    /// <summary>ボタンを押した瞬間に鳴らす（ButtonController.TriggerPressから呼ばれる）</summary>
+    public void PlayButtonClick() => PlayOneShot(buttonClickSound, buttonClickVolume);
 
     // ============================================================
     // 練習機：コイン投入・アイテム獲得

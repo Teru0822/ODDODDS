@@ -12,6 +12,14 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
     public static bool IsPlayingUfo { get; private set; } = false;
     /// <summary>このラウンド（ターン）内でデビルキャッチャーをプレイし終えているか。</summary>
     public static bool HasPlayedThisRound => Instance != null && Instance._hasPlayedThisRound;
+    /// <summary>
+    /// アイテム獲得のカウント対象期間か。プレイセッション開始（StartPlaySessionFromTelevision）で
+    /// trueになり、IsPlaySessionActiveがfalseに戻った後（配当が落ちきるまでの待機中等）もtrueのまま
+    /// 保持される。ターンが進んだ瞬間にfalseへリセットされる（_hasPlayedThisRoundと同じ購読で管理）。
+    /// これにより「プレイ後〜ターンが進むまで」に遅れて落ちてきたアイテムもカウント対象にできる
+    /// （IsPlaySessionActiveだけを見ると、セッション終了直後に落ちたアイテムがカウント漏れしてしまうため）。
+    /// </summary>
+    public static bool IsItemCountingActive { get; private set; } = false;
     public static event System.Action<bool> OnUfoModeChanged;
     public static event System.Action OnCoinInserted;
     public static event System.Action OnAllCoinsInserted;
@@ -373,7 +381,11 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
             {
                 mm.OnCurrentTurnChange
                     .Skip(1)
-                    .Subscribe(_ => _hasPlayedThisRound = false)
+                    .Subscribe(_ =>
+                    {
+                        _hasPlayedThisRound = false;
+                        IsItemCountingActive = false;
+                    })
                     .AddTo(this);
             })
             .AddTo(this);
@@ -607,7 +619,12 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
         _hasPlayedThisRound = true;
         _playTimer = playDuration;
         IsPlaySessionActive = true;
+        // プレイ後〜ターンが進むまでの間に遅れて落ちてきたアイテムもカウント対象にするためのフラグ。
+        // IsPlaySessionActiveがfalseに戻ってもここではリセットせず、ターンが進んだ時にのみリセットする
+        IsItemCountingActive = true;
         OnPlaySessionActiveChanged?.Invoke(true);
+        // 実際にプレイが始まったのでEscapeの専有を解放し、プレイ中は設定を開けるようにする
+        App.Input.GameInputGate.ReleaseEscape(this);
         _hasPlayedLowTimeWarning = false; // 新規セッション開始時に警告音再生フラグをリセット
         _isBelowLowTimeThreshold = false; // BGMテンポ切り替え用フラグも同様にリセット
 
@@ -615,6 +632,10 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
         // ターンが切り替わった場合、演出コルーチンが中断されIsFlashing等がtrueのまま
         // 固まっている可能性があるため、新しいセッション開始時に必ず強制リセットする
         DevilItemGoal.ResetStuckFlashState();
+
+        // 前回のプレイで表示したままだったItemShowcase（獲得アイテムの回転ポップアップ）が
+        // 残っていないよう、新しいセッション開始時に必ずリセットする
+        DevilItemPickupDisplay.Instance?.ResetDisplay();
 
         // アニメーション（コイン投入 → television 移動）完了までレバー/ボタン操作を禁止し、
         // 実際に操作されるまではタイマーも進めない
@@ -922,6 +943,10 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
         // クリックした瞬間にライトを点灯
         SetPlaySpotlight(true);
 
+        // TV視聴中（Play_Canvas/Play_Canvas2）はEscapeを専有し、設定画面が同時に開かないようにする。
+        // 実際にプレイが始まったら（StartPlaySessionFromTelevision）解放し、プレイ中は設定を開けるようにする
+        App.Input.GameInputGate.CaptureEscape(this);
+
         StartCoroutine(TransitionToUfoCamera());
     }
 
@@ -990,15 +1015,24 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
         {
             yield return new WaitUntil(() => !DevilDrawerRewardDisplay.Instance.IsShowing);
         }
-        else
+
+        // 支払い前にTV画面から戻った等、引き出し演出（OpenDrawer）自体が一度も呼ばれなかった場合は
+        // 上のWaitUntilが即座に抜けてしまい、DevilDrawerRewardDisplay側の消灯処理も実行されない。
+        // ライトが点いたままにならないよう、まだ点灯していれば（点滅演出の途中も含む）念のためここで消す。
+        // IsPlaySpotlightActiveは点滅演出が完了して初めてtrueになるため、演出の途中でここに来た場合は
+        // まだfalseのまま＝このチェックだけだと素通りしてしまう。裏で動き続ける点滅コルーチンの有無も見る
+        if (IsPlaySpotlightActive || _playLightFlickerCoroutine != null)
         {
-            // 引き出し演出が存在しない場合のフォールバック。従来通りここで消灯する
             SetPlaySpotlight(false);
         }
 
         IsPlaySessionActive = false;
         OnPlaySessionActiveChanged?.Invoke(false);
         SetCoinInsertionLightsActive(false);
+
+        // TV視聴中に専有していたEscapeを、プレイ開始前に戻った場合に備えて念のため解放しておく
+        // （実際にプレイが始まった場合はStartPlaySessionFromTelevisionで既に解放済みのため無害）
+        App.Input.GameInputGate.ReleaseEscape(this);
 
         // 途中でやめた場合・プレイが終了した場合ともに、television の画面を初期状態（Play_Canvas）へ戻す
         var tvControllerOnExit = FindAnyObjectByType<TelevisionStaticController>();
@@ -1099,7 +1133,8 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
 
     /// <summary>
     /// タイマー終了による自動終了時、ルーレットのコイン降雨中（ItemSpawner.IsSpawning）であれば
-    /// それが終わるまで待ち、さらに postRouletteRainExitDelay 秒待ってから ExitUfoMode() を呼ぶ。
+    /// それが終わるまで待ち、さらに当選アイテムが物理的に落下・着地し終わるまで待ってから、
+    /// postRouletteRainExitDelay 秒待って ExitUfoMode() を呼ぶ（＝引き出しの演出へ移行する）。
     /// 操作自体はこの待機中も IsPlaySessionActive = false により既にロックされている。
     /// </summary>
     private System.Collections.IEnumerator ExitAfterRouletteRainRoutine()
@@ -1109,9 +1144,21 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
             yield return null;
         }
 
+        // IsSpawningはアイテムの「生成」が終わったかどうかしか見ておらず、生成済みのアイテムが
+        // 物理的に落下・着地するまでは待たない。ItemSpawner側が降雨完了時に設定する
+        // CoinOptimizer.freezeStartTime（「そろそろ静止しているはず」とみなす時刻）まで待つことで、
+        // 当選アイテムが全て落ちきってから引き出しへ移行するようにする。
+        // 一度もアイテムが降っておらずfreezeStartTimeが初期値(float.MaxValue)のまま残っている
+        // ケースに備え、保険として最大5秒でタイムアウトする
+        float settleWaitStart = Time.time;
+        while (Time.time < CoinOptimizer.freezeStartTime && Time.time - settleWaitStart < 5f)
+        {
+            yield return null;
+        }
+
         yield return new WaitForSeconds(postRouletteRainExitDelay);
 
-        Debug.Log("[UFOCameraController] コイン降雨終了（または無し）+ 待機完了。デビルキャッチャーを終了します。");
+        Debug.Log("[UFOCameraController] コイン降雨終了（または無し）+ 着地待ち + 待機完了。デビルキャッチャーを終了します。");
         ExitUfoMode();
     }
 
@@ -1237,10 +1284,11 @@ public class UFOCameraController : MonoBehaviour, IsaveDataProvider, ISubCameraS
         var tvController = FindAnyObjectByType<TelevisionStaticController>();
 
         // モード終了：Fは常時（デバッグ用、プレイセッション中でもdebugAllowInterruptDuringPlayがONなら中断可）。
-        // Qはプレイセッション中でないときだけ「戻る」として機能する
-        // （プレイセッション中はQ/Eをサブカメラ切り替えに使うため）。Escapeは廃止。
-        bool qReturnPressed = Keyboard.current.qKey.wasPressedThisFrame && !IsPlaySessionActive;
-        if (Keyboard.current.fKey.wasPressedThisFrame || qReturnPressed)
+        // 「戻る」はEscapeで行う。QはPlay_Canvas2表示中もサブカメラ切替に使うキーのため、戻る操作からは外した
+        // （TV視聴中はGameInputGate.CaptureEscapeでEscapeを専有し、設定画面が同時に開かないようにしている。
+        // 実際にプレイが始まったら専有を解放するので、プレイ中のEscapeは設定を開く操作として機能する）。
+        bool escapeReturnPressed = Keyboard.current.escapeKey.wasPressedThisFrame;
+        if (Keyboard.current.fKey.wasPressedThisFrame || escapeReturnPressed)
         {
             // Play_Canvas2（television の選択画面）を表示中は、UFO自体を終了せず砂嵐を挟んで Play_Canvas へ戻る
             // （まだ Play を押して支払いを開始していないため、いつでもキャンセル可能）

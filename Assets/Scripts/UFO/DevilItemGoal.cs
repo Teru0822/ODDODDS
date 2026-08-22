@@ -659,12 +659,41 @@ public class DevilItemGoal : MonoBehaviour, IsaveDataProvider
         item.IsProcessedForGoal = true;
 
         // Devilキャッチャーを実際にプレイしていない間（ラウンド開始時のスポーン落下・物理的な転がり込みなど）に
-        // 何か入っても、獲得金額・枚数・効果音などは一切発生させない（未プレイ判定）。
-        // IsPlayingUfo（Devilエリア滞在中ずっとtrue）ではなく、実際にプレイ中かどうかを示す
-        // IsPlaySessionActiveを見る。ただし入ったアイテム自体は消しておかないと機体内に残り続けるため、
-        // カウントはせず破棄だけは行う
-        if (!UFOCameraController.IsPlaySessionActive)
+        // 何か入っても、セッションの獲得枚数・引き出し演出などは一切発生させない（未プレイ判定）。
+        // IsPlayingUfo（Devilエリア滞在中ずっとtrue）ではなく、IsItemCountingActiveを見る。
+        // これはプレイセッション開始でtrueになり、ターンが進むまでtrueを維持するため、
+        // プレイ終了後に配当が落ちきるまでの間に遅れて入ったアイテムもカウント対象にできる
+        // （IsPlaySessionActiveだけを見ると、セッション終了直後に入ったアイテムがカウント漏れしてしまう）。
+        // それでもなお期間外に入ってしまったコイン・ブラックダイヤは、次回プレイのセッションカウンターに
+        // 紛れ込ませず、その場で直接確定させる（下のif内を参照）。時計・ルーレットアイテムは時間延長や
+        // ルーレット演出など複雑な処理を伴うため対象外とし、単に破棄する
+        if (!UFOCameraController.IsItemCountingActive)
         {
+            // カウント期間が終わった後でもコイン（銅貨・銀貨・金貨）・ブラックダイヤが入ることがある。
+            // セッションカウンター（次回プレイの引き出しで一緒に加算）に積んでしまうと
+            // 前回分の獲得が次回のプレイに紛れ込んでしまうため、その場で直接確定させる
+            switch (item.itemType)
+            {
+                case UFOItemType.CopperCoin:
+                    UnwashedMoneyManager.Instance?.AddCoins(1, 0, 0);
+                    DevilSEManager.Instance?.PlayRealCoinGet();
+                    break;
+                case UFOItemType.SilverCoin:
+                    UnwashedMoneyManager.Instance?.AddCoins(0, 1, 0);
+                    DevilSEManager.Instance?.PlayRealCoinGet();
+                    break;
+                case UFOItemType.GoldCoin:
+                    UnwashedMoneyManager.Instance?.AddCoins(0, 0, 1);
+                    DevilSEManager.Instance?.PlayRealCoinGet();
+                    break;
+                case UFOItemType.BlackDiamond:
+                    if (_blackDiamondItem != null && ItemPanelManager.Instance != null)
+                        ItemPanelManager.Instance.AddItem(_blackDiamondItem.id, ItemType.CraneItem);
+                    DevilSEManager.Instance?.PlayRealBlackDiamondGet();
+                    TriggerLampFlash(blackDiamondFlashColor, false);
+                    break;
+            }
+
             Destroy(item.gameObject);
             return;
         }

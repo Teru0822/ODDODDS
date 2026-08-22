@@ -177,7 +177,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u3084\u3081\u308B(Q)"
+  m_text: "\u3084\u3081\u308B(esc)"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 80f2348e57a1a4d47af546535d76c144, type: 2}
   m_sharedMaterial: {fileID: -1235115034246611150, guid: 80f2348e57a1a4d47af546535d76c144, type: 2}
@@ -3203,7 +3203,7 @@ Transform:
   m_GameObject: {fileID: 813982482}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0, y: -0, z: 0.055}
+  m_LocalPosition: {x: -0, y: 0.2, z: 0.055}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6339,7 +6339,7 @@ MonoBehaviour:
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
-    fallbackWorldTargetSize: {x: 200, y: 200}
+    fallbackWorldTargetSize: {x: 200, y: 220}
     waitForExternalAction: 1
     fullDarkBackground: 0
     hideDimmingMask: 0
@@ -6511,7 +6511,7 @@ MonoBehaviour:
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
-    fallbackWorldTargetSize: {x: 200, y: 200}
+    fallbackWorldTargetSize: {x: 220, y: 220}
     waitForExternalAction: 1
     fullDarkBackground: 0
     hideDimmingMask: 0
@@ -6836,7 +6836,7 @@ MonoBehaviour:
     padding: 0
     rectAdjustMin: {x: 0, y: 0}
     rectAdjustMax: {x: 0, y: 0}
-    fallbackWorldTargetSize: {x: 300, y: 300}
+    fallbackWorldTargetSize: {x: 200, y: 200}
     waitForExternalAction: 0
     fullDarkBackground: 0
     hideDimmingMask: 0
@@ -6868,7 +6868,7 @@ MonoBehaviour:
     - 
     - 
     padding: 0
-    rectAdjustMin: {x: -20, y: -430}
+    rectAdjustMin: {x: -20, y: -120}
     rectAdjustMax: {x: 300, y: 0}
     fallbackWorldTargetSize: {x: 300, y: 300}
     waitForExternalAction: 0
@@ -6905,7 +6905,7 @@ MonoBehaviour:
     - 
     - 
     padding: 0
-    rectAdjustMin: {x: -20, y: -430}
+    rectAdjustMin: {x: -20, y: -120}
     rectAdjustMax: {x: 300, y: 0}
     fallbackWorldTargetSize: {x: 300, y: 300}
     waitForExternalAction: 0
@@ -6939,13 +6939,13 @@ MonoBehaviour:
     - 
     - 
     padding: 0
-    rectAdjustMin: {x: -20, y: -430}
+    rectAdjustMin: {x: -20, y: -120}
     rectAdjustMax: {x: 300, y: 0}
     fallbackWorldTargetSize: {x: 300, y: 300}
     waitForExternalAction: 0
     fullDarkBackground: 0
     hideDimmingMask: 0
-    messageBoxMaxWidth: 600
+    messageBoxMaxWidth: 610
     overrideMessageBoxPosition: 1
     messageBoxAnchor: {x: 0.3, y: 1}
     messageBoxPivot: {x: 0.3, y: 1}
@@ -6982,7 +6982,7 @@ MonoBehaviour:
     waitForExternalAction: 1
     fullDarkBackground: 0
     hideDimmingMask: 1
-    messageBoxMaxWidth: 600
+    messageBoxMaxWidth: 610
     overrideMessageBoxPosition: 1
     messageBoxAnchor: {x: 1, y: 1}
     messageBoxPivot: {x: 1, y: 1}
@@ -7530,11 +7530,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UFOBGMManager
   bgmClip: {fileID: 8300000, guid: 2a09a69371ec139448aa493e26466f46, type: 3}
   fastBgmClip: {fileID: 8300000, guid: bc7a6da4e96d6454b8509409ac21acff, type: 3}
-  bgmVolume: 0.3
+  bgmVolume: 0.05
   fadeDuration: 1
   speedCrossfadeDuration: 0.5
   normalSource: {fileID: 0}
   fastSource: {fileID: 0}
+  practiceBgmClip: {fileID: 8300000, guid: 2a09a69371ec139448aa493e26466f46, type: 3}
+  practiceFastBgmClip: {fileID: 8300000, guid: bc7a6da4e96d6454b8509409ac21acff, type: 3}
+  practiceBgmVolume: 0.05
+  practiceSource: {fileID: 0}
+  practiceFastSource: {fileID: 0}
 --- !u!4 &1307067186
 Transform:
   m_ObjectHideFlags: 0
@@ -7951,28 +7956,29 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UFOSEManager
   realCoinInsertSound: {fileID: 8300000, guid: 6a57f5afcbbb6174abd5994aa03b54f9, type: 3}
-  realCoinInsertVolume: 1.5
+  realCoinInsertVolume: 0.4
   realCoinGetSound: {fileID: 8300000, guid: 1844f9d577d01384a81bec1afd71b07b, type: 3}
   realWatchGetSound: {fileID: 8300000, guid: abcdc67f5c71d744489b1fa432127422, type: 3}
   realBlackDiamondGetSound: {fileID: 8300000, guid: 1fbebd194665c2f42879deab3512e212, type: 3}
   realRouletteItemGetSound: {fileID: 8300000, guid: 4adeb4a3f2c13ae4ab99e1a12f1b0cd6, type: 3}
-  realItemGetVolume: 1.4
+  realItemGetVolume: 0.3
+  realRouletteItemGetVolume: 0.8
   realLowTimeWarningLoopSound: {fileID: 8300000, guid: 95831d7d112bdea4281e9151acbddc29, type: 3}
-  realLowTimeWarningVolume: 0.2
+  realLowTimeWarningVolume: 0.05
   rouletteSpinLoopSound: {fileID: 8300000, guid: 54911b59815f05e4682a4d50bd22a3c2, type: 3}
-  rouletteSpinVolume: 1
+  rouletteSpinVolume: 0.25
   rouletteWinSound: {fileID: 8300000, guid: eb6dbd6dc5a533a4aa7411d7b083a991, type: 3}
-  rouletteWinVolume: 1
+  rouletteWinVolume: 0.3
   rouletteLoseSlotIndex: 1
   rouletteLoseSound: {fileID: 8300000, guid: 3a5027387a89518488a5a2e37134724a, type: 3}
   jackpotOmenSound: {fileID: 8300000, guid: 6b34ceb7db6f0034ebc8df65f4a7bcb8, type: 3}
-  jackpotOmenVolume: 2
+  jackpotOmenVolume: 0.25
   jackpotWinSound: {fileID: 8300000, guid: ef8b0dff61c60cd479cc1bd701096ecc, type: 3}
-  jackpotWinVolume: 1
+  jackpotWinVolume: 0.3
   realLightFlickerSound: {fileID: 8300000, guid: 4f319739c1eb21f46b9354431580df6d, type: 3}
-  realLightFlickerVolume: 0.314
+  realLightFlickerVolume: 0.1
   realLightOffSound: {fileID: 8300000, guid: 4e56454f649254a4cbb9af34af19ba36, type: 3}
-  realLightOffVolume: 6.02
+  realLightOffVolume: 0.25
   ambientLoopSound: {fileID: 8300000, guid: e48a9cd073793ed4c93425bbaf6c172b, type: 3}
   ambientVolume: 3.5
   drawerOpenSound: {fileID: 8300000, guid: 918f70682b696224b91e46a2e6348d48, type: 3}
@@ -7981,40 +7987,40 @@ MonoBehaviour:
   drawerCloseVolume: 1
   armDescentRustleSound: {fileID: 0}
   armMoveLoopSound: {fileID: 8300000, guid: 4f20f946064e39a40911467daf930332, type: 3}
-  armMoveVolume: 5.8
+  armMoveVolume: 2.5
   armMoveLoopSound2: {fileID: 8300000, guid: 880348c9c4f26334aaff8bff55e49320, type: 3}
-  armMoveVolume2: 1.26
+  armMoveVolume2: 0.2
   armMoveStartSound: {fileID: 8300000, guid: 528c1bdaf864f044ea8400ef9870f658, type: 3}
-  armMoveStartVolume: 3.8
+  armMoveStartVolume: 2
   armMoveStopSound: {fileID: 8300000, guid: 528c1bdaf864f044ea8400ef9870f658, type: 3}
-  armMoveStopVolume: 3.8
+  armMoveStopVolume: 2
   clawToggleSound: {fileID: 8300000, guid: 3ed09c3589870d0438ea4832160baaee, type: 3}
-  clawToggleVolume: 1
-  practiceBgmSound: {fileID: 0}
-  practiceBgmVolume: 0.6
+  clawToggleVolume: 0.4
+  buttonClickSound: {fileID: 8300000, guid: 4bbcb5e1c055b7b49b638217bd9eb11a, type: 3}
+  buttonClickVolume: 0.5
   practiceCoinInsertSound: {fileID: 8300000, guid: 6a57f5afcbbb6174abd5994aa03b54f9, type: 3}
-  practiceCoinInsertVolume: 2.75
+  practiceCoinInsertVolume: 0.4
   practiceCoinGetSound: {fileID: 8300000, guid: 1844f9d577d01384a81bec1afd71b07b, type: 3}
   practiceWatchGetSound: {fileID: 8300000, guid: abcdc67f5c71d744489b1fa432127422, type: 3}
   practiceBlackDiamondGetSound: {fileID: 8300000, guid: 293627995fffe3849badfeea4dc956a6, type: 3}
-  practiceItemGetVolume: 1
+  practiceItemGetVolume: 0.3
   practiceLowTimeWarningLoopSound: {fileID: 8300000, guid: 95831d7d112bdea4281e9151acbddc29, type: 3}
-  practiceLowTimeWarningVolume: 0.2
+  practiceLowTimeWarningVolume: 0.07
   tutorialFrameSnapSound: {fileID: 8300000, guid: d0890fb20bffc464dad3b7efa3c87c0d, type: 3}
-  tutorialFrameSnapVolume: 1
+  tutorialFrameSnapVolume: 0.4
   tutorialMessageTypingSound: {fileID: 8300000, guid: d76fe7901f976e249aaada8403e9d911, type: 3}
-  tutorialMessageTypingVolume: 0.7
+  tutorialMessageTypingVolume: 0.17
   floorImpactSounds:
   - {fileID: 8300000, guid: 779c9b077a980ee4c8967020192cbcb0, type: 3}
   - {fileID: 8300000, guid: bfa689949795b004a9f311501bb30e4a, type: 3}
   - {fileID: 8300000, guid: 8754d54879d74a842b4179b24ade428a, type: 3}
-  floorImpactVolume: 0.5
+  floorImpactVolume: 0.05
   coinImpactSounds:
   - {fileID: 8300000, guid: 73c2d60f4988bad4d8e691aa1ea6162c, type: 3}
   - {fileID: 8300000, guid: e82c7d8670a775c4cbbca8c82f8b99b9, type: 3}
   - {fileID: 8300000, guid: 59feb6d48411fba4cb17257dd57d3f60, type: 3}
   - {fileID: 8300000, guid: 3611958a152d6664294265843a72fdab, type: 3}
-  coinImpactVolume: 1
+  coinImpactVolume: 0.3
   specialItemFloorImpactSounds:
   - {fileID: 8300000, guid: 779c9b077a980ee4c8967020192cbcb0, type: 3}
   specialItemFloorImpactVolume: 1.5
@@ -8023,22 +8029,22 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 913c8f0cfab2fc048b8fb2f1b703bb17, type: 3}
   - {fileID: 8300000, guid: 0a6e736befe12024a83a2774d655406e, type: 3}
   - {fileID: 8300000, guid: 59b5201e3958e1140a1d308456b364db, type: 3}
-  specialItemImpactVolume: 1
+  specialItemImpactVolume: 0.2
   impactPitchRange: {x: 0.9, y: 1.1}
   touchSelectSound: {fileID: 8300000, guid: 94826d03cfc2c8148be7e49800e98929, type: 3}
-  touchSelectVolume: 1
+  touchSelectVolume: 0.4
   touchSelect2Sound: {fileID: 8300000, guid: 94826d03cfc2c8148be7e49800e98929, type: 3}
-  touchSelect2Volume: 1
+  touchSelect2Volume: 0.4
   touchLockedSound: {fileID: 8300000, guid: fccc3e76f36eb2c4799d6ad28bd144cd, type: 3}
-  touchLockedVolume: 0.8
+  touchLockedVolume: 0.6
   touchNoLockedSound: {fileID: 8300000, guid: 5066fccc65ef56d4f9323dbf41d7f471, type: 3}
   touchNoLockedVolume: 1
   touchHoverSound: {fileID: 8300000, guid: 0d47aa5ef60e1224abda0e0568dd694b, type: 3}
-  touchHoverVolume: 0.8
+  touchHoverVolume: 0.2
   televisionStaticSound: {fileID: 8300000, guid: 39361cfbeab23314aba9cac3bfd0baf3, type: 3}
-  televisionStaticVolume: 1
+  televisionStaticVolume: 0.5
   tutorialStaticLoopSound: {fileID: 8300000, guid: 39361cfbeab23314aba9cac3bfd0baf3, type: 3}
-  tutorialStaticLoopVolume: 0.3
+  tutorialStaticLoopVolume: 0.15
   tutorialStaticLoopEndSeconds: 50
   oneShotSource: {fileID: 0}
 --- !u!4 &1360053391
@@ -10561,7 +10567,7 @@ Transform:
   m_GameObject: {fileID: 1708828700}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -1, z: -0, w: 0}
-  m_LocalPosition: {x: 6.975995, y: 3.7779999, z: -6.2639995}
+  m_LocalPosition: {x: 6.975995, y: 3.88, z: -5.91}
   m_LocalScale: {x: 0.8308053, y: 0.8308051, z: 0.8308053}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -11134,7 +11140,7 @@ Transform:
   m_GameObject: {fileID: 1755706112}
   serializedVersion: 2
   m_LocalRotation: {x: -0.5997151, y: -0, z: -0, w: 0.80021363}
-  m_LocalPosition: {x: 0.561, y: 0.483, z: 3.02}
+  m_LocalPosition: {x: 0.64, y: 0.71, z: 3.16}
   m_LocalScale: {x: 21.985529, y: 21.98553, z: 9.771536}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -11559,7 +11565,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u2190\u623B\u308B(Q)"
+  m_text: "\u2190\u623B\u308B(esc)"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 80f2348e57a1a4d47af546535d76c144, type: 2}
   m_sharedMaterial: {fileID: -1235115034246611150, guid: 80f2348e57a1a4d47af546535d76c144, type: 2}
@@ -12543,7 +12549,7 @@ Transform:
   m_GameObject: {fileID: 1957663249}
   serializedVersion: 2
   m_LocalRotation: {x: -0.5997151, y: -0, z: -0, w: 0.80021363}
-  m_LocalPosition: {x: -0.704, y: 0.4507997, z: 3.13}
+  m_LocalPosition: {x: -0.659, y: 0.47, z: 3.136}
   m_LocalScale: {x: 21.985529, y: 21.98553, z: 9.771536}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -34273,8 +34279,6 @@ MonoBehaviour:
   buttonType: 2
   pressDepth: 0.05
   pressSpeed: 20
-  clickSound: {fileID: 0}
-  soundVolume: 1
   controlSourceOverride: {fileID: 2006116701}
 --- !u!4 &5025076286689370482
 Transform:
@@ -34938,8 +34942,6 @@ MonoBehaviour:
   buttonType: 0
   pressDepth: 0.05
   pressSpeed: 20
-  clickSound: {fileID: 8300000, guid: 4bbcb5e1c055b7b49b638217bd9eb11a, type: 3}
-  soundVolume: 1
   controlSourceOverride: {fileID: 2006116701}
 --- !u!1 &5286663386081716583
 GameObject:
@@ -38717,8 +38719,6 @@ MonoBehaviour:
   buttonType: 1
   pressDepth: 0.05
   pressSpeed: 20
-  clickSound: {fileID: 8300000, guid: 4bbcb5e1c055b7b49b638217bd9eb11a, type: 3}
-  soundVolume: 1
   controlSourceOverride: {fileID: 2006116701}
 --- !u!64 &6157150475815241568
 MeshCollider:
