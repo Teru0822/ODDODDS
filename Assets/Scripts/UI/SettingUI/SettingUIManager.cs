@@ -125,6 +125,18 @@ public class SettingUIManager : MonoBehaviour
 
     [SerializeField] private TMP_Dropdown _languageDropDown;
 
+    [Header("配色")]
+    [Tooltip("タブ選択色・キーバインド色をここから取る。未設定なら従来のハードコード値を使う")]
+    [SerializeField] private OddOdds.UI.Settings.SettingsTheme _theme;
+
+    // テーマ未設定でも従来どおり動くよう、既定値は変更前の値と同じにしてある
+    private Color TabSelectedFill      => _theme != null ? _theme.tabSelectedFill      : Color.white;
+    private Color TabSelectedText      => _theme != null ? _theme.tabSelectedText      : Color.black;
+    private Color TabDeselectedFill    => _theme != null ? _theme.tabDeselectedFill    : new Color(53f / 255f, 53f / 255f, 53f / 255f);
+    private Color TabDeselectedText    => _theme != null ? _theme.tabDeselectedText    : Color.white;
+    private Color KeybindIdleFill      => _theme != null ? _theme.keybindIdleFill      : Color.white;
+    private Color KeybindRebindingFill => _theme != null ? _theme.keybindRebindingFill : Color.red;
+
 
     private MouseHoverOutline[] _mouseHoverOutlines;
 
@@ -255,7 +267,7 @@ public class SettingUIManager : MonoBehaviour
             keybindItem.messageText.gameObject.SetActive(false);
             keybindItem.button.onClick.AddListener(() =>
             {
-                keybindItem.button.GetComponent<Image>().color = Color.red;
+                keybindItem.button.GetComponent<Image>().color = KeybindRebindingFill;
                 keybindItem.bindText.text = "";
                 keybindItem.messageText.gameObject.SetActive(true);
                 Debug.Log(keybindItem.inputActionReference.action.enabled);
@@ -467,15 +479,15 @@ public class SettingUIManager : MonoBehaviour
         if (nextIndex != -1)
         {
             SetContent(nextIndex);
-            _settingButtons[nextIndex].targetGraphic.color = Color.white;
-            _settingButtons[nextIndex].transform.GetChild(0).gameObject.GetComponent<TMP_Text>().color = Color.black;
+            _settingButtons[nextIndex].targetGraphic.color = TabSelectedFill;
+            _settingButtons[nextIndex].transform.GetChild(0).gameObject.GetComponent<TMP_Text>().color = TabSelectedText;
         }
 
         //以前表示していたbuttonの処理
         if (prevIndex != nextIndex && prevIndex != -1)
         {
-            _settingButtons[prevIndex].targetGraphic.color = new Color(53f / 255f, 53f / 255f, 53f / 255f);
-            _settingButtons[prevIndex].transform.GetChild(0).gameObject.GetComponent<TMP_Text>().color = Color.white;
+            _settingButtons[prevIndex].targetGraphic.color = TabDeselectedFill;
+            _settingButtons[prevIndex].transform.GetChild(0).gameObject.GetComponent<TMP_Text>().color = TabDeselectedText;
         }
 
     }
@@ -865,7 +877,7 @@ public class SettingUIManager : MonoBehaviour
                             item.inputActionReference.action.bindings[(int)item._bindingIndex].effectivePath,
                             InputControlPath.HumanReadableStringOptions.OmitDevice);
                         //画面を通常に戻す
-                        item.button.GetComponent<Image>().color = Color.white;
+                        item.button.GetComponent<Image>().color = KeybindIdleFill;
                         item.messageText.gameObject.SetActive(false);
                         _closeButton.gameObject.SetActive(true);
                         isNowRebinding = false;
@@ -886,7 +898,7 @@ public class SettingUIManager : MonoBehaviour
         _rebindingOperation.Dispose();
 
         //画面を通常に戻す
-        item.button.GetComponent<Image>().color = Color.white;
+        item.button.GetComponent<Image>().color = KeybindIdleFill;
         item.messageText.gameObject.SetActive(false);
         _closeButton.gameObject.SetActive(true);
         isNowRebinding = false;
