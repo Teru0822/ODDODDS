@@ -214,7 +214,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &31533647
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4329,7 +4329,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &703267209
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4810,7 +4810,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &776515950
 RectTransform:
   m_ObjectHideFlags: 0
@@ -9002,7 +9002,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1551220259
 RectTransform:
   m_ObjectHideFlags: 0
@@ -9266,7 +9266,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1572268117
 RectTransform:
   m_ObjectHideFlags: 0
@@ -13437,6 +13437,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4be850dd146119547b18f78243a949a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TypewriterUsageGate
+  Panel1_PlayDevilCatcher:
+    root: {fileID: 776515949}
+    yesButton: {fileID: 2042108349}
+    noButton: {fileID: 0}
+  Panel2_UseATM:
+    root: {fileID: 1551220258}
+    yesButton: {fileID: 155579295}
+    noButton: {fileID: 0}
+  Panel3_BothUnused:
+    root: {fileID: 31533646}
+    yesButton: {fileID: 936876333}
+    noButton: {fileID: 1755313682}
+  Panel4_DevilCatcherUnused:
+    root: {fileID: 1572268116}
+    yesButton: {fileID: 570361842}
+    noButton: {fileID: 1977859550}
+  Panel5_ATMUnused:
+    root: {fileID: 703267208}
+    yesButton: {fileID: 989567347}
+    noButton: {fileID: 2020464343}
   OnShowPanel1_PlayDevilCatcher:
     m_PersistentCalls:
       m_Calls:
