@@ -81,8 +81,26 @@ namespace OddOdds.UI.Settings
                 }
             }
 
-            if (_scrollbar.gameObject.activeSelf != show)
-                _scrollbar.gameObject.SetActive(show);
+            SetVisible(show);
+        }
+
+        /// <summary>
+        /// 見えなくする。
+        ///
+        /// SetActive では消せない。ScrollRect の Visibility が Permanent 以外だと、
+        /// ScrollRect 自身がスクロール要否に応じて毎フレーム SetActive を切り替えるため、
+        /// こちらで false にしてもすぐ戻されてしまう。
+        /// CanvasGroup なら ScrollRect の管理と衝突しない。
+        /// </summary>
+        private void SetVisible(bool visible)
+        {
+            var group = _scrollbar.GetComponent<CanvasGroup>();
+            if (group == null) group = _scrollbar.gameObject.AddComponent<CanvasGroup>();
+
+            float alpha = visible ? 1f : 0f;
+            if (!Mathf.Approximately(group.alpha, alpha)) group.alpha = alpha;
+            group.interactable = visible;
+            group.blocksRaycasts = visible;
         }
 
 #if UNITY_EDITOR
