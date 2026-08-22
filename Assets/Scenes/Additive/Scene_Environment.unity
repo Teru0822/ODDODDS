@@ -15404,7 +15404,7 @@ PrefabInstance:
       objectReference: {fileID: 498091436}
     - target: {fileID: 6046716883295855845, guid: b6fef00de4d2e7540add868eaf920c25, type: 3}
       propertyPath: _debugMode
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6046716883295855845, guid: b6fef00de4d2e7540add868eaf920c25, type: 3}
       propertyPath: controller
@@ -15427,6 +15427,10 @@ PrefabInstance:
       value: 0.99215686
       objectReference: {fileID: 0}
     - target: {fileID: 6046716883295855845, guid: b6fef00de4d2e7540add868eaf920c25, type: 3}
+      propertyPath: _debugForcePriority
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6046716883295855845, guid: b6fef00de4d2e7540add868eaf920c25, type: 3}
       propertyPath: _diamondSellDisplay
       value: 
       objectReference: {fileID: 1893993603}
@@ -15434,6 +15438,18 @@ PrefabInstance:
       propertyPath: _cameraTargetTransform
       value: 
       objectReference: {fileID: 275751564}
+    - target: {fileID: 6046716883295855845, guid: b6fef00de4d2e7540add868eaf920c25, type: 3}
+      propertyPath: _debugForcedSkillIds.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6046716883295855845, guid: b6fef00de4d2e7540add868eaf920c25, type: 3}
+      propertyPath: '_debugForcedSkillIds.Array.data[0]'
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 6046716883295855845, guid: b6fef00de4d2e7540add868eaf920c25, type: 3}
+      propertyPath: '_debugForcedSkillIds.Array.data[1]'
+      value: 26
+      objectReference: {fileID: 0}
     - target: {fileID: 9103030430489835650, guid: b6fef00de4d2e7540add868eaf920c25, type: 3}
       propertyPath: pressDepth
       value: 0.15
