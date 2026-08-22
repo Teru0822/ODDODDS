@@ -51,6 +51,14 @@ public class TypewriterUsageGate : MonoBehaviour
     private CursorLockMode _prevCursorLockState;
     private bool _prevCursorVisible;
 
+    private void Awake()
+    {
+        // シーンにパネルがアクティブのまま保存されていても起動時に必ず全て非表示にする
+        if (_panels != null)
+            foreach (var p in _panels)
+                if (p != null) p.SetActive(false);
+    }
+
     /// <summary>タイプライターを使おうとした時に呼ぶ。案内が不要ならその場で onAllowed を実行し、
     /// 必要ならパネル表示イベントを発火して「はい」が押されるまで待つ。</summary>
     public void RequestUse(Action onAllowed)

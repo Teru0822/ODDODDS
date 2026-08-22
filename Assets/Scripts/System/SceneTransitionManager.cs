@@ -76,22 +76,24 @@ namespace MiniGames.Transitions
 
         /// <summary>
         /// モヤだけを閉じる（画面が隠れる）。ロード画面は挟みません。
+        /// ロゴやローディングテキストは出さず黒フェードのみ。
         /// </summary>
         public IEnumerator FadeOutRoutine(float duration = -1f)
         {
             var lsm = LoadingScreenManager.Instance;
             if (lsm == null) yield break;
-            yield return lsm.Show(duration);
+            yield return lsm.SimpleFadeOut(duration);
         }
 
         /// <summary>
         /// モヤだけを晴らす（画面が現れる）。ロード画面は挟みません。
+        /// ロゴやローディングテキストは出さず黒フェードのみ。
         /// </summary>
         public IEnumerator FadeInRoutine(float duration = -1f)
         {
             var lsm = LoadingScreenManager.Instance;
             if (lsm == null) yield break;
-            yield return lsm.Hide(duration);
+            yield return lsm.SimpleFadeIn(duration);
         }
 
         // ─── 内部ルーティン ───────────────────────────────────────────────

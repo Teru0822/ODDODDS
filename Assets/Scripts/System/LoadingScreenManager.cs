@@ -1,11 +1,11 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using DG.Tweening;
-using UnityEngine.Rendering.Universal;
 
 namespace MiniGames.Transitions
 {
@@ -71,6 +71,7 @@ namespace MiniGames.Transitions
         private Tween _loadingTextFadeTween;
         private Coroutine _blinkCoroutine;
         private bool _isShowing = false;
+        private readonly List<Canvas> _hiddenCanvases = new List<Canvas>();
 
         // ─── ライフサイクル ───────────────────────────────────────────────
 
@@ -91,6 +92,7 @@ namespace MiniGames.Transitions
             }
 
             SetupCamera();
+            SetupLights();
             ExcludeLoadingLayerFromAllCameras();
             SceneManager.sceneLoaded += OnSceneLoaded;
             SetBlocker(false);
@@ -105,7 +107,6 @@ namespace MiniGames.Transitions
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             ExcludeLoadingLayerFromAllCameras();
-            if (_isShowing) AddOverlayToAllBaseCameras();
         }
 
         private void Update()
@@ -123,6 +124,28 @@ namespace MiniGames.Transitions
             if (_loadingCamera == null) return;
             var pos = _loadingCamera.transform.position;
             _loadingCamera.transform.position = new Vector3(pos.x, -500f, pos.z);
+            _loadingCamera.depth = 200; // IntroTourDirector のツアーカメラ(depth=100)より前面
+            _loadingCamera.clearFlags = CameraClearFlags.SolidColor;
+            _loadingCamera.backgroundColor = Color.black;
+            _loadingCamera.enabled = false;
+        }
+
+        private void SetupLights()
+        {
+            int layer = LayerMask.NameToLayer("LoadingScreen");
+            if (layer < 0) return;
+            int loadingOnlyMask = 1 << layer;
+            foreach (var lt in GetComponentsInChildren<Light>(true))
+            {
+                lt.cullingMask = loadingOnlyMask;
+                lt.enabled = false; // カメラが無効な間は消灯しておく
+            }
+        }
+
+        private void SetLightsEnabled(bool enable)
+        {
+            foreach (var lt in GetComponentsInChildren<Light>(true))
+                lt.enabled = enable;
         }
 
         private void ExcludeLoadingLayerFromAllCameras()
@@ -137,36 +160,35 @@ namespace MiniGames.Transitions
             }
         }
 
-        private void AddOverlayToAllBaseCameras()
-        {
-            if (_loadingCamera == null) return;
-            foreach (var cam in Camera.allCameras)
-            {
-                if (cam == _loadingCamera) continue;
-                var data = cam.GetUniversalAdditionalCameraData();
-                if (data.renderType == CameraRenderType.Base && !data.cameraStack.Contains(_loadingCamera))
-                    data.cameraStack.Add(_loadingCamera);
-            }
-        }
-
-        private void RemoveOverlayFromAllCameras()
-        {
-            if (_loadingCamera == null) return;
-            foreach (var cam in Camera.allCameras)
-            {
-                if (cam == _loadingCamera) continue;
-                var data = cam.GetUniversalAdditionalCameraData();
-                data.cameraStack.Remove(_loadingCamera);
-            }
-        }
-
         private void SetBlocker(bool active)
         {
             if (_rootBlocker != null) _rootBlocker.raycastTarget = active;
         }
 
+        /// <summary>ゲーム側の Canvas を全て無効化する。Screen Space Overlay も含め上書きを防ぐ。</summary>
+        private void HideOtherCanvases()
+        {
+            _hiddenCanvases.Clear();
+            foreach (var canvas in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+            {
+                if (canvas == null || !canvas.enabled) continue;
+                // DontDestroyOnLoad 側（LoadingScreen 自身等）は触らない
+                if (canvas.gameObject.scene.name == "DontDestroyOnLoad") continue;
+                canvas.enabled = false;
+                _hiddenCanvases.Add(canvas);
+            }
+        }
+
+        private void RestoreCanvases()
+        {
+            foreach (var canvas in _hiddenCanvases)
+                if (canvas != null) canvas.enabled = true;
+            _hiddenCanvases.Clear();
+        }
+
         private void HideImmediate()
         {
+            if (_loadingCamera != null) _loadingCamera.enabled = false;
             if (_fadeCanvasGroup != null)
             {
                 _fadeCanvasGroup.alpha = 0f;
@@ -230,6 +252,25 @@ namespace MiniGames.Transitions
         }
 
         /// <summary>
+        /// ロゴ・ローディングテキストを出さず黒オーバーレイだけでフェードアウトする。
+        /// ツアー内ショット間の霧演出など、ロード画面を挟まない単純な遮幕に使う。
+        /// </summary>
+        public Coroutine SimpleFadeOut(float fadeDuration = -1f)
+        {
+            float d = fadeDuration > 0f ? fadeDuration : _fadeDuration;
+            return StartCoroutine(SimpleFadeOutRoutine(d));
+        }
+
+        /// <summary>
+        /// 黒オーバーレイだけをフェードインして画面を開く。SimpleFadeOut とペアで使う。
+        /// </summary>
+        public Coroutine SimpleFadeIn(float fadeDuration = -1f)
+        {
+            float d = fadeDuration > 0f ? fadeDuration : _fadeDuration;
+            return StartCoroutine(SimpleFadeInRoutine(d));
+        }
+
+        /// <summary>
         /// Action を即時実行し minimumDuration 秒間表示を続ける。
         /// 現行 SceneTransitionManager.ShowTurnTransition の置き換え用。
         /// </summary>
@@ -245,15 +286,19 @@ namespace MiniGames.Transitions
         {
             _isShowing = true;
             SetBlocker(true);
-            AddOverlayToAllBaseCameras();
 
+            // FadeGroup を即時黒にしてからカメラを有効化することで、
+            // カメラ背景色が1フレーム見えてしまう黄色フラッシュを防ぐ。
             if (_fadeCanvasGroup != null)
             {
                 _fadeCanvasGroup.DOKill();
-                _fadeCanvasGroup.alpha = 0f;
+                _fadeCanvasGroup.alpha = 1f;
                 _fadeCanvasGroup.gameObject.SetActive(true);
-                yield return _fadeCanvasGroup.DOFade(1f, fadeDuration).WaitForCompletion();
             }
+
+            if (_loadingCamera != null) _loadingCamera.enabled = true;
+            HideOtherCanvases(); // Screen Space Overlay 含む全ゲームCanvasを隠す
+            SetLightsEnabled(true);
 
             if (_loadingScreenCanvasGroup != null)
             {
@@ -296,14 +341,22 @@ namespace MiniGames.Transitions
             }
 
             StopLoadingAnimation();
+            SetLightsEnabled(false); // ゲームが透け始める前にロゴライトを消す
 
             if (_fadeCanvasGroup != null)
             {
+                // FadeGroup を透かす際に黒ではなくゲーム映像が見えるよう Depth に切り替える
+                if (_loadingCamera != null) _loadingCamera.clearFlags = CameraClearFlags.Depth;
                 yield return _fadeCanvasGroup.DOFade(0f, fadeDuration).WaitForCompletion();
                 _fadeCanvasGroup.gameObject.SetActive(false);
             }
 
-            RemoveOverlayFromAllCameras();
+            if (_loadingCamera != null)
+            {
+                _loadingCamera.enabled = false;
+                _loadingCamera.clearFlags = CameraClearFlags.SolidColor; // 次の Show に備えてリセット
+            }
+            RestoreCanvases();
             SetBlocker(false);
             _isShowing = false;
         }
@@ -387,6 +440,47 @@ namespace MiniGames.Transitions
 
             yield return HideRoutine(fadeDuration);
             onComplete?.Invoke();
+        }
+
+        private IEnumerator SimpleFadeOutRoutine(float fadeDuration)
+        {
+            SetBlocker(true);
+            SetLightsEnabled(false); // 霧フェード中はロゴライトを消したまま
+
+            // ゲームが透けて見える状態からフェードアウトするため Depth を使う
+            if (_loadingCamera != null)
+            {
+                _loadingCamera.clearFlags = CameraClearFlags.Depth;
+                _loadingCamera.enabled = true;
+            }
+            if (_fadeCanvasGroup != null)
+            {
+                _fadeCanvasGroup.DOKill();
+                _fadeCanvasGroup.alpha = 0f;
+                _fadeCanvasGroup.gameObject.SetActive(true);
+                yield return _fadeCanvasGroup.DOFade(1f, fadeDuration).WaitForCompletion();
+            }
+        }
+
+        private IEnumerator SimpleFadeInRoutine(float fadeDuration)
+        {
+            // clearFlags を Depth に切り替えてゲームが透けて見えるようにしてから1フレーム待ち、
+            // ゲームカメラが色バッファを描画した後でフェードを開始することで黒フレームを防ぐ
+            if (_loadingCamera != null) _loadingCamera.clearFlags = CameraClearFlags.Depth;
+            yield return null;
+
+            if (_fadeCanvasGroup != null)
+            {
+                _fadeCanvasGroup.DOKill();
+                yield return _fadeCanvasGroup.DOFade(0f, fadeDuration).WaitForCompletion();
+                _fadeCanvasGroup.gameObject.SetActive(false);
+            }
+            if (_loadingCamera != null)
+            {
+                _loadingCamera.enabled = false;
+                _loadingCamera.clearFlags = CameraClearFlags.SolidColor;
+            }
+            SetBlocker(false);
         }
 
         // ─── アニメーション ───────────────────────────────────────────────
