@@ -113,7 +113,21 @@ public class SettingUIManager : MonoBehaviour
     [SerializeField] private Toggle _soundPitchOffToggle;
     [SerializeField] private List<AudioSource> _audioSources = new List<AudioSource>();
 
-    [Header("UIのオブジェクト(KeyBind)")]
+    [Header("UIのオブジェクト(操作)")]
+    [Tooltip("マウス感度のスライダー。未設定なら感度設定は無効")]
+    [SerializeField] private Slider _sensitivitySlider;
+
+    [Tooltip("感度の数値入力欄。スライダーと相互に同期する。未設定でもスライダーだけで動く")]
+    [SerializeField] private TMP_InputField _sensitivityInput;
+
+    [Tooltip("表示上の感度の最小値・最大値。ここで入力できる範囲が決まる")]
+    [SerializeField] private float _sensitivityDisplayMin = 1f;
+    [SerializeField] private float _sensitivityDisplayMax = 100f;
+
+    [Tooltip("表示値が最小・最大のときの実際のマウス感度 (deg/pixel)")]
+    [SerializeField] private float _sensitivityValueMin = 0.02f;
+    [SerializeField] private float _sensitivityValueMax = 0.40f;
+
     [SerializeField] private List<KeyBindItem> _keybindItems;
     [SerializeField] private bool isDoLoad = true;
     private bool isNowRebinding = false;
@@ -124,6 +138,13 @@ public class SettingUIManager : MonoBehaviour
     [Header("UIのオブジェクト(Other)")]
 
     [SerializeField] private TMP_Dropdown _languageDropDown;
+
+    // 設定値の保存キー。音量と明るさは PlayerPrefs に残して次回起動時に復元する
+    private const string PrefBgmVolume   = "Setting_BgmVolume";
+    private const string PrefSeVolume    = "Setting_SeVolume";
+    private const string PrefVoiceVolume = "Setting_VoiceVolume";
+    private const string PrefBrightness  = "Setting_Brightness";
+    private const string PrefSensitivity = "Setting_Sensitivity";
 
     [Header("配色")]
     [Tooltip("タブ選択色・キーバインド色をここから取る。未設定なら従来のハードコード値を使う")]
@@ -178,8 +199,8 @@ public class SettingUIManager : MonoBehaviour
 
         CreateRefreshRateOptions();
 
-        _volume = FindFirstObjectByType<Volume>();
-        _volume.profile.TryGet(out _colorAdjustments);
+        // ColorAdjustments を持つ Volume を選んで確保する（無ければ警告だけ出して続行）
+        EnsureColorAdjustments();
         _mainCamera = Camera.main;
         _cameraData = _mainCamera.GetUniversalAdditionalCameraData();
 
@@ -260,6 +281,10 @@ public class SettingUIManager : MonoBehaviour
         _seSlider.onValueChanged.AddListener(value => ChangeSeVolume(value));
         _voiceSlider.onValueChanged.AddListener(value => ChangeVoiceVolume(value));
 
+        SetupSensitivity();
+        SetupPreviewAudio();
+        RestoreSavedSettings();
+
         //キーバインド項目のリスナー追加
 
         foreach (var keybindItem in _keybindItems)
@@ -329,7 +354,7 @@ public class SettingUIManager : MonoBehaviour
 
     private void OnApplicationQuit()
     {
-        _colorAdjustments.postExposure.value = 0;
+        if (_colorAdjustments != null) _colorAdjustments.postExposure.value = 0;
     }
 
     private void Update()
@@ -603,19 +628,24 @@ public class SettingUIManager : MonoBehaviour
     /// <param name="value"></param>
     public void ChangeScreenSize(int value)
     {
+        // 解像度だけ変えたいので、ウィンドウ／フルスクリーンの状態は今のまま保つ。
+        // ここで false を渡すとフルスクリーン中に解像度を変えた時に
+        // 勝手にウィンドウ化してしまう
+        FullScreenMode mode = Screen.fullScreenMode;
+
         switch ((ScreenSize)value)
         {
             case ScreenSize.FHD:
-                Screen.SetResolution(1920, 1080, false);
+                Screen.SetResolution(1920, 1080, mode);
                 break;
             case ScreenSize.WQHD:
-                Screen.SetResolution(2560, 1440, false);
+                Screen.SetResolution(2560, 1440, mode);
                 break ;
             case ScreenSize.FourK:
-                Screen.SetResolution(3840, 2160, false);
+                Screen.SetResolution(3840, 2160, mode);
                 break ;
             case ScreenSize.Ultra_XGA:
-                Screen.SetResolution(1600, 1200, false);
+                Screen.SetResolution(1600, 1200, mode);
                 break ;
             default:
                 Debug.LogError("そのような基底のウィンドウサイズは存在しません。");
@@ -623,6 +653,12 @@ public class SettingUIManager : MonoBehaviour
         }
 
         Debug.Log("ScreenSize:" + value);
+
+#if UNITY_EDITOR
+        // エディタの Game ビューは Screen.SetResolution を無視する。
+        // 効いていないように見えるのは仕様なので、ビルドで確認する必要がある
+        Debug.Log("[SettingUIManager] エディタでは解像度変更は反映されません。ビルドで確認してください。");
+#endif
     }
 
     public void ChangeFramerate(int value)
@@ -719,7 +755,67 @@ public class SettingUIManager : MonoBehaviour
 
     public void ChangeLight(float value)
     {
-        _colorAdjustments.postExposure.value = -1 + 2 * value;
+        if (!EnsureColorAdjustments()) return;
+
+        // URP の Volume は overrideState を立てないと値が無視される。
+        // プロファイル側でチェックが入っていないと「設定しているのに変わらない」ので、
+        // 触る時に必ず有効化しておく
+        _colorAdjustments.postExposure.overrideState = true;
+        _colorAdjustments.postExposure.value = -1f + 2f * value;
+
+        PlayerPrefs.SetFloat(PrefBrightness, value);
+    }
+
+    /// <summary>
+    /// 明るさを操作する ColorAdjustments を確保する。
+    ///
+    /// FindFirstObjectByType&lt;Volume&gt;() だと ColorAdjustments を持たない Volume を
+    /// 拾ってしまうことがあるため、プロファイルに ColorAdjustments がある Volume を
+    /// 優先度の高い順に探す。
+    /// </summary>
+    private bool EnsureColorAdjustments()
+    {
+        if (_colorAdjustments != null) return true;
+
+        Volume best = null;
+        ColorAdjustments bestAdjustments = null;
+
+        var volumes = FindObjectsByType<Volume>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        foreach (var volume in volumes)
+        {
+            if (volume == null || volume.profile == null) continue;
+            if (!volume.profile.TryGet(out ColorAdjustments adjustments)) continue;
+
+            // グローバルで優先度が高いものを選ぶ。ローカル Volume は範囲内でしか効かない
+            bool better = best == null
+                          || (volume.isGlobal && !best.isGlobal)
+                          || (volume.isGlobal == best.isGlobal && volume.priority > best.priority);
+            if (!better) continue;
+
+            best = volume;
+            bestAdjustments = adjustments;
+        }
+
+        if (bestAdjustments == null)
+        {
+            WarnOnceAboutBrightness();
+            return false;
+        }
+
+        _volume = best;
+        _colorAdjustments = bestAdjustments;
+        return true;
+    }
+
+    private bool _warnedAboutBrightness;
+
+    private void WarnOnceAboutBrightness()
+    {
+        if (_warnedAboutBrightness) return;
+        _warnedAboutBrightness = true;
+        Debug.LogWarning("[SettingUIManager] ColorAdjustments を持つ Volume が見つからないため、" +
+                         "明るさ設定を反映できません。シーンの Global Volume の Profile に " +
+                         "Color Adjustments を追加してください。", this);
     }
 
     public void ChangeQualityPreset(int value)
@@ -810,19 +906,169 @@ public class SettingUIManager : MonoBehaviour
 
     /*--- ここからはサウンド用の設定項目に関する関数 ---------*/
     
+    /// <summary>
+    /// 音量つまみの実体。AudioVolumeController がシーン上の AudioSource へ倍率を掛ける。
+    /// どの音がどの分類かは AudioCategoryTag か、AudioVolumeController の Inspector で決める。
+    /// </summary>
+    private App.Audio.AudioVolumeController Volume
+    {
+        get
+        {
+            var controller = App.Audio.AudioVolumeController.Instance;
+            if (controller != null) return controller;
+
+            // シーンに置き忘れていても音量設定が死なないよう、無ければ自分で用意する
+            controller = FindFirstObjectByType<App.Audio.AudioVolumeController>();
+            if (controller == null)
+            {
+                var go = new GameObject("AudioVolumeController");
+                DontDestroyOnLoad(go);
+                controller = go.AddComponent<App.Audio.AudioVolumeController>();
+                Debug.Log("[SettingUIManager] AudioVolumeController が見つからないため自動生成しました。", controller);
+            }
+            return controller;
+        }
+    }
+
+    /*--- ここからは操作（感度）用の設定項目に関する関数 ---------*/
+
+    /// <summary>感度スライダーと数値入力欄をつなぐ。</summary>
+    private void SetupSensitivity()
+    {
+        if (_sensitivitySlider != null)
+        {
+            _sensitivitySlider.onValueChanged.AddListener(_ => ApplySensitivityFromSlider(true));
+        }
+
+        if (_sensitivityInput != null)
+        {
+            _sensitivityInput.contentType = TMP_InputField.ContentType.DecimalNumber;
+            // 入力途中の半端な値で感度が飛ばないよう、確定時だけ反映する
+            _sensitivityInput.onEndEdit.AddListener(ApplySensitivityFromInput);
+            _sensitivityInput.onSubmit.AddListener(ApplySensitivityFromInput);
+        }
+    }
+
+    /// <summary>表示値(1〜100 など) を実際のマウス感度へ変換する。</summary>
+    private float DisplayToSensitivity(float display)
+    {
+        float span = Mathf.Max(0.0001f, _sensitivityDisplayMax - _sensitivityDisplayMin);
+        float t = Mathf.Clamp01((display - _sensitivityDisplayMin) / span);
+        return Mathf.Lerp(_sensitivityValueMin, _sensitivityValueMax, t);
+    }
+
+    /// <summary>スライダーの位置から表示値を取り出す。スライダーの最小/最大がいくつでも動く。</summary>
+    private float SliderToDisplay()
+    {
+        if (_sensitivitySlider == null) return _sensitivityDisplayMin;
+        float t = Mathf.Clamp01(_sensitivitySlider.normalizedValue);
+        return Mathf.Lerp(_sensitivityDisplayMin, _sensitivityDisplayMax, t);
+    }
+
+    private void ApplySensitivityFromSlider(bool syncInput)
+    {
+        float display = SliderToDisplay();
+        ApplySensitivity(display);
+
+        if (syncInput && _sensitivityInput != null)
+        {
+            _sensitivityInput.SetTextWithoutNotify(display.ToString("0.#"));
+        }
+    }
+
+    private void ApplySensitivityFromInput(string text)
+    {
+        if (!float.TryParse(text, out float display))
+        {
+            // 数字として読めない入力は、今の値に戻して知らせる
+            if (_sensitivityInput != null)
+                _sensitivityInput.SetTextWithoutNotify(SliderToDisplay().ToString("0.#"));
+            return;
+        }
+
+        display = Mathf.Clamp(display, _sensitivityDisplayMin, _sensitivityDisplayMax);
+
+        if (_sensitivitySlider != null)
+        {
+            float span = Mathf.Max(0.0001f, _sensitivityDisplayMax - _sensitivityDisplayMin);
+            _sensitivitySlider.SetValueWithoutNotify(
+                Mathf.Lerp(_sensitivitySlider.minValue, _sensitivitySlider.maxValue,
+                           (display - _sensitivityDisplayMin) / span));
+        }
+
+        if (_sensitivityInput != null)
+            _sensitivityInput.SetTextWithoutNotify(display.ToString("0.#"));
+
+        ApplySensitivity(display);
+    }
+
+    /// <summary>実際にプレイヤーへ感度を反映して保存する。</summary>
+    private void ApplySensitivity(float display)
+    {
+        float sensitivity = DisplayToSensitivity(display);
+
+        // シーンを跨ぐとプレイヤーが入れ替わるので、その都度探し直す
+        if (_fpsController == null) _fpsController = FindFirstObjectByType<FirstPersonController>();
+        if (_fpsController != null) _fpsController.LookSensitivity = sensitivity;
+
+        PlayerPrefs.SetFloat(PrefSensitivity, display);
+    }
+
+    /// <summary>
+    /// 試聴用の音は音量設定の倍率を掛けない。
+    /// スライダーの値をそのまま鳴らして確認するためのものなので、
+    /// さらに設定倍率が乗ると二重に小さくなってしまう。
+    /// </summary>
+    private void SetupPreviewAudio()
+    {
+        if (_audio == null) return;
+        if (_audio.GetComponent<App.Audio.AudioCategoryTag>() != null) return;
+
+        var tag = _audio.gameObject.AddComponent<App.Audio.AudioCategoryTag>();
+        tag.category = App.Audio.AudioCategory.Unmanaged;
+        tag.applyToChildren = false;
+    }
+
+    /// <summary>前回終了時の音量と明るさを復元する。スライダーへ入れると各 Change〜 が呼ばれて反映される。</summary>
+    private void RestoreSavedSettings()
+    {
+        if (PlayerPrefs.HasKey(PrefBgmVolume))   _bgmSlider.value   = PlayerPrefs.GetFloat(PrefBgmVolume);
+        if (PlayerPrefs.HasKey(PrefSeVolume))    _seSlider.value    = PlayerPrefs.GetFloat(PrefSeVolume);
+        if (PlayerPrefs.HasKey(PrefVoiceVolume)) _voiceSlider.value = PlayerPrefs.GetFloat(PrefVoiceVolume);
+        if (PlayerPrefs.HasKey(PrefBrightness))  _lightSlider.value = PlayerPrefs.GetFloat(PrefBrightness);
+
+        // 感度はスライダーの範囲が任意なので、表示値から位置を逆算して入れる
+        if (_sensitivitySlider != null)
+        {
+            float display = PlayerPrefs.HasKey(PrefSensitivity)
+                ? PlayerPrefs.GetFloat(PrefSensitivity)
+                : SliderToDisplay();
+            ApplySensitivityFromInput(display.ToString("0.#"));
+        }
+
+        // スライダーの値が保存値と同じだと onValueChanged が飛ばないので、明示的に流し込む
+        ChangeBgmVolume(_bgmSlider.value);
+        ChangeSeVolume(_seSlider.value);
+        ChangeVoiceVolume(_voiceSlider.value);
+        ChangeLight(_lightSlider.value);
+    }
+
     public void ChangeBgmVolume(float value)
     {
-        //TODO:処理を実装する
+        Volume.Bgm = value;
+        PlayerPrefs.SetFloat(PrefBgmVolume, value);
     }
 
     public void ChangeSeVolume(float value)
     {
-        //TODO:処理を実装する
+        Volume.Se = value;
+        PlayerPrefs.SetFloat(PrefSeVolume, value);
     }
 
     public void ChangeVoiceVolume(float value)
     {
-        //TODO:処理を実装する
+        Volume.Voice = value;
+        PlayerPrefs.SetFloat(PrefVoiceVolume, value);
     }
 
     public void PlayTrySound(int type)

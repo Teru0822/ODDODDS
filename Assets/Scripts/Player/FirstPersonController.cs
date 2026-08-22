@@ -16,6 +16,16 @@ namespace App.Player
         [SerializeField] private Camera playerCamera;
         [Tooltip("マウス感度の基本値 (deg/pixel)。0.05〜0.3 推奨")]
         [SerializeField] private float lookSensitivity = 0.1f;
+
+        /// <summary>
+        /// マウス感度の基本値。設定画面の感度スライダーから書き換える。
+        /// 左右／上下の倍率はそのままなので、両方まとめて効く。
+        /// </summary>
+        public float LookSensitivity
+        {
+            get => lookSensitivity;
+            set => lookSensitivity = Mathf.Max(0f, value);
+        }
         [Tooltip("左右(Yaw)の感度倍率")]
         [SerializeField] private float horizontalSensitivity = 1.0f;
         [Tooltip("上下(Pitch)の感度倍率")]
