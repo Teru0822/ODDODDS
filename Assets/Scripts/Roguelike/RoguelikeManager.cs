@@ -62,6 +62,48 @@ public class RoguelikeManager : MonoBehaviour, IsaveDataProvider, ILanguage
 
 
     /// <summary>
+    /// 段階的にアンロックしていくスキルの並び（同じ内容の強化を1〜3段階等に分けたもの）。
+    /// 各配列内は「前の段階を取得しないと次の段階は選択肢に出せない」順序で並べる。
+    /// ここに含まれないSkillIdは制限なし（いつでも選択肢に出せる）。
+    /// </summary>
+    private static readonly SkillId[][] SkillTiers = new SkillId[][]
+    {
+        new[] { SkillId.UFO_ArmLevel2, SkillId.UFO_ArmLevel3, SkillId.UFO_ArmLevelUltimate },
+        new[] { SkillId.UFO_ExpandDropHole1, SkillId.UFO_ExpandDropHole2, SkillId.UFO_ExpandDropHole3 },
+        new[] { SkillId.UFO_PolishDiamond1, SkillId.UFO_PolishDiamond2, SkillId.UFO_PolishDiamond3 },
+        new[] { SkillId.UFO_ReduceSway1, SkillId.UFO_ReduceSway2, SkillId.UFO_ReduceSway3 },
+        new[] { SkillId.UFO_ArmSpeedUp1, SkillId.UFO_ArmSpeedUp2 },
+        new[] { SkillId.UFO_ExpandItems1, SkillId.UFO_ExpandItems2 },
+        new[] { SkillId.Typewriter_ExpandChoice1, SkillId.Typewriter_ExpandChoice2 },
+    };
+
+    // SkillId -> 直前の段階のSkillId。各段階の並びからSkillTiers初期化時に自動で組み立てる
+    private static readonly Dictionary<SkillId, SkillId> _prerequisiteBySkillId = BuildPrerequisiteMap();
+
+    private static Dictionary<SkillId, SkillId> BuildPrerequisiteMap()
+    {
+        var map = new Dictionary<SkillId, SkillId>();
+        foreach (var tier in SkillTiers)
+        {
+            for (int i = 1; i < tier.Length; i++)
+            {
+                map[tier[i]] = tier[i - 1];
+            }
+        }
+        return map;
+    }
+
+    /// <summary>
+    /// このスキルが今、選択肢の抽選対象になり得るか。
+    /// SkillTiersの2段階目以降は、直前の段階を取得済みでなければ対象外にする。
+    /// </summary>
+    private bool IsSkillAvailableForDraw(SkillId id)
+    {
+        if (!_prerequisiteBySkillId.TryGetValue(id, out var prerequisite)) return true;
+        return _roguelikeDictionary.TryGetValue(prerequisite, out var prerequisiteData) && prerequisiteData.isGet;
+    }
+
+    /// <summary>
     /// 現在アンロックされているスキルのみを集めたDictionaryを返す
     /// </summary>
     public Dictionary<SkillId, RoguelikeData> GetUnlockSkillDictionary => _roguelikeDictionary.Where(data => data.Value.isGet == true)
@@ -195,15 +237,16 @@ public class RoguelikeManager : MonoBehaviour, IsaveDataProvider, ILanguage
     {
         List<RoguelikeData> tmpList = new List<RoguelikeData>();
 
-        //既にゲットしてるスキルは除外
+        //既にゲットしてるスキル・前段階を未取得のスキル（SkillTiers参照）は除外
         if (type == SkillType.None)
         {
             foreach (var skill in _roguelikeDictionary)
             {
                 if (skill.Value.isGet)
                     continue;
-                else
-                    tmpList.Add(skill.Value);
+                if (!IsSkillAvailableForDraw(skill.Key))
+                    continue;
+                tmpList.Add(skill.Value);
             }
         }
         else //特定のタイプのスキルを優先して獲得させたい場合
@@ -212,8 +255,9 @@ public class RoguelikeManager : MonoBehaviour, IsaveDataProvider, ILanguage
             {
                 if (skill.Value.isGet || skill.Value.skillType != type)
                     continue;
-                else
-                    tmpList.Add(skill.Value);
+                if (!IsSkillAvailableForDraw(skill.Key))
+                    continue;
+                tmpList.Add(skill.Value);
             }
         }
 

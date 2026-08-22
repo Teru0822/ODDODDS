@@ -56,6 +56,13 @@ public class TypewriterInteractable : InteractableHighlight
     [Tooltip("ONにするとInspectorにローグライクスキルのオンオフパネルが表示される（Playモードのみ有効）")]
     [SerializeField] private bool _debugMode = false;
 
+    [Tooltip("ONの場合、下のDebug Forced Skill Idsで指定したスキルを選択肢に優先的に含める" +
+             "（既に取得済み・選択肢数を超える分は無視されます）")]
+    [SerializeField] private bool _debugForcePriority = false;
+
+    [Tooltip("優先的に選択肢へ含めたいスキルID。残りの枠はいつも通りランダム抽選で埋まります")]
+    [SerializeField] private SkillId[] _debugForcedSkillIds;
+
     private bool _busy;
     private bool _lookedAt;
     private bool _keyboardSubscribed;
@@ -251,6 +258,57 @@ public class TypewriterInteractable : InteractableHighlight
         OnUsageAllowed();
     }
 
+    /// <summary>
+    /// デバッグ用：_debugForcedSkillIdsで指定したスキルを優先的に選択肢へ入れる。
+    /// 取得済み・重複・choiceCount超過分は無視し、残りの枠はGetLockSkillsの通常抽選で埋める。
+    /// </summary>
+    private List<RoguelikeData> BuildDebugPriorityPicks(RoguelikeManager mgr, int choiceCount)
+    {
+        var result = new List<RoguelikeData>();
+
+        if (_debugForcedSkillIds != null)
+        {
+            var allSkills = mgr.AllSkillsDebug;
+            foreach (var skillId in _debugForcedSkillIds)
+            {
+                if (result.Count >= choiceCount) break;
+                if (!allSkills.TryGetValue(skillId, out var data) || data == null) continue;
+                if (data.isGet) continue; // 取得済みは選択肢に出せない
+
+                bool alreadyAdded = false;
+                foreach (var picked in result)
+                {
+                    if (picked.id == skillId) { alreadyAdded = true; break; }
+                }
+                if (alreadyAdded) continue;
+
+                result.Add(data);
+            }
+        }
+
+        int remaining = choiceCount - result.Count;
+        if (remaining > 0)
+        {
+            var randomPicks = mgr.GetLockSkills(remaining);
+            if (randomPicks != null)
+            {
+                foreach (var picked in randomPicks)
+                {
+                    if (result.Count >= choiceCount) break;
+
+                    bool alreadyAdded = false;
+                    foreach (var existing in result)
+                    {
+                        if (existing.id == picked.id) { alreadyAdded = true; break; }
+                    }
+                    if (!alreadyAdded) result.Add(picked);
+                }
+            }
+        }
+
+        return result;
+    }
+
     /// <summary>usageGate の確認が済んだ（または不要だった）ときに実際の打鍵処理へ進む。</summary>
     private void OnUsageAllowed()
     {
@@ -283,7 +341,9 @@ public class TypewriterInteractable : InteractableHighlight
                 else if (unlocked.ContainsKey(SkillId.Typewriter_ExpandChoice1)) choiceCount = 3;
             }
 
-            picks = mgr?.GetLockSkills(choiceCount);
+            picks = (_debugForcePriority && mgr != null)
+                ? BuildDebugPriorityPicks(mgr, choiceCount)
+                : mgr?.GetLockSkills(choiceCount);
             if (picks == null || picks.Count < 1)
             {
                 Debug.LogWarning($"[TypewriterInteractable] 未選択の報酬が残っていません", this);
