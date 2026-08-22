@@ -1,0 +1,94 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ecb9ab7c1c6d334dbad205aace28bf3, type: 3}
+  m_Name: SettingsTheme
+  m_EditorClassIdentifier: Assembly-CSharp::OddOdds.UI.Settings.SettingsTheme
+  screenBackground: {r: 0.03137255, g: 0.03137255, b: 0.03137255, a: 1}
+  panelBackground: {r: 0.0627451, g: 0.0627451, b: 0.0627451, a: 1}
+  rowBackground: {r: 0.039215688, g: 0.039215688, b: 0.039215688, a: 1}
+  line: {r: 1, g: 1, b: 1, a: 1}
+  textDim: {r: 0.6666667, g: 0.6666667, b: 0.6666667, a: 1}
+  disabled: {r: 0.33333334, g: 0.33333334, b: 0.33333334, a: 1}
+  rowBorderAlpha: 0.7
+  decorLineAlpha: 0.6
+  btnNormal: {r: 0.03137255, g: 0.03137255, b: 0.03137255, a: 1}
+  btnHighlighted: {r: 0.13333334, g: 0.13333334, b: 0.13333334, a: 1}
+  btnPressed: {r: 1, g: 1, b: 1, a: 1}
+  btnSelected: {r: 0.13333334, g: 0.13333334, b: 0.13333334, a: 1}
+  btnDisabled: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+  btnFadeDuration: 0.08
+  handleNormal: {r: 1, g: 1, b: 1, a: 1}
+  handleHighlighted: {r: 1, g: 1, b: 1, a: 1}
+  handlePressed: {r: 0.6666667, g: 0.6666667, b: 0.6666667, a: 1}
+  handleDisabled: {r: 0.33333334, g: 0.33333334, b: 0.33333334, a: 1}
+  tabSelectedFill: {r: 1, g: 1, b: 1, a: 1}
+  tabSelectedText: {r: 0.03137255, g: 0.03137255, b: 0.03137255, a: 1}
+  tabDeselectedFill: {r: 0.03137255, g: 0.03137255, b: 0.03137255, a: 1}
+  tabDeselectedText: {r: 1, g: 1, b: 1, a: 1}
+  keybindIdleFill: {r: 1, g: 1, b: 1, a: 1}
+  keybindIdleText: {r: 0.03137255, g: 0.03137255, b: 0.03137255, a: 1}
+  keybindRebindingFill: {r: 0.78431374, g: 0.15686275, b: 0.15686275, a: 1}
+  itemNormal: {r: 0.039215688, g: 0.039215688, b: 0.039215688, a: 1}
+  itemHighlighted: {r: 1, g: 1, b: 1, a: 1}
+  itemPressed: {r: 1, g: 1, b: 1, a: 1}
+  itemSelected: {r: 0.13333334, g: 0.13333334, b: 0.13333334, a: 1}
+  sliderBackground: {r: 0.13333334, g: 0.13333334, b: 0.13333334, a: 1}
+  sliderFill: {r: 1, g: 1, b: 1, a: 1}
+  sliderHandle: {r: 1, g: 1, b: 1, a: 1}
+  scrollbarBackground: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+  scrollbarHandle: {r: 1, g: 1, b: 1, a: 1}
+  tabSize: {x: 300, y: 70}
+  rowSize: {x: 1100, y: 80}
+  rowLabelPadding: 50
+  rowControlPadding: 30
+  dropdownSize: {x: 320, y: 48}
+  sliderSize: {x: 320, y: 24}
+  toggleBoxSize: 34
+  keybindButtonSize: {x: 240, y: 48}
+  borderThick: 2
+  borderThin: 1
+  sliderThickness: 3
+  scrollbarTrackWidth: 4
+  scrollbarHandleWidth: 6
+  decorLineWidth: 1500
+  decorDiamondSize: 8
+  showCornerOrnaments: 1
+  cornerLength: 60
+  cornerThickness: 2
+  cornerMargin: 32
+  cornerAlpha: 0.85
+  showTabDivider: 1
+  tabDividerWidth: 1400
+  tabDividerOffsetY: 18
+  closeButtonUseGlyph: 1
+  closeGlyphSize: 44
+  closeGlyphRatio: 0.62
+  leftAlignRowLabels: 1
+  rowLabelWidthRatio: 0.5
+  contentSpacing: 16
+  contentTopPadding: 40
+  contentViewSize: {x: 1500, y: 700}
+  displayFont: {fileID: 11400000, guid: 9b6e6387948db4bfeb4d697ed2d5eb91, type: 2}
+  bodyFont: {fileID: 11400000, guid: 80f2348e57a1a4d47af546535d76c144, type: 2}
+  monoFont: {fileID: 0}
+  fallbackFont: {fileID: 11400000, guid: 80f2348e57a1a4d47af546535d76c144, type: 2}
+  autoFixFontFallback: 1
+  sizeTitle: 52
+  sizeTab: 30
+  sizeLabel: 28
+  sizeValue: 26
+  sizeButton: 30
+  sizeSmall: 18
+  titleCharacterSpacing: 8
+  applyFontSizesOnRestyle: 0
+  headerNameKeywords:
+  - Header
