@@ -20,6 +20,38 @@ namespace OddOdds.UI.Settings.EditorTools
     /// </summary>
     public static class SettingsCanvasRestyler
     {
+
+        /// <summary>
+        /// コンポーネントを取得し、無ければ付ける。
+        ///
+        /// GetComponent&lt;T&gt;() ?? AddComponent&lt;T&gt;() と書いてはいけない。
+        /// Unity のオブジェクトは「破棄済み/未存在でも C# 的には null でない」ため
+        /// ?? が右辺に落ちず、存在しないコンポーネントに触って例外になる。
+        /// 判定は必ず Unity がオーバーロードした == を通す。
+        /// </summary>
+        private static T Ensure<T>(GameObject go) where T : Component
+        {
+            if (go == null) return null;
+            var component = go.GetComponent<T>();
+            return component != null ? component : go.AddComponent<T>();
+        }
+
+        private static int _failures;
+
+        /// <summary>1 工程を実行する。失敗しても他の工程は続ける。</summary>
+        private static void Step(string name, System.Action action)
+        {
+            try
+            {
+                action();
+            }
+            catch (System.Exception e)
+            {
+                _failures++;
+                Debug.LogError($"[Restyler] 「{name}」で失敗しました。\n" +
+                               $"{e.GetType().Name}: {e.Message}\n{e.StackTrace}");
+            }
+        }
         private const string PrefabPath = "Assets/Resources/Prefab/SettingCanvas.prefab";
         private const string ThemePath  = "Assets/ODDODDS/UI/SettingsTheme.asset";
 
@@ -73,37 +105,47 @@ namespace OddOdds.UI.Settings.EditorTools
             try
             {
                 int borders = 0;
+                _failures = 0;
 
-                // 構造を変える処理を先に済ませる（後段の塗りを新しい要素にも行き渡らせるため）
-                RetargetOtherTabToLanguage(root);
-                ConvertScreenModeToDropdown(root, theme);
+                // 各工程は独立して失敗させる。1 箇所の例外で全部が止まり、
+                // 何も保存されないまま終わる事故を防ぐため
+                Step("「その他」タブの改名", () => RetargetOtherTabToLanguage(root));
+                Step("スクリーンモードのドロップダウン化", () => ConvertScreenModeToDropdown(root, theme));
 
-                FlattenAllImages(root);
-                StyleFrame(root, theme);
-                borders += StyleTabs(root, theme);
-                borders += StylePlainButtons(root, theme);
-                borders += StyleRows(root, theme);
-                borders += StyleDropdowns(root, theme);
-                StyleToggles(root, theme);
-                StyleSliders(root, theme);
-                StyleScrollbars(root, theme);
-                StyleKeybindButtons(root, theme);
+                Step("スプライトの除去", () => FlattenAllImages(root));
+                Step("外枠・パネル", () => StyleFrame(root, theme));
+                Step("タブ", () => borders += StyleTabs(root, theme));
+                Step("ボタン", () => borders += StylePlainButtons(root, theme));
+                Step("設定行", () => borders += StyleRows(root, theme));
+                Step("ドロップダウン", () => borders += StyleDropdowns(root, theme));
+                Step("トグル", () => StyleToggles(root, theme));
+                Step("スライダー", () => StyleSliders(root, theme));
+                Step("スクロールバー", () => StyleScrollbars(root, theme));
+                Step("キーバインド", () => StyleKeybindButtons(root, theme));
 
-                // 装飾と配置
-                StyleCorners(root, theme);
-                StyleTabDivider(root, theme);
-                StyleCloseButton(root, theme);
-                AlignRowLabels(root, theme);
-                SetupScrollbarPerPage(root, theme);
+                Step("四隅の飾り", () => StyleCorners(root, theme));
+                Step("タブ下の区切り線", () => StyleTabDivider(root, theme));
+                Step("閉じるボタン", () => StyleCloseButton(root, theme));
+                Step("項目名の左寄せ", () => AlignRowLabels(root, theme));
+                Step("スクロールバーの出し分け", () => SetupScrollbarPerPage(root, theme));
 
                 // フォントは最後。装飾で追加したテキストにも同じ設定を行き渡らせる
-                FixFontFallbacks(theme);
-                StyleTexts(root, theme);
-                BindThemeToManager(root, theme);
+                Step("フォントの代替設定", () => FixFontFallbacks(theme));
+                Step("フォントの適用", () => StyleTexts(root, theme));
+                Step("テーマの受け渡し", () => BindThemeToManager(root, theme));
 
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
-                Debug.Log($"[Restyler] リスキンしました（枠線 {borders} 箇所）。\n" +
-                          "色を変えたいときは SettingsTheme.asset を編集して、もう一度このメニューを実行してください。");
+
+                if (_failures == 0)
+                {
+                    Debug.Log($"[Restyler] リスキンしました（枠線 {borders} 箇所）。\n" +
+                              "色を変えたいときは SettingsTheme.asset を編集して、もう一度このメニューを実行してください。");
+                }
+                else
+                {
+                    Debug.LogWarning($"[Restyler] {_failures} 個の工程が失敗しましたが、" +
+                                     "残りは適用して保存しました。上のエラーを確認してください。");
+                }
             }
             finally
             {
@@ -214,7 +256,7 @@ namespace OddOdds.UI.Settings.EditorTools
         private static int AddBorder(GameObject go, float thickness, Color color)
         {
             if (go == null) return 0;
-            var border = go.GetComponent<UIRectBorder>() ?? go.AddComponent<UIRectBorder>();
+            var border = Ensure<UIRectBorder>(go);
             // 手動調整モードの枠は色だけ揃え、太さと配置はユーザーの設定を尊重する
             if (!border.AutoLayout || LayoutLocked(go.transform))
             {
@@ -306,7 +348,7 @@ namespace OddOdds.UI.Settings.EditorTools
                     {
                         label.color = theme.line;
                         // 押下中は背景が白へ反転するので文字を黒へ入れ替える
-                        var invert = tr.GetComponent<ButtonLabelInvert>() ?? tr.gameObject.AddComponent<ButtonLabelInvert>();
+                        var invert = Ensure<ButtonLabelInvert>(tr.gameObject);
                         invert.Bind(label, theme.screenBackground);
                     }
 
@@ -337,7 +379,7 @@ namespace OddOdds.UI.Settings.EditorTools
                     if (isHeader)
                     {
                         image.color = Color.clear;
-                        var border = row.gameObject.GetComponent<UIRectBorder>() ?? row.gameObject.AddComponent<UIRectBorder>();
+                        var border = Ensure<UIRectBorder>(row.gameObject);
                         border.Thickness = theme.borderThin;
                         border.Color = WithAlpha(theme.line, theme.decorLineAlpha);
                         border.Rebuild();
@@ -368,6 +410,10 @@ namespace OddOdds.UI.Settings.EditorTools
                 theme.ApplyTint(dropdown, TintMode.Dark);
                 n += AddBorder(dropdown.gameObject, theme.borderThin, theme.line);
 
+                // 開いた時に項目が全部見えるようにする（実行時に高さを詰め直す）
+                var fitter = Ensure<DropdownListFitter>(dropdown.gameObject);
+                fitter.Configure(theme.dropdownFitListToItems, theme.dropdownFitMaxHeight, theme.dropdownEscapeMask);
+
                 if (dropdown.captionText != null) dropdown.captionText.color = theme.line;
 
                 // 矢印は画像をやめて「▼」の文字で描く
@@ -380,8 +426,20 @@ namespace OddOdds.UI.Settings.EditorTools
                 SetImage(template.gameObject, theme.screenBackground);
                 n += AddBorder(template.gameObject, theme.borderThin, theme.line);
 
+                // 展開したリストの高さ。0 なら Unity 側の設定をそのまま使う
+                if (theme.dropdownListHeight > 0f && !LayoutLocked(template))
+                    template.sizeDelta = new Vector2(template.sizeDelta.x, theme.dropdownListHeight);
+
                 var item = template.Find("Viewport/Content/Item");
                 if (item == null) continue;
+
+                // 1 項目の高さ。0 なら変更しない
+                if (theme.dropdownItemHeight > 0f && !LayoutLocked(item))
+                {
+                    var itemRect = item.GetComponent<RectTransform>();
+                    if (itemRect != null)
+                        itemRect.sizeDelta = new Vector2(itemRect.sizeDelta.x, theme.dropdownItemHeight);
+                }
 
                 var itemBackground = item.Find("Item Background")?.GetComponent<Image>();
                 var itemToggle = item.GetComponent<Toggle>();
@@ -391,7 +449,7 @@ namespace OddOdds.UI.Settings.EditorTools
                     if (itemToggle != null)
                     {
                         itemToggle.targetGraphic = itemBackground;
-                        var tint = item.GetComponent<SelectableTint>() ?? item.gameObject.AddComponent<SelectableTint>();
+                        var tint = Ensure<SelectableTint>(item.gameObject);
                         tint.mode = TintMode.DropdownItem;
                         theme.ApplyTint(itemToggle, TintMode.DropdownItem);
                     }
@@ -409,7 +467,7 @@ namespace OddOdds.UI.Settings.EditorTools
                             new Vector2(theme.dropdownLabelIndent, dropdown.itemText.rectTransform.offsetMin.y);
 
                     // ハイライト時は背景が白になるので文字を黒へ
-                    var invert = item.GetComponent<ButtonLabelInvert>() ?? item.gameObject.AddComponent<ButtonLabelInvert>();
+                    var invert = Ensure<ButtonLabelInvert>(item.gameObject);
                     invert.Bind(dropdown.itemText, theme.screenBackground, onPress: false, onHover: true);
                 }
             }
@@ -483,7 +541,7 @@ namespace OddOdds.UI.Settings.EditorTools
                 if (slider.handleRect != null)
                     SetImage(slider.handleRect.gameObject, theme.sliderHandle);
 
-                var tint = slider.GetComponent<SelectableTint>() ?? slider.gameObject.AddComponent<SelectableTint>();
+                var tint = Ensure<SelectableTint>(slider.gameObject);
                 tint.mode = TintMode.Handle;
                 theme.ApplyTint(slider, TintMode.Handle);
             }
@@ -497,7 +555,7 @@ namespace OddOdds.UI.Settings.EditorTools
                 if (scrollbar.handleRect != null)
                     SetImage(scrollbar.handleRect.gameObject, theme.scrollbarHandle);
 
-                var tint = scrollbar.GetComponent<SelectableTint>() ?? scrollbar.gameObject.AddComponent<SelectableTint>();
+                var tint = Ensure<SelectableTint>(scrollbar.gameObject);
                 tint.mode = TintMode.Handle;
                 theme.ApplyTint(scrollbar, TintMode.Handle);
             }
@@ -655,8 +713,7 @@ namespace OddOdds.UI.Settings.EditorTools
             // 選択中だけ表示する
             if (itemToggle != null)
             {
-                var follower = item.GetComponent<ToggleGraphicFollower>()
-                               ?? item.gameObject.AddComponent<ToggleGraphicFollower>();
+                var follower = Ensure<ToggleGraphicFollower>(item.gameObject);
                 follower.Bind(itemToggle, mark.gameObject);
             }
         }
@@ -854,8 +911,7 @@ namespace OddOdds.UI.Settings.EditorTools
             }
             if (rules.Count == 0) return;
 
-            var controller = scrollView.GetComponent<SettingsScrollbarPerPage>()
-                             ?? scrollView.gameObject.AddComponent<SettingsScrollbarPerPage>();
+            var controller = Ensure<SettingsScrollbarPerPage>(scrollView.gameObject);
             controller.Bind(scrollbar, rules.ToArray());
         }
 
@@ -937,10 +993,16 @@ namespace OddOdds.UI.Settings.EditorTools
             }
 
             // 選択肢は Toggle のラベルから作る（ローカライズ済みの文言をそのまま使える）
-            var options = toggles
-                .Select(t => t.transform.Find("Label")?.GetComponent<TMP_Text>()?.text)
-                .Select((t, i) => string.IsNullOrEmpty(t) ? "Option " + (i + 1) : t)
-                .ToList();
+            // ?.GetComponent<T>()?.text と繋いではいけない。GetComponent が返す
+            // 「Unity 的には null」は ?. をすり抜けるため、null チェックは == で行う
+            var options = new List<string>(toggles.Count);
+            for (int i = 0; i < toggles.Count; i++)
+            {
+                var labelTr = toggles[i].transform.Find("Label");
+                var label = labelTr != null ? labelTr.GetComponent<TMP_Text>() : null;
+                var text = label != null ? label.text : null;
+                options.Add(string.IsNullOrEmpty(text) ? "Option " + (i + 1) : text);
+            }
             dropdown.ClearOptions();
             dropdown.AddOptions(options);
 
@@ -954,7 +1016,7 @@ namespace OddOdds.UI.Settings.EditorTools
                 rt.sizeDelta = theme.dropdownSize;
             }
 
-            var proxy = row.GetComponent<ToggleDropdownProxy>() ?? row.gameObject.AddComponent<ToggleDropdownProxy>();
+            var proxy = Ensure<ToggleDropdownProxy>(row.gameObject);
             proxy.Bind(dropdown, toggles);
 
             // エディタ上でも Toggle が見えないようにしておく。
@@ -962,7 +1024,7 @@ namespace OddOdds.UI.Settings.EditorTools
             // 非アクティブだと言語切替を受け取れなくなるため（選択肢が古い言語で固まる）
             foreach (var toggle in toggles)
             {
-                var group = toggle.GetComponent<CanvasGroup>() ?? toggle.gameObject.AddComponent<CanvasGroup>();
+                var group = Ensure<CanvasGroup>(toggle.gameObject);
                 group.alpha = 0f;
                 group.interactable = false;
                 group.blocksRaycasts = false;
@@ -998,7 +1060,7 @@ namespace OddOdds.UI.Settings.EditorTools
         private static Image EnsureImage(Transform parent, string name, Color color)
         {
             var rt = EnsureChild(parent, name);
-            var image = rt.GetComponent<Image>() ?? rt.gameObject.AddComponent<Image>();
+            var image = Ensure<Image>(rt.gameObject);
             image.sprite = null;
             image.color = color;
             image.raycastTarget = false;
@@ -1008,7 +1070,7 @@ namespace OddOdds.UI.Settings.EditorTools
         private static TextMeshProUGUI EnsureText(Transform parent, string name, string content, SettingsTheme theme)
         {
             var rt = EnsureChild(parent, name);
-            var text = rt.GetComponent<TextMeshProUGUI>() ?? rt.gameObject.AddComponent<TextMeshProUGUI>();
+            var text = Ensure<TextMeshProUGUI>(rt.gameObject);
             text.text = content;
             text.raycastTarget = false;
             var font = theme.GetFont(FontRole.Body);
@@ -1022,7 +1084,7 @@ namespace OddOdds.UI.Settings.EditorTools
             var image = go.GetComponent<Image>();
             if (image != null) Object.DestroyImmediate(image, true);
 
-            var text = go.GetComponent<TextMeshProUGUI>() ?? go.AddComponent<TextMeshProUGUI>();
+            var text = Ensure<TextMeshProUGUI>(go);
             text.text = glyph;
             text.color = color;
             text.fontSize = size;

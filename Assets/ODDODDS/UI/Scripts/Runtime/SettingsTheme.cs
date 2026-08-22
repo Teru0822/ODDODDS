@@ -154,6 +154,24 @@ namespace OddOdds.UI.Settings
         [Tooltip("× と文字の高さの割り当て比率（× 側）")]
         [Range(0.3f, 0.9f)] public float closeGlyphRatio = 0.62f;
 
+        [Header("ドロップダウンの開いたときの大きさ")]
+        [Tooltip("Template の高さ。項目がこれより少なければ縮み、多ければスクロールする。\n" +
+                 "0 にすると変更しない（Unity 側で個別に設定した値をそのまま使う）")]
+        public float dropdownListHeight = 0f;
+
+        [Tooltip("リスト 1 項目の高さ。0 にすると変更しない")]
+        public float dropdownItemHeight = 0f;
+
+        [Tooltip("開いたリストを、項目が全部見える高さに実行時へ詰め直す。\n" +
+                 "項目数が少ないのに途中までしか見えない場合はこれをオンにする")]
+        public bool dropdownFitListToItems = true;
+
+        [Tooltip("詰め直したときの高さの上限。0 で上限なし（項目数ぶん必ず全部表示する）")]
+        public float dropdownFitMaxHeight = 0f;
+
+        [Tooltip("開いたリストを Canvas 直下へ逃がし、ScrollView のマスクで切られないようにする")]
+        public bool dropdownEscapeMask = true;
+
         [Header("ドロップダウンの選択マーカー")]
         [Tooltip("選択中の項目の左に置くマーカー枠を用意する。\n" +
                  "枠だけ作るので、ダイヤなどの Image をその子オブジェクトに入れて使う")]

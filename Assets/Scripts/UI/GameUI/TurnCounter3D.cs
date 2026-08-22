@@ -70,37 +70,11 @@ public class TurnCounter3D : MonoBehaviour
     [Tooltip("止まっていたら再生し直して、ループしないクリップでも回し続ける")]
     [SerializeField] private bool _keepIdlePlaying = true;
 
-    [Header("カメラへの追従")]
-    [Tooltip("カメラの子にして画面に貼り付ける。オフにするとワールド上の普通の 3D オブジェクトとして扱う")]
-    [SerializeField] private bool _pinToCamera = true;
-
-    [Tooltip("親にするカメラ。未指定なら Camera.main を使う")]
-    [SerializeField] private Camera _camera;
-
-    [Tooltip("カメラから見た位置。X-で左、Y+で上、Z+で奥（画面左上なら X- Y+）")]
-    [SerializeField] private Vector3 _localPosition = new Vector3(-0.32f, 0.18f, 1f);
-
-    [Tooltip("カメラから見た向き")]
-    [SerializeField] private Vector3 _localEuler = new Vector3(0f, 180f, 0f);
-
-    [Tooltip("カウンター全体の大きさ")]
-    [SerializeField] private float _scale = 1f;
-
-    [Header("退避（本・設定画面を開いた時）")]
-    [Tooltip("Tab の本や Esc の設定画面を開いている間、画面左へどかす")]
-    [SerializeField] private bool _stowWhileUIOpen = true;
-
-    [Tooltip("退避先の位置（カメラから見たローカル座標）。通常位置より X をマイナスへ")]
-    [SerializeField] private Vector3 _stowedLocalPosition = new Vector3(-0.75f, 0.18f, 1f);
-
-    [Tooltip("退避時の向き")]
-    [SerializeField] private Vector3 _stowedLocalEuler = new Vector3(0f, 180f, 0f);
-
-    [Tooltip("どく／戻るのにかける時間(秒)")]
-    [SerializeField] private float _stowDuration = 0.35f;
-
-    [Tooltip("動きの緩急")]
-    [SerializeField] private AnimationCurve _stowCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+    // 位置・向き・大きさはシーンに置いたまま Transform で決める。
+    // 以前はカメラに貼り付けて毎フレーム座標を上書きしていたが、
+    // 部屋に据え置く方式に変えたため、この機能ごと廃止した。
+    // ふわふわ浮かせたい場合は既存の FloatingMotion コンポーネントを併用する
+    // （Assets/Scripts/Animation/FloatingMotion.cs）。
 
     [Header("専用ライト")]
     [Tooltip("このオブジェクトだけを照らすライトを使う。オフならシーンの通常のライティングを受ける")]
@@ -120,10 +94,8 @@ public class TurnCounter3D : MonoBehaviour
     [SerializeField] private float _lightIntensity = 3f;
     [SerializeField] private float _lightRange = 2f;
 
-    [Header("表示タイミング")]
-    [Tooltip("ゲーム画面の他の UI（所持コイン等）と同じタイミングで出す。" +
-             "ローディング中・イントロツアー中は出さない")]
-    [SerializeField] private bool _followGameUIVisibility = true;
+    // 表示・非表示の追従も廃止。部屋に据え置く以上、常にそこに在る方が自然なので
+    // 描画のオン/オフはしない。消したい場合は GameObject ごと非アクティブにする。
 
     [Header("差し替え")]
     [Tooltip("置き換え対象の旧 2D ターン表示。指定すると起動時に非表示にする")]
@@ -144,9 +116,7 @@ public class TurnCounter3D : MonoBehaviour
 
     // Idle ステートを持たない Animator に Play("Idle") を投げるとエラーが出続けるので、事前に調べておく
     private bool[] _animatorHasIdle;
-    private float _stowT;
     private bool _subscribed;
-    private bool? _visibleApplied;
     private string _appliedLightSettings;
     private readonly HashSet<string> _warned = new HashSet<string>();
 
@@ -159,10 +129,6 @@ public class TurnCounter3D : MonoBehaviour
 
         SetupDedicatedLight();
     }
-
-    /// <summary>本や設定画面が開いている間はどいておく。</summary>
-    private bool ShouldStow =>
-        _stowWhileUIOpen && (BookOpenController.IsBookVisible || SettingUIManager.IsMenuOpen);
 
     /// <summary>
     /// このオブジェクトだけを照らすライトを用意する。
@@ -337,39 +303,6 @@ public class TurnCounter3D : MonoBehaviour
         if (_graph.IsValid()) _graph.Destroy();
     }
 
-    /// <summary>カメラの子にして、指定のローカル位置へ置く。</summary>
-    private void ApplyCameraPin()
-    {
-        if (!_pinToCamera) return;
-
-        if (_camera == null || !_camera.isActiveAndEnabled) _camera = Camera.main;
-        if (_camera == null) return;
-
-        // カメラの子にしてはいけない。
-        // タイトルからの遷移中は SceneTransitionManager が「持ち越したタイトルカメラ」を
-        // Camera.main にしており、ロード完了時にそれを Destroy する。
-        // 子になっているとカウンターごと道連れで消えるため、親子付けはせず
-        // 毎フレーム カメラ基準のワールド座標を計算して置く（本と同じ方式）。
-        if (transform.parent != null) transform.SetParent(null, true);
-
-        // 退避の進み具合を更新する。設定画面で時間が止まっても動くよう unscaled で進める
-        float target = ShouldStow ? 1f : 0f;
-        _stowT = _stowDuration > 0f
-            ? Mathf.MoveTowards(_stowT, target, Time.unscaledDeltaTime / _stowDuration)
-            : target;
-
-        float e = _stowCurve != null ? _stowCurve.Evaluate(_stowT) : _stowT;
-
-        // Slerp なので原点まわりに弧を描いて左へ逃げる
-        Vector3 localPos = Vector3.Slerp(_localPosition, _stowedLocalPosition, e);
-        Quaternion localRot = Quaternion.Slerp(Quaternion.Euler(_localEuler),
-                                               Quaternion.Euler(_stowedLocalEuler), e);
-
-        Transform cam = _camera.transform;
-        transform.SetPositionAndRotation(cam.TransformPoint(localPos), cam.rotation * localRot);
-        transform.localScale = Vector3.one * _scale;
-    }
-
     /// <summary>
     /// MoneyManager の購読を試みる。
     /// このプロジェクトは Multi-Scene 構成で、MoneyManager は MainScene ではなく
@@ -415,18 +348,11 @@ public class TurnCounter3D : MonoBehaviour
 
         // サブシーンのロード完了を待って購読する（ビルドでは MainScene より後に来る）
         TrySubscribeMoneyManager();
-        ApplyVisibility();
 
         ApplyLightSettings();
 
         if (_graphReady) AdvanceClipPlayback();
         else if (_keepIdlePlaying) PlayIdle(false);
-    }
-
-    private void LateUpdate()
-    {
-        // 位置・大きさを Play 中に調整できるよう毎フレーム反映する
-        ApplyCameraPin();
     }
 
     /// <summary>指定の場所に値を表示する。桁数に合わせて 0 埋めする。</summary>
@@ -479,44 +405,12 @@ public class TurnCounter3D : MonoBehaviour
         // 生成した数字にも専用ライトのビットを掛ける
         ApplyLightingLayer();
 
-        // 生成し直した数字が、非表示中でも勝手に見えてしまわないようにする
-        ApplyVisibility(true);
     }
 
     /// <summary>
     /// 値を桁ごとに分解する。桁数に足りない分は先頭を 0 で埋め、
     /// あふれた場合は下位の桁だけを残す（表示が崩れるより読める方を優先）。
     /// </summary>
-    /// <summary>
-    /// 他のゲーム UI と足並みを揃えて出し入れする。
-    /// GameUIManager は イントロツアー終了（＝UFOキャッチャーのコインが降り終わった後）に
-    /// 表示へ切り替わるので、そこへ追従させれば所持コイン表記などと同時に出る。
-    /// ローディング中は GameUIManager がまだ居ない／非表示なので、カウンターも出ない。
-    /// </summary>
-    private void ApplyVisibility(bool force = false)
-    {
-        bool visible = true;
-        if (_followGameUIVisibility)
-        {
-            var ui = GameUIManager.Instance;
-            visible = ui != null && ui.IsGameUIVisible;
-        }
-
-        if (!force && _visibleApplied.HasValue && _visibleApplied.Value == visible) return;
-
-        // SetActive で消すと Update が止まり、二度と復帰できなくなるので描画だけ止める
-        foreach (var renderer in GetComponentsInChildren<Renderer>(true))
-        {
-            if (renderer != null) renderer.enabled = visible;
-        }
-
-        if (_dedicatedLight != null) _dedicatedLight.enabled = visible;
-
-        _visibleApplied = visible;
-
-        if (_logEvents) Debug.Log($"[TurnCounter3D] 表示 = {visible}", this);
-    }
-
     /// <summary>ログ用の呼び名。どちらの表示かが分かればよい。</summary>
     private string FieldName(DigitField field)
     {

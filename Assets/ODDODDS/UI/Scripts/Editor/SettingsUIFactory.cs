@@ -14,6 +14,21 @@ namespace OddOdds.UI.Settings.EditorTools
     /// </summary>
     public static class SettingsUIFactory
     {
+
+        /// <summary>
+        /// コンポーネントを取得し、無ければ付ける。
+        ///
+        /// GetComponent&lt;T&gt;() ?? AddComponent&lt;T&gt;() と書いてはいけない。
+        /// Unity のオブジェクトは「破棄済み/未存在でも C# 的には null でない」ため
+        /// ?? が右辺に落ちず、存在しないコンポーネントに触って例外になる。
+        /// 判定は必ず Unity がオーバーロードした == を通す。
+        /// </summary>
+        private static T Ensure<T>(GameObject go) where T : Component
+        {
+            if (go == null) return null;
+            var component = go.GetComponent<T>();
+            return component != null ? component : go.AddComponent<T>();
+        }
         // ------------------------------------------------------------------
         // 基本
         // ------------------------------------------------------------------
@@ -53,7 +68,7 @@ namespace OddOdds.UI.Settings.EditorTools
         public static ThemedElement Tag(GameObject go, ThemeRole role)
         {
             if (role == ThemeRole.None) return null;
-            var element = go.GetComponent<ThemedElement>() ?? go.AddComponent<ThemedElement>();
+            var element = Ensure<ThemedElement>(go);
             element.role = role;
             return element;
         }
