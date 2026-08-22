@@ -24,14 +24,6 @@ public class ButtonController : MonoBehaviour
     [Tooltip("押し込み／戻りのスピード")]
     public float pressSpeed = 20f;
 
-    [Header("効果音")]
-    [Tooltip("ボタンを押したときの効果音")]
-    [SerializeField] private AudioClip clickSound;
-
-    [Tooltip("効果音の音量調整 (1.0より大きい値で音量増幅可能)")]
-    [Range(0f, 10f)]
-    [SerializeField] private float soundVolume = 1.0f;
-
     [Header("チュートリアル用制御元（任意）")]
     [Tooltip("設定すると、UFOCameraControllerの静的な状態の代わりにこちらを参照します（ICraneControlSourceを実装したコンポーネント）。" +
              "未設定なら今まで通りUFOCameraControllerを見ます（実機用）。")]
@@ -111,7 +103,7 @@ public class ButtonController : MonoBehaviour
         _controlSource?.NotifyButtonPressed(buttonType);
 
         // クリック効果音の再生
-        PlaySound(clickSound);
+        DevilSEManager.Instance?.PlayButtonClick();
 
         if (armController != null)
         {
@@ -151,10 +143,5 @@ public class ButtonController : MonoBehaviour
         if (_collider == null || activeCam == null) return false;
         Ray ray = activeCam.ScreenPointToRay(screenPos);
         return _collider.Raycast(ray, out _, 1000f);
-    }
-
-    private void PlaySound(AudioClip clip)
-    {
-        DevilSEManager.Instance?.PlayOneShot(clip, soundVolume);
     }
 }

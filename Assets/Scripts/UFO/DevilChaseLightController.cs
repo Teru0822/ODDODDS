@@ -377,6 +377,11 @@ public class DevilChaseLightController : MonoBehaviour
             // 練習機のTutorialItemGoalは実機のFlashLampsCoroutineと違い、チェイスライト側の物理ランプには
             // 触れないため、獲得演出中はこちら側で同じランプをTutorialItemGoal.CurrentFlashColorで光らせる
             if (practiceItemGoal != null && practiceItemGoal.IsFlashing) return RegularLightMode.PracticeItemFlash;
+
+            // レバー/ボタンを実際に操作してタイマーが始まるまでは、実機と同じくチェイスを開始せず、
+            // コイン投入時に点いた通常ライトをそのまま点けたままにしておく
+            if (practiceTutorialCrane != null && !practiceTutorialCrane.IsTimerStarted) return RegularLightMode.CoinInsertFlash;
+
             // 残り時間警告(赤)は、コイン獲得の一瞬フラッシュよりも優先する
             if (lowTime) return RegularLightMode.WarningBlink;
             if (s_coinCatchFlashTimer > 0f) return RegularLightMode.CoinCatchFlash;

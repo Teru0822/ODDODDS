@@ -929,8 +929,10 @@ public class UFOArmController : MonoBehaviour
 
     void UpdateMovement()
     {
-        // アーム動作中、または手動開閉中は移動を禁止する
-        if (IsInputLocked) return;
+        // アーム動作中（下降・掴み・上昇等）は移動を禁止するが、手動開閉（ToggleClaw）中は
+        // レバー操作でアームを動かせるようにする（IsInputLockedではなくIsBusyのみで判定する）。
+        // ボタン連打防止（StartDescentCycle/ToggleClaw自体の再入禁止）は引き続きIsInputLockedで行う
+        if (IsBusy) return;
         if (armRoot == null) return;
 
         Vector3 pos = (_armRigidbody != null) ? _armRigidbody.position : armRoot.position;

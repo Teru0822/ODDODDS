@@ -527,6 +527,9 @@ public class ItemSpawner : MonoBehaviour
             if (_activeAreaMask == 0) _activeAreaMask = 1;
         }
 
+        // 2c. 1マスだけに全アイテムが集中するパターンを無くすため、最低2マスは有効にする
+        EnsureMinimumActiveCells(cellCount, minimumRequired: 2);
+
         // 3. 確率パターンの選択 (nC_cellCount通りに対応する割り当て)
         if (ratePatterns != null && ratePatterns.Count > 0)
         {
@@ -587,6 +590,54 @@ public class ItemSpawner : MonoBehaviour
                   $"グリッドモード: {gridModeName}\n" +
                   $"有効エリア: {areaStr}(マスク値: {_activeAreaMask})\n" +
                   $"確率割当: {ratesLog.ToString()}");
+    }
+
+    /// <summary>
+    /// _activeAreaMaskの有効ビット数がminimumRequired未満の場合、除外されていないセルから
+    /// ランダムに追加して底上げする（1マスだけに全アイテムが集中するパターンを無くすため）。
+    /// 除外設定等でminimumRequired未満のセルしか有効化できない場合は、可能な範囲で妥協する。
+    /// </summary>
+    private void EnsureMinimumActiveCells(int cellCount, int minimumRequired)
+    {
+        int activeBitCount = CountSetBits(_activeAreaMask);
+        if (activeBitCount >= minimumRequired) return;
+
+        // Grid9の通常ウェーブはセル0(ジャックポット用)を対象外にしたいので、候補から除く
+        bool excludeCellZero = _currentWaveGridType == GridType.Grid9;
+
+        var candidates = new System.Collections.Generic.List<int>();
+        for (int i = 0; i < cellCount; i++)
+        {
+            if (excludeCellZero && i == 0) continue;
+            if ((_activeAreaMask & (1 << i)) != 0) continue; // 既に有効
+            if (excludedCellIndices != null && excludedCellIndices.Contains(i)) continue;
+            candidates.Add(i);
+        }
+
+        // Fisher-Yatesでシャッフルしてから、足りない分だけランダムに追加する
+        for (int i = candidates.Count - 1; i > 0; i--)
+        {
+            int swap = Random.Range(0, i + 1);
+            (candidates[i], candidates[swap]) = (candidates[swap], candidates[i]);
+        }
+
+        foreach (int idx in candidates)
+        {
+            if (activeBitCount >= minimumRequired) break;
+            _activeAreaMask |= (1 << idx);
+            activeBitCount++;
+        }
+    }
+
+    private static int CountSetBits(int value)
+    {
+        int count = 0;
+        while (value != 0)
+        {
+            count += value & 1;
+            value >>= 1;
+        }
+        return count;
     }
 
     private System.Collections.Generic.List<SpawnRatePattern> GetRandomCombinations(System.Collections.Generic.List<SpawnRatePattern> list, int count)
