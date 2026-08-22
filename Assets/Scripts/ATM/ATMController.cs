@@ -187,6 +187,11 @@ namespace App.ATM
         [Tooltip("ATMにアタッチした MouseHoverOutline。インスペクターでの指定が必須です")]
         [SerializeField] private MouseHoverOutline hoverOutline;
 
+        [Header("使用ゲート")]
+        [Tooltip("1ターン目にDevilCatcher未プレイの場合、先に使うよう案内するゲート。" +
+                 "別サブシーンにあるため未設定でよい（実行時に自動検索する）")]
+        [SerializeField] private TypewriterUsageGate usageGate;
+
         [Header("演出用オブジェクト (プレハブ内アセット)")]
         [Tooltip("起動時に有効化するライトオブジェクト群")]
         [SerializeField] private GameObject[] atmLights;
@@ -672,6 +677,11 @@ namespace App.ATM
         private void OnATMClicked()
         {
             if (_currentState != ATMState.Off) return;
+
+            // 別サブシーンにあるため、Inspectorで未設定なら実行時に検索する
+            // （シーンをまたぐドラッグ参照は保存時にUnityがnullにしてしまうため）
+            if (usageGate == null) usageGate = FindAnyObjectByType<TypewriterUsageGate>();
+            if (usageGate != null && usageGate.TryBlockATM()) return;
 
             ResolveCrossSceneReferences();
 
