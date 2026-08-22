@@ -373,6 +373,8 @@ public class TypewriterInteractable : InteractableHighlight
 
         if (_diamondSellDisplay != null)
             yield return StartCoroutine(_diamondSellDisplay.PlaySellAnimation(count, stage, rate, moneyBefore, moneyAfter));
+        else
+            Debug.LogWarning("[TypewriterInteractable] _diamondSellDisplay が未アサインです。InspectorでBlackDiamondSellDisplayをアサインしてください", this);
     }
 
     private IEnumerator TypeAndUnblock(string text, RoguelikeManager mgr)

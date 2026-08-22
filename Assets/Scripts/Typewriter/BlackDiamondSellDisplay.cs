@@ -56,8 +56,15 @@ public class BlackDiamondSellDisplay : MonoBehaviour
     public IEnumerator PlaySellAnimation(int diamondCount, int stage, float rate, float moneyBefore, float moneyAfter)
     {
         if (diamondCount <= 0) yield break;
+        if (_panel == null)
+        {
+            Debug.LogWarning("[BlackDiamondSellDisplay] _panel が未アサインです。InspectorでパネルGameObjectをアサインしてください", this);
+            yield break;
+        }
 
-        if (_panel != null) _panel.SetActive(true);
+        var parentCanvas = _panel.GetComponentInParent<Canvas>();
+        if (parentCanvas != null && !parentCanvas.enabled) parentCanvas.enabled = true;
+        _panel.SetActive(true);
 
         if (_diamondImage != null && _diamondSprites != null && _diamondSprites.Length > 0)
         {
@@ -105,7 +112,7 @@ public class BlackDiamondSellDisplay : MonoBehaviour
 
         yield return new WaitForSeconds(_holdAfterFinish);
 
-        if (_panel != null) _panel.SetActive(false);
+        _panel.SetActive(false);
     }
 
     private void EnsureAudioSource()
